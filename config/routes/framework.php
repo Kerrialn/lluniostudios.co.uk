@@ -7,6 +7,6 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 return static function (RoutingConfigurator $routingConfigurator): void {
     if ($routingConfigurator->env() === 'dev') {
         $routingConfigurator->import('@FrameworkBundle/Resources/config/routing/errors.php')
-        ->prefix('/_error');
+            ->prefix('/_error');
     }
 };

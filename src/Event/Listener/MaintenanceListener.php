@@ -1,4 +1,5 @@
 <?php
+
 // src/Event/Listener/MaintenanceListener.php
 
 namespace App\Event\Listener;
@@ -20,18 +21,18 @@ class MaintenanceListener
 {
     public function __construct(
         private ParameterBagInterface $parameterBag,
-        private RouterInterface       $router,
-        private LoggerInterface       $logger,
+        private RouterInterface $router,
+        private LoggerInterface $logger,
         #[Autowire('%kernel.environment%')]
         private readonly string $env
     ) {}
 
-    public function onKernelRequest(RequestEvent $event): void
+    public function onKernelRequest(RequestEvent $requestEvent): void
     {
-        $request = $event->getRequest();
+        $request = $requestEvent->getRequest();
 
         // 1) Only run on the "main" HTTP request
-        if (! $event->isMainRequest()) {
+        if (! $requestEvent->isMainRequest()) {
             return;
         }
 
@@ -60,7 +61,7 @@ class MaintenanceListener
 
         // 6) Never redirect if we’re already on the maintenance route/path
         $maintenanceRoute = 'maintenance';
-        $maintenancePath  = $this->router->generate($maintenanceRoute); // e.g. "/maintenance"
+        $maintenancePath = $this->router->generate($maintenanceRoute); // e.g. "/maintenance"
 
         if ($currentRoute === $maintenanceRoute || $request->getPathInfo() === $maintenancePath) {
             return;
@@ -75,6 +76,6 @@ class MaintenanceListener
             $maintenancePath
         ));
 
-        $event->setResponse(new RedirectResponse($maintenancePath, 302));
+        $requestEvent->setResponse(new RedirectResponse($maintenancePath, 302));
     }
 }

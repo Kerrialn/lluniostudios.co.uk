@@ -19,5 +19,4 @@ class AppController extends AbstractController
     {
         return $this->render('app/maintenance.html.twig');
     }
-
 }
