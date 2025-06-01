@@ -7,17 +7,10 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->extension('framework', [
         'asset_mapper' => [
+            'server' => '%env(APP_ENV)%' !== 'prod',
             'paths' => [
                 'assets/',
             ],
-            'missing_import_mode' => 'strict',
         ],
     ]);
-    if ($containerConfigurator->env() === 'prod') {
-        $containerConfigurator->extension('framework', [
-            'asset_mapper' => [
-                'missing_import_mode' => 'warn',
-            ],
-        ]);
-    }
 };
