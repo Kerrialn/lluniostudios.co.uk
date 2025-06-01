@@ -1,0 +1,91 @@
+version: "3.9"
+
+networks:
+  traefik:
+    external: true
+  internal:
+    external: false
+
+volumes:
+  php_socket:
+  caddy_data:
+  caddy_config:
+
+services:
+  php:
+    image: ghcr.io/eventpoints/lluniostudios.co.uk-php:main
+    volumes:
+      - php_socket:/var/run/php
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+    healthcheck:
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - database
+    restart: unless-stopped
+    environment:
+      MERCURE_PUBLIC_URL: "https://lluniostudios.co.uk/.well-known/mercure"
+      APP_ENV: "prod"
+      DATABASE_URL: "postgresql://__LLUNIOSTUDIOS_POSTGRES_USER__:__LLUNIOSTUDIOS_POSTGRES_PASSWORD__@database:5432/__LLUNIOSTUDIOS_POSTGRES_DBNAME__?serverVersion=13&charset=utf8"
+      MERCURE_JWT_SECRET: "__LLUNIOSTUDIOS_MERCURE_JWT_SECRET__"
+      APP_SECRET: "__LLUNIOSTUDIOS_APP_SECRET__"
+      MAILER_DSN: "__LLUNIOSTUDIOS_MAILER_DSN__"
+      MESSENGER_TRANSPORT_DSN: "__MESSENGER_TRANSPORT_DSN__"
+      APP_UNDER_MAINTENANCE: "__LLUNIOSTUDIOS_APP_UNDER_MAINTENANCE__"
+    networks:
+      - internal
+
+  caddy:
+    image: ghcr.io/eventpoints/lluniostudios.co.uk-caddy:main
+    depends_on:
+      - php
+    restart: unless-stopped
+    environment:
+      SERVER_NAME: ":80"
+      MERCURE_PUBLISHER_JWT_KEY: "__LLUNIOSTUDIOS_MERCURE_JWT_SECRET__"
+      MERCURE_SUBSCRIBER_JWT_KEY: "__LLUNIOSTUDIOS_MERCURE_JWT_SECRET__"
+    volumes:
+      - php_socket:/var/run/php
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    expose:
+      - "80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lluniostudios.rule=Host(`lluniostudios.co.uk`, `www.lluniostudios.co.uk`)"
+      - "traefik.http.routers.lluniostudios.tls=true"
+      - "traefik.http.routers.lluniostudios.tls.certresolver=le"
+    networks:
+      - traefik
+      - internal
+
+  database:
+    image: postgres:13
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "__LLUNIOSTUDIOS_POSTGRES_DBNAME__"
+      POSTGRES_PASSWORD: "__LLUNIOSTUDIOS_POSTGRES_PASSWORD__"
+      POSTGRES_USER: "__LLUNIOSTUDIOS_POSTGRES_USER__"
+    volumes:
+      - ./db-data:/var/lib/postgresql/data:rw
+    networks:
+      - internal
+
+  adminer:
+    image: adminer:4.8.0
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: database
+    expose:
+      - "8080"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lluniostudios-adminer.rule=Host(`adminer.lluniostudios.com`)"
+      - "traefik.http.routers.lluniostudios-adminer.tls=true"
+      - "traefik.http.routers.lluniostudios-adminer.tls.certresolver=le"
+    networks:
+      - internal
+      - traefik
