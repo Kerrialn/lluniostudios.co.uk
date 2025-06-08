@@ -35,4 +35,55 @@ return [
         'version' => '5.3.6',
         'type' => 'css',
     ],
+    'swup' => [
+        'version' => '3.1.1',
+    ],
+    '@swup/slide-theme' => [
+        'version' => '1.0.5',
+    ],
+    'delegate-it' => [
+        'version' => '6.0.1',
+    ],
+    '@swup/debug-plugin' => [
+        'version' => '3.0.0',
+    ],
+    '@swup/plugin' => [
+        'version' => '2.0.2',
+    ],
+    'path-to-regexp' => [
+        'version' => '6.2.2',
+    ],
+    '@swup/fade-theme' => [
+        'version' => '1.0.5',
+    ],
+    '@swup/theme' => [
+        'version' => '2.1.0',
+    ],
+    '@swup/forms-plugin' => [
+        'version' => '2.0.1',
+    ],
+    '@symfony/ux-swup' => [
+        'version' => '2.25.2',
+    ],
+    'tom-select' => [
+        'version' => '2.4.3',
+    ],
+    '@orchidjs/sifter' => [
+        'version' => '1.1.0',
+    ],
+    '@orchidjs/unicode-variants' => [
+        'version' => '1.1.2',
+    ],
+    'tom-select/dist/css/tom-select.default.min.css' => [
+        'version' => '2.4.3',
+        'type' => 'css',
+    ],
+    'tom-select/dist/css/tom-select.default.css' => [
+        'version' => '2.4.3',
+        'type' => 'css',
+    ],
+    'tom-select/dist/css/tom-select.bootstrap5.css' => [
+        'version' => '2.4.3',
+        'type' => 'css',
+    ],
 ];

@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-12 col-md-8">
+                <h1 class="boldonse-regular mb-3">Cart</h1>
+                <div class="list-group list-group-flush">
+                    {% for item in cart.cartItems %}
+                        <a class="list-group-item list-group-item-action" href="#">
+                            <div>{{ item.product.title }}</div>
+                            {% for option in item.cartItemOptions %}
+                                <div>{{ option.productOption.name }} - {{ option.productOptionValue.value }} </div>
+                            {% endfor %}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

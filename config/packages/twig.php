@@ -9,6 +9,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         'file_name_pattern' => '*.twig',
         'form_themes' => [
             'bootstrap_5_layout.html.twig',
+            'form/type/integer_type.html.twig',
         ],
     ]);
     if ($containerConfigurator->env() === 'test') {

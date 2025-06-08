@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Carbon\Doctrine\DateTimeImmutableType;
+use Carbon\Doctrine\DateTimeType;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
@@ -11,6 +13,10 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             'url' => '%env(resolve:DATABASE_URL)%',
             'profiling_collect_backtrace' => '%kernel.debug%',
             'use_savepoints' => true,
+            'types' => [
+                'datetime_immutable' => DateTimeImmutableType::class,
+                'datetime' => DateTimeType::class,
+            ],
         ],
         'orm' => [
             'auto_generate_proxy_classes' => true,

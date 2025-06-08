@@ -1,9 +1,36 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-    <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-12 col-md-4">
-                HOMEPAGE
+    <div>
+        <img class="img-fluid w-100 min-vh-100 object-fit-cover" src="https://placehold.co/1200x800/8c1456/white"/>
+        <div class="container">
+
+            <div class="row g-3 justify-content-center align-items-center" style="padding: 100px 0">
+                <div class="col-12 col-md-8">
+                    <div class="row g-3 justify-content-center align-items-center">
+                        <div class="col-12">
+                            <h1 class="boldonse-regular mb-5">Iron & Stone Lighting Series</h1>
+                            <p class="lead">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus vel lectus nec
+                                dolor blandit
+                                ornare. Vestibulum feugiat volutpat lorem, id scelerisque dolor ornare vitae. Duis elit eros,
+                                feugiat in est ut, eleifend facilisis elit. Aliquam nec urna tincidunt, aliquam massa vitae,
+                                ullamcorper magna. Ut justo dolor, sagittis in porttitor sed, pellentesque ac odio. Suspendisse
+                                eleifend est risus, a malesuada risus vestibulum egestas. Curabitur eget venenatis arcu. Nullam
+                                bibendum aliquam tellus at egestas.</p>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <img class="img-fluid" src="https://placehold.co/300x300/8c1456/white"/>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <img class="img-fluid" src="https://placehold.co/300x300/8c1456/white"/>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <img class="img-fluid" src="https://placehold.co/300x300/8c1456/white"/>
+                        </div>
+                        <div class="text-end">
+                            <a class="btn btn-primary" href="{{ path('show_product', {slug: 'iron-and-stone' }) }}">{{ 'buy-now'|trans }}</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

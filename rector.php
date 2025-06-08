@@ -12,4 +12,4 @@ return RectorConfig::configure()
         __DIR__ . '/tests',
         __DIR__ . '/translations',
     ])
-    ->withPreparedSets(deadCode: true, codeQuality: true, naming: true, doctrineCodeQuality: true);
+    ->withPreparedSets(deadCode: true, codeQuality: true);

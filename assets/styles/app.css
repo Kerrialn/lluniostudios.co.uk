@@ -1,19 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
 
-body {
-    background-color: #111;
-    background-image: radial-gradient(
-        circle at 100% 100%,                /* position the center of the gradient at bottom-right */
-        rgba(255, 255, 255, 0.1) 0%,       /* very faint white in the very corner */
-        rgba(255, 255, 255, 0.00) 60%       /* fade out to fully transparent by 60% of the radius */
-    );
-    background-repeat: no-repeat;        /* only one glow, not tiled */
-    background-size: cover;              /* so it spans the full viewport / container */
-}
-
-
 .boldonse-regular {
     font-family: "Boldonse", system-ui;
     font-weight: 400;
     font-style: normal;
+}
+
+.min-vh-30 {
+    min-height: 30vh !important;
+}
+
+.min-vh-40 {
+    min-height: 40vh !important;
+}
+
+.min-vh-50 {
+    min-height: 50vh !important;
+}
+
+.min-vh-60 {
+    min-height: 60vh !important;
+}
+
+.min-vh-80 {
+    min-height: 80vh !important;
+}
+
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+    .glass {
+        background-color: rgba(255,255,255,0.7);
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+    }
+}
+
+
+.offcanvas-backdrop{
+    background-color: rgba(0,0,0,0.25);
 }

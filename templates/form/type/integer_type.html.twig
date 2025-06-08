@@ -1,0 +1,54 @@
+{% block integer_type_widget %}
+    {% set type = type|default('text') %}
+    <div class="input-group custom-number-group">
+        {% if attr.min is defined and attr.min >= 0 %}
+            <button type="button" class="btn btn-dark decrement">−</button>
+        {% endif %}
+        {{ block('integer_widget') }}
+        <button type="button" class="btn btn-dark increment">+</button>
+    </div>
+
+    {# Optional: inline JS to hook +/− #}
+    <script>
+        (function(){
+            const group = document.currentScript.previousElementSibling;
+            const input = group.querySelector('input');
+
+            // Make input readonly so text cannot be typed
+            input.readOnly = true;
+
+            // Decrement
+            group.querySelector('.decrement').addEventListener('click', ()=> {
+                let v = parseFloat(input.value) || 0;
+                const min = input.hasAttribute('min') ? parseFloat(input.min) : null;
+                input.value = (min !== null)
+                    ? Math.max(v - 1, min)
+                    : (v - 1);
+            });
+
+            // Increment
+            group.querySelector('.increment').addEventListener('click', ()=> {
+                let v = parseFloat(input.value) || 0;
+                const max = input.hasAttribute('max') ? parseFloat(input.max) : null;
+                input.value = (max !== null)
+                    ? Math.min(v + 1, max)
+                    : (v + 1);
+            });
+
+            // Optional: allow arrow keys even when readonly
+            input.addEventListener('keydown', e => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const delta = e.key === 'ArrowUp' ? 1 : -1;
+                    const v = parseFloat(input.value) || 0;
+                    const min = input.hasAttribute('min') ? parseFloat(input.min) : null;
+                    const max = input.hasAttribute('max') ? parseFloat(input.max) : null;
+                    let newVal = v + delta;
+                    if (min !== null && newVal < min) newVal = min;
+                    if (max !== null && newVal > max) newVal = max;
+                    input.value = newVal;
+                }
+            });
+        })();
+    </script>
+{% endblock %}

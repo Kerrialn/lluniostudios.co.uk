@@ -6,3 +6,7 @@ parameters:
         - public/
         - src/
         - tests/
+    ignoreErrors:
+        # your existing suppression of “$id is never written, only read”
+        - '#\$id is never written, only read#'
+        - '#never assigned .* so it can be removed from the property type#'
