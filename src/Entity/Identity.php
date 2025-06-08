@@ -44,7 +44,7 @@ abstract class Identity implements UserInterface
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\Column(length: 255, unique: true, nullable: true )]
+    #[ORM\Column(length: 255, unique: true, nullable: true)]
     #[Assert\Email]
     protected string $email;
 
@@ -57,13 +57,13 @@ abstract class Identity implements UserInterface
     /**
      * @var Collection<int, InternetProtocol> $internetProtocols
      */
-    #[ORM\ManyToMany(targetEntity: InternetProtocol::class, mappedBy: 'owners', cascade:['persist'])]
+    #[ORM\ManyToMany(targetEntity: InternetProtocol::class, mappedBy: 'owners', cascade: ['persist'])]
     private Collection $internetProtocols;
 
     /**
      * @var Collection<int, Fingerprint> $fingerprints
      */
-    #[ORM\OneToMany(targetEntity: Fingerprint::class, mappedBy: 'owner', cascade:['persist'])]
+    #[ORM\OneToMany(targetEntity: Fingerprint::class, mappedBy: 'owner', cascade: ['persist'])]
     private Collection $fingerprints;
 
     #[ORM\ManyToOne(targetEntity: PhoneNumber::class, cascade: ['remove'])]
@@ -85,7 +85,11 @@ abstract class Identity implements UserInterface
     private null|CarbonImmutable $verifiedAt = null;
 
     #[ORM\OneToOne(inversedBy: 'owner', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(
+        name: 'cart_id',
+        referencedColumnName: 'id',
+        nullable: true
+    )]
     private ?Cart $cart = null;
 
     public function __construct()
@@ -193,7 +197,7 @@ abstract class Identity implements UserInterface
 
     public function removeInternetProtocol(InternetProtocol $internetProtocol): self
     {
-       $owner = $internetProtocol->getOwners()->findFirst(fn(int $key, Identity $identity) => $identity === $this);
+        $owner = $internetProtocol->getOwners()->findFirst(fn(int $key, Identity $identity) => $identity === $this);
 
         if ($owner === $this) {
             $this->internetProtocols->removeElement($internetProtocol);
