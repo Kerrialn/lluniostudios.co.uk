@@ -8,7 +8,10 @@ use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: CartItemOptionRepository::class)]
-#[ORM\UniqueConstraint(name: 'cart_item_opt_unique', columns: ['cart_item_id', 'option_id'])]
+#[ORM\UniqueConstraint(
+    name: 'cart_item_optval_unique',
+    columns: ['cart_item_id', 'product_option_value_id']
+)]
 class CartItemOption
 {
     #[ORM\Id]
