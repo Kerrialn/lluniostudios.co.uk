@@ -4,7 +4,7 @@
         <div class="hstack gap-4">
             <a href="{{ path('cart') }}" class="link-dark position-relative">
                 <i class="bi bi-cart fs-1"></i>
-                <span class="fs-6 position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{{ app.user.cart.cartItems.count }}</span>
+                <span class="fs-6 position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{{ app.user.cart.cartItems.count|default('0') }}</span>
             </a>
             <a class="link-dark" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar"
                aria-controls="offcanvasNavbar" aria-label="Toggle navigation">

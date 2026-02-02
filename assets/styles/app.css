@@ -1,5 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
 
+
+.ts-control {
+    padding-bottom: 0.625rem !important;
+}
+
+.ts-wrapper.single .ts-control, .ts-wrapper.single .ts-control input {
+    padding-top: 1.625rem !important;
+}
+
 .boldonse-regular {
     font-family: "Boldonse", system-ui;
     font-weight: 400;

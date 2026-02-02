@@ -84,12 +84,7 @@ abstract class Identity implements UserInterface
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private null|CarbonImmutable $verifiedAt = null;
 
-    #[ORM\OneToOne(inversedBy: 'owner', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(
-        name: 'cart_id',
-        referencedColumnName: 'id',
-        nullable: true
-    )]
+    #[ORM\OneToOne(targetEntity: Cart::class, inversedBy: 'identity', cascade: ['persist'])]
     private ?Cart $cart = null;
 
     public function __construct()
@@ -165,7 +160,7 @@ abstract class Identity implements UserInterface
 
     public function addPhoneNumber(PhoneNumber $phoneNumber): void
     {
-        if (! $this->phoneNumbers->contains($phoneNumber)) {
+        if (!$this->phoneNumbers->contains($phoneNumber)) {
             $this->phoneNumbers->add($phoneNumber);
             $phoneNumber->setOwner($this);
         }
@@ -188,7 +183,7 @@ abstract class Identity implements UserInterface
 
     public function addInternetProtocol(InternetProtocol $internetProtocol): self
     {
-        if (! $this->internetProtocols->contains($internetProtocol)) {
+        if (!$this->internetProtocols->contains($internetProtocol)) {
             $this->internetProtocols->add($internetProtocol);
         }
 
@@ -216,7 +211,7 @@ abstract class Identity implements UserInterface
 
     public function addFingerprint(Fingerprint $fingerprint): self
     {
-        if (! $this->fingerprints->contains($fingerprint)) {
+        if (!$this->fingerprints->contains($fingerprint)) {
             $this->fingerprints->add($fingerprint);
             $fingerprint->setOwner($this);
         }
@@ -248,11 +243,12 @@ abstract class Identity implements UserInterface
             return $this->email;
         }
 
-        if ($this->defaultPhoneNumber instanceof \App\Entity\PhoneNumber) {
+        if ($this->defaultPhoneNumber instanceof PhoneNumber) {
             return $this->defaultPhoneNumber->getFullPhoneNumber();
         }
 
-        if (! empty($this->getFingerprints()->first())) {
+        dd($this->getFingerprints());
+        if ($this->getFingerprints()->first() instanceof Fingerprint) {
             return $this->getFingerprints()->first()->getFingerprint();
         }
 
