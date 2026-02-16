@@ -10,7 +10,6 @@ use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: FingerprintRepository::class)]
-
 class Fingerprint
 {
     #[ORM\Id]
@@ -19,7 +18,7 @@ class Fingerprint
     #[ORM\CustomIdGenerator(UuidGenerator::class)]
     private ?Uuid $id = null;
 
-    #[ORM\Column(length: 255, unique: true, nullable: true)]
+    #[ORM\Column(length: 255, unique: true, nullable: false)]
     private ?string $fingerprint = null;
 
     #[ORM\ManyToOne(targetEntity: Identity::class, inversedBy: 'fingerprints')]
@@ -65,5 +64,10 @@ class Fingerprint
     public function setOwner(?Identity $identity): void
     {
         $this->identity = $identity;
+    }
+
+    public function __toString(): string
+    {
+        return $this->getFingerprint();
     }
 }

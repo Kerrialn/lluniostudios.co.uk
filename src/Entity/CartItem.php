@@ -23,8 +23,11 @@ class CartItem
     #[ORM\Column(type: Types::INTEGER)]
     private int|null $quantity = null;
 
-    #[ORM\Column(type: Types::INTEGER)]
-    private int|null $unitPrice = null;
+    #[ORM\Column(type: Types::STRING, nullable: true)]
+    private null|string $hash = null;
+
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    private string|null $unitPrice = null;
 
     #[ORM\Column]
     private DateTimeImmutable $createdAt;
@@ -36,7 +39,7 @@ class CartItem
     /**
      * @var Collection<int, CartItemOption>
      */
-    #[ORM\OneToMany(targetEntity: CartItemOption::class, mappedBy: 'cartItem', cascade: ['persist'])]
+    #[ORM\OneToMany(targetEntity: CartItemOption::class, mappedBy: 'cartItem', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $cartItemOptions;
 
     #[ORM\ManyToOne(targetEntity: Product::class)]
@@ -128,13 +131,43 @@ class CartItem
         $this->quantity = $quantity;
     }
 
-    public function getUnitPrice(): ?int
+    public function getUnitPrice(): ?string
     {
         return $this->unitPrice;
     }
 
-    public function setUnitPrice(?int $unitPrice): void
+    public function setUnitPrice(?string $unitPrice): void
     {
         $this->unitPrice = $unitPrice;
+    }
+
+    public function getHash(): ?string
+    {
+        return $this->hash;
+    }
+
+    public function setHash(?string $hash): void
+    {
+        $this->hash = $hash;
+    }
+
+    public function increaseQuantity(int $amount): void
+    {
+        $this->quantity += $amount;
+    }
+
+    public function getLineTotal(): int
+    {
+        return (int) $this->unitPrice * $this->quantity;
+    }
+
+    public function getLineTotalInGbp(): float
+    {
+        return $this->getLineTotal() / 100;
+    }
+
+    public function getUnitPriceInGbp(): float
+    {
+        return (int) $this->unitPrice / 100;
     }
 }

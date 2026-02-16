@@ -15,7 +15,6 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             PasswordAuthenticatedUserInterface::class => 'auto',
         ],
 
-        // === Define your providers, including a chain ===
         'providers' => [
             'app_user_provider' => [
                 'entity' => [
@@ -41,7 +40,10 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'pattern' => '^/(_(profiler|wdt)|css|images|js)/',
                 'security' => false,
             ],
-
+            'maintenance' => [
+                'pattern' => '^/maintenance',
+                'security' => false,
+            ],
             'main' => [
                 'lazy' => true,
                 'provider' => 'chain_provider',
@@ -70,11 +72,19 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
         'access_control' => [
             [
+                'path' => '^/maintenance',
+                'roles' => ['PUBLIC_ACCESS'],
+            ],
+            [
                 'path' => '^/login',
                 'roles' => ['PUBLIC_ACCESS'],
             ],
             [
                 'path' => '^/register',
+                'roles' => ['PUBLIC_ACCESS'],
+            ],
+            [
+                'path' => '^/$',
                 'roles' => ['PUBLIC_ACCESS'],
             ],
             [

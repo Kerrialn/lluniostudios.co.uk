@@ -63,7 +63,7 @@ services:
       - internal
 
   database:
-    image: postgres:13
+    image: postgres:17
     restart: unless-stopped
     environment:
       POSTGRES_DB: "__LLUNIOSTUDIOS_POSTGRES_DBNAME__"
