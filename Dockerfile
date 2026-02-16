@@ -12,31 +12,18 @@ RUN mkdir -p var/cache var/log
 COPY composer.json composer.lock symfony.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts
 
-# ------------------ build front-end assets ------------------
-FROM node:22 AS js-builder
-WORKDIR /app
-
-# copy only what npm needs first for caching
-COPY package.json package-lock.json ./
-RUN npm ci
-
-# now copy front-end sources + configs
-COPY assets ./assets
-COPY public ./public
-# COPY webpack.config.js postcss.config.js tailwind.config.js .  # if you have these
-
-RUN npm run build
-# (this should compile scss -> css as part of your build)
-
-# ------------------ final php image ------------------
 FROM composer AS php
-# bring back the whole app + vendor from composer stage
+
+# now copy the full app
 COPY . .
 
-# copy built assets into public (common output for Encore/Vite/etc)
-COPY --from=js-builder /app/public /app/public
-
+# run composer again now that the app code exists (if you rely on flex auto-scripts)
 RUN composer install --no-dev --no-interaction --classmap-authoritative
+
+RUN php bin/console importmap:install --no-interaction
+
+RUN php bin/console asset-map:compile
+
 RUN composer symfony:dump-env prod
 RUN chmod -R 777 var
 
