@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Entity;
@@ -80,8 +81,8 @@ class NewsletterSubscriber
     public function __construct(string $email)
     {
         $this->email = mb_strtolower(trim($email));
-        $this->confirmationToken = self::randomToken(32);
-        $this->unsubscribeToken = self::randomToken(32);
+        $this->confirmationToken = $this->randomToken(32);
+        $this->unsubscribeToken = $this->randomToken(32);
     }
 
     #[ORM\PrePersist]
@@ -165,9 +166,109 @@ class NewsletterSubscriber
         $this->locale = $locale;
     }
 
-    private static function randomToken(int $bytes): string
+    private function randomToken(int $bytes): string
     {
         return rtrim(strtr(base64_encode(random_bytes($bytes)), '+/', '-_'), '=');
+    }
+
+    public function getConfirmedAt(): ?DateTimeImmutable
+    {
+        return $this->confirmedAt;
+    }
+
+    public function setConfirmedAt(?DateTimeImmutable $confirmedAt): void
+    {
+        $this->confirmedAt = $confirmedAt;
+    }
+
+    public function getSubscribedAt(): ?DateTimeImmutable
+    {
+        return $this->subscribedAt;
+    }
+
+    public function setSubscribedAt(?DateTimeImmutable $subscribedAt): void
+    {
+        $this->subscribedAt = $subscribedAt;
+    }
+
+    public function getUnsubscribedAt(): ?DateTimeImmutable
+    {
+        return $this->unsubscribedAt;
+    }
+
+    public function setUnsubscribedAt(?DateTimeImmutable $unsubscribedAt): void
+    {
+        $this->unsubscribedAt = $unsubscribedAt;
+    }
+
+    public function getBouncedAt(): ?DateTimeImmutable
+    {
+        return $this->bouncedAt;
+    }
+
+    public function setBouncedAt(?DateTimeImmutable $bouncedAt): void
+    {
+        $this->bouncedAt = $bouncedAt;
+    }
+
+    public function getSource(): ?string
+    {
+        return $this->source;
+    }
+
+    public function setSource(?string $source): void
+    {
+        $this->source = $source;
+    }
+
+    public function getIpAddress(): ?string
+    {
+        return $this->ipAddress;
+    }
+
+    public function setIpAddress(?string $ipAddress): void
+    {
+        $this->ipAddress = $ipAddress;
+    }
+
+    public function getUserAgent(): ?string
+    {
+        return $this->userAgent;
+    }
+
+    public function setUserAgent(?string $userAgent): void
+    {
+        $this->userAgent = $userAgent;
+    }
+
+    public function getLocale(): ?string
+    {
+        return $this->locale;
+    }
+
+    public function setLocale(?string $locale): void
+    {
+        $this->locale = $locale;
+    }
+
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(DateTimeImmutable $createdAt): void
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(DateTimeImmutable $updatedAt): void
+    {
+        $this->updatedAt = $updatedAt;
     }
 }
 

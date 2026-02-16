@@ -8,6 +8,9 @@ use App\Entity\NewsletterSubscriber;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
+/**
+ * @template-extends ServiceEntityRepository<NewsletterSubscriber>
+ */
 final class NewsletterSubscriberRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
