@@ -18,7 +18,6 @@ class CartItemRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param Uuid $id
      * @return array<int, CartItem>
      */
     public function findByCart(Uuid $id): array

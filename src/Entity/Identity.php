@@ -160,7 +160,7 @@ abstract class Identity implements UserInterface
 
     public function addPhoneNumber(PhoneNumber $phoneNumber): void
     {
-        if (!$this->phoneNumbers->contains($phoneNumber)) {
+        if (! $this->phoneNumbers->contains($phoneNumber)) {
             $this->phoneNumbers->add($phoneNumber);
             $phoneNumber->setOwner($this);
         }
@@ -183,7 +183,7 @@ abstract class Identity implements UserInterface
 
     public function addInternetProtocol(InternetProtocol $internetProtocol): self
     {
-        if (!$this->internetProtocols->contains($internetProtocol)) {
+        if (! $this->internetProtocols->contains($internetProtocol)) {
             $this->internetProtocols->add($internetProtocol);
         }
 
@@ -211,7 +211,7 @@ abstract class Identity implements UserInterface
 
     public function addFingerprint(Fingerprint $fingerprint): self
     {
-        if (!$this->fingerprints->contains($fingerprint)) {
+        if (! $this->fingerprints->contains($fingerprint)) {
             $this->fingerprints->add($fingerprint);
             $fingerprint->setOwner($this);
         }
@@ -247,7 +247,6 @@ abstract class Identity implements UserInterface
             return $this->defaultPhoneNumber->getFullPhoneNumber();
         }
 
-        dd($this->getFingerprints());
         if ($this->getFingerprints()->first() instanceof Fingerprint) {
             return $this->getFingerprints()->first()->getFingerprint();
         }

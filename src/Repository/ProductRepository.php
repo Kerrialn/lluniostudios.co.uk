@@ -15,5 +15,4 @@ class ProductRepository extends ServiceEntityRepository
     {
         parent::__construct($managerRegistry, Product::class);
     }
-
 }

@@ -10,7 +10,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         'db_driver' => 'orm',
         'mappings' => [
             'images' => [
-                'uri_prefix'         => '/uploads/images',
+                'uri_prefix' => '/uploads/images',
                 'upload_destination' => '%kernel.project_dir%/public/uploads/images',
                 'namer' => SmartUniqueNamer::class,
             ],

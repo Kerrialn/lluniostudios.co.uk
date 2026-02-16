@@ -48,7 +48,7 @@ class CartRepository extends ServiceEntityRepository
         // Identity owns the relationship (has cart_id FK), so use identity->getCart()
         $cart = $identity->getCart();
 
-        if (!$cart instanceof Cart) {
+        if (! $cart instanceof Cart) {
             $cart = new Cart();
             $identity->setCart($cart);
 

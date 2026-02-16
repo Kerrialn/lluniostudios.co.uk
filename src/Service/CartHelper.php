@@ -26,7 +26,6 @@ final readonly class CartHelper
         return hash('sha256', json_encode($data));
     }
 
-
     public function mergeCartItemDuplication(Cart $cart): void
     {
         $seen = [];
@@ -47,6 +46,5 @@ final readonly class CartHelper
             $cart->removeCartItem($cartItem);
         }
     }
-
 }
 

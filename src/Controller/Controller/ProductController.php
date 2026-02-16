@@ -2,19 +2,16 @@
 
 namespace App\Controller\Controller;
 
-use App\Entity\Cart;
 use App\Entity\CartItem;
 use App\Entity\CartItemOption;
 use App\Entity\Identity;
 use App\Entity\Product;
 use App\Form\CartItemForm;
 use App\Model\CartItemFormModel;
-use App\Repository\CartItemRepository;
 use App\Repository\CartRepository;
 use App\Repository\ProductOptionValueRepository;
 use App\Repository\ProductRepository;
 use App\Service\CartHelper;
-use Doctrine\ORM\EntityManagerInterface;
 use Nette\Utils\Strings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,10 +24,8 @@ class ProductController extends AbstractController
     public function __construct(
         private readonly ProductRepository $productRepository,
         private readonly CartRepository $cartRepository,
-        private readonly CartItemRepository $cartItemRepository,
         private readonly ProductOptionValueRepository $productOptionValueRepository,
-        private readonly CartHelper $cartHelper,
-        private readonly EntityManagerInterface $entityManager
+        private readonly CartHelper $cartHelper
     )
     {
     }
@@ -95,5 +90,4 @@ class ProductController extends AbstractController
             'cartItemForm' => $cartItemForm,
         ]);
     }
-
 }

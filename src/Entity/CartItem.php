@@ -23,11 +23,11 @@ class CartItem
     #[ORM\Column(type: Types::INTEGER)]
     private int|null $quantity = null;
 
-    #[ORM\Column(type: Types::STRING,nullable: true)]
+    #[ORM\Column(type: Types::STRING, nullable: true)]
     private null|string $hash = null;
 
-    #[ORM\Column(type: Types::INTEGER)]
-    private int|null $unitPrice = null;
+    #[ORM\Column(type: Types::STRING, length: 255)]
+    private string|null $unitPrice = null;
 
     #[ORM\Column]
     private DateTimeImmutable $createdAt;
@@ -131,12 +131,12 @@ class CartItem
         $this->quantity = $quantity;
     }
 
-    public function getUnitPrice(): ?int
+    public function getUnitPrice(): ?string
     {
         return $this->unitPrice;
     }
 
-    public function setUnitPrice(?int $unitPrice): void
+    public function setUnitPrice(?string $unitPrice): void
     {
         $this->unitPrice = $unitPrice;
     }
@@ -158,7 +158,7 @@ class CartItem
 
     public function getLineTotal(): int
     {
-        return $this->unitPrice * $this->quantity;
+        return (int) $this->unitPrice * $this->quantity;
     }
 
     public function getLineTotalInGbp(): float
@@ -168,7 +168,6 @@ class CartItem
 
     public function getUnitPriceInGbp(): float
     {
-        return $this->unitPrice / 100;
+        return (int) $this->unitPrice / 100;
     }
-
 }

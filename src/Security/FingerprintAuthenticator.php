@@ -31,10 +31,10 @@ class FingerprintAuthenticator extends AbstractAuthenticator implements Authenti
     use TargetPathTrait;
 
     public function __construct(
-        private readonly UrlGeneratorInterface  $urlGenerator,
-        private readonly FingerprintRepository  $fingerprintRepository,
-        private readonly FingerPrintService     $fingerPrintService,
-        private readonly Security               $security,
+        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly FingerprintRepository $fingerprintRepository,
+        private readonly FingerPrintService $fingerPrintService,
+        private readonly Security $security,
         private readonly EntityManagerInterface $entityManager
     )
     {
@@ -53,12 +53,11 @@ class FingerprintAuthenticator extends AbstractAuthenticator implements Authenti
         }
         // 2) Don’t run on your login form or any non‐protected routes
         // 3) Otherwise run fingerprint logic
-        return !in_array($path, [
+        return ! in_array($path, [
             $this->urlGenerator->generate('app_login'),
             '/_profiler', '/_wdt', // etc.
         ], true);
     }
-
 
     public function authenticate(Request $request): Passport
     {
@@ -67,9 +66,11 @@ class FingerprintAuthenticator extends AbstractAuthenticator implements Authenti
         return new SelfValidatingPassport(
             new UserBadge($token, function (string $finger) {
                 // 1. Try to load existing fingerprint (and thereby user)
-                $fingerprint = $this->fingerprintRepository->findOneBy(['fingerprint' => $finger]);
+                $fingerprint = $this->fingerprintRepository->findOneBy([
+                    'fingerprint' => $finger,
+                ]);
 
-                if ($fingerprint) {
+                if ($fingerprint !== null) {
                     return $fingerprint->getOwner();
                 }
 
@@ -82,8 +83,10 @@ class FingerprintAuthenticator extends AbstractAuthenticator implements Authenti
                     $this->entityManager->flush(); // Persist both Identity + Fingerprint
                 } catch (UniqueConstraintViolationException) {
                     // Race condition: another request flushed same fingerprint first
-                    $fingerprint = $this->fingerprintRepository->findOneBy(['fingerprint' => $finger]);
-                    if (! $fingerprint) {
+                    $fingerprint = $this->fingerprintRepository->findOneBy([
+                        'fingerprint' => $finger,
+                    ]);
+                    if ($fingerprint === null) {
                         throw new \RuntimeException('Failed to persist fingerprint but no fallback found');
                     }
 

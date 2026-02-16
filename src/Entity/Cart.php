@@ -96,7 +96,7 @@ class Cart
     {
         $total = 0;
         foreach ($this->cartItems as $cartItem) {
-            $total += $cartItem->getUnitPrice() * $cartItem->getQuantity();
+            $total += (int) $cartItem->getUnitPrice() * $cartItem->getQuantity();
         }
         return $total;
     }
@@ -119,5 +119,4 @@ class Cart
         }
         return $count;
     }
-
 }
