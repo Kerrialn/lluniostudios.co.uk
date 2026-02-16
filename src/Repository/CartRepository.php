@@ -5,10 +5,7 @@ namespace App\Repository;
 use App\Entity\Cart;
 use App\Entity\Identity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\Mapping\Entity;
 use Doctrine\Persistence\ManagerRegistry;
-use Symfony\Component\Uid\Uuid;
-use function Doctrine\ORM\QueryBuilder;
 
 /**
  * @extends ServiceEntityRepository<Cart>
@@ -40,36 +37,25 @@ class CartRepository extends ServiceEntityRepository
         }
     }
 
-    public function findByIdentity(Uuid $id): null|Cart
+    public function findByIdentity(Identity $identity): null|Cart
     {
-        $qb = $this->createQueryBuilder('cart');
-        $qb->leftJoin('cart.identity', 'identity');
-
-        $qb->andWhere(
-            $qb->expr()->eq('identity.id', ':id')
-        )->setParameter('id', $id);
-
-        return $qb->getQuery()->getOneOrNullResult();
+        // Identity owns the relationship (has cart_id FK), so use identity->getCart()
+        return $identity->getCart();
     }
 
     public function findOrCreate(Identity $identity): Cart
     {
-
-
-        $qb = $this->createQueryBuilder('cart');
-        $qb->leftJoin('cart.identity', 'identity');
-
-
-            $qb->andWhere(
-                $qb->expr()->eq('identity.id', ':id')
-            )->setParameter('id', $identity->getId());
-
-        $cart = $qb->getQuery()->getOneOrNullResult();
-
+        // Identity owns the relationship (has cart_id FK), so use identity->getCart()
+        $cart = $identity->getCart();
 
         if (!$cart instanceof Cart) {
             $cart = new Cart();
             $identity->setCart($cart);
+
+            // Persist and flush to save the cart_id on the identity
+            $this->getEntityManager()->persist($cart);
+            $this->getEntityManager()->persist($identity);
+            $this->getEntityManager()->flush();
         }
 
         return $cart;

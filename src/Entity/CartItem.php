@@ -23,7 +23,7 @@ class CartItem
     #[ORM\Column(type: Types::INTEGER)]
     private int|null $quantity = null;
 
-    #[ORM\Column(type: Types::STRING)]
+    #[ORM\Column(type: Types::STRING,nullable: true)]
     private null|string $hash = null;
 
     #[ORM\Column(type: Types::INTEGER)]
