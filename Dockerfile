@@ -1,4 +1,4 @@
-FROM ghcr.io/eventpoints/php:sha-ea6c165 AS composer
+FROM ghcr.io/eventpoints/php:main AS composer
 
 ENV APP_ENV="prod" \
     APP_DEBUG=0 \
@@ -7,34 +7,38 @@ ENV APP_ENV="prod" \
     PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
 
 RUN rm -f /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
 RUN mkdir -p var/cache var/log
 
 COPY composer.json composer.lock symfony.lock ./
-
 RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts
 
-FROM node:22 as js-builder
+# ------------------ build front-end assets ------------------
+FROM node:22 AS js-builder
+WORKDIR /app
 
-WORKDIR /build
+# copy only what npm needs first for caching
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# We need /vendor here
-COPY --from=composer /app .
+# now copy front-end sources + configs
+COPY assets ./assets
+COPY public ./public
+# COPY webpack.config.js postcss.config.js tailwind.config.js .  # if you have these
 
-# Production yarn build
-COPY ./assets ./assets
+RUN npm run build
+# (this should compile scss -> css as part of your build)
 
-FROM composer as php
-
-COPY --from=js-builder /build .
+# ------------------ final php image ------------------
+FROM composer AS php
+# bring back the whole app + vendor from composer stage
 COPY . .
 
-RUN npm install -g sass
-# Need to run again to trigger scripts with application code present
+# copy built assets into public (common output for Encore/Vite/etc)
+COPY --from=js-builder /app/public /app/public
+
 RUN composer install --no-dev --no-interaction --classmap-authoritative
 RUN composer symfony:dump-env prod
 RUN chmod -R 777 var
 
-FROM ghcr.io/eventpoints/caddy:sha-fc43d4e AS caddy
-
+FROM ghcr.io/eventpoints/caddy:main AS caddy
 COPY --from=php /app/public public/
