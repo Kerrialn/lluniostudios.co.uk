@@ -12,7 +12,10 @@ class IntegerType extends AbstractType
     {
         $optionsResolver->setDefaults([
             'scale' => 0,
+            'data' => 0,
+            'empty_data' => '0',
             'attr' => [
+                'autocomplete' => 'off',
                 'class' => 'custom-number-input',
                 'min' => 0,
                 'max' => 999,

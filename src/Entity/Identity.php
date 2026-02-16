@@ -84,12 +84,7 @@ abstract class Identity implements UserInterface
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private null|CarbonImmutable $verifiedAt = null;
 
-    #[ORM\OneToOne(inversedBy: 'owner', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(
-        name: 'cart_id',
-        referencedColumnName: 'id',
-        nullable: true
-    )]
+    #[ORM\OneToOne(targetEntity: Cart::class, inversedBy: 'identity', cascade: ['persist'])]
     private ?Cart $cart = null;
 
     public function __construct()
@@ -248,11 +243,11 @@ abstract class Identity implements UserInterface
             return $this->email;
         }
 
-        if ($this->defaultPhoneNumber instanceof \App\Entity\PhoneNumber) {
+        if ($this->defaultPhoneNumber instanceof PhoneNumber) {
             return $this->defaultPhoneNumber->getFullPhoneNumber();
         }
 
-        if (! empty($this->getFingerprints()->first())) {
+        if ($this->getFingerprints()->first() instanceof Fingerprint) {
             return $this->getFingerprints()->first()->getFingerprint();
         }
 

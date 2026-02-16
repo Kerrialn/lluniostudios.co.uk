@@ -11,6 +11,7 @@ use App\Model\CartItemFormModel;
 use App\Repository\CartRepository;
 use App\Repository\ProductOptionValueRepository;
 use App\Repository\ProductRepository;
+use App\Service\CartHelper;
 use Nette\Utils\Strings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,7 +24,8 @@ class ProductController extends AbstractController
     public function __construct(
         private readonly ProductRepository $productRepository,
         private readonly CartRepository $cartRepository,
-        private readonly ProductOptionValueRepository $productOptionValueRepository
+        private readonly ProductOptionValueRepository $productOptionValueRepository,
+        private readonly CartHelper $cartHelper
     )
     {
     }
@@ -48,20 +50,37 @@ class ProductController extends AbstractController
 
         $cartItemForm->handleRequest($request);
         if ($cartItemForm->isSubmitted() && $cartItemForm->isValid()) {
+
+            $cart = $this->cartRepository->findOrCreate($identity);
             $quantity = $cartItemForm->get('quantity')->getData();
+
             $cartItem = new CartItem(quantity: $quantity, product: $product);
-            $identity->getCart()->addCartItem($cartItem);
+            $cartItem->setUnitPrice($product->getPrice());
 
             foreach ($product->getProductOptions() as $productOption) {
                 $productOptionId = $cartItemForm->get(Strings::webalize($productOption->getName()))->getData();
-                $productOptionValue = $this->productOptionValueRepository->find($productOptionId);
+                $productOptionValue = $this->productOptionValueRepository->findOneWithOption($productOptionId);
                 $cartItemOption = new CartItemOption(cartItem: $cartItem, productOption: $productOption, productOptionValue: $productOptionValue);
                 $cartItem->addCartItemOption($cartItemOption);
             }
 
-            $this->cartRepository->save(cart: $cartItem->getCart());
-            $this->addFlash('success', 'product added to cart');
-            $this->redirectToRoute('show_product', [
+            $hash = $this->cartHelper->generateCartItemHash($cartItem);
+            $cartItem->setHash($hash);
+
+            $existingItem = $cart->getCartItems()->filter(
+                fn(CartItem $existingCartItem) => $existingCartItem->getHash() === $cartItem->getHash()
+            )->first();
+
+            if ($existingItem) {
+                $existingItem->increaseQuantity($cartItem->getQuantity());
+            } else {
+                $cart->addCartItem($cartItem);
+            }
+
+            $this->cartRepository->save(cart: $cart, flush: true);
+
+            $this->addFlash('message', 'product added to cart');
+            return $this->redirectToRoute('show_product', [
                 'slug' => $product->getSlug(),
             ]);
         }

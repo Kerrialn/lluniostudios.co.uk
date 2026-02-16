@@ -25,11 +25,11 @@ class Cart
     /**
      * @var Collection<int, CartItem>
      */
-    #[ORM\OneToMany(targetEntity: CartItem::class, mappedBy: 'cart', cascade: ['persist'])]
+    #[ORM\OneToMany(targetEntity: CartItem::class, mappedBy: 'cart', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $cartItems;
 
-    #[ORM\OneToOne(mappedBy: 'cart', cascade: ['persist', 'remove'])]
-    private ?Identity $identity = null;
+    #[ORM\OneToOne(targetEntity: Identity::class, mappedBy: 'cart')]
+    private null|Identity $identity = null;
 
     public function __construct()
     {
@@ -82,20 +82,41 @@ class Cart
         return $this;
     }
 
-    public function getOwner(): ?Identity
+    public function getIdentity(): ?Identity
     {
         return $this->identity;
     }
 
-    public function setOwner(Identity $identity): static
+    public function setIdentity(?Identity $identity): void
     {
-        // set the owning side of the relation if necessary
-        if ($identity->getCart() !== $this) {
-            $identity->setCart($this);
-        }
-
         $this->identity = $identity;
+    }
 
-        return $this;
+    public function getTotal(): int
+    {
+        $total = 0;
+        foreach ($this->cartItems as $cartItem) {
+            $total += (int) $cartItem->getUnitPrice() * $cartItem->getQuantity();
+        }
+        return $total;
+    }
+
+    public function getTotalInGbp(): float
+    {
+        return $this->getTotal() / 100;
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->cartItems->isEmpty();
+    }
+
+    public function getItemCount(): int
+    {
+        $count = 0;
+        foreach ($this->cartItems as $cartItem) {
+            $count += $cartItem->getQuantity();
+        }
+        return $count;
     }
 }

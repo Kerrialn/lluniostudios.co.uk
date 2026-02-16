@@ -9,6 +9,7 @@ use App\Entity\UnregisteredUser;
 use App\Entity\User;
 use App\Repository\FingerprintRepository;
 use App\Service\FingerPrintService;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -61,24 +62,38 @@ class FingerprintAuthenticator extends AbstractAuthenticator implements Authenti
     public function authenticate(Request $request): Passport
     {
         $token = $this->fingerPrintService->generate($request);
+
         return new SelfValidatingPassport(
-            new UserBadge($token, function (string $t) {
+            new UserBadge($token, function (string $finger) {
+                // 1. Try to load existing fingerprint (and thereby user)
                 $fingerprint = $this->fingerprintRepository->findOneBy([
-                    'fingerprint' => $t,
+                    'fingerprint' => $finger,
                 ]);
-                if ($fingerprint === null) {
-                    $fingerprint = new Fingerprint($t);
-                    $this->entityManager->persist($fingerprint);
+
+                if ($fingerprint !== null) {
+                    return $fingerprint->getOwner();
                 }
 
-                if (! $fingerprint->getOwner()) {
-                    $unregisteredUser = new UnregisteredUser();
-                    $unregisteredUser->addFingerprint($fingerprint);
-                    $this->entityManager->persist($unregisteredUser);
-                    $this->entityManager->flush();
-                    return $unregisteredUser;
+                // 2. Ensure fingerprint doesn't already exist (even if not flushed before)
+                $identity = new UnregisteredUser();
+                $identity->addFingerprint(new Fingerprint($finger));
+
+                try {
+                    $this->entityManager->persist($identity);
+                    $this->entityManager->flush(); // Persist both Identity + Fingerprint
+                } catch (UniqueConstraintViolationException) {
+                    // Race condition: another request flushed same fingerprint first
+                    $fingerprint = $this->fingerprintRepository->findOneBy([
+                        'fingerprint' => $finger,
+                    ]);
+                    if ($fingerprint === null) {
+                        throw new \RuntimeException('Failed to persist fingerprint but no fallback found');
+                    }
+
+                    return $fingerprint->getOwner();
                 }
-                return $fingerprint->getOwner();
+
+                return $identity;
             })
         );
     }
