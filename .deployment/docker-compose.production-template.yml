@@ -28,7 +28,7 @@ services:
     environment:
       MERCURE_PUBLIC_URL: "https://lluniostudios.co.uk/.well-known/mercure"
       APP_ENV: "prod"
-      DATABASE_URL: "postgresql://__LLUNIOSTUDIOS_POSTGRES_USER__:__LLUNIOSTUDIOS_POSTGRES_PASSWORD__@database:5432/__LLUNIOSTUDIOS_POSTGRES_DBNAME__?serverVersion=13&charset=utf8"
+      DATABASE_URL: "postgresql://__LLUNIOSTUDIOS_POSTGRES_USER__:__LLUNIOSTUDIOS_POSTGRES_PASSWORD__@database:5432/__LLUNIOSTUDIOS_POSTGRES_DBNAME__?serverVersion=16&charset=utf8"
       MERCURE_JWT_SECRET: "__LLUNIOSTUDIOS_MERCURE_JWT_SECRET__"
       APP_SECRET: "__LLUNIOSTUDIOS_APP_SECRET__"
       MAILER_DSN: "__LLUNIOSTUDIOS_MAILER_DSN__"
