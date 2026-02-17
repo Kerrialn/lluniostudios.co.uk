@@ -83,7 +83,7 @@ services:
       - "8080"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.lluniostudios-adminer.rule=Host(`adminer.lluniostudios.com`)"
+      - "traefik.http.routers.lluniostudios-adminer.rule=Host(`adminer.lluniostudios.co.uk`)"
       - "traefik.http.routers.lluniostudios-adminer.tls=true"
       - "traefik.http.routers.lluniostudios-adminer.tls.certresolver=le"
     networks:
