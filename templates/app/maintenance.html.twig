@@ -13,7 +13,7 @@
                 {% for label, messages in app.flashes %}
                     {% for message in messages %}
                         <div class="alert alert-dark">
-                            {{ message }}
+                            {{ message|capitalize }}
                         </div>
                     {% endfor %}
                 {% endfor %}
@@ -30,7 +30,7 @@
                             <div class="vstack gap-3">
                                 {{ form_row(newsletterSubscriberForm.name) }}
                                 {{ form_row(newsletterSubscriberForm.email) }}
-                                <button type="submit" class="btn btn-primary w-100">{{ 'request-access'|trans }}</button>
+                                <button type="submit" class="btn btn-primary w-100">{{ 'request-access'|trans|capitalize }}</button>
                             </div>
                             {{ form_end(newsletterSubscriberForm) }}
                         </div>
