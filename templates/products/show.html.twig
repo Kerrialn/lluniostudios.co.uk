@@ -43,8 +43,8 @@
                                     {# fieldName was “option_<id>” in your form type #}
                                     {% set fieldName = productOption.name|webalize %}
                                     <div class="form-group form-floating">
-                                        {{ form_label(attribute(cartItemForm, fieldName)) }}
                                         {{ form_widget(attribute(cartItemForm, fieldName)) }}
+                                        {{ form_label(attribute(cartItemForm, fieldName)) }}
                                         {{ form_errors(attribute(cartItemForm, fieldName)) }}
                                     </div>
                                 {% endfor %}

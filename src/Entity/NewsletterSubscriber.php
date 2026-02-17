@@ -27,6 +27,10 @@ class NewsletterSubscriber
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     private Uuid $id;
 
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    private string $name;
+
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\NotBlank]
     #[Assert\Email]
@@ -78,9 +82,8 @@ class NewsletterSubscriber
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private DateTimeImmutable $updatedAt;
 
-    public function __construct(string $email)
+    public function __construct()
     {
-        $this->email = mb_strtolower(trim($email));
         $this->confirmationToken = $this->randomToken(32);
         $this->unsubscribeToken = $this->randomToken(32);
     }
@@ -107,6 +110,11 @@ class NewsletterSubscriber
     public function getEmail(): string
     {
         return $this->email;
+    }
+
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
     }
 
     public function getStatus(): NewsletterSubscriberStatus
@@ -270,5 +278,18 @@ class NewsletterSubscriber
     {
         $this->updatedAt = $updatedAt;
     }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+
+
 }
 

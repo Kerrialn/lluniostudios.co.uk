@@ -1,0 +1,21 @@
+{% extends 'email/base.html.twig' %}
+{% trans_default_domain 'email' %}
+
+{% block subject %}
+    {{ 'news-letter-signup'|trans({name: name}) }}
+{% endblock %}
+
+{% block content %}
+    <div>{{ 'greetings'|trans({name: name}) }}</div>
+    <p>{{ 'thank-you-trader-for-joining'|trans }}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center" style="padding:16px 0;">
+                <a class="btn" href="{{ absolute_url(path('newsletter_verify_email', { token: token })) }}"
+                   style="display:inline-block;">
+                    {{ 'confirm-email'|trans }}
+                </a>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

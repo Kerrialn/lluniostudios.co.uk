@@ -9,6 +9,11 @@
     padding-top: 1.625rem !important;
 }
 
+.form-floating > .form-control {
+    padding-top: 1.625rem !important;
+    padding-bottom: 0.625rem !important;
+}
+
 .boldonse-regular {
     font-family: "Boldonse", system-ui;
     font-weight: 400;

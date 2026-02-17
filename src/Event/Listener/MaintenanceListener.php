@@ -48,6 +48,10 @@ class MaintenanceListener
             return;
         }
 
+        if ($currentRoute === 'newsletter_verify_email') {
+            return;
+        }
+
         // 4) Only redirect true HTML page‐loads (skip CSS/JS/Ajax/etc.)
         if ($request->getRequestFormat() !== 'html') {
             return;

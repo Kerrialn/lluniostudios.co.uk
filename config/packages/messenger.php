@@ -31,7 +31,6 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 ],
             ],
             'routing' => [
-                SendEmailMessage::class => 'async',
                 ChatMessage::class => 'async',
                 SmsMessage::class => 'async',
             ],

@@ -63,7 +63,7 @@ abstract class Identity implements UserInterface
     /**
      * @var Collection<int, Fingerprint> $fingerprints
      */
-    #[ORM\OneToMany(targetEntity: Fingerprint::class, mappedBy: 'owner', cascade: ['persist'])]
+    #[ORM\OneToMany(targetEntity: Fingerprint::class, mappedBy: 'identity', cascade: ['persist'])]
     private Collection $fingerprints;
 
     #[ORM\ManyToOne(targetEntity: PhoneNumber::class, cascade: ['remove'])]

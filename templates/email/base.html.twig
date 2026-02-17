@@ -1,0 +1,39 @@
+{% trans_default_domain 'email' %}
+{% apply inline_css(source('email/css/email.css')) %}
+    <!doctype html>
+    <html>
+    <body class="body">
+    {# Preheader text (hidden in most clients but used for previews) #}
+    <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">
+      {% block preheader %}{% endblock %}
+    </span>
+
+    <table class="wrapper" role="presentation" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td align="center">
+                <table class="card" role="presentation" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="header" style="text-align: center">
+                            {% block header %}
+                                <img style="width: 120px;" src="{{ absolute_url(asset('images/llunio-studios-logo-v1.png')) }}">
+                            {% endblock %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content">
+                            {% block content %}{% endblock %}
+                            <div class="hr"></div>
+                            {% block footer %}
+                                <div class="footer">
+                                    © {{ "now"|date("Y") }} {{ project_name|default('lluniostudios.co.uk') }}
+                                </div>
+                            {% endblock %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    </body>
+    </html>
+{% endapply %}

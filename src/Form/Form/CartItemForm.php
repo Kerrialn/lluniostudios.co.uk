@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Form;
+namespace App\Form\Form;
 
 use App\Entity\Product;
 use App\Form\Type\IntegerType;
@@ -13,14 +13,14 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class CartItemForm extends AbstractType
 {
-    public function buildForm(FormBuilderInterface $formBuilder, array $options): void
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /**
          * @var Product $product
          */
         $product = $options['product'];
 
-        $formBuilder
+        $builder
             ->add('quantity', IntegerType::class, [
                 'label' => false,
             ]);
@@ -32,7 +32,7 @@ class CartItemForm extends AbstractType
                 $choices[$val->getValue()] = $val->getId();
             }
 
-            $formBuilder->add(Strings::webalize($productOption->getName()), ChoiceType::class, [
+            $builder->add(Strings::webalize($productOption->getName()), ChoiceType::class, [
                 'row_attr' => [
                     'class' => 'form-floating',
                 ],
