@@ -1,6 +1,6 @@
 <?php
 
-return  [
+return [
     'This value should be false.' => 'This value should be false.',
     'This value should be true.' => 'This value should be true.',
     'This value should be of type {{ type }}.' => 'This value should be of type {{ type }}.',

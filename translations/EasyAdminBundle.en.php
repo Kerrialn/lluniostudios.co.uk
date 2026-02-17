@@ -1,6 +1,6 @@
 <?php
 
-return  [
+return [
     'page_title.dashboard' => 'Dashboard',
     'page_title.detail' => '%entity_label_singular% <small>(#%entity_short_id%)</small>',
     'page_title.edit' => 'Edit %entity_label_singular%',

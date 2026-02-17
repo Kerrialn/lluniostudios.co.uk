@@ -1,6 +1,6 @@
 <?php
 
-return  [
+return [
     'An authentication exception occurred.' => 'An authentication exception occurred.',
     'Authentication credentials could not be found.' => 'Authentication credentials could not be found.',
     'Authentication request could not be processed due to a system problem.' => 'Authentication request could not be processed due to a system problem.',
