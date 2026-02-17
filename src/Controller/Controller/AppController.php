@@ -40,7 +40,7 @@ class AppController extends AbstractController
     {
         $subscriber = $this->newsletterSubscriberRepository->findOneByConfirmationToken($token);
 
-        if (! $subscriber instanceof \App\Entity\NewsletterSubscriber) {
+        if (! $subscriber instanceof NewsletterSubscriber) {
             $this->addFlash(FlashMessageEnum::ERROR->value, 'Invalid or expired confirmation link.');
 
             return $this->redirectToRoute('maintenance');
