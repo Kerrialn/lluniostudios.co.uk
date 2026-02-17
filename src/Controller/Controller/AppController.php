@@ -7,7 +7,6 @@ use App\Enum\FlashMessageEnum;
 use App\Form\Form\NewsletterSubscriberForm;
 use App\Repository\NewsletterSubscriberRepository;
 use App\Repository\ProductRepository;
-use App\Service\CartHelper;
 use App\Service\EmailService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,7 +40,7 @@ class AppController extends AbstractController
     {
         $subscriber = $this->newsletterSubscriberRepository->findOneByConfirmationToken($token);
 
-        if (!$subscriber) {
+        if (! $subscriber instanceof \App\Entity\NewsletterSubscriber) {
             $this->addFlash(FlashMessageEnum::ERROR->value, 'Invalid or expired confirmation link.');
 
             return $this->redirectToRoute('maintenance');
@@ -75,7 +74,7 @@ class AppController extends AbstractController
         }
 
         return $this->render('app/maintenance.html.twig', [
-            'newsletterSubscriberForm' => $newsletterSubscriberForm
+            'newsletterSubscriberForm' => $newsletterSubscriberForm,
         ]);
     }
 }

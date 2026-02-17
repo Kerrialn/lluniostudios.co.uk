@@ -2,7 +2,7 @@
 
 namespace App\Enum;
 
-enum FlashMessageEnum : string
+enum FlashMessageEnum: string
 {
     case SUSCCESS = 'success';
     case WARNING = 'warning';

@@ -8,7 +8,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->extension('twig', [
         'file_name_pattern' => '*.twig',
         'globals' => [
-            'is_under_maintenance' => '%env(APP_UNDER_MAINTENANCE)%'
+            'is_under_maintenance' => '%env(APP_UNDER_MAINTENANCE)%',
         ],
         'form_themes' => [
             'bootstrap_5_layout.html.twig',

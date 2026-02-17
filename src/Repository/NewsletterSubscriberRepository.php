@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\Identity;
 use App\Entity\NewsletterSubscriber;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -30,7 +29,9 @@ final class NewsletterSubscriberRepository extends ServiceEntityRepository
 
     public function findOneByConfirmationToken(string $token): ?NewsletterSubscriber
     {
-        return $this->findOneBy(['confirmationToken' => $token]);
+        return $this->findOneBy([
+            'confirmationToken' => $token,
+        ]);
     }
 
     public function remove(NewsletterSubscriber $entity, bool $flush = false): void

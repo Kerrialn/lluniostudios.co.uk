@@ -3,12 +3,7 @@
 namespace App\Form\Form;
 
 use App\Entity\NewsletterSubscriber;
-use App\Entity\Product;
-use App\Form\Type\IntegerType;
-use App\Model\CartItemFormModel;
-use Nette\Utils\Strings;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -22,20 +17,20 @@ class NewsletterSubscriberForm extends AbstractType
             ->add('name', TextType::class, [
                 'label' => 'Full name',
                 'row_attr' => [
-                    'class' => 'form-floating'
+                    'class' => 'form-floating',
                 ],
                 'attr' => [
-                    'placeholder' => 'Full name'
-                ]
+                    'placeholder' => 'Full name',
+                ],
             ])
             ->add('email', EmailType::class, [
                 'label' => 'E-mail address',
                 'row_attr' => [
-                    'class' => 'form-floating'
+                    'class' => 'form-floating',
                 ],
                 'attr' => [
-                    'placeholder' => 'E-mail address'
-                ]
+                    'placeholder' => 'E-mail address',
+                ],
             ])
         ;
     }

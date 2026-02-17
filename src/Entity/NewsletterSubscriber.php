@@ -288,8 +288,5 @@ class NewsletterSubscriber
     {
         $this->name = $name;
     }
-
-
-
 }
 
