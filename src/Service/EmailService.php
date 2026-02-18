@@ -12,7 +12,7 @@ use Symfony\Component\Mime\Address;
 
 final readonly class EmailService
 {
-    private const SENDER_EMAIL_ADDRESS = 'notifications@traderpoint.cz';
+    private const SENDER_EMAIL_ADDRESS = 'notifications@lluniostudios.co.uk';
 
     public function __construct(
         private MailerInterface $mailer,
