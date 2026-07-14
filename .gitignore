@@ -13,10 +13,10 @@
 /.phpunit.cache/
 ###< phpunit/phpunit ###
 
-###> symfony/asset-mapper ###
-/public/assets/
-/assets/vendor/
-###< symfony/asset-mapper ###
+###> pentatrion/vite-bundle ###
+/public/build/
+/node_modules/
+###< pentatrion/vite-bundle ###
 
 ###> phpstan/phpstan ###
 phpstan.neon

@@ -1,18 +1,30 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-    <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-12 col-md-8">
-                <h1 class="boldonse-regular mb-3">Products</h1>
-                <div class="list-group list-group-flush">
-                    {% for product in products %}
-                    <a class="list-group-item list-group-item-action" href="#">
-                        <div>{{ product.title }}</div>
-                        <div>{{ product.description }}</div>
+    <div class="mx-auto max-w-6xl px-4 pt-28 pb-16">
+        <h1 class="boldonse-regular text-3xl text-gray-900 mb-8">Products</h1>
+
+        {% if products is empty %}
+            <p class="text-gray-500">No products available yet.</p>
+        {% else %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for product in products %}
+                    <a href="{{ path('show_product', {slug: product.slug}) }}"
+                       class="group block rounded-xl overflow-hidden border border-gray-100 hover:border-gray-300 transition">
+                        <div class="aspect-square bg-gray-50 overflow-hidden">
+                            {% if product.mainImage %}
+                                <img src="{{ asset('uploads/images/' ~ product.mainImage.filename) }}"
+                                     alt="{{ product.title }}"
+                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500"/>
+                            {% endif %}
+                        </div>
+                        <div class="p-4">
+                            <h2 class="text-lg font-medium text-gray-900">{{ product.title|title }}</h2>
+                            <p class="mt-1 text-sm text-gray-500 line-clamp-2">{{ product.description }}</p>
+                            <p class="mt-2 font-semibold text-gray-900">{{ product.priceInGbp|format_currency('GBP') }}</p>
+                        </div>
                     </a>
-                    {% endfor %}
-                </div>
+                {% endfor %}
             </div>
-        </div>
+        {% endif %}
     </div>
 {% endblock %}

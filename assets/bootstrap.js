@@ -1,3 +1,5 @@
-import { startStimulusApp } from '@symfony/stimulus-bundle';
+import { startStimulusApp } from 'vite-plugin-symfony/stimulus/helpers';
 
 const app = startStimulusApp();
+
+export { app };

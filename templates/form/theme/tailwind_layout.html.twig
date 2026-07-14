@@ -1,0 +1,74 @@
+{#
+    Minimal Tailwind + Flowbite form theme for Llunio Studios.
+    Covers the field types used across the shop (text, email, password, textarea,
+    choice/select, checkbox, radio, integer spinner, submit).
+#}
+{% use 'form_div_layout.html.twig' %}
+
+{%- block form_row -%}
+    <div class="mb-4 {{ row_attr.class ?? '' }}">
+        {{- form_label(form) -}}
+        {{- form_widget(form) -}}
+        {{- form_errors(form) -}}
+        {{- form_help(form) -}}
+    </div>
+{%- endblock form_row -%}
+
+{%- block form_label -%}
+    {% if label is not same as(false) %}
+        {% set label_attr = label_attr|merge({class: (label_attr.class|default('') ~ ' block mb-2 text-sm font-medium text-gray-900')|trim}) %}
+        <label{% for name, value in label_attr %} {{ name }}="{{ value }}"{% endfor %}{% if id is defined %} for="{{ id }}"{% endif %}>
+            {{- label is empty ? (label_format is not empty ? label_format|replace({'%name%': name, '%id%': id}) : name|humanize) : (translation_domain is same as(false) ? label : label|trans({}, translation_domain)) -}}
+            {%- if required %} <span class="text-red-600">*</span>{% endif -%}
+        </label>
+    {% endif %}
+{%- endblock form_label -%}
+
+{%- block form_help -%}
+    {% if help is not empty %}
+        <p class="mt-1 text-sm text-gray-500">{{ help|trans({}, translation_domain) }}</p>
+    {% endif %}
+{%- endblock form_help -%}
+
+{%- block form_errors -%}
+    {% if errors|length > 0 %}
+        <ul class="mt-1 space-y-1">
+            {% for error in errors %}
+                <li class="text-sm text-red-600">{{ error.message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{%- endblock form_errors -%}
+
+{%- block form_widget_simple -%}
+    {% set _input_class = 'block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-gray-900 focus:ring-gray-900' %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ _input_class)|trim}) %}
+    {{- parent() -}}
+{%- endblock form_widget_simple -%}
+
+{%- block textarea_widget -%}
+    {% set _input_class = 'block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-gray-900 focus:ring-gray-900' %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ _input_class)|trim}) %}
+    {{- parent() -}}
+{%- endblock textarea_widget -%}
+
+{%- block choice_widget_collapsed -%}
+    {% set _input_class = 'block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-gray-900 focus:ring-gray-900' %}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ _input_class)|trim}) %}
+    {{- parent() -}}
+{%- endblock choice_widget_collapsed -%}
+
+{%- block checkbox_widget -%}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900')|trim}) %}
+    <input type="checkbox"{{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+{%- endblock checkbox_widget -%}
+
+{%- block radio_widget -%}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' w-4 h-4 border-gray-300 text-gray-900 focus:ring-gray-900')|trim}) %}
+    <input type="radio"{{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+{%- endblock radio_widget -%}
+
+{%- block button_widget -%}
+    {% set attr = attr|merge({class: (attr.class|default('') ~ ' inline-flex items-center justify-center rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 disabled:opacity-50')|trim}) %}
+    {{- parent() -}}
+{%- endblock button_widget -%}

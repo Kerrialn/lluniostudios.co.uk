@@ -1,54 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import 'tailwindcss';
+@import 'tom-select/dist/css/tom-select.default.css';
+@plugin 'flowbite/plugin';
 
+/* Scan Twig templates, PHP form themes, JS controllers and Flowbite for class names. */
+@source '../../templates/**/*.html.twig';
+@source '../../src/**/*.php';
+@source '../**/*.js';
+@source '../../node_modules/flowbite/**/*.js';
 
-.ts-control {
-    padding-bottom: 0.625rem !important;
-}
-
-.ts-wrapper.single .ts-control, .ts-wrapper.single .ts-control input {
-    padding-top: 1.625rem !important;
-}
-
-.form-floating > .form-control {
-    padding-top: 1.625rem !important;
-    padding-bottom: 0.625rem !important;
+@theme {
+    --font-display: 'Boldonse', system-ui, sans-serif;
+    --font-sans: 'Nunito', system-ui, sans-serif;
 }
 
 .boldonse-regular {
-    font-family: "Boldonse", system-ui;
+    font-family: 'Boldonse', system-ui;
     font-weight: 400;
     font-style: normal;
-}
-
-.min-vh-30 {
-    min-height: 30vh !important;
-}
-
-.min-vh-40 {
-    min-height: 40vh !important;
-}
-
-.min-vh-50 {
-    min-height: 50vh !important;
-}
-
-.min-vh-60 {
-    min-height: 60vh !important;
-}
-
-.min-vh-80 {
-    min-height: 80vh !important;
-}
-
-@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
-    .glass {
-        background-color: rgba(255,255,255,0.7);
-        -webkit-backdrop-filter: blur(3px);
-        backdrop-filter: blur(3px);
-    }
-}
-
-
-.offcanvas-backdrop{
-    background-color: rgba(0,0,0,0.25);
 }

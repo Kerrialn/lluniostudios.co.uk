@@ -1,64 +1,44 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-    <div class="row g-0 justify-content-between align-items-center min-vh-100">
-        <div class="col-12 col-md-5">
-            <div id="product-{{ product.id }}-image-carousel" class="carousel slide d-flex flex-column">
-                <div
-                    class="d-flex gap-2 justify-content-end align-items-center w-100 position-absolute bottom-0 right-0 z-3 p-3">
-                    <a class="btn btn-primary" href="#" type="button"
-                       data-bs-target="#product-{{ product.id }}-image-carousel" data-bs-slide="prev">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                    <a class="btn btn-primary" href="#" type="button"
-                       data-bs-target="#product-{{ product.id }}-image-carousel" data-bs-slide="next">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                </div>
-                <div class="carousel-inner z-1">
+    <div class="grid grid-cols-1 md:grid-cols-2 min-h-screen">
+        {# Image gallery #}
+        <div class="bg-gray-50">
+            {% if product.images is not empty %}
+                <div class="md:h-screen md:overflow-y-auto">
                     {% for image in product.images %}
-                        <div class="carousel-item {{ loop.first ? 'active' }}">
-                            <img style="height: 100vh" class="img-fluid w-100 object-fit-cover "
-                                 src="{{ asset('uploads/images/' ~ image.filename) }}"/>
-                        </div>
+                        <img src="{{ asset('uploads/images/' ~ image.filename) }}"
+                             alt="{{ product.title }}"
+                             class="w-full object-cover {{ loop.first ? 'md:h-screen' : 'md:h-[70vh]' }}"/>
                     {% endfor %}
                 </div>
-            </div>
+            {% endif %}
         </div>
-        <div class="col-12 col-md-7">
-            <div class="container">
-                <div class="row justify-content-center g-3">
-                    <div class="col-12 col-md-8">
-                        <h1 class="boldonse-regular mb-3 mt-5">{{ product.title|title }}</h1>
-                        <h3 class="boldonse-regular mb-3">{{ product.priceInGbp|format_currency('GBP') }}</h3>
-                        <p>{{ product.description }}</p>
 
-                        <div class="">
-                            {{ form_start(cartItemForm) }}
+        {# Details + add to cart #}
+        <div class="flex items-center justify-center px-6 py-24 md:py-0">
+            <div class="w-full max-w-md">
+                <h1 class="boldonse-regular text-3xl text-gray-900 mb-3">{{ product.title|title }}</h1>
+                <p class="text-2xl font-semibold text-gray-900 mb-4">{{ product.priceInGbp|format_currency('GBP') }}</p>
+                <p class="text-gray-600 mb-8">{{ product.description }}</p>
 
-                            {{ form_row(cartItemForm.quantity) }}
+                {% for message in app.flashes('message') %}
+                    <div class="mb-4 rounded-lg bg-gray-900 text-white text-sm px-4 py-2">{{ message|capitalize }}</div>
+                {% endfor %}
 
-                            {# Render each dynamic “option_<id>” field here #}
-                            <div class="vstack gap-3">
-                                {% for productOption in product.getProductOptions() %}
-                                    {# fieldName was “option_<id>” in your form type #}
-                                    {% set fieldName = productOption.name|webalize %}
-                                    <div class="form-group form-floating">
-                                        {{ form_widget(attribute(cartItemForm, fieldName)) }}
-                                        {{ form_label(attribute(cartItemForm, fieldName)) }}
-                                        {{ form_errors(attribute(cartItemForm, fieldName)) }}
-                                    </div>
-                                {% endfor %}
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 my-3">Add to cart</button>
-
-                            {{ form_end(cartItemForm) }}
-                        </div>
-
+                {{ form_start(cartItemForm) }}
+                    <div class="space-y-4">
+                        {{ form_row(cartItemForm.quantity) }}
+                        {% for productOption in product.getProductOptions() %}
+                            {% set fieldName = productOption.name|webalize %}
+                            {{ form_row(attribute(cartItemForm, fieldName)) }}
+                        {% endfor %}
                     </div>
-                </div>
+                    <button type="submit"
+                            class="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800 focus:ring-4 focus:ring-gray-300">
+                        Add to cart
+                    </button>
+                {{ form_end(cartItemForm) }}
             </div>
-
         </div>
     </div>
 {% endblock %}

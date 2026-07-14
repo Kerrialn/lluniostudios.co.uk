@@ -1,29 +1,33 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div>
-        <img class="img-fluid w-100 object-fit-cover" style="height: 100vh" src="{{ asset('uploads/images/' ~ product.images.first.filename) }}"/>
-        <div class="container">
-
-            <div class="row g-3 justify-content-center align-items-center" style="padding: 100px 0">
-                <div class="col-12 col-md-8">
-                    <div class="row g-3 justify-content-center align-items-center">
-                        <div class="col-12">
-                            <h1 class="boldonse-regular mb-5">{{ product.title }}</h1>
-                            <p class="lead">{{ product.description|raw }}</p>
-                        </div>
-                        {% for image in product.images %}
-                            <div class="col-12 col-md-4">
-                                <img class="img-fluid w-100 object-fit-cover" style="height: 250px" src="{{ asset('uploads/images/' ~ image.filename) }}" />
-                            </div>
-                        {% endfor %}
-                        <div class="text-end">
-                            <a class="btn btn-primary"
-                               href="{{ path('show_product', {slug: product.slug }) }}">{{ 'buy-now'|trans }}</a>
-                        </div>
-                    </div>
+    {% if product %}
+        <div>
+            {% if product.mainImage %}
+                <img class="w-full h-screen object-cover"
+                     src="{{ asset('uploads/images/' ~ product.mainImage.filename) }}" alt="{{ product.title }}"/>
+            {% endif %}
+            <div class="mx-auto max-w-4xl px-4 py-24">
+                <h1 class="boldonse-regular text-4xl text-gray-900 mb-6">{{ product.title }}</h1>
+                <p class="text-lg text-gray-600 mb-10">{{ product.description|raw }}</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+                    {% for image in product.images %}
+                        <img class="w-full h-64 object-cover rounded-lg"
+                             src="{{ asset('uploads/images/' ~ image.filename) }}" alt="{{ product.title }}"/>
+                    {% endfor %}
+                </div>
+                <div class="text-right">
+                    <a class="inline-flex items-center rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800"
+                       href="{{ path('show_product', {slug: product.slug}) }}">{{ 'buy-now'|trans }}</a>
                 </div>
             </div>
         </div>
-    </div>
+    {% else %}
+        <div class="mx-auto max-w-2xl px-4 pt-40 pb-24 text-center">
+            <h1 class="boldonse-regular text-4xl text-gray-900 mb-6">Llunio Studios</h1>
+            <p class="text-lg text-gray-600 mb-10">Sculptural liquid-stone lamps, made to order.</p>
+            <a class="inline-flex items-center rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800"
+               href="{{ path('products') }}">View the collection</a>
+        </div>
+    {% endif %}
 {% endblock %}

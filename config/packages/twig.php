@@ -11,7 +11,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             'is_under_maintenance' => '%env(APP_UNDER_MAINTENANCE)%',
         ],
         'form_themes' => [
-            'bootstrap_5_layout.html.twig',
+            'form/theme/tailwind_layout.html.twig',
             'form/type/integer_type.html.twig',
         ],
     ]);

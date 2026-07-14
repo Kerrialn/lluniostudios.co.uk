@@ -1,13 +1,15 @@
 import './bootstrap.js';
+import './styles/app.css';
+import { initFlowbite } from 'flowbite';
+
 /*
- * Welcome to your app's main JavaScript file!
- *
- * This file will be included onto the page via the importmap() Twig function,
- * which should already be in your base.html.twig.
+ * Vite entrypoint for Llunio Studios.
+ * Tailwind v4 + Flowbite + Stimulus (via vite-plugin-symfony) + Swup page transitions.
  */
 
-import 'bootstrap';
-import './styles/bootstrap.css';
-import './styles/app.css';
-
-console.log('This log comes from assets/app.js - welcome to AssetMapper! 🎉');
+// Flowbite auto-inits on DOMContentLoaded, but Swup swaps the DOM without a full
+// reload, so re-initialise interactive components after each page transition.
+const reinit = () => initFlowbite();
+document.addEventListener('DOMContentLoaded', reinit);
+document.addEventListener('swup:contentReplaced', reinit);
+document.addEventListener('swup:content:replace', reinit);
