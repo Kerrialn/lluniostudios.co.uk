@@ -87,11 +87,18 @@ abstract class Identity implements UserInterface
     #[ORM\OneToOne(targetEntity: Cart::class, inversedBy: 'identity', cascade: ['persist'])]
     private ?Cart $cart = null;
 
+    /**
+     * @var Collection<int, Address> $addresses
+     */
+    #[ORM\OneToMany(targetEntity: Address::class, mappedBy: 'owner', cascade: ['persist'])]
+    private Collection $addresses;
+
     public function __construct()
     {
         $this->internetProtocols = new ArrayCollection();
         $this->fingerprints = new ArrayCollection();
         $this->phoneNumbers = new ArrayCollection();
+        $this->addresses = new ArrayCollection();
         $this->createdAt = new CarbonImmutable();
     }
 
@@ -304,6 +311,33 @@ abstract class Identity implements UserInterface
     public function setCart(Cart $cart): static
     {
         $this->cart = $cart;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Address>
+     */
+    public function getAddresses(): Collection
+    {
+        return $this->addresses;
+    }
+
+    public function addAddress(Address $address): self
+    {
+        if (! $this->addresses->contains($address)) {
+            $this->addresses->add($address);
+            $address->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAddress(Address $address): self
+    {
+        if ($this->addresses->removeElement($address) && $address->getOwner() === $this) {
+            $address->setOwner(null);
+        }
 
         return $this;
     }

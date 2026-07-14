@@ -26,6 +26,18 @@ class Product
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?string $price = null;
 
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $weightGrams = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $lengthMm = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $widthMm = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $heightMm = null;
+
     #[ORM\Column(length: 255)]
     private ?string $slug = null;
 
@@ -186,5 +198,45 @@ class Product
     public function setPrice(?string $price): void
     {
         $this->price = $price;
+    }
+
+    public function getWeightGrams(): ?int
+    {
+        return $this->weightGrams;
+    }
+
+    public function setWeightGrams(?int $weightGrams): void
+    {
+        $this->weightGrams = $weightGrams;
+    }
+
+    public function getLengthMm(): ?int
+    {
+        return $this->lengthMm;
+    }
+
+    public function setLengthMm(?int $lengthMm): void
+    {
+        $this->lengthMm = $lengthMm;
+    }
+
+    public function getWidthMm(): ?int
+    {
+        return $this->widthMm;
+    }
+
+    public function setWidthMm(?int $widthMm): void
+    {
+        $this->widthMm = $widthMm;
+    }
+
+    public function getHeightMm(): ?int
+    {
+        return $this->heightMm;
+    }
+
+    public function setHeightMm(?int $heightMm): void
+    {
+        $this->heightMm = $heightMm;
     }
 }
