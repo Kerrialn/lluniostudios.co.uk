@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\NewsletterSubscriber;
+use App\Entity\Order;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -33,6 +34,23 @@ final readonly class EmailService
             context: array_merge($context, [
                 'name' => $newsletterSubscriber->getName(),
             ]),
+        );
+    }
+
+    public function sendOrderConfirmationEmail(Order $order): void
+    {
+        if ($order->getEmail() === null) {
+            return;
+        }
+
+        $this->send(
+            subject: 'Your Llunio Studios order ' . $order->getOrderNumber(),
+            template: '/email/order/confirmation.html.twig',
+            email: $order->getEmail(),
+            name: $order->getShippingAddress()?->getRecipientName() ?? $order->getEmail(),
+            context: [
+                'order' => $order,
+            ],
         );
     }
 

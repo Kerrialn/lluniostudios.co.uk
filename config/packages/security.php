@@ -72,6 +72,10 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
         'access_control' => [
             [
+                'path' => '^/webhook',
+                'roles' => ['PUBLIC_ACCESS'],
+            ],
+            [
                 'path' => '^/maintenance',
                 'roles' => ['PUBLIC_ACCESS'],
             ],

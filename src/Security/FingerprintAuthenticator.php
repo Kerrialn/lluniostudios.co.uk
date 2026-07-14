@@ -51,8 +51,12 @@ class FingerprintAuthenticator extends AbstractAuthenticator implements Authenti
         if ($this->security->getUser() instanceof UserInterface) {
             return false;
         }
-        // 2) Don’t run on your login form or any non‐protected routes
-        // 3) Otherwise run fingerprint logic
+        // 2) Never run on stateless endpoints such as payment webhooks
+        if (str_starts_with($path, '/webhook')) {
+            return false;
+        }
+        // 3) Don’t run on your login form or any non‐protected routes
+        // 4) Otherwise run fingerprint logic
         return ! in_array($path, [
             $this->urlGenerator->generate('app_login'),
             '/_profiler', '/_wdt', // etc.
