@@ -177,7 +177,8 @@ class Product
             fn(int $key, Image $image): bool => $image->getPosition() === 0
         );
 
-        return $main ?? $this->images->first();
+        // Collection::first() returns false when empty; normalise to null.
+        return $main ?? ($this->images->first() ?: null);
     }
 
     public function __toString(): string
