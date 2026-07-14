@@ -43,7 +43,17 @@ class FingerprintUserProvider implements UserProviderInterface
 
     public function refreshUser(UserInterface $user): UserInterface
     {
-        return $user;
+        // Only this provider's guests are our concern; registered users are
+        // refreshed by the entity provider in the chain.
+        if (! $user instanceof UnregisteredUser) {
+            return $user;
+        }
+
+        // Reload a managed instance for the current request's EntityManager.
+        // Returning the detached, session-deserialized $user causes Doctrine to
+        // treat its cascaded Fingerprint as new on the next flush, producing a
+        // duplicate-key violation.
+        return $this->loadUserByIdentifier($user->getUserIdentifier());
     }
 
     public function supportsClass(string $class): bool

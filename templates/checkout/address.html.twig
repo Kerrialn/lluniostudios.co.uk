@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <div class="mx-auto max-w-5xl px-4 pt-28 pb-16">
+        <h1 class="boldonse-regular text-3xl text-gray-900 mb-2">Checkout</h1>
+        <p class="text-sm text-gray-500 mb-8">Step 1 of 3 — Delivery details</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div class="lg:col-span-2">
+                {{ form_start(form) }}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% if form.email is defined %}
+                            <div class="sm:col-span-2">{{ form_row(form.email) }}</div>
+                        {% endif %}
+                        <div class="sm:col-span-2">{{ form_row(form.recipientName) }}</div>
+                        <div class="sm:col-span-2">{{ form_row(form.line1) }}</div>
+                        <div class="sm:col-span-2">{{ form_row(form.line2) }}</div>
+                        {{ form_row(form.city) }}
+                        {{ form_row(form.county) }}
+                        {{ form_row(form.postcode) }}
+                        {{ form_row(form.country) }}
+                        <div class="sm:col-span-2">{{ form_row(form.phone) }}</div>
+                    </div>
+                    <button type="submit"
+                            class="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800">
+                        Continue to shipping
+                    </button>
+                {{ form_end(form) }}
+            </div>
+
+            <div>{{ include('checkout/_summary.html.twig') }}</div>
+        </div>
+    </div>
+{% endblock %}
