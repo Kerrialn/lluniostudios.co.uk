@@ -38,5 +38,9 @@ RUN composer install --no-dev --no-interaction --classmap-authoritative
 RUN composer symfony:dump-env prod
 RUN chmod -R 777 var
 
+# Vich writes uploaded images here at runtime (non-root user), and it seeds the
+# shared `uploads` volume's permissions on first creation. See the prod compose.
+RUN mkdir -p public/uploads && chmod -R 777 public/uploads
+
 FROM ghcr.io/eventpoints/caddy:main AS caddy
 COPY --from=php /app/public public/
