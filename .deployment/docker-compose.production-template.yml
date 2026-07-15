@@ -10,6 +10,7 @@ volumes:
   php_socket:
   caddy_data:
   caddy_config:
+  uploads:
 
 services:
   php:
@@ -17,6 +18,8 @@ services:
     volumes:
       - php_socket:/var/run/php
       - ./php/php.ini:/usr/local/etc/php/php.ini
+      # Persist user-uploaded images and share them with Caddy (which serves them).
+      - uploads:/app/public/uploads
     healthcheck:
       interval: 10s
       timeout: 3s
@@ -51,6 +54,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - ./Caddyfile:/etc/caddy/Caddyfile
+      # Serve the same uploaded images the PHP container writes.
+      - uploads:/app/public/uploads:ro
     expose:
       - "80"
     labels:
