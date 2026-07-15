@@ -87,10 +87,10 @@ class Order
     {
         $this->createdAt = new CarbonImmutable();
         $this->items = new ArrayCollection();
-        $this->orderNumber = self::generateOrderNumber();
+        $this->orderNumber = $this->generateOrderNumber();
     }
 
-    private static function generateOrderNumber(): string
+    private function generateOrderNumber(): string
     {
         return 'LS-' . (new CarbonImmutable())->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
     }

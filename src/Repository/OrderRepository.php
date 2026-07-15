@@ -54,6 +54,10 @@ class OrderRepository extends ServiceEntityRepository
      */
     public function findByUser(User $user): array
     {
-        return $this->findBy(['user' => $user], ['createdAt' => 'DESC']);
+        return $this->findBy([
+            'user' => $user,
+        ], [
+            'createdAt' => 'DESC',
+        ]);
     }
 }

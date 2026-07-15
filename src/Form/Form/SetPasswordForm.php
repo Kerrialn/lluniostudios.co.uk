@@ -16,8 +16,12 @@ class SetPasswordForm extends AbstractType
         $builder->add('plainPassword', RepeatedType::class, [
             'type' => PasswordType::class,
             'mapped' => false,
-            'first_options' => ['label' => 'New password'],
-            'second_options' => ['label' => 'Confirm password'],
+            'first_options' => [
+                'label' => 'New password',
+            ],
+            'second_options' => [
+                'label' => 'Confirm password',
+            ],
             'invalid_message' => 'The passwords do not match.',
             'constraints' => [
                 new Assert\NotBlank(message: 'Please enter a password.'),

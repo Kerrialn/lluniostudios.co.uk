@@ -74,7 +74,9 @@ class CheckoutController extends AbstractController
                 : strtolower(trim((string) $form->get('email')->getData()));
 
             if (! $currentUser instanceof User) {
-                $existing = $this->userRepository->findOneBy(['email' => $email]);
+                $existing = $this->userRepository->findOneBy([
+                    'email' => $email,
+                ]);
 
                 // Registered account (has a password) -> require login first.
                 if ($existing instanceof User && $existing->hasPassword()) {
@@ -135,7 +137,7 @@ class CheckoutController extends AbstractController
             $quoteId = (string) $request->request->get('shipping_quote', '');
             $quote = $this->shippingCalculator->findQuote($cart, $address, $quoteId);
 
-            if ($quote === null) {
+            if (! $quote instanceof \App\Shipping\ShippingQuote) {
                 $this->addFlash('error', 'Please choose a shipping option.');
 
                 return $this->render('checkout/shipping.html.twig', [
@@ -187,7 +189,7 @@ class CheckoutController extends AbstractController
     {
         $user = $this->currentUser();
         $order = $this->orderRepository->findByOrderNumber($orderNumber);
-        if ($order === null || ! $user instanceof User || $order->getUser() !== $user) {
+        if (! $order instanceof \App\Entity\Order || ! $user instanceof User || $order->getUser() !== $user) {
             throw $this->createNotFoundException();
         }
 
@@ -215,7 +217,7 @@ class CheckoutController extends AbstractController
     {
         $user = $this->currentUser();
         $order = $this->orderRepository->findByOrderNumber($orderNumber);
-        if ($order === null || ! $user instanceof User || $order->getUser() !== $user) {
+        if (! $order instanceof \App\Entity\Order || ! $user instanceof User || $order->getUser() !== $user) {
             throw $this->createNotFoundException();
         }
 

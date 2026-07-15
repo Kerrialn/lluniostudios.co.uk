@@ -33,7 +33,9 @@ final class PromoteUserCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $email = strtolower(trim((string) $input->getArgument('email')));
 
-        $user = $this->userRepository->findOneBy(['email' => $email]);
+        $user = $this->userRepository->findOneBy([
+            'email' => $email,
+        ]);
         if ($user === null) {
             $io->error(sprintf('No user found with email "%s".', $email));
 

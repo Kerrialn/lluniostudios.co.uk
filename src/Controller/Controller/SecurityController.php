@@ -18,13 +18,13 @@ class SecurityController extends AbstractController
     #[Route(path: '/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        if ($this->getUser()) {
+        if ($this->getUser() instanceof \Symfony\Component\Security\Core\User\UserInterface) {
             return $this->redirectToRoute('account_orders');
         }
 
         // Surface any login failure as an error toast (via the global flash partial).
         $error = $authenticationUtils->getLastAuthenticationError();
-        if ($error !== null) {
+        if ($error instanceof \Symfony\Component\Security\Core\Exception\AuthenticationException) {
             $this->addFlash('error', $this->translator->trans($error->getMessageKey(), $error->getMessageData(), 'security'));
         }
 

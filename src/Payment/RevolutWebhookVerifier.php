@@ -38,11 +38,9 @@ final readonly class RevolutWebhookVerifier
         }
 
         // Reject stale timestamps to mitigate replay attacks.
-        if (! ctype_digit($timestamp) || abs(time() * 1000 - (int) $timestamp) > self::TIMESTAMP_TOLERANCE_SECONDS * 1000) {
-            // Revolut sends the timestamp in milliseconds; tolerate both ms and s.
-            if (! ctype_digit($timestamp) || abs(time() - (int) $timestamp) > self::TIMESTAMP_TOLERANCE_SECONDS) {
-                return false;
-            }
+        // Revolut sends the timestamp in milliseconds; tolerate both ms and s.
+        if ((! ctype_digit($timestamp) || abs(time() * 1000 - (int) $timestamp) > self::TIMESTAMP_TOLERANCE_SECONDS * 1000) && (! ctype_digit($timestamp) || abs(time() - (int) $timestamp) > self::TIMESTAMP_TOLERANCE_SECONDS)) {
+            return false;
         }
 
         $payloadToSign = 'v1.' . $timestamp . '.' . $rawBody;

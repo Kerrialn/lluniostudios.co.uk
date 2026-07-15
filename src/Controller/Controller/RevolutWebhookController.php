@@ -49,7 +49,7 @@ class RevolutWebhookController extends AbstractController
         }
 
         $order = $this->orderRepository->findByRevolutOrderId($revolutOrderId);
-        if ($order === null) {
+        if (! $order instanceof \App\Entity\Order) {
             $this->logger->info('Revolut webhook for unknown order ' . $revolutOrderId);
 
             return new JsonResponse([

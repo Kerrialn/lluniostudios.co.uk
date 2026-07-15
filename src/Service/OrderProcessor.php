@@ -39,7 +39,7 @@ final readonly class OrderProcessor
 
         // Empty the buyer's cart now the order is settled.
         $cart = $order->getUser()?->getCart();
-        if ($cart !== null) {
+        if ($cart instanceof \App\Entity\Cart) {
             foreach ($cart->getCartItems()->toArray() as $cartItem) {
                 $cart->removeCartItem($cartItem);
             }

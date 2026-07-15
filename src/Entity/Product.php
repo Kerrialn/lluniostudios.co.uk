@@ -44,7 +44,9 @@ class Product
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(options: ['default' => false])]
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
     private bool $isPublished = false;
 
     /**

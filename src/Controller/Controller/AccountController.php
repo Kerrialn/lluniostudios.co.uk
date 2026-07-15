@@ -41,7 +41,7 @@ class AccountController extends AbstractController
         $user = $this->getUser();
         $order = $this->orderRepository->findByOrderNumber($orderNumber);
 
-        if ($order === null || $order->getUser() !== $user) {
+        if (! $order instanceof \App\Entity\Order || $order->getUser() !== $user) {
             throw $this->createNotFoundException();
         }
 

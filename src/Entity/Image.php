@@ -36,10 +36,14 @@ class Image
     #[ORM\Column(type: \Doctrine\DBAL\Types\Types::INTEGER)]
     private int $position = 0;
 
-    #[ORM\Column(options: ['default' => false])]
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
     private bool $isCardImage = false;
 
-    #[ORM\Column(options: ['default' => false])]
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
     private bool $isLandingImage = false;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]

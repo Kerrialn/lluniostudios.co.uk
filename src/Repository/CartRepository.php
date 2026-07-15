@@ -35,5 +35,4 @@ class CartRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-
 }
