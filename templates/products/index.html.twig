@@ -1,7 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block body %}
     <div class="mx-auto max-w-6xl px-4 pt-28 pb-16">
-        <h1 class="boldonse-regular text-3xl text-gray-900 mb-8">Products</h1>
 
         {% if products is empty %}
             <p class="text-gray-500">No products available yet.</p>
@@ -9,19 +8,17 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {% for product in products %}
                     <a href="{{ path('show_product', {slug: product.slug}) }}"
-                       class="group block rounded-xl overflow-hidden border border-gray-100 hover:border-gray-300 transition">
-                        <div class="aspect-square bg-gray-50 overflow-hidden">
-                            {% if product.mainImage %}
-                                <img src="{{ asset('uploads/images/' ~ product.mainImage.filename) }}"
-                                     alt="{{ product.title }}"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition duration-500"/>
-                            {% endif %}
-                        </div>
-                        <div class="p-4">
-                            <h2 class="text-lg font-medium text-gray-900">{{ product.title|title }}</h2>
-                            <p class="mt-1 text-sm text-gray-500 line-clamp-2">{{ product.description }}</p>
-                            <p class="mt-2 font-semibold text-gray-900">{{ product.priceInGbp|format_currency('GBP') }}</p>
-                        </div>
+                       class="group relative block aspect-square overflow-hidden rounded-xl bg-gray-100">
+                        {% if product.cardImage %}
+                            <img src="{{ asset('uploads/images/' ~ product.cardImage.filename) }}"
+                                 alt="{{ product.title }}"
+                                 class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/>
+                        {% else %}
+                            <div class="absolute inset-0 bg-gradient-to-br from-stone-500 via-stone-700 to-stone-900"></div>
+                        {% endif %}
+                        {# Scrim so the title stays legible over any image #}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                        <h2 class="boldonse-regular absolute inset-x-0 bottom-0 p-4 text-lg text-white">{{ product.title|title }}</h2>
                     </a>
                 {% endfor %}
             </div>

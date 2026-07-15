@@ -19,9 +19,9 @@ class Address
     #[ORM\CustomIdGenerator(UuidGenerator::class)]
     private Uuid $id;
 
-    #[ORM\ManyToOne(targetEntity: Identity::class, inversedBy: 'addresses')]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'addresses')]
     #[ORM\JoinColumn(name: 'owner_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?Identity $owner = null;
+    private ?User $owner = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
@@ -64,12 +64,12 @@ class Address
         return $this->id;
     }
 
-    public function getOwner(): ?Identity
+    public function getOwner(): ?User
     {
         return $this->owner;
     }
 
-    public function setOwner(?Identity $owner): void
+    public function setOwner(?User $owner): void
     {
         $this->owner = $owner;
     }

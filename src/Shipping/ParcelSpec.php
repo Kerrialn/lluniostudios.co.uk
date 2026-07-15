@@ -24,6 +24,21 @@ final readonly class ParcelSpec
         return $this->weightGrams / 1000;
     }
 
+    public function lengthCm(): float
+    {
+        return $this->lengthMm / 10;
+    }
+
+    public function widthCm(): float
+    {
+        return $this->widthMm / 10;
+    }
+
+    public function heightCm(): float
+    {
+        return $this->heightMm / 10;
+    }
+
     public function longestSideCm(): float
     {
         return max($this->lengthMm, $this->widthMm, $this->heightMm) / 10;

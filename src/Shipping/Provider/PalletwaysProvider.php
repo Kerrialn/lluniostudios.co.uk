@@ -61,6 +61,9 @@ final class PalletwaysProvider implements ShippingProviderInterface
                     'deliveryPostcode' => $destination->getPostcode(),
                     'deliveryCountryCode' => $destination->getCountry(),
                     'weightKg' => $parcel->weightKg(),
+                    'lengthCm' => $parcel->lengthCm(),
+                    'widthCm' => $parcel->widthCm(),
+                    'heightCm' => $parcel->heightCm(),
                 ],
             ]);
 

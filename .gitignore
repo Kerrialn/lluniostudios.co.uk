@@ -23,3 +23,5 @@ phpstan.neon
 ###< phpstan/phpstan ###
 
 /docker/*
+
+/public/uploads/*

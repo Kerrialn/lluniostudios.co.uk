@@ -11,15 +11,16 @@ export default class extends Controller {
     static values = {
         token: String,
         mode: String,
+        email: String,
         completeUrl: String,
     };
 
     async connect() {
         try {
-            this.instance = await RevolutCheckout(this.tokenValue, {
-                mode: this.modeValue || 'sandbox',
-                locale: 'en',
-            });
+            // RevolutCheckout(token, mode) — `mode` is a string ('sandbox' | 'prod' | 'dev').
+            // Passing an options object here makes the SDK resolve URLS[mode] to undefined
+            // and fail its widget fetch ("Failed to fetch").
+            this.instance = await RevolutCheckout(this.tokenValue, this.modeValue || 'sandbox');
         } catch (e) {
             this.showError('Unable to initialise payment. Please try again.');
             return;
@@ -41,8 +42,12 @@ export default class extends Controller {
         event.preventDefault();
         this.clearError();
         this.disable();
+        // Revolut requires a customer email at submit time (otherwise it rejects
+        // with error.invalid-email — "Invalid email format"). Use the email
+        // captured on the order during checkout.
         this.card.submit({
             name: this.hasCardholderTarget ? this.cardholderTarget.value : undefined,
+            email: this.emailValue || undefined,
         });
     }
 

@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+{% block title %}My orders — Llunio Studios{% endblock %}
+{% block body %}
+    <div class="mx-auto max-w-3xl px-4 pt-28 pb-16">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="boldonse-regular text-3xl text-gray-900">My orders</h1>
+            <a href="{{ path('account_set_password') }}" class="text-sm text-gray-900 underline">Account settings</a>
+        </div>
+
+        {% if needsPassword %}
+            <div class="mb-6 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4">
+                <p class="font-medium mb-1">Secure your account</p>
+                <p>You haven't set a password yet. <a href="{{ path('account_set_password') }}" class="underline font-medium">Set one now</a> so you can sign back in later.</p>
+            </div>
+        {% endif %}
+
+        {% if orders is empty %}
+            <p class="text-gray-500">You haven't placed any orders yet.</p>
+            <a href="{{ path('products') }}" class="inline-block mt-4 text-sm text-gray-900 underline">Browse products</a>
+        {% else %}
+            <div class="space-y-4">
+                {% for order in orders %}
+                    <a href="{{ path('account_order_show', { orderNumber: order.orderNumber }) }}"
+                       class="block rounded-xl border border-gray-100 p-5 hover:border-gray-300 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-medium text-gray-900">{{ order.orderNumber }}</p>
+                                <p class="text-sm text-gray-500">{{ order.createdAt|date('j M Y') }} · {{ order.items|length }} item{{ order.items|length == 1 ? '' : 's' }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-gray-900">{{ order.totalInGbp|format_currency('GBP') }}</p>
+                                <span class="inline-block mt-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">{{ order.status.label }}</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -62,9 +62,10 @@ Product (Entity)
 
 ## Key Entities
 
-- **Identity** (abstract) -> **User** | **UnregisteredUser** (STI pattern)
+- **User** (email-keyed account; `password` nullable until the customer sets one)
 - **Product** -> **ProductOption** -> **ProductOptionValue** (EAV)
 - **Cart** -> **CartItem** -> **CartItemOption** (stores selected EAV values)
+- **Order** -> **OrderItem** (snapshotted at purchase); Order belongs to a User
 - **Image** (Vich uploaded, linked to Product)
 
 ## Conventions
@@ -77,9 +78,17 @@ Product (Entity)
 
 ## Authentication
 
-Two strategies via chain provider:
-1. **Email/Password** - Registered users (User entity)
-2. **Fingerprint** - Guest users auto-created from IP+UA+Lang hash
+Simple email/password (no fingerprinting or guest Identity).
+
+- Anonymous visitors browse and hold a **session-based cart** (`CartResolver`,
+  cart id in the session).
+- At checkout an account is created from the entered **email** (passwordless).
+  If that email already has a password, the visitor is asked to log in first.
+  On success the session cart is attached to the user (`CartResolver::attachToUser`)
+  and they're logged in programmatically (`Security::login`).
+- The `/account` area (order history, set password) is guarded by `ROLE_USER`.
+  Customers set a password after checkout to sign back in.
+- `/admin` requires `ROLE_ADMIN`; grant it with `php bin/console app:user:promote <email>`.
 
 ## Admin Panel
 

@@ -4,7 +4,6 @@ namespace App\Controller\Controller;
 
 use App\Entity\CartItem;
 use App\Entity\CartItemOption;
-use App\Entity\Identity;
 use App\Entity\Product;
 use App\Form\Form\CartItemForm;
 use App\Model\CartItemFormModel;
@@ -12,12 +11,12 @@ use App\Repository\CartRepository;
 use App\Repository\ProductOptionValueRepository;
 use App\Repository\ProductRepository;
 use App\Service\CartHelper;
+use App\Service\CartResolver;
 use Nette\Utils\Strings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 class ProductController extends AbstractController
 {
@@ -25,7 +24,8 @@ class ProductController extends AbstractController
         private readonly ProductRepository $productRepository,
         private readonly CartRepository $cartRepository,
         private readonly ProductOptionValueRepository $productOptionValueRepository,
-        private readonly CartHelper $cartHelper
+        private readonly CartHelper $cartHelper,
+        private readonly CartResolver $cartResolver,
     )
     {
     }
@@ -33,7 +33,7 @@ class ProductController extends AbstractController
     #[Route(path: '/products', name: 'products')]
     public function index(): Response
     {
-        $products = $this->productRepository->findAll();
+        $products = $this->productRepository->findPublished();
 
         return $this->render('products/index.html.twig', [
             'products' => $products,
@@ -41,8 +41,13 @@ class ProductController extends AbstractController
     }
 
     #[Route(path: '/products/{slug:product}', name: 'show_product')]
-    public function show(Product $product, #[CurrentUser] Identity $identity, Request $request): Response
+    public function show(Product $product, Request $request): Response
     {
+        // Unpublished products are not publicly viewable.
+        if (! $product->isPublished()) {
+            throw $this->createNotFoundException();
+        }
+
         $cartItemFormModel = new CartItemFormModel();
         $cartItemForm = $this->createForm(CartItemForm::class, $cartItemFormModel, [
             'product' => $product,
@@ -51,7 +56,7 @@ class ProductController extends AbstractController
         $cartItemForm->handleRequest($request);
         if ($cartItemForm->isSubmitted() && $cartItemForm->isValid()) {
 
-            $cart = $this->cartRepository->findOrCreate($identity);
+            $cart = $this->cartResolver->getCart();
             $quantity = $cartItemForm->get('quantity')->getData();
 
             $cartItem = new CartItem(quantity: $quantity, product: $product);

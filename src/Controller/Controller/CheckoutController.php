@@ -3,38 +3,46 @@
 namespace App\Controller\Controller;
 
 use App\Entity\Address;
-use App\Entity\Identity;
+use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
 use App\Form\Form\AddressForm;
 use App\Payment\RevolutMerchantClient;
 use App\Repository\AddressRepository;
-use App\Repository\CartRepository;
 use App\Repository\OrderRepository;
+use App\Repository\UserRepository;
+use App\Service\CartResolver;
 use App\Service\OrderFactory;
 use App\Service\ShippingCalculator;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Throwable;
 
 class CheckoutController extends AbstractController
 {
+    use TargetPathTrait;
+
     private const SESSION_ADDRESS_ID = 'checkout_address_id';
 
     private const SESSION_EMAIL = 'checkout_email';
 
     public function __construct(
-        private readonly CartRepository $cartRepository,
+        private readonly CartResolver $cartResolver,
         private readonly AddressRepository $addressRepository,
         private readonly OrderRepository $orderRepository,
+        private readonly UserRepository $userRepository,
         private readonly ShippingCalculator $shippingCalculator,
         private readonly OrderFactory $orderFactory,
         private readonly RevolutMerchantClient $revolutClient,
+        private readonly Security $security,
+        private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger,
         #[Autowire('%env(REVOLUT_PUBLIC_KEY)%')]
         private readonly string $revolutPublicKey,
@@ -44,28 +52,54 @@ class CheckoutController extends AbstractController
     }
 
     #[Route(path: '/checkout', name: 'checkout')]
-    public function address(#[CurrentUser] Identity $identity, Request $request): Response
+    public function address(Request $request): Response
     {
-        $cart = $this->cartRepository->findOrCreate($identity);
+        $cart = $this->cartResolver->getCart();
         if ($cart->isEmpty()) {
             return $this->redirectToRoute('cart');
         }
 
-        $address = new Address();
-        $prefillEmail = $this->identityEmail($identity);
+        $currentUser = $this->currentUser();
 
+        $address = new Address();
         $form = $this->createForm(AddressForm::class, $address, [
-            'with_email' => true,
-            'email' => $prefillEmail,
+            'with_email' => ! $currentUser instanceof User,
+            'email' => $currentUser?->getEmail(),
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $address->setOwner($identity);
+            $email = $currentUser instanceof User
+                ? $currentUser->getEmail()
+                : strtolower(trim((string) $form->get('email')->getData()));
+
+            if (! $currentUser instanceof User) {
+                $existing = $this->userRepository->findOneBy(['email' => $email]);
+
+                // Registered account (has a password) -> require login first.
+                if ($existing instanceof User && $existing->hasPassword()) {
+                    $this->saveTargetPath($request->getSession(), 'main', $this->generateUrl('checkout'));
+                    $this->addFlash('message', 'You already have an account. Please log in to continue checkout.');
+
+                    return $this->redirectToRoute('app_login');
+                }
+
+                // Otherwise reuse the passwordless account or create a fresh one.
+                $currentUser = $existing ?? new User($email);
+                if (! $existing instanceof User) {
+                    $this->applyName($currentUser, (string) $address->getRecipientName());
+                    $this->entityManager->persist($currentUser);
+                }
+
+                $this->cartResolver->attachToUser($currentUser);
+                $this->security->login($currentUser);
+            }
+
+            $address->setOwner($currentUser);
             $this->addressRepository->save($address, true);
 
             $request->getSession()->set(self::SESSION_ADDRESS_ID, (string) $address->getId());
-            $request->getSession()->set(self::SESSION_EMAIL, (string) $form->get('email')->getData());
+            $request->getSession()->set(self::SESSION_EMAIL, $email);
 
             return $this->redirectToRoute('checkout_shipping');
         }
@@ -77,9 +111,14 @@ class CheckoutController extends AbstractController
     }
 
     #[Route(path: '/checkout/shipping', name: 'checkout_shipping')]
-    public function shipping(#[CurrentUser] Identity $identity, Request $request): Response
+    public function shipping(Request $request): Response
     {
-        $cart = $this->cartRepository->findOrCreate($identity);
+        $user = $this->currentUser();
+        if (! $user instanceof User) {
+            return $this->redirectToRoute('checkout');
+        }
+
+        $cart = $this->cartResolver->getCart();
         if ($cart->isEmpty()) {
             return $this->redirectToRoute('cart');
         }
@@ -90,7 +129,7 @@ class CheckoutController extends AbstractController
         }
 
         $quotes = $this->shippingCalculator->quotesForCart($cart, $address);
-        $email = (string) $request->getSession()->get(self::SESSION_EMAIL, $this->identityEmail($identity));
+        $email = (string) $request->getSession()->get(self::SESSION_EMAIL, $user->getEmail());
 
         if ($request->isMethod('POST')) {
             $quoteId = (string) $request->request->get('shipping_quote', '');
@@ -107,7 +146,7 @@ class CheckoutController extends AbstractController
             }
 
             $shippingAddress = $quote->method === ShippingMethod::PICKUP ? null : $address;
-            $order = $this->orderFactory->createFromCart($cart, $identity, $email, $quote, $shippingAddress);
+            $order = $this->orderFactory->createFromCart($cart, $user, $email, $quote, $shippingAddress);
             $this->orderRepository->save($order, true);
 
             // Create the Revolut order server-side (sandbox). Skipped gracefully
@@ -144,10 +183,11 @@ class CheckoutController extends AbstractController
     }
 
     #[Route(path: '/checkout/pay/{orderNumber}', name: 'checkout_pay')]
-    public function pay(#[CurrentUser] Identity $identity, Request $request, string $orderNumber): Response
+    public function pay(Request $request, string $orderNumber): Response
     {
+        $user = $this->currentUser();
         $order = $this->orderRepository->findByOrderNumber($orderNumber);
-        if ($order === null || $order->getIdentity() !== $identity) {
+        if ($order === null || ! $user instanceof User || $order->getUser() !== $user) {
             throw $this->createNotFoundException();
         }
 
@@ -171,16 +211,38 @@ class CheckoutController extends AbstractController
     }
 
     #[Route(path: '/checkout/complete/{orderNumber}', name: 'checkout_complete')]
-    public function complete(#[CurrentUser] Identity $identity, string $orderNumber): Response
+    public function complete(string $orderNumber): Response
     {
+        $user = $this->currentUser();
         $order = $this->orderRepository->findByOrderNumber($orderNumber);
-        if ($order === null || $order->getIdentity() !== $identity) {
+        if ($order === null || ! $user instanceof User || $order->getUser() !== $user) {
             throw $this->createNotFoundException();
         }
 
         return $this->render('checkout/complete.html.twig', [
             'order' => $order,
+            // Prompt the customer to secure their account if they haven't yet.
+            'needsPassword' => ! $user->hasPassword(),
         ]);
+    }
+
+    private function currentUser(): ?User
+    {
+        $user = $this->getUser();
+
+        return $user instanceof User ? $user : null;
+    }
+
+    private function applyName(User $user, string $recipientName): void
+    {
+        $recipientName = trim($recipientName);
+        if ($recipientName === '') {
+            return;
+        }
+
+        $parts = preg_split('/\s+/', $recipientName) ?: [];
+        $user->setFirstName(array_shift($parts) ?: null);
+        $user->setLastName($parts !== [] ? implode(' ', $parts) : null);
     }
 
     private function sessionAddress(Request $request): ?Address
@@ -191,15 +253,6 @@ class CheckoutController extends AbstractController
         }
 
         return $this->addressRepository->find($addressId);
-    }
-
-    private function identityEmail(Identity $identity): ?string
-    {
-        try {
-            return $identity->getEmail();
-        } catch (Throwable) {
-            return null;
-        }
     }
 
     private function tokenSessionKey(string $orderNumber): string

@@ -38,8 +38,7 @@ final readonly class OrderProcessor
         }
 
         // Empty the buyer's cart now the order is settled.
-        $identity = $order->getIdentity();
-        $cart = $identity?->getCart();
+        $cart = $order->getUser()?->getCart();
         if ($cart !== null) {
             foreach ($cart->getCartItems()->toArray() as $cartItem) {
                 $cart->removeCartItem($cartItem);

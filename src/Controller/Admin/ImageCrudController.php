@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Image;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
@@ -23,6 +24,8 @@ class ImageCrudController extends AbstractCrudController
         return [
             TextField::new('caption')->setRequired(false),
             IntegerField::new('position')->setRequired(false),
+            BooleanField::new('isCardImage', 'Card image'),
+            BooleanField::new('isLandingImage', 'Landing image'),
             Field::new('imageFile')
                 ->setFormType(VichImageType::class)
                 ->onlyOnForms(),

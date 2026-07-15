@@ -36,6 +36,12 @@ class Image
     #[ORM\Column(type: \Doctrine\DBAL\Types\Types::INTEGER)]
     private int $position = 0;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isCardImage = false;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isLandingImage = false;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private CarbonImmutable $updatedAt;
 
@@ -106,6 +112,30 @@ class Image
     public function setUpdatedAt(CarbonImmutable $updatedAt): void
     {
         $this->updatedAt = $updatedAt;
+    }
+
+    public function isCardImage(): bool
+    {
+        return $this->isCardImage;
+    }
+
+    public function setIsCardImage(bool $isCardImage): self
+    {
+        $this->isCardImage = $isCardImage;
+
+        return $this;
+    }
+
+    public function isLandingImage(): bool
+    {
+        return $this->isLandingImage;
+    }
+
+    public function setIsLandingImage(bool $isLandingImage): self
+    {
+        $this->isLandingImage = $isLandingImage;
+
+        return $this;
     }
 
     public function getProduct(): ?Product

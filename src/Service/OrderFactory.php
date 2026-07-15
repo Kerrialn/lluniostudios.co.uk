@@ -6,9 +6,9 @@ namespace App\Service;
 
 use App\Entity\Address;
 use App\Entity\Cart;
-use App\Entity\Identity;
 use App\Entity\Order;
 use App\Entity\OrderItem;
+use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Shipping\ShippingQuote;
 
@@ -20,13 +20,13 @@ final readonly class OrderFactory
      */
     public function createFromCart(
         Cart $cart,
-        Identity $identity,
+        User $user,
         string $email,
         ShippingQuote $shippingQuote,
         ?Address $shippingAddress,
     ): Order {
         $order = new Order();
-        $order->setIdentity($identity);
+        $order->setUser($user);
         $order->setEmail($email);
         $order->setStatus(OrderStatus::PENDING);
 

@@ -36,6 +36,16 @@
             </div>
         </div>
 
-        <a href="{{ path('products') }}" class="inline-block mt-8 text-sm text-gray-900 underline">Continue shopping</a>
+        {% if needsPassword %}
+            <div class="mt-8 rounded-lg bg-gray-900 text-white text-left p-5">
+                <p class="font-medium mb-1">Set a password to access your orders</p>
+                <p class="text-sm text-gray-300 mb-3">Your account was created with {{ order.email }}. Add a password so you can sign in and track your orders any time.</p>
+                <a href="{{ path('account_set_password') }}" class="inline-block rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100">Set a password</a>
+            </div>
+        {% else %}
+            <a href="{{ path('account_orders') }}" class="inline-block mt-8 text-sm text-gray-900 underline">View your orders</a>
+        {% endif %}
+
+        <a href="{{ path('products') }}" class="block mt-4 text-sm text-gray-500 underline">Continue shopping</a>
     </div>
 {% endblock %}

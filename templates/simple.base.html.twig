@@ -15,12 +15,14 @@
 </head>
 <body class="min-h-full bg-white text-gray-900 antialiased font-sans"
       {{ stimulus_controller('symfony/ux-swup/swup', {
-          containers: ['#main', '#navbar'],
+          containers: ['#main', '#flashes'],
           theme: 'slide',
           cache: true,
           animateHistoryBrowsing: true,
       }) }}
 >
+<div id="flashes">{{ include('partials/_flashes.html.twig') }}</div>
+
 <main class="min-h-screen" id="main">
     {% block body %}{% endblock %}
 </main>

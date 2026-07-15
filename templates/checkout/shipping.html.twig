@@ -4,10 +4,6 @@
         <h1 class="boldonse-regular text-3xl text-gray-900 mb-2">Checkout</h1>
         <p class="text-sm text-gray-500 mb-8">Step 2 of 3 — Shipping method</p>
 
-        {% for message in app.flashes('error') %}
-            <div class="mb-4 rounded-lg bg-red-50 text-red-700 text-sm px-4 py-2">{{ message }}</div>
-        {% endfor %}
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
             <div class="lg:col-span-2">
                 <div class="mb-6 text-sm text-gray-600">

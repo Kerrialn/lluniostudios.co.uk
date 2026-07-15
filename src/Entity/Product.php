@@ -44,6 +44,9 @@ class Product
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isPublished = false;
+
     /**
      * @var Collection<int, Image>
      */
@@ -101,6 +104,18 @@ class Product
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->isPublished;
+    }
+
+    public function setIsPublished(bool $isPublished): static
+    {
+        $this->isPublished = $isPublished;
 
         return $this;
     }
@@ -179,6 +194,30 @@ class Product
 
         // Collection::first() returns false when empty; normalise to null.
         return $main ?? ($this->images->first() ?: null);
+    }
+
+    /**
+     * Image shown on product cards / the show page (falls back to the main image).
+     */
+    public function getCardImage(): ?Image
+    {
+        $card = $this->images->findFirst(
+            fn(int $key, Image $image): bool => $image->isCardImage()
+        );
+
+        return $card ?? $this->getMainImage();
+    }
+
+    /**
+     * Image featured on the landing hero (falls back to the main image).
+     */
+    public function getLandingImage(): ?Image
+    {
+        $landing = $this->images->findFirst(
+            fn(int $key, Image $image): bool => $image->isLandingImage()
+        );
+
+        return $landing ?? $this->getMainImage();
     }
 
     public function __toString(): string

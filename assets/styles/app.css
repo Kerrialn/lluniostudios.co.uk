@@ -12,10 +12,33 @@
 @theme {
     --font-display: 'Boldonse', system-ui, sans-serif;
     --font-sans: 'Nunito', system-ui, sans-serif;
+
+    /* Flowbite drawers/modals use `bg-dark-backdrop/70`; the token isn't provided
+       by the plugin under Tailwind v4, so define it (matches the app's gray-900). */
+    --color-dark-backdrop: #111827;
 }
 
 .boldonse-regular {
     font-family: 'Boldonse', system-ui;
     font-weight: 400;
     font-style: normal;
+}
+
+/* ---- Navbar colour (class-driven, adapts to page / image luminance) ---- */
+#navbar .navbar-bar { color: #111827; }
+#navbar .navbar-bar a,
+#navbar .navbar-bar button { color: inherit; }
+#navbar .navbar-bar a:hover,
+#navbar .navbar-bar button:hover { opacity: .7; }
+#navbar .cart-badge { background: #111827; color: #ffffff; }
+
+/* White over a dark hero/image. */
+#navbar.nav-light .navbar-bar { color: #ffffff; }
+#navbar.nav-light .cart-badge { background: #ffffff; color: #111827; }
+
+/* Product show split layout: on desktop the actions overlay the white details
+   column, so keep them dark even when the logo is white over the image. */
+@media (min-width: 768px) {
+    #navbar.nav-split.nav-light .navbar-actions { color: #111827; }
+    #navbar.nav-split.nav-light .cart-badge { background: #111827; color: #ffffff; }
 }

@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+{% block title %}Order {{ order.orderNumber }} — Llunio Studios{% endblock %}
+{% block body %}
+    <div class="mx-auto max-w-xl px-4 pt-28 pb-16">
+        <a href="{{ path('account_orders') }}" class="text-sm text-gray-500 underline">← Back to orders</a>
+
+        <div class="flex items-center justify-between mt-4 mb-6">
+            <h1 class="boldonse-regular text-2xl text-gray-900">{{ order.orderNumber }}</h1>
+            <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">{{ order.status.label }}</span>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">Placed {{ order.createdAt|date('j M Y') }}</p>
+
+        <div class="rounded-xl border border-gray-100 p-6 bg-gray-50">
+            {% for item in order.items %}
+                <div class="flex justify-between text-sm py-1">
+                    <span class="text-gray-900">{{ item.quantity }} × {{ item.productTitle }}</span>
+                    <span class="text-gray-900">{{ item.lineTotalInGbp|format_currency('GBP') }}</span>
+                </div>
+            {% endfor %}
+            <div class="flex justify-between text-sm border-t border-gray-200 mt-2 pt-2">
+                <span class="text-gray-500">Subtotal</span>
+                <span class="text-gray-900">{{ order.subtotalInGbp|format_currency('GBP') }}</span>
+            </div>
+            <div class="flex justify-between text-sm mt-1">
+                <span class="text-gray-500">Shipping{% if order.shippingServiceName %} ({{ order.shippingServiceName }}){% endif %}</span>
+                <span class="text-gray-900">{{ order.shippingCost == 0 ? 'Free' : order.shippingCostInGbp|format_currency('GBP') }}</span>
+            </div>
+            <div class="flex justify-between border-t border-gray-200 mt-2 pt-2">
+                <span class="font-semibold text-gray-900">Total</span>
+                <span class="font-semibold text-gray-900">{{ order.totalInGbp|format_currency('GBP') }}</span>
+            </div>
+        </div>
+
+        {% if order.shippingAddress %}
+            <div class="mt-6">
+                <h2 class="text-sm font-medium text-gray-900 mb-1">Shipping to</h2>
+                <p class="text-sm text-gray-600">{{ order.shippingAddress.recipientName }}<br>{{ order.shippingAddress.singleLine }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

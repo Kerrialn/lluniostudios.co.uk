@@ -15,13 +15,16 @@
 </head>
 <body class="min-h-full bg-white text-gray-900 antialiased font-sans"
       {{ stimulus_controller('symfony/ux-swup/swup', {
-          containers: ['#main', '#navbar'],
+          containers: ['#main', '#navbar', '#flashes'],
           theme: 'slide',
           cache: true,
           animateHistoryBrowsing: true,
       }) }}
 >
-{{ include('partials/_nav.html.twig') }}
+{% block navbar %}{{ include('partials/_nav.html.twig') }}{% endblock %}
+
+{# Kept outside #main so Swup's transform on #main never traps the toast under the navbar. #}
+<div id="flashes">{{ include('partials/_flashes.html.twig') }}</div>
 
 <main class="min-h-[70vh]" id="main">
     {% block body %}{% endblock %}

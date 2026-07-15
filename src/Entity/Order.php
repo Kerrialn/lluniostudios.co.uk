@@ -27,9 +27,9 @@ class Order
     #[ORM\Column(length: 32, unique: true)]
     private string $orderNumber;
 
-    #[ORM\ManyToOne(targetEntity: Identity::class)]
-    #[ORM\JoinColumn(name: 'identity_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?Identity $identity = null;
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'orders')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $user = null;
 
     #[ORM\Column(length: 255)]
     private ?string $email = null;
@@ -111,14 +111,14 @@ class Order
         return $this->orderNumber;
     }
 
-    public function getIdentity(): ?Identity
+    public function getUser(): ?User
     {
-        return $this->identity;
+        return $this->user;
     }
 
-    public function setIdentity(?Identity $identity): void
+    public function setUser(?User $user): void
     {
-        $this->identity = $identity;
+        $this->user = $user;
     }
 
     public function getEmail(): ?string
