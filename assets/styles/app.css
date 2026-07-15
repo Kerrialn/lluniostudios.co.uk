@@ -1,54 +1,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import 'tailwindcss';
+@import 'tom-select/dist/css/tom-select.default.css';
+@plugin 'flowbite/plugin';
 
+/* Scan Twig templates, PHP form themes, JS controllers and Flowbite for class names. */
+@source '../../templates/**/*.html.twig';
+@source '../../src/**/*.php';
+@source '../**/*.js';
+@source '../../node_modules/flowbite/**/*.js';
 
-.ts-control {
-    padding-bottom: 0.625rem !important;
-}
+@theme {
+    --font-display: 'Boldonse', system-ui, sans-serif;
+    --font-sans: 'Nunito', system-ui, sans-serif;
 
-.ts-wrapper.single .ts-control, .ts-wrapper.single .ts-control input {
-    padding-top: 1.625rem !important;
-}
-
-.form-floating > .form-control {
-    padding-top: 1.625rem !important;
-    padding-bottom: 0.625rem !important;
+    /* Flowbite drawers/modals use `bg-dark-backdrop/70`; the token isn't provided
+       by the plugin under Tailwind v4, so define it (matches the app's gray-900). */
+    --color-dark-backdrop: #111827;
 }
 
 .boldonse-regular {
-    font-family: "Boldonse", system-ui;
+    font-family: 'Boldonse', system-ui;
     font-weight: 400;
     font-style: normal;
 }
 
-.min-vh-30 {
-    min-height: 30vh !important;
-}
+/* ---- Navbar colour (class-driven, adapts to page / image luminance) ---- */
+#navbar .navbar-bar { color: #111827; }
+#navbar .navbar-bar a,
+#navbar .navbar-bar button { color: inherit; }
+#navbar .navbar-bar a:hover,
+#navbar .navbar-bar button:hover { opacity: .7; }
+#navbar .cart-badge { background: #111827; color: #ffffff; }
 
-.min-vh-40 {
-    min-height: 40vh !important;
-}
+/* White over a dark hero/image. */
+#navbar.nav-light .navbar-bar { color: #ffffff; }
+#navbar.nav-light .cart-badge { background: #ffffff; color: #111827; }
 
-.min-vh-50 {
-    min-height: 50vh !important;
-}
-
-.min-vh-60 {
-    min-height: 60vh !important;
-}
-
-.min-vh-80 {
-    min-height: 80vh !important;
-}
-
-@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
-    .glass {
-        background-color: rgba(255,255,255,0.7);
-        -webkit-backdrop-filter: blur(3px);
-        backdrop-filter: blur(3px);
-    }
-}
-
-
-.offcanvas-backdrop{
-    background-color: rgba(0,0,0,0.25);
+/* Product show split layout: on desktop the actions overlay the white details
+   column, so keep them dark even when the logo is white over the image. */
+@media (min-width: 768px) {
+    #navbar.nav-split.nav-light .navbar-actions { color: #111827; }
+    #navbar.nav-split.nav-light .cart-badge { background: #111827; color: #ffffff; }
 }

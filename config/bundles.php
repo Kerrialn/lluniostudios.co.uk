@@ -53,4 +53,7 @@ return [
     Symfony\UX\Autocomplete\AutocompleteBundle::class => [
         'all' => true,
     ],
+    Pentatrion\ViteBundle\PentatrionViteBundle::class => [
+        'all' => true,
+    ],
 ];

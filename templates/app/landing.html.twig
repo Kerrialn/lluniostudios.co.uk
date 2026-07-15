@@ -1,29 +1,59 @@
 {% extends 'base.html.twig' %}
 
-{% block body %}
-    <div>
-        <img class="img-fluid w-100 object-fit-cover" style="height: 100vh" src="{{ asset('uploads/images/' ~ product.images.first.filename) }}"/>
-        <div class="container">
+{# White navbar over the dark image hero; default (dark) nav on the light fallback. #}
+{% block navbar %}
+    {{ include('partials/_nav.html.twig', { light: product is not null }) }}
+{% endblock %}
 
-            <div class="row g-3 justify-content-center align-items-center" style="padding: 100px 0">
-                <div class="col-12 col-md-8">
-                    <div class="row g-3 justify-content-center align-items-center">
-                        <div class="col-12">
-                            <h1 class="boldonse-regular mb-5">{{ product.title }}</h1>
-                            <p class="lead">{{ product.description|raw }}</p>
-                        </div>
-                        {% for image in product.images %}
-                            <div class="col-12 col-md-4">
-                                <img class="img-fluid w-100 object-fit-cover" style="height: 250px" src="{{ asset('uploads/images/' ~ image.filename) }}" />
-                            </div>
-                        {% endfor %}
-                        <div class="text-end">
-                            <a class="btn btn-primary"
-                               href="{{ path('show_product', {slug: product.slug }) }}">{{ 'buy-now'|trans }}</a>
-                        </div>
-                    </div>
+{% block body %}
+    {% if product %}
+        {# Full-bleed image hero — the product image is the star. #}
+        <section class="relative flex min-h-screen items-center justify-center overflow-hidden">
+            {% if product.landingImage %}
+                <img src="{{ asset('uploads/images/' ~ product.landingImage.filename) }}"
+                     alt="{{ product.title }}"
+                     class="absolute inset-0 h-full w-full object-cover"/>
+            {% else %}
+                {# Placeholder until real product imagery is added. #}
+                <div class="absolute inset-0 bg-gradient-to-br from-stone-500 via-stone-700 to-stone-900"></div>
+            {% endif %}
+            {# Scrim keeps the white navbar + copy legible over any image. #}
+            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-black/70"></div>
+
+            <div class="relative z-10 mx-auto max-w-3xl px-4 pt-24 pb-16 text-center text-white">
+                <p class="mb-6 text-xs uppercase tracking-[0.35em] text-white/70">Liquid stone, shaped by hand</p>
+                <h1 class="boldonse-regular mb-6 text-4xl leading-tight md:text-6xl">{{ product.title|title }}</h1>
+                <p class="mx-auto mb-8 max-w-2xl text-lg text-white/85 md:text-xl">
+                    A sculptural centrepiece cast in liquid stone — where raw materiality meets warm,
+                    ambient light. Poured, cured and finished to order, so no two pieces are ever alike.
+                </p>
+                <p class="mb-10 text-lg font-semibold tracking-wide">{{ product.priceInGbp|format_currency('GBP') }}</p>
+                <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <a href="{{ path('show_product', {slug: product.slug}) }}"
+                       class="inline-flex items-center rounded-lg bg-white px-8 py-3 text-sm font-medium text-gray-900 transition hover:bg-gray-100">
+                        Discover {{ product.title|title }}
+                    </a>
+                    <a href="{{ collection and collection.slug ? path('show_collection', {slug: collection.slug}) : path('products') }}"
+                       class="inline-flex items-center rounded-lg border border-white/40 px-8 py-3 text-sm font-medium text-white transition hover:bg-white/10">
+                        {{ collection ? 'Explore ' ~ collection.name : 'View the collection' }}
+                    </a>
                 </div>
             </div>
-        </div>
-    </div>
+
+
+        </section>
+    {% else %}
+        {# Brand hero fallback when nothing is published yet (light background → dark nav). #}
+        <section class="mx-auto max-w-2xl px-4 pt-40 pb-24 text-center">
+            <p class="mb-6 text-xs uppercase tracking-[0.35em] text-gray-500">Liquid stone, shaped by hand</p>
+            <h1 class="boldonse-regular mb-6 text-4xl text-gray-900 md:text-5xl">Llunio Studios</h1>
+            <p class="mx-auto mb-10 max-w-xl text-lg text-gray-600">
+                Sculptural liquid-stone lamps, made to order. New pieces are on the way — check back soon.
+            </p>
+            <a href="{{ collection and collection.slug ? path('show_collection', {slug: collection.slug}) : path('products') }}"
+               class="inline-flex items-center rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800">
+                {{ collection ? 'Explore ' ~ collection.name : 'View the collection' }}
+            </a>
+        </section>
+    {% endif %}
 {% endblock %}

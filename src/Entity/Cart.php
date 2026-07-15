@@ -28,8 +28,8 @@ class Cart
     #[ORM\OneToMany(targetEntity: CartItem::class, mappedBy: 'cart', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $cartItems;
 
-    #[ORM\OneToOne(targetEntity: Identity::class, mappedBy: 'cart')]
-    private null|Identity $identity = null;
+    #[ORM\OneToOne(targetEntity: User::class, mappedBy: 'cart')]
+    private ?User $user = null;
 
     public function __construct()
     {
@@ -82,14 +82,14 @@ class Cart
         return $this;
     }
 
-    public function getIdentity(): ?Identity
+    public function getUser(): ?User
     {
-        return $this->identity;
+        return $this->user;
     }
 
-    public function setIdentity(?Identity $identity): void
+    public function setUser(?User $user): void
     {
-        $this->identity = $identity;
+        $this->user = $user;
     }
 
     public function getTotal(): int

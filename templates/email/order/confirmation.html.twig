@@ -1,0 +1,46 @@
+{% extends 'email/base.html.twig' %}
+
+{% block preheader %}Your Llunio Studios order {{ order.orderNumber }} is confirmed.{% endblock %}
+
+{% block content %}
+    <div>Hi {{ order.shippingAddress ? order.shippingAddress.recipientName : order.email }},</div>
+    <p>Thank you for your order. We've received your payment and your order is confirmed.</p>
+
+    <p><strong>Order {{ order.orderNumber }}</strong></p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:12px 0;">
+        {% for item in order.items %}
+            <tr>
+                <td style="padding:6px 0;">
+                    {{ item.quantity }} × {{ item.productTitle }}
+                    {% for opt in item.optionsSnapshot %}
+                        <br><small>{{ opt.option }}: {{ opt.value }}</small>
+                    {% endfor %}
+                </td>
+                <td align="right" style="padding:6px 0;">{{ item.lineTotalInGbp|format_currency('GBP') }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td style="padding:6px 0;">Subtotal</td>
+            <td align="right" style="padding:6px 0;">{{ order.subtotalInGbp|format_currency('GBP') }}</td>
+        </tr>
+        <tr>
+            <td style="padding:6px 0;">Shipping{% if order.shippingServiceName %} ({{ order.shippingServiceName }}){% endif %}</td>
+            <td align="right" style="padding:6px 0;">{{ order.shippingCostInGbp|format_currency('GBP') }}</td>
+        </tr>
+        <tr>
+            <td style="padding:6px 0;"><strong>Total</strong></td>
+            <td align="right" style="padding:6px 0;"><strong>{{ order.totalInGbp|format_currency('GBP') }}</strong></td>
+        </tr>
+    </table>
+
+    {% if order.shippingAddress %}
+        <p>
+            <strong>Shipping to</strong><br>
+            {{ order.shippingAddress.recipientName }}<br>
+            {{ order.shippingAddress.singleLine }}
+        </p>
+    {% else %}
+        <p><strong>Collection from the studio.</strong></p>
+    {% endif %}
+{% endblock %}

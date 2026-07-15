@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ collection.name }} — Llunio Studios{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-6xl px-4 pt-28 pb-16">
+        {# Collection header with its custom image #}
+        {% if collection.imageFilename %}
+            <div class="relative mb-10 overflow-hidden rounded-2xl">
+                <img src="{{ asset('uploads/images/' ~ collection.imageFilename) }}"
+                     alt="{{ collection.name }}"
+                     class="h-64 w-full object-cover md:h-96"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"></div>
+                <h1 class="boldonse-regular absolute inset-x-0 bottom-0 p-6 text-3xl text-white md:p-8 md:text-4xl">{{ collection.name }}</h1>
+            </div>
+        {% else %}
+            <h1 class="boldonse-regular mb-6 text-3xl text-gray-900">{{ collection.name }}</h1>
+        {% endif %}
+
+        {% if collection.description %}
+            <div class="mb-12 max-w-2xl space-y-3 leading-relaxed text-gray-600">{{ collection.description|raw }}</div>
+        {% endif %}
+
+        {# Products in the collection #}
+        {% set products = collection.publishedProducts %}
+        {% if products is empty %}
+            <p class="text-gray-500">No products in this collection yet.</p>
+        {% else %}
+            <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {% for product in products %}
+                    <a href="{{ path('show_product', {slug: product.slug}) }}"
+                       class="group relative block aspect-square overflow-hidden rounded-xl bg-gray-100">
+                        {% if product.cardImage %}
+                            <img src="{{ asset('uploads/images/' ~ product.cardImage.filename) }}"
+                                 alt="{{ product.title }}"
+                                 class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/>
+                        {% else %}
+                            <div class="absolute inset-0 bg-gradient-to-br from-stone-500 via-stone-700 to-stone-900"></div>
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                        <h2 class="boldonse-regular absolute inset-x-0 bottom-0 p-4 text-lg text-white">{{ product.title|title }}</h2>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -2,8 +2,11 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Address;
 use App\Entity\Cart;
+use App\Entity\Order;
 use App\Entity\Product;
+use App\Entity\ProductCollection;
 use App\Entity\ProductOption;
 use App\Entity\User;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
@@ -32,8 +35,11 @@ class DashboardController extends AbstractDashboardController
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
          yield MenuItem::linkToCrud('Product', 'fas fa-list', Product::class);
+         yield MenuItem::linkToCrud('Collection', 'fas fa-layer-group', ProductCollection::class);
          yield MenuItem::linkToCrud('ProductOption', 'fas fa-list', ProductOption::class);
          yield MenuItem::linkToCrud('Cart', 'fas fa-list', Cart::class);
+         yield MenuItem::linkToCrud('Order', 'fas fa-receipt', Order::class);
+         yield MenuItem::linkToCrud('Address', 'fas fa-location-dot', Address::class);
          yield MenuItem::linkToCrud('User', 'fas fa-list', User::class);
     }
 }

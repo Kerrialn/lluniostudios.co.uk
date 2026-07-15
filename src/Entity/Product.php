@@ -26,11 +26,28 @@ class Product
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?string $price = null;
 
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $weightGrams = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $lengthMm = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $widthMm = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $heightMm = null;
+
     #[ORM\Column(length: 255)]
     private ?string $slug = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
+
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
+    private bool $isPublished = false;
 
     /**
      * @var Collection<int, Image>
@@ -89,6 +106,18 @@ class Product
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->isPublished;
+    }
+
+    public function setIsPublished(bool $isPublished): static
+    {
+        $this->isPublished = $isPublished;
 
         return $this;
     }
@@ -165,7 +194,32 @@ class Product
             fn(int $key, Image $image): bool => $image->getPosition() === 0
         );
 
-        return $main ?? $this->images->first();
+        // Collection::first() returns false when empty; normalise to null.
+        return $main ?? ($this->images->first() ?: null);
+    }
+
+    /**
+     * Image shown on product cards / the show page (falls back to the main image).
+     */
+    public function getCardImage(): ?Image
+    {
+        $card = $this->images->findFirst(
+            fn(int $key, Image $image): bool => $image->isCardImage()
+        );
+
+        return $card ?? $this->getMainImage();
+    }
+
+    /**
+     * Image featured on the landing hero (falls back to the main image).
+     */
+    public function getLandingImage(): ?Image
+    {
+        $landing = $this->images->findFirst(
+            fn(int $key, Image $image): bool => $image->isLandingImage()
+        );
+
+        return $landing ?? $this->getMainImage();
     }
 
     public function __toString(): string
@@ -186,5 +240,45 @@ class Product
     public function setPrice(?string $price): void
     {
         $this->price = $price;
+    }
+
+    public function getWeightGrams(): ?int
+    {
+        return $this->weightGrams;
+    }
+
+    public function setWeightGrams(?int $weightGrams): void
+    {
+        $this->weightGrams = $weightGrams;
+    }
+
+    public function getLengthMm(): ?int
+    {
+        return $this->lengthMm;
+    }
+
+    public function setLengthMm(?int $lengthMm): void
+    {
+        $this->lengthMm = $lengthMm;
+    }
+
+    public function getWidthMm(): ?int
+    {
+        return $this->widthMm;
+    }
+
+    public function setWidthMm(?int $widthMm): void
+    {
+        $this->widthMm = $widthMm;
+    }
+
+    public function getHeightMm(): ?int
+    {
+        return $this->heightMm;
+    }
+
+    public function setHeightMm(?int $heightMm): void
+    {
+        $this->heightMm = $heightMm;
     }
 }

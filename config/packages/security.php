@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 use App\Entity\User;
-use App\Provider\FingerprintUserProvider;
-use App\Security\EmailAuthenticator;
-use App\Security\FingerprintAuthenticator;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
@@ -22,17 +19,6 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                     'property' => 'email',
                 ],
             ],
-            'guest_user_provider' => [
-                'id' => FingerprintUserProvider::class,
-            ],
-            'chain_provider' => [
-                'chain' => [
-                    'providers' => [
-                        'app_user_provider',
-                        'guest_user_provider',
-                    ],
-                ],
-            ],
         ],
 
         'firewalls' => [
@@ -40,25 +26,20 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'pattern' => '^/(_(profiler|wdt)|css|images|js)/',
                 'security' => false,
             ],
-            'maintenance' => [
-                'pattern' => '^/maintenance',
-                'security' => false,
-            ],
             'main' => [
                 'lazy' => true,
-                'provider' => 'chain_provider',
-                'custom_authenticators' => [
-                    EmailAuthenticator::class,
-                    FingerprintAuthenticator::class,
-                ],
-                'entry_point' => FingerprintAuthenticator::class,
+                'provider' => 'app_user_provider',
                 'form_login' => [
                     'login_path' => 'app_login',
                     'check_path' => 'app_login',
+                    'username_parameter' => 'email',
+                    'password_parameter' => 'password',
                     'enable_csrf' => true,
+                    'default_target_path' => 'account_orders',
                 ],
                 'logout' => [
                     'path' => 'app_logout',
+                    'target' => 'landing',
                     'invalidate_session' => true,
                     'delete_cookies' => ['REMEMBERME'],
                 ],
@@ -70,26 +51,16 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ],
         ],
 
+        // Everything is public except the customer account area. Checkout is
+        // public so guests can start it; an account is created mid-checkout.
         'access_control' => [
             [
-                'path' => '^/maintenance',
-                'roles' => ['PUBLIC_ACCESS'],
-            ],
-            [
-                'path' => '^/login',
-                'roles' => ['PUBLIC_ACCESS'],
-            ],
-            [
-                'path' => '^/register',
-                'roles' => ['PUBLIC_ACCESS'],
-            ],
-            [
-                'path' => '^/$',
-                'roles' => ['PUBLIC_ACCESS'],
-            ],
-            [
-                'path' => '^/',
+                'path' => '^/account',
                 'roles' => ['ROLE_USER'],
+            ],
+            [
+                'path' => '^/admin',
+                'roles' => ['ROLE_ADMIN'],
             ],
         ],
     ]);

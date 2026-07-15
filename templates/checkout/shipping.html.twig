@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    <div class="mx-auto max-w-5xl px-4 pt-28 pb-16">
+        <h1 class="boldonse-regular text-3xl text-gray-900 mb-2">Checkout</h1>
+        <p class="text-sm text-gray-500 mb-8">Step 2 of 3 — Shipping method</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div class="lg:col-span-2">
+                <div class="mb-6 text-sm text-gray-600">
+                    Delivering to
+                    <span class="text-gray-900">{{ address.recipientName }}, {{ address.singleLine }}</span>
+                    · <a href="{{ path('checkout') }}" class="underline">edit</a>
+                </div>
+
+                {% if quotes is empty %}
+                    <p class="text-gray-500">No shipping options are available for this order. Please
+                        <a href="{{ path('cart') }}" class="underline">review your cart</a>.</p>
+                {% else %}
+                    <form method="post">
+                        <div class="space-y-3">
+                            {% for quote in quotes %}
+                                <label class="flex items-center justify-between gap-4 rounded-lg border border-gray-200 p-4 cursor-pointer hover:border-gray-400 has-[:checked]:border-gray-900 has-[:checked]:ring-1 has-[:checked]:ring-gray-900">
+                                    <span class="flex items-center gap-3">
+                                        <input type="radio" name="shipping_quote" value="{{ quote.id }}"
+                                               class="w-4 h-4 text-gray-900 focus:ring-gray-900" {{ loop.first ? 'checked' }}>
+                                        <span>
+                                            <span class="block text-gray-900 font-medium">{{ quote.carrier }} — {{ quote.serviceName }}</span>
+                                            <span class="block text-xs text-gray-500">
+                                                {% if quote.estimatedDays == 0 %}Collect from studio{% else %}Est. {{ quote.estimatedDays }} day{{ quote.estimatedDays != 1 ? 's' }}{% endif %}
+                                            </span>
+                                        </span>
+                                    </span>
+                                    <span class="font-semibold text-gray-900">
+                                        {{ quote.priceInPence == 0 ? 'Free' : quote.priceInGbp|format_currency('GBP') }}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit"
+                                class="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800">
+                            Continue to payment
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <div>{{ include('checkout/_summary.html.twig') }}</div>
+        </div>
+    </div>
+{% endblock %}

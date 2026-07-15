@@ -1,3 +1,15 @@
+# --- Vite/Tailwind asset build ------------------------------------------------
+FROM node:22-alpine AS assets
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY vite.config.js ./
+COPY assets ./assets
+COPY templates ./templates
+COPY src ./src
+RUN npm run build
+
+# --- Composer / PHP -----------------------------------------------------------
 FROM ghcr.io/eventpoints/php:main AS composer
 
 ENV APP_ENV="prod" \
@@ -17,12 +29,11 @@ FROM composer AS php
 # now copy the full app
 COPY . .
 
+# bring in the compiled Vite assets (public/build) from the node stage
+COPY --from=assets /app/public/build ./public/build
+
 # run composer again now that the app code exists (if you rely on flex auto-scripts)
 RUN composer install --no-dev --no-interaction --classmap-authoritative
-
-RUN php bin/console importmap:install --no-interaction
-
-RUN php bin/console asset-map:compile
 
 RUN composer symfony:dump-env prod
 RUN chmod -R 777 var

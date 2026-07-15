@@ -16,7 +16,6 @@ class IntegerType extends AbstractType
             'empty_data' => '0',
             'attr' => [
                 'autocomplete' => 'off',
-                'class' => 'custom-number-input',
                 'min' => 0,
                 'max' => 999,
             ],

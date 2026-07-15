@@ -1,18 +1,27 @@
 {% extends 'base.html.twig' %}
 {% block body %}
-    <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-12 col-md-8">
-                <h1 class="boldonse-regular mb-3">Products</h1>
-                <div class="list-group list-group-flush">
-                    {% for product in products %}
-                    <a class="list-group-item list-group-item-action" href="#">
-                        <div>{{ product.title }}</div>
-                        <div>{{ product.description }}</div>
+    <div class="mx-auto max-w-6xl px-4 pt-28 pb-16">
+
+        {% if products is empty %}
+            <p class="text-gray-500">No products available yet.</p>
+        {% else %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for product in products %}
+                    <a href="{{ path('show_product', {slug: product.slug}) }}"
+                       class="group relative block aspect-square overflow-hidden rounded-xl bg-gray-100">
+                        {% if product.cardImage %}
+                            <img src="{{ asset('uploads/images/' ~ product.cardImage.filename) }}"
+                                 alt="{{ product.title }}"
+                                 class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"/>
+                        {% else %}
+                            <div class="absolute inset-0 bg-gradient-to-br from-stone-500 via-stone-700 to-stone-900"></div>
+                        {% endif %}
+                        {# Scrim so the title stays legible over any image #}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                        <h2 class="boldonse-regular absolute inset-x-0 bottom-0 p-4 text-lg text-white">{{ product.title|title }}</h2>
                     </a>
-                    {% endfor %}
-                </div>
+                {% endfor %}
             </div>
-        </div>
+        {% endif %}
     </div>
 {% endblock %}

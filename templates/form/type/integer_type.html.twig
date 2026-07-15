@@ -1,14 +1,26 @@
 {% block integer_type_widget %}
-    {% set type = type|default('text') %}
     {% set attr = attr|merge({
         'data-integer-spinner-target': 'input',
-        'data-action': 'keydown->integer-spinner#keydown'
+        'data-action': 'keydown->integer-spinner#keydown',
+        'class': (attr.class|default('') ~ ' boldonse-regular shrink-0 w-16 border-0 bg-transparent text-center text-2xl text-gray-900 focus:outline-none focus:ring-0')|trim,
     }) %}
-    <div class="input-group custom-number-group" data-controller="integer-spinner">
-        {% if attr.min is defined and attr.min >= 0 %}
-            <button type="button" class="btn btn-dark" data-action="integer-spinner#decrement">−</button>
-        {% endif %}
-        {{ block('integer_widget') }}
-        <button type="button" class="btn btn-dark" data-action="integer-spinner#increment">+</button>
+    <div class="relative inline-flex items-center" data-controller="integer-spinner">
+        <button type="button"
+                data-action="integer-spinner#decrement"
+                aria-label="Decrease value"
+                class="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 bg-gray-100 text-gray-900 hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-100">
+            <svg class="h-4 w-4 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14"/>
+            </svg>
+        </button>
+        <input type="text"{{ block('widget_attributes') }} value="{{ value }}" />
+        <button type="button"
+                data-action="integer-spinner#increment"
+                aria-label="Increase value"
+                class="flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 bg-gray-100 text-gray-900 hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-100">
+            <svg class="h-4 w-4 text-gray-900" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
+            </svg>
+        </button>
     </div>
 {% endblock %}

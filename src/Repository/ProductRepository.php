@@ -15,4 +15,37 @@ class ProductRepository extends ServiceEntityRepository
     {
         parent::__construct($managerRegistry, Product::class);
     }
+
+    /**
+     * @return list<Product>
+     */
+    public function findPublished(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.isPublished = true')
+            ->orderBy('p.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findPublishedBySlug(string $slug): ?Product
+    {
+        return $this->findOneBy([
+            'slug' => $slug,
+            'isPublished' => true,
+        ]);
+    }
+
+    /**
+     * The single product to showcase on the landing hero (latest published).
+     */
+    public function findFeatured(): ?Product
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.isPublished = true')
+            ->orderBy('p.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

@@ -1,0 +1,3 @@
+pentatrion_vite:
+    # Public sub-directory where Vite writes its manifest/entrypoints (public/build).
+    build_directory: build

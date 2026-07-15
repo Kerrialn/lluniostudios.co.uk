@@ -1,0 +1,20 @@
+<div class="rounded-xl border border-gray-100 p-6 bg-gray-50">
+    <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Order summary</h2>
+    <div class="divide-y divide-gray-200">
+        {% for item in cart.cartItems %}
+            <div class="flex justify-between gap-3 py-3 text-sm">
+                <div>
+                    <span class="text-gray-900">{{ item.quantity }} × {{ item.product.title|title }}</span>
+                    {% for option in item.cartItemOptions %}
+                        <div class="text-gray-500 text-xs">{{ option.productOption.name }}: {{ option.productOptionValue.value }}</div>
+                    {% endfor %}
+                </div>
+                <span class="text-gray-900 whitespace-nowrap">{{ item.lineTotalInGbp|format_currency('GBP') }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="border-t border-gray-200 mt-3 pt-3 flex justify-between text-sm">
+        <span class="text-gray-500">Subtotal</span>
+        <span class="font-semibold text-gray-900">{{ cart.totalInGbp|format_currency('GBP') }}</span>
+    </div>
+</div>
