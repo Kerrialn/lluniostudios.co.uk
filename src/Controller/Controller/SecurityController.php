@@ -68,13 +68,26 @@ class SecurityController extends AbstractController
                 $user = $this->userRepository->findOneBy([
                     'email' => $email,
                 ]);
+
                 // Only send if the account exists, but never reveal which is which.
+                $sent = true;
                 if ($user instanceof User) {
-                    $this->loginCodeService->request($user);
+                    try {
+                        $this->loginCodeService->request($user);
+                    } catch (\Throwable $throwable) {
+                        // Mail transport down (e.g. banned SMTP account). Don't 500 —
+                        // let the customer retry. The mailer already logs the cause.
+                        $sent = false;
+                    }
                 }
-                $session->remove(self::SESSION_PENDING_EMAIL);
-                $this->addFlash('message', 'If that email has an account, we\'ve sent a 6-digit sign-in code.');
-                $step = 'code';
+
+                if ($sent) {
+                    $session->remove(self::SESSION_PENDING_EMAIL);
+                    $this->addFlash('message', 'If that email has an account, we\'ve sent a 6-digit sign-in code.');
+                    $step = 'code';
+                } else {
+                    $this->addFlash('error', 'We couldn\'t send your code right now. Please try again in a moment.');
+                }
             }
         }
 

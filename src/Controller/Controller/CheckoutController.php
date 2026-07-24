@@ -92,7 +92,20 @@ class CheckoutController extends AbstractController
                 // Existing account -> verify identity with an emailed code before
                 // continuing, so nobody can check out into someone else's account.
                 if ($existing instanceof User) {
-                    $this->loginCodeService->request($existing);
+                    try {
+                        $this->loginCodeService->request($existing);
+                    } catch (Throwable $throwable) {
+                        // Mail transport down (e.g. banned SMTP account). Don't 500 —
+                        // keep them on the address step to retry.
+                        $this->logger->error('Checkout login code send failed: ' . $throwable->getMessage());
+                        $this->addFlash('error', 'We couldn\'t email your sign-in code right now. Please try again in a moment.');
+
+                        return $this->render('checkout/address.html.twig', [
+                            'cart' => $cart,
+                            'form' => $form,
+                        ]);
+                    }
+
                     $request->getSession()->set(SecurityController::SESSION_PENDING_EMAIL, $email);
                     $this->saveTargetPath($request->getSession(), 'main', $this->generateUrl('checkout'));
                     $this->addFlash('message', 'You already have an account. Enter the 6-digit code we just emailed to continue.');
