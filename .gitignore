@@ -23,5 +23,10 @@ phpstan.neon
 ###< phpstan/phpstan ###
 
 /docker/*
+# Keep the dev opcache override tracked: docker-compose mounts it, so a fresh
+# clone needs the file to exist or opcache runs with validate_timestamps=off.
+!/docker/php
+/docker/php/*
+!/docker/php/zz-opcache-dev.ini
 
 /public/uploads/*

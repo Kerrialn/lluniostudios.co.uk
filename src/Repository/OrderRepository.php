@@ -42,6 +42,13 @@ class OrderRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function findByStripePaymentIntentId(string $stripePaymentIntentId): ?Order
+    {
+        return $this->findOneBy([
+            'stripePaymentIntentId' => $stripePaymentIntentId,
+        ]);
+    }
+
     public function findByOrderNumber(string $orderNumber): ?Order
     {
         return $this->findOneBy([

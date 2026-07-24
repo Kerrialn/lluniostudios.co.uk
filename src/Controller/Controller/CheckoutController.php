@@ -8,10 +8,12 @@ use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
 use App\Form\Form\AddressForm;
 use App\Payment\RevolutMerchantClient;
+use App\Payment\StripePaymentClient;
 use App\Repository\AddressRepository;
 use App\Repository\OrderRepository;
 use App\Repository\UserRepository;
 use App\Service\CartResolver;
+use App\Service\LoginCodeService;
 use App\Service\OrderFactory;
 use App\Service\ShippingCalculator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -41,6 +43,8 @@ class CheckoutController extends AbstractController
         private readonly ShippingCalculator $shippingCalculator,
         private readonly OrderFactory $orderFactory,
         private readonly RevolutMerchantClient $revolutClient,
+        private readonly StripePaymentClient $stripeClient,
+        private readonly LoginCodeService $loginCodeService,
         private readonly Security $security,
         private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger,
@@ -48,7 +52,14 @@ class CheckoutController extends AbstractController
         private readonly string $revolutPublicKey,
         #[Autowire('%env(REVOLUT_ENV)%')]
         private readonly string $revolutEnv,
+        #[Autowire('%env(PAYMENT_PROVIDER)%')]
+        private readonly string $paymentProvider,
     ) {
+    }
+
+    private function usesStripe(): bool
+    {
+        return strtolower($this->paymentProvider) !== 'revolut';
     }
 
     #[Route(path: '/checkout', name: 'checkout')]
@@ -78,20 +89,21 @@ class CheckoutController extends AbstractController
                     'email' => $email,
                 ]);
 
-                // Registered account (has a password) -> require login first.
-                if ($existing instanceof User && $existing->hasPassword()) {
+                // Existing account -> verify identity with an emailed code before
+                // continuing, so nobody can check out into someone else's account.
+                if ($existing instanceof User) {
+                    $this->loginCodeService->request($existing);
+                    $request->getSession()->set(SecurityController::SESSION_PENDING_EMAIL, $email);
                     $this->saveTargetPath($request->getSession(), 'main', $this->generateUrl('checkout'));
-                    $this->addFlash('message', 'You already have an account. Please log in to continue checkout.');
+                    $this->addFlash('message', 'You already have an account. Enter the 6-digit code we just emailed to continue.');
 
                     return $this->redirectToRoute('app_login');
                 }
 
-                // Otherwise reuse the passwordless account or create a fresh one.
-                $currentUser = $existing ?? new User($email);
-                if (! $existing instanceof User) {
-                    $this->applyName($currentUser, (string) $address->getRecipientName());
-                    $this->entityManager->persist($currentUser);
-                }
+                // New email -> create a passwordless account and sign them in.
+                $currentUser = new User($email);
+                $this->applyName($currentUser, (string) $address->getRecipientName());
+                $this->entityManager->persist($currentUser);
 
                 $this->cartResolver->attachToUser($currentUser);
                 $this->security->login($currentUser);
@@ -151,22 +163,12 @@ class CheckoutController extends AbstractController
             $order = $this->orderFactory->createFromCart($cart, $user, $email, $quote, $shippingAddress);
             $this->orderRepository->save($order, true);
 
-            // Create the Revolut order server-side (sandbox). Skipped gracefully
-            // until sandbox keys are configured, so the flow is demoable now.
-            if ($this->revolutClient->isConfigured()) {
-                try {
-                    $revolutOrder = $this->revolutClient->createOrder(
-                        $order->getTotal(),
-                        $order->getCurrency(),
-                        $order->getOrderNumber(),
-                    );
-                    $order->setRevolutOrderId($revolutOrder->id);
-                    $order->setRevolutState($revolutOrder->state);
-                    $request->getSession()->set($this->tokenSessionKey($order->getOrderNumber()), $revolutOrder->token);
-                } catch (Throwable $throwable) {
-                    $this->logger->error('Revolut order creation failed: ' . $throwable->getMessage());
-                    $this->addFlash('error', 'Could not start payment. Please try again.');
-                }
+            // Start the payment with the active provider. Skipped gracefully until
+            // keys are configured, so the flow stays demoable.
+            if ($this->usesStripe()) {
+                $this->startStripePayment($request, $order);
+            } else {
+                $this->startRevolutPayment($request, $order);
             }
 
             $order->setStatus(OrderStatus::AWAITING_PAYMENT);
@@ -199,16 +201,27 @@ class CheckoutController extends AbstractController
             ]);
         }
 
-        $token = $request->getSession()->get($this->tokenSessionKey($orderNumber));
+        $completeUrl = $this->generateUrl('checkout_complete', [
+            'orderNumber' => $orderNumber,
+        ]);
+
+        if ($this->usesStripe()) {
+            return $this->render('checkout/pay.html.twig', [
+                'order' => $order,
+                'provider' => 'stripe',
+                'stripeClientSecret' => $request->getSession()->get($this->stripeSecretSessionKey($orderNumber)),
+                'stripePublishableKey' => $this->stripeClient->getPublishableKey(),
+                'completeUrl' => $completeUrl,
+            ]);
+        }
 
         return $this->render('checkout/pay.html.twig', [
             'order' => $order,
-            'revolutToken' => $token,
+            'provider' => 'revolut',
+            'revolutToken' => $request->getSession()->get($this->tokenSessionKey($orderNumber)),
             'revolutPublicKey' => $this->revolutPublicKey,
             'revolutMode' => $this->revolutEnv === 'prod' ? 'prod' : 'sandbox',
-            'completeUrl' => $this->generateUrl('checkout_complete', [
-                'orderNumber' => $orderNumber,
-            ]),
+            'completeUrl' => $completeUrl,
         ]);
     }
 
@@ -223,8 +236,6 @@ class CheckoutController extends AbstractController
 
         return $this->render('checkout/complete.html.twig', [
             'order' => $order,
-            // Prompt the customer to secure their account if they haven't yet.
-            'needsPassword' => ! $user->hasPassword(),
         ]);
     }
 
@@ -257,8 +268,55 @@ class CheckoutController extends AbstractController
         return $this->addressRepository->find($addressId);
     }
 
+    private function startStripePayment(Request $request, \App\Entity\Order $order): void
+    {
+        if (! $this->stripeClient->isConfigured()) {
+            return;
+        }
+
+        try {
+            $intent = $this->stripeClient->createPaymentIntent(
+                $order->getTotal(),
+                $order->getCurrency(),
+                $order->getOrderNumber(),
+                $order->getEmail(),
+            );
+            $order->setStripePaymentIntentId($intent->id);
+            $request->getSession()->set($this->stripeSecretSessionKey($order->getOrderNumber()), $intent->clientSecret);
+        } catch (Throwable $throwable) {
+            $this->logger->error('Stripe payment intent creation failed: ' . $throwable->getMessage());
+            $this->addFlash('error', 'Could not start payment. Please try again.');
+        }
+    }
+
+    private function startRevolutPayment(Request $request, \App\Entity\Order $order): void
+    {
+        if (! $this->revolutClient->isConfigured()) {
+            return;
+        }
+
+        try {
+            $revolutOrder = $this->revolutClient->createOrder(
+                $order->getTotal(),
+                $order->getCurrency(),
+                $order->getOrderNumber(),
+            );
+            $order->setRevolutOrderId($revolutOrder->id);
+            $order->setRevolutState($revolutOrder->state);
+            $request->getSession()->set($this->tokenSessionKey($order->getOrderNumber()), $revolutOrder->token);
+        } catch (Throwable $throwable) {
+            $this->logger->error('Revolut order creation failed: ' . $throwable->getMessage());
+            $this->addFlash('error', 'Could not start payment. Please try again.');
+        }
+    }
+
     private function tokenSessionKey(string $orderNumber): string
     {
         return 'revolut_token_' . $orderNumber;
+    }
+
+    private function stripeSecretSessionKey(string $orderNumber): string
+    {
+        return 'stripe_client_secret_' . $orderNumber;
     }
 }

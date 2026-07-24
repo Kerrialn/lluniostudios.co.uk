@@ -3,15 +3,11 @@
 declare(strict_types=1);
 
 use App\Entity\User;
+use App\Security\EmailCodeAuthenticator;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->extension('security', [
-        'password_hashers' => [
-            PasswordAuthenticatedUserInterface::class => 'auto',
-        ],
-
         'providers' => [
             'app_user_provider' => [
                 'entity' => [
@@ -29,13 +25,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             'main' => [
                 'lazy' => true,
                 'provider' => 'app_user_provider',
-                'form_login' => [
-                    'login_path' => 'app_login',
-                    'check_path' => 'app_login',
-                    'username_parameter' => 'email',
-                    'password_parameter' => 'password',
-                    'enable_csrf' => true,
-                    'default_target_path' => 'account_orders',
+                'custom_authenticators' => [
+                    EmailCodeAuthenticator::class,
                 ],
                 'logout' => [
                     'path' => 'app_logout',
@@ -47,6 +38,9 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                     'secret' => '%kernel.secret%',
                     'lifetime' => 604800,
                     'path' => '/',
+                    // No password to sign against (passwordless). Sign the cookie
+                    // on the email so changing it invalidates old remember-me cookies.
+                    'signature_properties' => ['email'],
                 ],
             ],
         ],

@@ -68,6 +68,9 @@ class Order
     #[ORM\Column(length: 32, nullable: true)]
     private ?string $revolutState = null;
 
+    #[ORM\Column(length: 128, nullable: true)]
+    private ?string $stripePaymentIntentId = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?CarbonImmutable $paidAt = null;
 
@@ -244,6 +247,16 @@ class Order
     public function setRevolutState(?string $revolutState): void
     {
         $this->revolutState = $revolutState;
+    }
+
+    public function getStripePaymentIntentId(): ?string
+    {
+        return $this->stripePaymentIntentId;
+    }
+
+    public function setStripePaymentIntentId(?string $stripePaymentIntentId): void
+    {
+        $this->stripePaymentIntentId = $stripePaymentIntentId;
     }
 
     public function getPaidAt(): ?CarbonImmutable

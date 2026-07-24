@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\NewsletterSubscriber;
 use App\Entity\Order;
+use App\Entity\User;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -34,6 +35,20 @@ final readonly class EmailService
             context: array_merge($context, [
                 'name' => $newsletterSubscriber->getName(),
             ]),
+        );
+    }
+
+    public function sendLoginCodeEmail(User $user, string $code): void
+    {
+        $this->send(
+            subject: 'Your Llunio Studios sign-in code',
+            template: '/email/security/login_code.html.twig',
+            email: $user->getEmail(),
+            name: $user->getFullName() ?? $user->getEmail(),
+            context: [
+                'code' => $code,
+                'name' => $user->getFullName(),
+            ],
         );
     }
 

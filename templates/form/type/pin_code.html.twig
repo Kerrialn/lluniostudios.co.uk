@@ -1,0 +1,21 @@
+{% block pin_code_widget %}
+    {% set length = length|default(6) %}
+    <div class="flex justify-center gap-2" data-controller="pin-code" data-pin-code-length-value="{{ length }}">
+        {# Real form field — hidden; the controller writes the joined digits here #}
+        <input type="hidden" {{ block('widget_attributes') }}
+               {% if value is not empty %}value="{{ value }}"{% endif %}
+               data-pin-code-target="hidden">
+
+        {# Visible single-character boxes (not submitted) #}
+        {% for i in 1..length %}
+            <input type="text"
+                   inputmode="numeric"
+                   maxlength="1"
+                   autocomplete="{{ loop.first ? 'one-time-code' : 'off' }}"
+                   aria-label="Digit {{ loop.index }}"
+                   data-pin-code-target="input"
+                   data-action="input->pin-code#onInput keydown->pin-code#onKeydown paste->pin-code#onPaste focus->pin-code#onFocus"
+                   class="block w-12 h-14 text-center text-xl font-semibold rounded-lg border border-gray-300 bg-gray-50 text-gray-900 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900">
+        {% endfor %}
+    </div>
+{% endblock %}

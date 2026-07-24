@@ -1,0 +1,13 @@
+{% extends 'email/base.html.twig' %}
+
+{% block preheader %}Your Llunio Studios sign-in code is {{ code }}.{% endblock %}
+
+{% block content %}
+    <div>Hi{% if name %} {{ name }}{% endif %},</div>
+    <p>Use this code to sign in to your Llunio Studios account:</p>
+
+    <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:24px 0;text-align:center;">{{ code }}</p>
+
+    <p>This code expires in 10 minutes and can only be used once.</p>
+    <p style="color:#6b7280;font-size:13px;">If you didn't try to sign in, you can safely ignore this email.</p>
+{% endblock %}

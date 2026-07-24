@@ -4,7 +4,6 @@ services:
         platform: linux/arm64
         volumes:
             - .:/app:cached
-            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
             - ./docker/php/zz-opcache-dev.ini:/usr/local/etc/php/conf.d/zz-opcache-dev.ini
         healthcheck:
             # expects /app/php/docker-healthcheck.sh to ping 127.0.0.1:9000
