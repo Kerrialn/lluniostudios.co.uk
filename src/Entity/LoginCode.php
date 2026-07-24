@@ -87,7 +87,7 @@ class LoginCode
 
     public function isConsumed(): bool
     {
-        return $this->consumedAt !== null;
+        return $this->consumedAt instanceof \Carbon\CarbonImmutable;
     }
 
     public function consume(): void

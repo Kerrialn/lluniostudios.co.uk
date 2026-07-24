@@ -40,7 +40,7 @@ class StripeWebhookController extends AbstractController
         }
 
         $intent = $event->data->object ?? null;
-        $paymentIntentId = is_object($intent) && isset($intent->id) ? (string) $intent->id : '';
+        $paymentIntentId = is_object($intent) && $intent->id !== null ? (string) $intent->id : '';
 
         if ($paymentIntentId === '') {
             return new JsonResponse([
