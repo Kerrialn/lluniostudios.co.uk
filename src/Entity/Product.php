@@ -50,6 +50,24 @@ class Product
     private bool $isPublished = false;
 
     /**
+     * Can be bought straight through checkout (Studio and Gallery). Other sizes
+     * always go to Request, and their price is shown as "from", display only.
+     */
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
+    private bool $directOrder = false;
+
+    /**
+     * False while the weight and dimensions are placeholders (lamp size, not
+     * the measured packed box). Shown as "Placeholder" in the admin.
+     */
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
+    private bool $packedSizeConfirmed = false;
+
+    /**
      * @var Collection<int, Image>
      */
     #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'product', cascade: ['persist', 'remove'])]
@@ -59,6 +77,9 @@ class Product
      * @var Collection<int, ProductOption>
      */
     #[ORM\OneToMany(targetEntity: ProductOption::class, mappedBy: 'product', cascade: ['persist', 'remove'])]
+    #[ORM\OrderBy([
+        'position' => 'ASC',
+    ])]
     private Collection $productOptions;
 
     #[ORM\Column]
@@ -118,6 +139,46 @@ class Product
     public function setIsPublished(bool $isPublished): static
     {
         $this->isPublished = $isPublished;
+
+        return $this;
+    }
+
+    public function isDirectOrder(): bool
+    {
+        return $this->directOrder;
+    }
+
+    public function setDirectOrder(bool $directOrder): static
+    {
+        $this->directOrder = $directOrder;
+
+        return $this;
+    }
+
+    /**
+     * Request-only sizes show their price as "from" (display only).
+     */
+    public function isPriceFrom(): bool
+    {
+        return ! $this->directOrder;
+    }
+
+    public function isPackedSizeConfirmed(): bool
+    {
+        return $this->packedSizeConfirmed;
+    }
+
+    /**
+     * For the admin list: whether the weight and dimensions are real.
+     */
+    public function getWeightAndSizeStatus(): string
+    {
+        return $this->packedSizeConfirmed ? 'Confirmed' : 'Placeholder';
+    }
+
+    public function setPackedSizeConfirmed(bool $packedSizeConfirmed): static
+    {
+        $this->packedSizeConfirmed = $packedSizeConfirmed;
 
         return $this;
     }

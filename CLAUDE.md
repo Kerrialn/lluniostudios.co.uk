@@ -102,3 +102,7 @@ Images upload to `/public/uploads/images` via Vich Uploader with SmartUniqueName
 
 - **Mobile homepage photos:** a portrait pair (one dim, one bright) will be taken specifically for the homepage on upright phones. Phones will use them; desktop, tablet and sideways phones keep the current landscape pair (`public/images/home/hero-dim-*.jpg`, `hero-bright-*.jpg`). The template is already set up for them: see the "PENDING CONTENT" note in `templates/app/landing.html.twig` (add the files, set `portraitPhotos` to true) and fill in the photo's measurements in `assets/styles/app.css` under "Portrait photos for upright phones".
 - **Known phone limits until then:** with the landscape pair, upright phones with a tall visible screen (no browser bars, e.g. 390×844) get a small homepage heading (about 10.5–12.5px), and screens shorter than about 609px (e.g. 320×568) scroll slightly. Both are accepted for now and will be fixed by the portrait photos.
+
+## For my brother
+
+- **`Product::$price` type mismatch:** the column is an `integer` (pence) but the property, getter and setter are typed `?string`, so `doctrine:schema:validate` reports the mapping as invalid. Left as it is during the design merge because changing it ripples into the basket code (e.g. `CartItem::setUnitPrice($product->getPrice())`). Fix by typing it `?int` throughout and updating the callers.

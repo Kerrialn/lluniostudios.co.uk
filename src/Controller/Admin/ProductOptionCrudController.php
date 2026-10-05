@@ -4,8 +4,11 @@ namespace App\Controller\Admin;
 
 use App\Entity\ProductOption;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
 /**
@@ -23,6 +26,9 @@ class ProductOptionCrudController extends AbstractCrudController
         return [
             IdField::new('id')->onlyOnIndex(),
             TextField::new('name'),
+            AssociationField::new('product')->onlyOnIndex(),
+            ChoiceField::new('stage', 'Configurator stage')->setChoices(ProductOption::STAGES),
+            IntegerField::new('position', 'Order')->setHelp('Lowest first.'),
             CollectionField::new('productOptionValues')
                 ->useEntryCrudForm(ProductOptionValueCrudController::class)
                 ->setEntryIsComplex(true)

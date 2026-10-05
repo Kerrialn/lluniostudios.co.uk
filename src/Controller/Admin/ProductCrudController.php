@@ -28,7 +28,14 @@ class ProductCrudController extends AbstractCrudController
             IdField::new('id')->onlyOnIndex(),
             TextField::new('title'),
             BooleanField::new('isPublished', 'Published'),
-            MoneyField::new('price')->setCurrency('GBP')->setStoredAsCents(true),
+            BooleanField::new('directOrder', 'Direct order')
+                ->setHelp('On: can be bought at checkout (Studio, Gallery). Off: always goes to Request, and the price is shown as "from" (display only).'),
+            MoneyField::new('price')->setCurrency('GBP')->setStoredAsCents(true)
+                ->setHelp('Set by size only. For Request sizes this is the "from" price, display only.'),
+            TextField::new('weightAndSizeStatus', 'Weight & size')->onlyOnIndex(),
+            BooleanField::new('packedSizeConfirmed', 'Packed size confirmed')
+                ->setHelp('Leave off while the weight and dimensions below are placeholders (the lamp\'s own size). Turn on once the real packed box is measured.')
+                ->onlyOnForms(),
             IntegerField::new('weightGrams', 'Weight (g)')->hideOnIndex(),
             IntegerField::new('lengthMm', 'Length (mm)')->hideOnIndex(),
             IntegerField::new('widthMm', 'Width (mm)')->hideOnIndex(),
