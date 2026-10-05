@@ -2,10 +2,16 @@
     Site footer (design: Site v4 Unified): a row of icon links in normal page
     flow at the end of the content. The studio address, trading name and
     T&Cs live on the Contact page, not here.
+
+    Options:
+      pinned  true on the homepage: just the icons, pinned bottom-left over
+              the hero photo, switching amber/near-black with the bulb's
+              brightness (switch group ll-sw-footer), with a soft glow
 #}
+{% set pinned = pinned|default(false) %}
 {% set iconLink = 'w-11 h-11 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity' %}
-<footer class="bg-ll-bg text-ll-ink font-archivo">
-    <div class="flex flex-wrap items-center justify-between gap-4 py-[clamp(20px,3vw,32px)] px-[calc(clamp(20px,4vw,56px)-11px)]">
+<footer class="font-archivo {{ pinned ? 'll-footer-pinned ll-sw-footer' : 'bg-ll-bg text-ll-ink' }}">
+    <div class="flex flex-wrap items-center justify-between gap-4 {{ pinned ? '' : 'py-[clamp(20px,3vw,32px)] px-[calc(clamp(20px,4vw,56px)-11px)]' }}">
         <div class="flex items-center gap-0.5">
             <a href="{{ path('contact') }}" aria-label="Contact" title="Contact" class="{{ iconLink }}">
                 <svg width="23" height="22.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13"></rect><path d="M3.5 6l8.5 7 8.5-7"></path></svg>
@@ -18,10 +24,12 @@
             </a>
         </div>
 
-        {# PLACEHOLDER: not in the design. Kept so existing customers can reach
-           their orders until the accounts question is decided. #}
-        <a href="{{ path(app.user ? 'account_orders' : 'app_login') }}" class="ll-label text-ll-mute hover:text-ll-ink px-[11px]">
-            {{ app.user ? 'Your orders' : 'Sign in' }}
-        </a>
+        {% if not pinned %}
+            {# PLACEHOLDER: not in the design. Kept so existing customers can reach
+               their orders until the accounts question is decided. #}
+            <a href="{{ path(app.user ? 'account_orders' : 'app_login') }}" class="ll-label text-ll-mute hover:text-ll-ink px-[11px]">
+                {{ app.user ? 'Your orders' : 'Sign in' }}
+            </a>
+        {% endif %}
     </div>
 </footer>

@@ -1,12 +1,15 @@
 {#
     Site nav (design: Site v4 Unified). A solid dark bar in page flow that
     scrolls away with the page, as on the prototype's inner pages.
-      - `light` -> transparent over a full-bleed hero image (homepage).
-    Text is cream throughout.
+      - `overlay: 'hero'` -> transparent over the homepage photo. The logo,
+        links and menu button switch from amber to near-black with the bulb's
+        brightness (switch groups ll-sw-logo / ll-sw-nav, see app.css), with a
+        glow on phones, as in the prototype's Test 2.
+    Otherwise text is cream.
     Items with `route: null` are pages from later steps and render as
     dimmed, non-clickable placeholders.
 #}
-{% set overlay = light|default(false) %}
+{% set overlay = overlay|default(false) %}
 {% set currentRoute = app.request.attributes.get('_route') %}
 {% set basketCount = cart_item_count() %}
 {# PLACEHOLDER: Bespoke Commissions has no page until Step 9. #}
@@ -17,15 +20,21 @@
     { label: basketCount > 0 ? 'Basket (' ~ basketCount ~ ')' : 'Basket', route: 'cart', active: currentRoute starts with 'cart' },
 ] %}
 <nav id="navbar" aria-label="Main"
-     class="relative z-40 font-archivo {{ overlay ? 'nav-overlay' : '' }}"
+     class="relative z-40 font-archivo {{ overlay ? 'nav-overlay' : '' }} {{ overlay == 'hero' ? 'nav-ink-hero' : '' }}"
      {{ stimulus_controller('mobile-menu') }}>
     <div class="flex items-center justify-between gap-7 py-[22px] px-[clamp(20px,4vw,56px)]">
-        <a href="{{ path('landing') }}" class="shrink-0">
-            <img src="{{ asset('images/brand/logo-mark-light.png') }}" alt="Llunio Studios" class="h-[34px] w-auto">
+        <a href="{{ path('landing') }}" class="shrink-0 nav-glow {{ overlay == 'hero' ? 'll-sw-logo' : '' }}">
+            {% if overlay == 'hero' %}
+                <span class="nav-logo-mask" style="--ll-logo-mask: url('{{ asset('images/brand/logo-mark-light.png') }}')">
+                    <img src="{{ asset('images/brand/logo-mark-light.png') }}" alt="Llunio Studios" class="h-[34px] w-auto">
+                </span>
+            {% else %}
+                <img src="{{ asset('images/brand/logo-mark-light.png') }}" alt="Llunio Studios" class="h-[34px] w-auto">
+            {% endif %}
         </a>
 
         {# Desktop links #}
-        <ul class="hidden min-[900px]:flex flex-wrap items-center gap-x-[26px] gap-y-2 ll-label">
+        <ul class="hidden min-[900px]:flex flex-wrap items-center gap-x-[26px] gap-y-2 ll-label {{ overlay == 'hero' ? 'll-sw-nav' : '' }}">
             {% for item in items %}
                 <li>
                     {% if item.route %}
@@ -40,7 +49,7 @@
         </ul>
 
         {# Mobile: basket count + menu button #}
-        <div class="flex min-[900px]:hidden items-center gap-1">
+        <div class="flex min-[900px]:hidden items-center gap-1 nav-glow {{ overlay == 'hero' ? 'll-sw-nav' : '' }}">
             {% if basketCount > 0 %}
                 <a href="{{ path('cart') }}" aria-label="Basket, {{ basketCount }} {{ basketCount == 1 ? 'item' : 'items' }}"
                    class="min-w-11 h-11 flex items-center justify-center ll-label tabular-nums">({{ basketCount }})</a>

@@ -108,5 +108,270 @@
 #navbar a:hover,
 #navbar button:hover { opacity: .7; }
 
+/* ---- Homepage ("Test 2" hero, bulb_dimmer_controller.js) ----
+   Everything drawn on the photo (intro text, nav links and menu button, logo,
+   footer icons) switches from the bulb's amber to near-black once brightness
+   (--ll-hero-b) passes that group's switch point (--sw-*), with a 0.3s
+   crossfade. Each switch point is measured: it is where amber and near-black
+   give equal contrast against the photo behind that group, so the text never
+   passes through colours as dark as the photo. --lit is 0 below the switch,
+   1 above it. Values below were chosen from contrast measurements and
+   checked by eye; sideways phones only have the nav and logo on the photo. */
+:root {
+    --ll-hero-b: 0;
+    /* The photo's top and bottom-left corners stay dark longer than the middle,
+       so the nav, logo and footer icons switch later than the text. */
+    --sw-text: .52;
+    --sw-nav: .72;
+    --sw-logo: .75;
+    --sw-footer: .72;
+}
+/* Upright phones: text measured on screenshots (amber and black equal at 56%). */
+@media (max-width: 759px) and (orientation: portrait) {
+    :root { --sw-text: .56; }
+}
+.ll-sw-text { --sw: var(--sw-text); }
+.ll-sw-nav { --sw: var(--sw-nav); }
+.ll-sw-logo { --sw: var(--sw-logo); }
+.ll-sw-footer { --sw: var(--sw-footer); }
+.ll-sw-text,
+.ll-sw-nav,
+.ll-sw-logo,
+.ll-sw-footer {
+    --lit: clamp(0, (var(--ll-hero-b) - var(--sw)) * 100000, 1);
+    color: rgb(calc(250 - 229 * var(--lit)) calc(179 - 161 * var(--lit)) calc(90 - 76 * var(--lit)));
+    transition: color .3s ease, filter .3s ease, text-shadow .3s ease;
+}
+
+/* The logo is drawn in the current text colour through a mask of the logo. */
+.nav-logo-mask {
+    display: inline-flex;
+    background-color: currentColor;
+    -webkit-mask: var(--ll-logo-mask) center / contain no-repeat;
+    mask: var(--ll-logo-mask) center / contain no-repeat;
+}
+.nav-logo-mask img { opacity: 0; }
+/* The prototype's legibility glow, following the switch: a soft dark shadow
+   behind amber, a soft light glow behind near-black. On the nav it is phones
+   only (below 900px), as in the prototype; the pinned footer always has it. */
+@media (max-width: 899px) {
+    #navbar.nav-ink-hero .nav-glow { filter: drop-shadow(0 calc(1px * (1 - var(--lit))) 6px rgb(calc(255 * var(--lit)) calc(240 * var(--lit)) calc(220 * var(--lit)) / .55)); }
+}
+
+/* The whole photo (4022x3015, ratio 1.334) is shown, never cropped: it fits
+   inside the hero, anchored left and 40% down as Test 2 frames it. Any space
+   left over is filled by stretching strips of the photo's own edge pixels,
+   so the background continues seamlessly. */
+.ll-home-stage { container-type: size; }
+.ll-home-frame,
+.ll-home-fill-right {
+    position: absolute;
+    top: calc((100cqh - min(74.96cqw, 100cqh)) * 0.4);
+    height: min(74.96cqw, 100cqh);
+}
+.ll-home-frame {
+    left: 0;
+    width: min(100cqw, 133.4cqh);
+    max-width: none; /* Tailwind's base styles cap images at 100% width */
+}
+.ll-home-fill-right {
+    left: calc(min(100cqw, 133.4cqh) - 2px); /* tucked under the photo edge so no hairline shows */
+    right: -2%;
+}
+.ll-home-fill-top,
+.ll-home-fill-bottom {
+    position: absolute;
+    left: 0;
+    width: calc(min(100cqw, 133.4cqh) * 1.02);
+}
+.ll-home-fill-top {
+    top: 0;
+    height: calc((100cqh - min(74.96cqw, 100cqh)) * 0.4 + 2px);
+}
+.ll-home-fill-bottom {
+    top: calc((100cqh - min(74.96cqw, 100cqh)) * 0.4 + min(74.96cqw, 100cqh) - 2px);
+    bottom: 0;
+}
+.ll-home-fill-right,
+.ll-home-fill-top,
+.ll-home-fill-bottom {
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+/* The lit shot is offset by 0.995% of the photo's width to line up with the dark one. */
+.ll-home-lit { transform: translateX(calc(min(100cqw, 133.4cqh) * -0.00995)); }
+
+/* Phones (below 760px): the photo fills the hero height, so the lamp is big.
+   The lamp occupies 9.5%-30.6% of the photo's width and 14.2%-93% of its
+   height, so at full height it is shown whole from top to feet. It is placed
+   20px from the left edge; only empty background is cropped (the strip left of
+   the lamp, and whatever lies beyond the right edge of the screen). If the
+   screen is wider than the photo (phones held sideways), the photo starts at
+   the left edge and the right-edge fill covers the remainder. */
+@media (max-width: 759px) {
+    .ll-home-frame,
+    .ll-home-fill-right {
+        top: 0;
+        height: 100cqh;
+    }
+    .ll-home-frame {
+        width: 133.4cqh;
+        left: min(0px, max(100cqw - 133.4cqh, 20px - 133.4cqh * 0.095));
+    }
+    .ll-home-fill-right {
+        left: calc(min(0px, max(100cqw - 133.4cqh, 20px - 133.4cqh * 0.095)) + 133.4cqh - 2px);
+    }
+    .ll-home-fill-top,
+    .ll-home-fill-bottom { display: none; }
+    .ll-home-lit { transform: translateX(calc(133.4cqh * -0.00995)); }
+}
+
+/* Upright phones: the homepage is exactly one screen (100dvh, which follows
+   the browser's address bar), with no scrolling and no filler.
+
+   The photo is described by the custom properties below, so a different photo
+   (e.g. the portrait pair planned for phones) only needs new numbers here:
+     --photo-ratio  width / height
+     --lamp-x, --lamp-w     lamp's left edge and width, as fractions of width
+     --lamp-top, --lamp-feet  top of the lamp and bottom of its feet (fractions of height)
+     --cable-top    where the cable on the floor starts (fraction of height)
+     --lit-shift    horizontal offset that lines the lit shot up with the dark one
+
+   Layout rules (H = photo height, T = its top edge, V = screen height):
+     - the photo always covers the screen: T <= 0 and T + H >= V
+     - the lamp's top clears the logo: T + lamp-top * H >= 69px
+     - the feet stay above the footer icons pinned bottom-left:
+       T + lamp-feet * H <= V - 44px
+     - the lamp is as large as possible while the heading still fits beside
+       it at 14px (its longest word, INDIVIDUALLY, is 9.6em wide)
+   The lamp sits 20px from the left; the heading and buttons go in the
+   photo's background to its right, below the nav and above the cable.
+   If a screen is too short for these rules (under ~609px for this photo), the
+   page grows to that minimum and scrolls slightly rather than overlap. */
+@media (max-width: 759px) and (orientation: portrait) {
+    /* On <body> so the footer (outside the hero) can use --V too. */
+    body:has(.ll-home-hero) {
+        --photo-ratio: 1.334;
+        --lamp-x: .095;
+        --lamp-w: .211;
+        --lamp-top: .142;
+        --lamp-feet: .93;
+        --cable-top: .84;
+        --lit-shift: -.00995;
+
+        --V: max(100dvh, calc(113px + (var(--lamp-feet) - var(--lamp-top)) * 44px / (1 - var(--lamp-feet))));
+        --H: max(
+            var(--V),
+            44px / (1 - var(--lamp-feet)),
+            min(
+                (var(--V) - 113px) / (var(--lamp-feet) - var(--lamp-top)),
+                (100vw - 50px - 134px) / (var(--photo-ratio) * var(--lamp-w))
+            )
+        );
+        --W: calc(var(--H) * var(--photo-ratio));
+        --T: min(0px, var(--V) - 44px - var(--lamp-feet) * var(--H));
+        min-height: 0;
+    }
+    .ll-home-hero { background: transparent; }
+    /* Portrait photos for upright phones (PENDING CONTENT, see landing.html.twig).
+       When they arrive, replace these placeholders with the new photo's values;
+       the rest of the layout follows from them. */
+    body:has(.ll-home-hero.has-portrait-photos) {
+        --photo-ratio: .75;    /* placeholder: width / height of the portrait photo */
+        --lamp-x: .1;          /* placeholder */
+        --lamp-w: .3;          /* placeholder */
+        --lamp-top: .15;       /* placeholder */
+        --lamp-feet: .9;       /* placeholder */
+        --cable-top: .85;      /* placeholder */
+        --lit-shift: 0;        /* placeholder */
+    }
+    .ll-home-stage { height: var(--V); }
+    .ll-home-frame {
+        top: var(--T);
+        height: var(--H);
+        width: var(--W);
+        left: calc(20px - var(--W) * var(--lamp-x));
+    }
+    .ll-home-fill-right { display: none; }
+    .ll-home-lit { transform: translateX(calc(var(--W) * var(--lit-shift))); }
+    /* The meter goes in the gap between the lamp and the text. */
+    .ll-home-meter { left: calc((var(--lamp-x) + var(--lamp-w)) * 100% + 7px); }
+
+    .ll-home-text {
+        position: absolute;
+        top: calc(var(--ll-nav-h) + 8px);
+        left: calc(20px + var(--W) * var(--lamp-w) + 14px);
+        right: 16px;
+        width: auto;
+        height: calc(var(--T) + var(--cable-top) * var(--H) - 8px - var(--ll-nav-h) - 8px);
+        padding: 0;
+        gap: 18px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, calc(.35 * (1 - var(--lit))));
+        container-type: inline-size;
+    }
+    .ll-home-text h1 {
+        max-width: none;
+        font-size: min(28px, calc(100cqi / 9.6));
+    }
+    .ll-home-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .ll-home-btn {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        max-width: 100%;
+        padding: 10px 12px;
+        font-size: min(11px, calc((100cqi - 24px) / 7.4)); /* COMMISSION must fit */
+        letter-spacing: .1em;
+        line-height: 1.25;
+    }
+    /* Footer icons pinned to the bottom-left of the layout (the bottom of the
+       screen, or of the minimum-height page on very short screens), over the
+       photo, switching like the text. */
+    footer.ll-footer-pinned { /* element + class: outranks the general footer rule further down */
+        position: absolute;
+        z-index: 40;
+        left: calc(clamp(20px, 4vw, 56px) - 11px);
+        top: calc(var(--V) - 48px);
+        padding: 0;
+        background: none;
+        filter: drop-shadow(0 calc(1px * (1 - var(--lit))) 6px rgb(calc(255 * var(--lit)) calc(240 * var(--lit)) calc(220 * var(--lit)) / .55));
+    }
+    main.ll-home-main {
+        background: transparent;
+        min-height: 0;
+    }
+}
+
+.ll-home-meter-fill { transition: height .45s cubic-bezier(.25, .6, .3, 1); }
+.is-dragging .ll-home-meter-fill { transition: none; }
+
+/* Footer: pinned bottom-left over the hero from 760px, in the bulb's colour
+   with a glow; on phones it scrolls with the page below the text. */
+.ll-footer-pinned {
+    background: #fca941;
+    padding: clamp(24px, 4vw, 48px) calc(clamp(20px, 4vw, 56px) - 11px) calc(clamp(20px, 3vw, 32px) - 16px);
+}
+@media (min-width: 760px) {
+    .ll-footer-pinned {
+        position: fixed;
+        z-index: 40;
+        left: calc(clamp(20px, 4vw, 56px) - 11px);
+        bottom: calc(clamp(20px, 3vw, 32px) - 16px);
+        padding: 0;
+        background: none;
+        filter: drop-shadow(0 calc(1px * (1 - var(--lit))) 6px rgb(calc(255 * var(--lit)) calc(240 * var(--lit)) calc(220 * var(--lit)) / .55));
+    }
+}
+
+/* Sideways phones: the intro text and footer sit on the amber panel below
+   the photo, not on it, so they stay near-black. */
+@media (max-width: 759px) and (orientation: landscape) {
+    .ll-home-text.ll-sw-text,
+    footer.ll-footer-pinned.ll-sw-footer { color: #15120e; }
+}
+
 /* Lock page scroll while the full-screen mobile menu is open. */
 html.ll-menu-open { overflow: hidden; }

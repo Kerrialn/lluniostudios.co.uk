@@ -1,59 +1,97 @@
 {% extends 'base.html.twig' %}
 
-{# White navbar over the dark image hero; default (dark) nav on the light fallback. #}
-{% block navbar %}
-    {{ include('partials/_nav.html.twig', { light: product is not null }) }}
-{% endblock %}
+{#
+    Homepage: the Site v4 prototype's "Test 2" hero. A dark photo of a Lumen
+    Forma (APC_0264); scrolling or dragging on the bulb glides to the lit shot
+    (APC_0261-24693d94), while the nav, logo, footer icons and intro text switch
+    from the bulb's amber to near-black at measured balance points. From 760px
+    the whole photo is shown, never cropped; leftover space is filled from the
+    photo's own edge colours. Upright phones get a one-screen layout with the
+    text to the right of the lamp; sideways phones stack the text below on
+    light amber in black.
+
+    PENDING CONTENT: portrait photos (a dim and a bright shot) will be taken
+    specifically for the mobile homepage. Upright phones will use them;
+    desktop, tablet and sideways phones keep this landscape pair. To drop them in:
+      1. Add hero-dim-portrait-1080.jpg, hero-dim-portrait-2160.jpg,
+         hero-bright-portrait-1080.jpg and hero-bright-portrait-2160.jpg to
+         public/images/home (web copies: rotated upright, metadata stripped).
+      2. Set portraitPhotos to true below.
+      3. Fill in the portrait photo's measurements in app.css
+         ("Portrait photos for upright phones"): its shape, where the lamp,
+         feet and cable sit, and the offset between the two shots. The phone
+         layout is driven by those numbers, so nothing else needs reworking.
+      4. Check the bulb touch area (the "hit" element's phone classes,
+         left-[11%] top-[30%] w-[20%] h-[34%]) still sits on the bulb.
+#}
+{% set portraitPhotos = false %}
+{% block navbar %}{{ include('partials/_nav.html.twig', { overlay: 'hero' }) }}{% endblock %}
+{% block main_class %}ll-home-main bg-[#fca941] min-[760px]:bg-[#945401] text-ll-ink font-archivo{% endblock %}
+{% block footer %}{{ include('partials/_footer.html.twig', { pinned: true }) }}{% endblock %}
+
+{#
+    One photo plus its fills. Beside the photo (wide screens) its right-edge
+    strip is stretched across the gap. Above and below it (tall screens) the
+    edge strip continues the photo for the first 48px, then fades into that
+    edge's average colour, so long gaps don't show stretched streaks.
+#}
+{% macro photo_layer(name, alt, portraitPhotos) %}
+    {% set average = {
+        dim: { top: '#030000', bottom: '#080201' },
+        bright: { top: '#a65e01', bottom: '#ac5e01' },
+    }[name] %}
+    <div class="ll-home-fill-top" style="background-image: linear-gradient(to top, transparent, {{ average.top }} 48px), url('{{ asset('images/home/hero-' ~ name ~ '-edge-top.png') }}')"></div>
+    <div class="ll-home-fill-bottom" style="background-image: linear-gradient(to bottom, transparent, {{ average.bottom }} 48px), url('{{ asset('images/home/hero-' ~ name ~ '-edge-bottom.png') }}')"></div>
+    <div class="ll-home-fill-right" style="background-image: url('{{ asset('images/home/hero-' ~ name ~ '-edge-right.png') }}')"></div>
+    <picture>
+        {% if portraitPhotos %}
+            <source media="(max-width: 759px) and (orientation: portrait)"
+                    srcset="{{ asset('images/home/hero-' ~ name ~ '-portrait-1080.jpg') }} 1080w, {{ asset('images/home/hero-' ~ name ~ '-portrait-2160.jpg') }} 2160w"
+                    sizes="100vw">
+        {% endif %}
+        <img src="{{ asset('images/home/hero-' ~ name ~ '-2560.jpg') }}"
+             srcset="{{ asset('images/home/hero-' ~ name ~ '-1280.jpg') }} 1280w, {{ asset('images/home/hero-' ~ name ~ '-2560.jpg') }} 2560w"
+             sizes="min(100vw, 134vh)" alt="{{ alt }}" {{ alt ? '' : 'aria-hidden="true"' }} draggable="false"
+             class="ll-home-frame object-fill select-none" {{ name == 'dim' ? 'fetchpriority="high"' : '' }}>
+    </picture>
+{% endmacro %}
 
 {% block body %}
-    {% if product %}
-        {# Full-bleed image hero — the product image is the star. #}
-        <section class="relative flex min-h-screen items-center justify-center overflow-hidden">
-            {% if product.landingImage %}
-                <img src="{{ asset('uploads/images/' ~ product.landingImage.filename) }}"
-                     alt="{{ product.title }}"
-                     class="absolute inset-0 h-full w-full object-cover"/>
-            {% else %}
-                {# Placeholder until real product imagery is added. #}
-                <div class="absolute inset-0 bg-gradient-to-br from-stone-500 via-stone-700 to-stone-900"></div>
-            {% endif %}
-            {# Scrim keeps the white navbar + copy legible over any image. #}
-            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-black/70"></div>
-
-            <div class="relative z-10 mx-auto max-w-3xl px-4 pt-24 pb-16 text-center text-white">
-                <p class="mb-6 text-xs uppercase tracking-[0.35em] text-white/70">Liquid stone, shaped by hand</p>
-                <h1 class="boldonse-regular mb-6 text-4xl leading-tight md:text-6xl">{{ product.title|title }}</h1>
-                <p class="mx-auto mb-8 max-w-2xl text-lg text-white/85 md:text-xl">
-                    A sculptural centrepiece cast in liquid stone — where raw materiality meets warm,
-                    ambient light. Poured, cured and finished to order, so no two pieces are ever alike.
-                </p>
-                <p class="mb-10 text-lg font-semibold tracking-wide">{{ product.priceInGbp|format_currency('GBP') }}</p>
-                <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
-                    <a href="{{ path('show_product', {slug: product.slug}) }}"
-                       class="inline-flex items-center rounded-lg bg-white px-8 py-3 text-sm font-medium text-gray-900 transition hover:bg-gray-100">
-                        Discover {{ product.title|title }}
-                    </a>
-                    <a href="{{ collection and collection.slug ? path('show_collection', {slug: collection.slug}) : path('products') }}"
-                       class="inline-flex items-center rounded-lg border border-white/40 px-8 py-3 text-sm font-medium text-white transition hover:bg-white/10">
-                        {{ collection ? 'Explore ' ~ collection.name : 'View the collection' }}
-                    </a>
-                </div>
+    <section class="ll-home-hero {{ portraitPhotos ? 'has-portrait-photos' : '' }} relative bg-[#fca941] min-[760px]:bg-[#945401]" {{ stimulus_controller('bulb-dimmer') }}>
+        <div class="ll-home-stage relative overflow-hidden bg-[#040101] h-[max(520px,86vh)] min-[760px]:h-[max(600px,100vh)]">
+            {{ _self.photo_layer('dim', 'Lumen Forma, lit', portraitPhotos) }}
+            <div class="ll-home-lit absolute inset-0 opacity-0 pointer-events-none" data-bulb-dimmer-target="overlay" aria-hidden="true">
+                {{ _self.photo_layer('bright', '', portraitPhotos) }}
             </div>
 
+            {# Bulb controls, positioned as percentages of the photo so they stay on the bulb. #}
+            <div class="ll-home-frame z-[2] pointer-events-none">
+                <div class="absolute min-w-[88px] min-h-[88px] rounded-[45%] cursor-ns-resize touch-none pointer-events-auto
+                            left-[11%] top-[30%] w-[20%] h-[34%]
+                            min-[900px]:left-[16.2%] min-[900px]:top-[36%] min-[900px]:w-[10.2%] min-[900px]:h-[21.5%]"
+                     title="Scroll to adjust brightness" role="slider" tabindex="0" aria-label="Lamp brightness"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                     data-bulb-dimmer-target="hit"></div>
+                <div class="ll-home-meter absolute left-[33%] top-[38%] h-[17%] w-px bg-[rgba(21,18,14,.22)] opacity-0 transition-opacity duration-[400ms]"
+                     data-bulb-dimmer-target="meter" aria-hidden="true">
+                    <div class="ll-home-meter-fill absolute -left-px -right-px bottom-0 h-0 bg-[#15120e]" data-bulb-dimmer-target="meterFill"></div>
+                </div>
+            </div>
+        </div>
 
-        </section>
-    {% else %}
-        {# Brand hero fallback when nothing is published yet (light background → dark nav). #}
-        <section class="mx-auto max-w-2xl px-4 pt-40 pb-24 text-center">
-            <p class="mb-6 text-xs uppercase tracking-[0.35em] text-gray-500">Liquid stone, shaped by hand</p>
-            <h1 class="boldonse-regular mb-6 text-4xl text-gray-900 md:text-5xl">Llunio Studios</h1>
-            <p class="mx-auto mb-10 max-w-xl text-lg text-gray-600">
-                Sculptural liquid-stone lamps, made to order. New pieces are on the way — check back soon.
-            </p>
-            <a href="{{ collection and collection.slug ? path('show_collection', {slug: collection.slug}) : path('products') }}"
-               class="inline-flex items-center rounded-lg bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800">
-                {{ collection ? 'Explore ' ~ collection.name : 'View the collection' }}
-            </a>
-        </section>
-    {% endif %}
+        <div class="ll-home-text ll-sw-text relative w-full px-6 pt-10 pb-14 text-[#15120e]
+                    min-[760px]:absolute min-[760px]:inset-y-0 min-[760px]:right-0 min-[760px]:w-[min(48%,680px)]
+                    min-[760px]:py-[clamp(40px,6vw,110px)] min-[760px]:pr-[clamp(24px,5vw,88px)] min-[760px]:pl-0
+                    flex flex-col justify-center gap-[clamp(28px,3.5vw,48px)] pointer-events-none">
+            <h1 class="max-w-[21em] font-light text-[clamp(28px,2.9vw,48px)] leading-[1.24] uppercase tracking-[0.03em] [text-wrap:balance]">
+                Hand cast <br>individually unique Liquid stone <br>sculptures
+            </h1>
+            <div class="ll-home-actions flex flex-wrap gap-2.5 pointer-events-auto">
+                <a href="{{ path('products') }}" class="ll-home-btn border border-current px-[22px] py-3.5 text-xs leading-[normal] font-medium uppercase tracking-[0.14em]">Explore our lighting designs</a>
+                {# PLACEHOLDER: Bespoke Commissions has no page until Step 9. #}
+                <span class="ll-home-btn border border-current px-[22px] py-3.5 text-xs leading-[normal] font-medium uppercase tracking-[0.14em] opacity-40 cursor-default"
+                      aria-disabled="true" title="Coming soon">Commission Your vision</span>
+            </div>
+        </div>
+    </section>
 {% endblock %}

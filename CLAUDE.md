@@ -97,3 +97,8 @@ Access at `/admin` - Full CRUD for Products, Options, Users, Cart management.
 ## File Uploads
 
 Images upload to `/public/uploads/images` via Vich Uploader with SmartUniqueNamer.
+
+## Pending content
+
+- **Mobile homepage photos:** a portrait pair (one dim, one bright) will be taken specifically for the homepage on upright phones. Phones will use them; desktop, tablet and sideways phones keep the current landscape pair (`public/images/home/hero-dim-*.jpg`, `hero-bright-*.jpg`). The template is already set up for them: see the "PENDING CONTENT" note in `templates/app/landing.html.twig` (add the files, set `portraitPhotos` to true) and fill in the photo's measurements in `assets/styles/app.css` under "Portrait photos for upright phones".
+- **Known phone limits until then:** with the landscape pair, upright phones with a tall visible screen (no browser bars, e.g. 390×844) get a small homepage heading (about 10.5–12.5px), and screens shorter than about 609px (e.g. 320×568) scroll slightly. Both are accepted for now and will be fixed by the portrait photos.
