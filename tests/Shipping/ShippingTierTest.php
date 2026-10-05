@@ -6,6 +6,7 @@ namespace App\Tests\Shipping;
 
 use App\Entity\Address;
 use App\Enum\ShippingMethod;
+use App\Shipping\Consignment;
 use App\Shipping\ParcelSpec;
 use App\Shipping\Provider\MockDpdProvider;
 use App\Shipping\Provider\MockPalletwaysProvider;
@@ -31,51 +32,61 @@ final class ShippingTierTest extends TestCase
     public function testWithinAllLimitsIsDpd(): void
     {
         $parcel = new ParcelSpec(30_000, 500, 300, 300, 12000);
-        self::assertTrue($this->dpd->supports($parcel));
-        self::assertFalse($this->pallet->supports($parcel));
+        self::assertTrue($this->dpd->supports(new Consignment([$parcel])));
+        self::assertFalse($this->pallet->supports(new Consignment([$parcel])));
     }
 
     public function testExactly31kgIsStillDpd(): void
     {
         $parcel = new ParcelSpec(31_000, 500, 300, 300, 12000);
-        self::assertTrue($this->dpd->supports($parcel));
+        self::assertTrue($this->dpd->supports(new Consignment([$parcel])));
     }
 
     public function testJustOver31kgGoesPallet(): void
     {
         $parcel = new ParcelSpec(31_001, 500, 300, 300, 12000);
-        self::assertFalse($this->dpd->supports($parcel));
-        self::assertTrue($this->pallet->supports($parcel));
+        self::assertFalse($this->dpd->supports(new Consignment([$parcel])));
+        self::assertTrue($this->pallet->supports(new Consignment([$parcel])));
     }
 
     public function testLongestSideOver175cmGoesPallet(): void
     {
         // 1760mm = 176cm longest side, light weight
         $parcel = new ParcelSpec(5_000, 1760, 100, 100, 12000);
-        self::assertFalse($this->dpd->supports($parcel));
-        self::assertTrue($this->pallet->supports($parcel));
+        self::assertFalse($this->dpd->supports(new Consignment([$parcel])));
+        self::assertTrue($this->pallet->supports(new Consignment([$parcel])));
     }
 
     public function testGirthOver300cmGoesPallet(): void
     {
         // longest 100cm (ok) but length+girth = 500cm (> 300)
         $parcel = new ParcelSpec(5_000, 1000, 1000, 1000, 12000);
-        self::assertFalse($this->dpd->supports($parcel));
-        self::assertTrue($this->pallet->supports($parcel));
+        self::assertFalse($this->dpd->supports(new Consignment([$parcel])));
+        self::assertTrue($this->pallet->supports(new Consignment([$parcel])));
     }
 
     public function testDpdQuoteIsWeightBanded(): void
     {
-        $light = $this->dpd->quote(new ParcelSpec(1_500, 300, 200, 200, 5000), $this->destination);
-        $heavy = $this->dpd->quote(new ParcelSpec(25_000, 500, 300, 300, 5000), $this->destination);
+        $light = $this->dpd->quote(new Consignment([new ParcelSpec(1_500, 300, 200, 200, 5000)]), $this->destination);
+        $heavy = $this->dpd->quote(new Consignment([new ParcelSpec(25_000, 500, 300, 300, 5000)]), $this->destination);
 
         self::assertSame(ShippingMethod::DPD, $light[0]->method);
         self::assertLessThan($heavy[0]->priceInPence, $light[0]->priceInPence);
     }
 
+    public function testConsignmentIsDpdOnlyIfEveryBoxFits(): void
+    {
+        $fits = new ParcelSpec(20_000, 220, 220, 600, 79900);
+        $tooHeavy = new ParcelSpec(32_000, 220, 220, 600, 79900);
+
+        self::assertTrue($this->dpd->supports(new Consignment([$fits, $fits])));
+        self::assertFalse($this->dpd->supports(new Consignment([$fits, $tooHeavy])));
+        self::assertFalse($this->dpd->supports(new Consignment([])));
+    }
+
     public function testPalletQuoteMethod(): void
     {
-        $quotes = $this->pallet->quote(new ParcelSpec(40_000, 500, 300, 300, 5000), $this->destination);
+        $quotes = $this->pallet->quote(new Consignment([new ParcelSpec(40_000, 500, 300, 300, 5000)]), $this->destination);
         self::assertSame(ShippingMethod::PALLET, $quotes[0]->method);
         self::assertSame('Palletways', $quotes[0]->carrier);
     }

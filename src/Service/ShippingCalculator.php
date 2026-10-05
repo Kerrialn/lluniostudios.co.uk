@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Address;
 use App\Entity\Cart;
+use App\Shipping\Consignment;
 use App\Shipping\ParcelSpec;
 use App\Shipping\ShippingProviderResolver;
 use App\Shipping\ShippingQuote;
@@ -18,28 +19,30 @@ final readonly class ShippingCalculator
     }
 
     /**
-     * Build a single parcel spec from the cart: total weight across all items,
-     * and the largest bounding box per axis (worst-case, so an oversize item
-     * pushes the whole order into the pallet tier).
+     * One box per lamp, all going to the same address as one consignment
+     * (e.g. two lamps = one DPD consignment of two parcels). Each box uses
+     * the product's weight and dimensions and the lamp's price as its value.
      */
-    public function parcelForCart(Cart $cart): ParcelSpec
+    public function consignmentForCart(Cart $cart): Consignment
     {
-        $weightGrams = 0;
-        $lengthMm = 0;
-        $widthMm = 0;
-        $heightMm = 0;
+        $parcels = [];
 
         foreach ($cart->getCartItems() as $item) {
             $product = $item->getProduct();
-            $quantity = $item->getQuantity() ?? 1;
+            $box = new ParcelSpec(
+                $product?->getWeightGrams() ?? 0,
+                $product?->getLengthMm() ?? 0,
+                $product?->getWidthMm() ?? 0,
+                $product?->getHeightMm() ?? 0,
+                (int) $item->getUnitPrice(),
+            );
 
-            $weightGrams += ($product?->getWeightGrams() ?? 0) * $quantity;
-            $lengthMm = max($lengthMm, $product?->getLengthMm() ?? 0);
-            $widthMm = max($widthMm, $product?->getWidthMm() ?? 0);
-            $heightMm = max($heightMm, $product?->getHeightMm() ?? 0);
+            for ($i = 0; $i < ($item->getQuantity() ?? 1); $i++) {
+                $parcels[] = $box;
+            }
         }
 
-        return new ParcelSpec($weightGrams, $lengthMm, $widthMm, $heightMm, $cart->getTotal());
+        return new Consignment($parcels);
     }
 
     /**
@@ -47,15 +50,15 @@ final readonly class ShippingCalculator
      */
     public function quotesForCart(Cart $cart, Address $destination): array
     {
-        $parcel = $this->parcelForCart($cart);
+        $consignment = $this->consignmentForCart($cart);
         $quotes = [];
 
         foreach ($this->resolver->providers() as $provider) {
-            if (! $provider->supports($parcel)) {
+            if (! $provider->supports($consignment)) {
                 continue;
             }
 
-            foreach ($provider->quote($parcel, $destination) as $quote) {
+            foreach ($provider->quote($consignment, $destination) as $quote) {
                 $quotes[] = $quote;
             }
         }

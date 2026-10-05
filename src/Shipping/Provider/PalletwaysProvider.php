@@ -6,6 +6,7 @@ namespace App\Shipping\Provider;
 
 use App\Entity\Address;
 use App\Enum\ShippingMethod;
+use App\Shipping\Consignment;
 use App\Shipping\ParcelSpec;
 use App\Shipping\ShippingProviderInterface;
 use App\Shipping\ShippingQuote;
@@ -40,12 +41,12 @@ final class PalletwaysProvider implements ShippingProviderInterface
         return $this->apiBase !== '' && $this->apiKey !== '';
     }
 
-    public function supports(ParcelSpec $parcel): bool
+    public function supports(Consignment $consignment): bool
     {
-        return $this->isConfigured() && ! $this->isDpdEligible($parcel);
+        return $this->isConfigured() && ! $consignment->isEmpty() && ! $this->isDpdEligibleConsignment($consignment);
     }
 
-    public function quote(ParcelSpec $parcel, Address $destination): array
+    public function quote(Consignment $consignment, Address $destination): array
     {
         if (! $this->isConfigured()) {
             return [];
@@ -60,10 +61,12 @@ final class PalletwaysProvider implements ShippingProviderInterface
                 'json' => [
                     'deliveryPostcode' => $destination->getPostcode(),
                     'deliveryCountryCode' => $destination->getCountry(),
-                    'weightKg' => $parcel->weightKg(),
-                    'lengthCm' => $parcel->lengthCm(),
-                    'widthCm' => $parcel->widthCm(),
-                    'heightCm' => $parcel->heightCm(),
+                    'weightKg' => $consignment->totalWeightKg(),
+                    'pieces' => array_map(static fn (ParcelSpec $parcel): array => [
+                        'lengthCm' => $parcel->lengthCm(),
+                        'widthCm' => $parcel->widthCm(),
+                        'heightCm' => $parcel->heightCm(),
+                    ], $consignment->parcels),
                 ],
             ]);
 

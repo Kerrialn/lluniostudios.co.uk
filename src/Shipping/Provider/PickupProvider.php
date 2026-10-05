@@ -6,7 +6,7 @@ namespace App\Shipping\Provider;
 
 use App\Entity\Address;
 use App\Enum\ShippingMethod;
-use App\Shipping\ParcelSpec;
+use App\Shipping\Consignment;
 use App\Shipping\ShippingProviderInterface;
 use App\Shipping\ShippingQuote;
 
@@ -15,12 +15,12 @@ use App\Shipping\ShippingQuote;
  */
 final class PickupProvider implements ShippingProviderInterface
 {
-    public function supports(ParcelSpec $parcel): bool
+    public function supports(Consignment $consignment): bool
     {
         return true;
     }
 
-    public function quote(ParcelSpec $parcel, Address $destination): array
+    public function quote(Consignment $consignment, Address $destination): array
     {
         return [
             new ShippingQuote(

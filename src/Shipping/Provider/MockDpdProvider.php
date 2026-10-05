@@ -6,33 +6,31 @@ namespace App\Shipping\Provider;
 
 use App\Entity\Address;
 use App\Enum\ShippingMethod;
+use App\Shipping\Consignment;
 use App\Shipping\ParcelSpec;
 use App\Shipping\ShippingProviderInterface;
 use App\Shipping\ShippingQuote;
 
 /**
  * Deterministic stand-in for the DPD UK API used until live credentials exist.
- * Weight-banded pricing for parcels within DPD's size/weight limits.
+ * Prices a multi-parcel consignment as the sum of a weight-banded price per
+ * box. Only offered when every box is within DPD's size/weight limits.
  */
 final class MockDpdProvider implements ShippingProviderInterface
 {
     use DpdEligibility;
 
-    public function supports(ParcelSpec $parcel): bool
+    public function supports(Consignment $consignment): bool
     {
-        return $this->isDpdEligible($parcel);
+        return $this->isDpdEligibleConsignment($consignment);
     }
 
-    public function quote(ParcelSpec $parcel, Address $destination): array
+    public function quote(Consignment $consignment, Address $destination): array
     {
-        $kg = $parcel->weightKg();
-
-        $price = match (true) {
-            $kg <= 2.0 => 595,
-            $kg <= 10.0 => 895,
-            $kg <= 20.0 => 1295,
-            default => 1795,
-        };
+        $price = 0;
+        foreach ($consignment->parcels as $parcel) {
+            $price += $this->priceForParcel($parcel);
+        }
 
         return [
             new ShippingQuote(
@@ -43,5 +41,17 @@ final class MockDpdProvider implements ShippingProviderInterface
                 estimatedDays: 1,
             ),
         ];
+    }
+
+    private function priceForParcel(ParcelSpec $parcel): int
+    {
+        $kg = $parcel->weightKg();
+
+        return match (true) {
+            $kg <= 2.0 => 595,
+            $kg <= 10.0 => 895,
+            $kg <= 20.0 => 1295,
+            default => 1795,
+        };
     }
 }

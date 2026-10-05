@@ -6,6 +6,7 @@ namespace App\Shipping\Provider;
 
 use App\Entity\Address;
 use App\Enum\ShippingMethod;
+use App\Shipping\Consignment;
 use App\Shipping\ParcelSpec;
 use App\Shipping\ShippingProviderInterface;
 use App\Shipping\ShippingQuote;
@@ -15,9 +16,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Throwable;
 
 /**
- * Live DPD UK quotes. Requires a DPD API account; credentials are supplied via
- * DPD_API_BASE / DPD_API_KEY. When unconfigured, returns no quotes so the
- * checkout degrades gracefully (the resolver uses mock providers instead).
+ * Live DPD UK quotes for a multi-parcel consignment (one box per lamp, booked
+ * and priced together). Requires a DPD API account; credentials are supplied
+ * via DPD_API_BASE / DPD_API_KEY. When unconfigured, returns no quotes so the
+ * checkout degrades gracefully (the resolver uses MockDpdProvider instead).
  *
  * NOTE: the exact request/response shape must be finalised against DPD's API
  * docs once the account is issued — the mapping below is the integration seam.
@@ -41,12 +43,12 @@ final class DpdProvider implements ShippingProviderInterface
         return $this->apiBase !== '' && $this->apiKey !== '';
     }
 
-    public function supports(ParcelSpec $parcel): bool
+    public function supports(Consignment $consignment): bool
     {
-        return $this->isConfigured() && $this->isDpdEligible($parcel);
+        return $this->isConfigured() && $this->isDpdEligibleConsignment($consignment);
     }
 
-    public function quote(ParcelSpec $parcel, Address $destination): array
+    public function quote(Consignment $consignment, Address $destination): array
     {
         if (! $this->isConfigured()) {
             return [];
@@ -62,8 +64,15 @@ final class DpdProvider implements ShippingProviderInterface
                     'collectionCountryCode' => 'GB',
                     'deliveryCountryCode' => $destination->getCountry(),
                     'deliveryPostcode' => $destination->getPostcode(),
-                    'totalWeightKg' => $parcel->weightKg(),
-                    'parcelValue' => $parcel->valueInPence / 100,
+                    'numberOfParcels' => $consignment->parcelCount(),
+                    'totalWeightKg' => $consignment->totalWeightKg(),
+                    'consignmentValue' => $consignment->totalValueInPence() / 100,
+                    'parcels' => array_map(static fn (ParcelSpec $parcel): array => [
+                        'weightKg' => $parcel->weightKg(),
+                        'lengthCm' => $parcel->lengthCm(),
+                        'widthCm' => $parcel->widthCm(),
+                        'heightCm' => $parcel->heightCm(),
+                    ], $consignment->parcels),
                 ],
             ]);
 

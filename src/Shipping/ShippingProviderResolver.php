@@ -12,8 +12,10 @@ use App\Shipping\Provider\PickupProvider;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
- * Selects the active set of shipping providers. Pickup is always offered.
- * SHIPPING_MODE=live uses the real DPD/Palletways APIs; anything else (default
+ * Selects the active set of shipping providers. Checkout offers DPD only.
+ * Collect-from-studio and Palletways stay in the code but are switched off
+ * (SHIPPING_PICKUP_ENABLED / SHIPPING_PALLET_ENABLED, both off by default).
+ * SHIPPING_MODE=live uses the real carrier APIs; anything else (default
  * "mock") uses the deterministic stand-ins so checkout works without carrier keys.
  */
 final class ShippingProviderResolver
@@ -26,6 +28,10 @@ final class ShippingProviderResolver
         private readonly PalletwaysProvider $palletways,
         #[Autowire('%env(SHIPPING_MODE)%')]
         private readonly string $mode = 'mock',
+        #[Autowire('%env(bool:SHIPPING_PICKUP_ENABLED)%')]
+        private readonly bool $pickupEnabled = false,
+        #[Autowire('%env(bool:SHIPPING_PALLET_ENABLED)%')]
+        private readonly bool $palletEnabled = false,
     ) {
     }
 
@@ -34,10 +40,17 @@ final class ShippingProviderResolver
      */
     public function providers(): array
     {
-        if ($this->mode === 'live') {
-            return [$this->pickup, $this->dpd, $this->palletways];
+        $live = $this->mode === 'live';
+        $providers = [$live ? $this->dpd : $this->mockDpd];
+
+        if ($this->palletEnabled) {
+            $providers[] = $live ? $this->palletways : $this->mockPalletways;
         }
 
-        return [$this->pickup, $this->mockDpd, $this->mockPalletways];
+        if ($this->pickupEnabled) {
+            $providers[] = $this->pickup;
+        }
+
+        return $providers;
     }
 }

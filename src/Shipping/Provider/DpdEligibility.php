@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shipping\Provider;
 
+use App\Shipping\Consignment;
 use App\Shipping\ParcelSpec;
 
 /**
@@ -23,5 +24,23 @@ trait DpdEligibility
         return $parcel->weightKg() <= self::MAX_WEIGHT_KG
             && $parcel->longestSideCm() <= self::MAX_LONGEST_SIDE_CM
             && $parcel->lengthPlusGirthCm() <= self::MAX_LENGTH_PLUS_GIRTH_CM;
+    }
+
+    /**
+     * DPD takes a multi-parcel consignment if every box is within the limits.
+     */
+    public function isDpdEligibleConsignment(Consignment $consignment): bool
+    {
+        if ($consignment->isEmpty()) {
+            return false;
+        }
+
+        foreach ($consignment->parcels as $parcel) {
+            if (! $this->isDpdEligible($parcel)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
