@@ -8,6 +8,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\CountryField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
+/**
+ * @extends AbstractCrudController<Address>
+ */
 class AddressCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string

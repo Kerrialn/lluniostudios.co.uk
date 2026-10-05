@@ -11,6 +11,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use Vich\UploaderBundle\Form\Type\VichImageType;
 
+/**
+ * @extends AbstractCrudController<ProductCollection>
+ */
 class ProductCollectionCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string

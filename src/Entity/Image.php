@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Uid\Uuid;
-use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Vich\UploaderBundle\Mapping\Attribute as Vich;
 
 #[ORM\Entity]
 #[Vich\Uploadable]

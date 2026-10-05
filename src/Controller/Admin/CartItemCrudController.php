@@ -7,6 +7,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 
+/**
+ * @extends AbstractCrudController<CartItem>
+ */
 class CartItemCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
