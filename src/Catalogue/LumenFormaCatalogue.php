@@ -22,7 +22,7 @@ final class LumenFormaCatalogue
 
     public const COLLECTION_SLUG = 'lumen-forma';
 
-    public const DESCRIPTION = 'Hand-cast liquid stone lighting series. Individually poured, cured, and hand-finished to order in our Bournemouth studio.';
+    public const DESCRIPTION = 'Hand-cast liquid stone lighting series. Individually poured, cured, and hand-finished to order in our Dorset Studio.';
 
     /**
      * @var list<array{slug: string, title: string, price: int, direct: bool, lengthMm: int, widthMm: int, heightMm: int, weightGrams: ?int}>
