@@ -1,0 +1,28 @@
+{#
+    Site footer (design: Site v4 Unified): a row of icon links in normal page
+    flow at the end of the content. The studio address, trading name and
+    T&Cs live on the Contact page, not here.
+#}
+{% set iconLink = 'w-11 h-11 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity' %}
+<footer class="bg-ll-bg text-ll-ink font-archivo">
+    <div class="flex flex-wrap items-center justify-between gap-4 py-[clamp(20px,3vw,32px)] px-[calc(clamp(20px,4vw,56px)-11px)]">
+        <div class="flex items-center gap-0.5">
+            {# PLACEHOLDER: links to the Contact page once it exists (Step 2). #}
+            <span class="{{ iconLink }} cursor-default" role="link" aria-disabled="true" aria-label="Contact (coming soon)" title="Contact (coming soon)">
+                <svg width="23" height="22.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13"></rect><path d="M3.5 6l8.5 7 8.5-7"></path></svg>
+            </span>
+            <a href="https://www.instagram.com/llunio_studios/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram" class="{{ iconLink }}">
+                <svg width="22.5" height="22.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.2" cy="6.8" r=".6" fill="currentColor" stroke="none"></circle></svg>
+            </a>
+            <a href="https://www.youtube.com/@LlunioStudios" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube" class="{{ iconLink }}">
+                <svg width="25" height="22.5" viewBox="0 0 26 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5.5" width="21" height="13" rx="3.5"></rect><path d="M11 9.2v5.6l4.8-2.8z"></path></svg>
+            </a>
+        </div>
+
+        {# PLACEHOLDER: not in the design. Kept so existing customers can reach
+           their orders until the accounts question is decided. #}
+        <a href="{{ path(app.user ? 'account_orders' : 'app_login') }}" class="ll-label text-ll-mute hover:text-ll-ink px-[11px]">
+            {{ app.user ? 'Your orders' : 'Sign in' }}
+        </a>
+    </div>
+</footer>

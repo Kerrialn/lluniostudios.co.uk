@@ -1,0 +1,21 @@
+{#
+    Shown wherever a real photograph doesn't exist yet. Never substitute a
+    generated, mocked-up or stand-in image for a missing photo.
+
+    Fills its container, so the parent sets the size, e.g.
+        <div class="relative aspect-[4/5]">
+            {{ include('partials/_image_coming_soon.html.twig', { title: 'Atelier' }) }}
+        </div>
+
+    Options:
+      title  optional small label under the rule (e.g. the size or option name)
+      class  extra classes for the panel
+#}
+<div class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center bg-ll-surface text-ll-ink font-archivo {{ class|default('') }}"
+     role="img" aria-label="Image coming soon{{ title|default(false) ? ': ' ~ title : '' }}">
+    <div class="font-light uppercase tracking-[0.06em] text-[clamp(26px,3vw,44px)] leading-tight">Image Coming Soon</div>
+    <div class="w-10 h-px bg-ll-ink/35"></div>
+    {% if title|default(false) %}
+        <div class="text-[11px] font-medium uppercase tracking-[0.2em] text-ll-mute">{{ title }}</div>
+    {% endif %}
+</div>

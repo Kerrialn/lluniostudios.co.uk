@@ -1,8 +1,5 @@
 {% extends 'base.html.twig' %}
 
-{# Split layout: logo overlays the image (adaptive), actions overlay the white details on desktop. #}
-{% block navbar %}{{ include('partials/_nav.html.twig', { split: true }) }}{% endblock %}
-
 {% block body %}
     <div class="grid grid-cols-1 md:grid-cols-2 md:min-h-screen">
         {# Image gallery — mobile: top, max 50vh; desktop: full-height left half #}

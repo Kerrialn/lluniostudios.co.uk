@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en-GB" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,7 +13,7 @@
         {{ vite_entry_script_tags('app') }}
     {% endblock %}
 </head>
-<body class="min-h-full bg-white text-gray-900 antialiased font-sans"
+<body class="min-h-full flex flex-col bg-ll-bg text-ll-ink antialiased font-sans"
       {{ stimulus_controller('symfony/ux-swup/swup', {
           containers: ['#main', '#navbar', '#flashes'],
           theme: 'slide',
@@ -26,8 +26,12 @@
 {# Kept outside #main so Swup's transform on #main never traps the toast under the navbar. #}
 <div id="flashes">{{ include('partials/_flashes.html.twig') }}</div>
 
-<main class="min-h-[70vh]" id="main">
+{# Pages not yet restyled keep the original light content area. Restyled pages
+   override `main_class` with the dark design, e.g. 'bg-ll-bg text-ll-ink font-archivo'. #}
+<main class="min-h-[70vh] flex-1 {% block main_class %}bg-white text-gray-900{% endblock %}" id="main">
     {% block body %}{% endblock %}
 </main>
+
+{{ include('partials/_footer.html.twig') }}
 </body>
 </html>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
 @import 'tailwindcss';
 @import 'tom-select/dist/css/tom-select.default.css';
 @plugin 'flowbite/plugin';
@@ -16,6 +16,37 @@
     /* Flowbite drawers/modals use `bg-dark-backdrop/70`; the token isn't provided
        by the plugin under Tailwind v4, so define it (matches the app's gray-900). */
     --color-dark-backdrop: #111827;
+
+    /* Llunio design system (Site v4 Unified). Use as bg-ll-bg, text-ll-ink, border-ll-line, ... */
+    --font-archivo: 'Archivo', system-ui, sans-serif;
+    --color-ll-bg: #15120e;
+    --color-ll-surface: #1c1813;
+    --color-ll-ink: #ece3d3;
+    --color-ll-mute: #a89b86;
+    --color-ll-line: rgb(236 227 211 / 0.22);
+    --color-ll-line-soft: rgb(236 227 211 / 0.14);
+}
+
+/* Small uppercase labels: nav, buttons, field labels. */
+.ll-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+/* Light, uppercase headings. */
+.ll-heading {
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    line-height: 1.1;
+}
+
+/* Underlined text link used across the design. */
+.ll-link {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
 }
 
 .boldonse-regular {
@@ -24,21 +55,20 @@
     font-style: normal;
 }
 
-/* ---- Navbar colour (class-driven, adapts to page / image luminance) ---- */
-#navbar .navbar-bar { color: #111827; }
-#navbar .navbar-bar a,
-#navbar .navbar-bar button { color: inherit; }
-#navbar .navbar-bar a:hover,
-#navbar .navbar-bar button:hover { opacity: .7; }
-#navbar .cart-badge { background: #111827; color: #ffffff; }
-
-/* White over a dark hero/image. */
-#navbar.nav-light .navbar-bar { color: #ffffff; }
-#navbar.nav-light .cart-badge { background: #ffffff; color: #111827; }
-
-/* Product show split layout: on desktop the actions overlay the white details
-   column, so keep them dark even when the logo is white over the image. */
-@media (min-width: 768px) {
-    #navbar.nav-split.nav-light .navbar-actions { color: #111827; }
-    #navbar.nav-split.nav-light .cart-badge { background: #111827; color: #ffffff; }
+/* ---- Site nav ----
+   Solid dark bar by default; `nav-overlay` makes it transparent over a full-bleed
+   hero image (homepage). Cream text in both cases. */
+#navbar {
+    background: var(--color-ll-bg);
+    border-bottom: 1px solid var(--color-ll-line);
+    color: var(--color-ll-ink);
 }
+#navbar.nav-overlay {
+    background: transparent;
+    border-bottom-color: transparent;
+}
+#navbar a:hover,
+#navbar button:hover { opacity: .7; }
+
+/* Lock page scroll while the full-screen mobile menu is open. */
+html.ll-menu-open { overflow: hidden; }

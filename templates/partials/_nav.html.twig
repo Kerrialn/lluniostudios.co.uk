@@ -1,54 +1,86 @@
 {#
-    Navbar colour is class-driven so it can adapt to the page:
-      - `light`  -> white text/icons over a dark hero image (also toggled at
-        runtime by the product-gallery controller based on image luminance).
-      - `split`  -> product show layout: on desktop the actions sit over the
-        white details column, so they stay dark even when the logo is white.
-    Colours are applied via CSS in app.css (.navbar-bar / .navbar-actions).
+    Site nav (design: Site v4 Unified).
+      - `light` -> transparent over a full-bleed hero image (homepage).
+        Otherwise a solid dark bar. Text is cream in both cases.
+    Items with `route: null` are pages from later steps and render as
+    dimmed, non-clickable placeholders.
 #}
-{% set light = light|default(false) %}
-{% set split = split|default(false) %}
-<nav id="navbar" class="fixed top-0 inset-x-0 z-40 bg-transparent {{ light ? 'nav-light' : '' }} {{ split ? 'nav-split' : '' }}">
-    <div class="navbar-bar mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-        <a class="boldonse-regular text-2xl tracking-tight" href="{{ path('landing') }}">Lluniostudios</a>
+{% set overlay = light|default(false) %}
+{% set currentRoute = app.request.attributes.get('_route') %}
+{% set basketCount = cart_item_count() %}
+{# PLACEHOLDERS: Bespoke Commissions (Step 9) and The Workshop (Step 2) have no pages yet. #}
+{% set items = [
+    { label: 'Lighting Designs', route: 'products', active: currentRoute in ['products', 'show_product', 'show_collection'] },
+    { label: 'Bespoke Commissions', route: null, active: false },
+    { label: 'The Workshop', route: null, active: false },
+    { label: basketCount > 0 ? 'Basket (' ~ basketCount ~ ')' : 'Basket', route: 'cart', active: currentRoute starts with 'cart' },
+] %}
+<nav id="navbar" aria-label="Main"
+     class="fixed top-0 inset-x-0 z-40 font-archivo {{ overlay ? 'nav-overlay' : '' }}"
+     {{ stimulus_controller('mobile-menu') }}>
+    <div class="flex items-center justify-between gap-7 py-[22px] px-[clamp(20px,4vw,56px)]">
+        <a href="{{ path('landing') }}" class="shrink-0">
+            <img src="{{ asset('images/brand/logo-mark-light.png') }}" alt="Llunio Studios" class="h-[34px] w-auto">
+        </a>
 
-        <div class="navbar-actions flex items-center gap-5">
-            <a href="{{ path('cart') }}" class="relative" aria-label="Cart">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.137a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
-                </svg>
-                {% set cartCount = cart_item_count() %}
-                {% if cartCount > 0 %}
-                    <span class="cart-badge absolute -top-1 -right-2 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold rounded-full">{{ cartCount }}</span>
-                {% endif %}
-            </a>
+        {# Desktop links #}
+        <ul class="hidden min-[900px]:flex flex-wrap items-center gap-x-[26px] gap-y-2 ll-label">
+            {% for item in items %}
+                <li>
+                    {% if item.route %}
+                        <a href="{{ path(item.route) }}"
+                           class="{{ item.active ? 'underline underline-offset-[6px]' : '' }}"
+                           {{ item.active ? 'aria-current="page"' : '' }}>{{ item.label }}</a>
+                    {% else %}
+                        <span class="opacity-40 cursor-default" aria-disabled="true" title="Coming soon">{{ item.label }}</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
 
-            <button type="button" aria-label="Open menu"
-                    data-drawer-target="drawer-nav" data-drawer-show="drawer-nav" data-drawer-placement="right" aria-controls="drawer-nav">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                </svg>
+        {# Mobile: basket count + menu button #}
+        <div class="flex min-[900px]:hidden items-center gap-1">
+            {% if basketCount > 0 %}
+                <a href="{{ path('cart') }}" aria-label="Basket, {{ basketCount }} {{ basketCount == 1 ? 'item' : 'items' }}"
+                   class="min-w-11 h-11 flex items-center justify-center ll-label tabular-nums">({{ basketCount }})</a>
+            {% endif %}
+            <button type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"
+                    class="w-11 h-11 flex flex-col items-center justify-center gap-1.5"
+                    data-mobile-menu-target="openButton" data-action="mobile-menu#open">
+                <span class="block w-[22px] h-px bg-current"></span>
+                <span class="block w-[22px] h-px bg-current"></span>
+                <span class="block w-[22px] h-px bg-current"></span>
             </button>
         </div>
     </div>
 
-    {# Flowbite drawer menu #}
-    <div id="drawer-nav" tabindex="-1" aria-labelledby="drawer-nav-label"
-         class="fixed top-0 right-0 z-50 h-screen p-6 overflow-y-auto transition-transform translate-x-full bg-white w-72 shadow-xl">
-        <button type="button" data-drawer-hide="drawer-nav" aria-controls="drawer-nav"
-                class="text-gray-400 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm w-8 h-8 absolute top-5 right-5 inline-flex items-center justify-center" aria-label="Close menu">
-            <svg class="w-3 h-3" fill="none" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
-        </button>
-        <ul class="mt-8 space-y-4 text-lg">
-            <li><a href="{{ path('landing') }}" class="text-gray-900 hover:text-gray-500">Home</a></li>
-            <li><a href="{{ path('products') }}" class="text-gray-900 hover:text-gray-500">Products</a></li>
-            <li><a href="{{ path('cart') }}" class="text-gray-900 hover:text-gray-500">Cart</a></li>
-            {% if app.user %}
-                <li><a href="{{ path('account_orders') }}" class="text-gray-900 hover:text-gray-500">My orders</a></li>
-                <li><a href="{{ path('app_logout') }}" class="text-gray-900 hover:text-gray-500">Log out</a></li>
-            {% else %}
-                <li><a href="{{ path('app_login') }}" class="text-gray-900 hover:text-gray-500">Sign in</a></li>
-            {% endif %}
+    {# Full-screen mobile menu #}
+    <div id="mobile-menu" hidden data-mobile-menu-target="panel"
+         class="fixed inset-0 z-[60] flex flex-col overflow-auto bg-ll-bg text-ll-ink" role="dialog" aria-modal="true" aria-label="Menu">
+        <div class="flex items-center justify-between py-[17px] px-[clamp(20px,4vw,56px)]">
+            <a href="{{ path('landing') }}" data-action="mobile-menu#close">
+                <img src="{{ asset('images/brand/logo-mark-light.png') }}" alt="Llunio Studios" class="h-[34px] w-auto">
+            </a>
+            <button type="button" aria-label="Close menu" data-action="mobile-menu#close"
+                    class="min-w-11 h-11 flex items-center justify-end gap-2.5 ll-label">
+                Close<span class="text-lg leading-none tracking-normal" aria-hidden="true">×</span>
+            </button>
+        </div>
+        <ul class="flex flex-col border-t border-ll-line py-[clamp(24px,6vh,56px)] px-[clamp(20px,4vw,56px)]">
+            {% for item in items %}
+                <li class="border-b border-ll-line-soft">
+                    {% if item.route %}
+                        <a href="{{ path(item.route) }}" data-action="mobile-menu#close"
+                           class="min-h-16 flex items-center justify-between gap-4 text-[22px] ll-heading"
+                           {{ item.active ? 'aria-current="page"' : '' }}>
+                            <span>{{ item.label }}</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-ll-ink {{ item.active ? '' : 'opacity-0' }}" aria-hidden="true"></span>
+                        </a>
+                    {% else %}
+                        <span class="min-h-16 flex items-center text-[22px] ll-heading opacity-40" aria-disabled="true">{{ item.label }}</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
         </ul>
     </div>
 </nav>
