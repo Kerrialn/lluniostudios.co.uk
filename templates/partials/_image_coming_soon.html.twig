@@ -8,14 +8,24 @@
         </div>
 
     Options:
-      title  optional small label under the rule (e.g. the size or option name)
-      class  extra classes for the panel
+      title    optional small label under the rule (e.g. the size or option name)
+      compact  true for a single small label ("<title> Image Coming Soon"),
+               used where text is overlaid on top (e.g. page heroes)
+      class    extra classes for the panel (e.g. a background colour)
 #}
-<div class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center bg-ll-surface text-ll-ink font-archivo {{ class|default('') }}"
-     role="img" aria-label="Image coming soon{{ title|default(false) ? ': ' ~ title : '' }}">
-    <div class="font-light uppercase tracking-[0.06em] text-[clamp(26px,3vw,44px)] leading-tight">Image Coming Soon</div>
-    <div class="w-10 h-px bg-ll-ink/35"></div>
-    {% if title|default(false) %}
-        <div class="text-[11px] font-medium uppercase tracking-[0.2em] text-ll-mute">{{ title }}</div>
-    {% endif %}
-</div>
+{% set label = title|default(false) %}
+{% if compact|default(false) %}
+    <div class="absolute inset-0 flex items-center justify-center p-6 text-center font-archivo text-xs uppercase tracking-[0.14em] text-[#9a9a9a] {{ class|default('bg-ll-surface') }}"
+         role="img" aria-label="{{ label ? label ~ ' image' : 'Image' }} coming soon">
+        {{ label ? label ~ ' ' }}Image Coming Soon
+    </div>
+{% else %}
+    <div class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center text-ll-ink font-archivo {{ class|default('bg-ll-surface') }}"
+         role="img" aria-label="Image coming soon{{ label ? ': ' ~ label }}">
+        <div class="font-light uppercase tracking-[0.06em] text-[clamp(26px,3vw,44px)] leading-tight">Image Coming Soon</div>
+        <div class="w-10 h-px bg-ll-ink/35"></div>
+        {% if label %}
+            <div class="text-[11px] font-medium uppercase tracking-[0.2em] text-ll-mute">{{ label }}</div>
+        {% endif %}
+    </div>
+{% endif %}

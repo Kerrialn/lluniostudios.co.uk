@@ -7,10 +7,9 @@
 <footer class="bg-ll-bg text-ll-ink font-archivo">
     <div class="flex flex-wrap items-center justify-between gap-4 py-[clamp(20px,3vw,32px)] px-[calc(clamp(20px,4vw,56px)-11px)]">
         <div class="flex items-center gap-0.5">
-            {# PLACEHOLDER: links to the Contact page once it exists (Step 2). #}
-            <span class="{{ iconLink }} cursor-default" role="link" aria-disabled="true" aria-label="Contact (coming soon)" title="Contact (coming soon)">
+            <a href="{{ path('contact') }}" aria-label="Contact" title="Contact" class="{{ iconLink }}">
                 <svg width="23" height="22.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13"></rect><path d="M3.5 6l8.5 7 8.5-7"></path></svg>
-            </span>
+            </a>
             <a href="https://www.instagram.com/llunio_studios/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram" class="{{ iconLink }}">
                 <svg width="22.5" height="22.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.2" cy="6.8" r=".6" fill="currentColor" stroke="none"></circle></svg>
             </a>

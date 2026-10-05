@@ -27,6 +27,16 @@
     --color-ll-line-soft: rgb(236 227 211 / 0.14);
 }
 
+/* Height of the site nav: 22px padding x2 + 1px border + the tallest item,
+   which is the 44px menu button on phones and the 34px logo from 900px up.
+   Used to size full-screen heroes that sit below the nav. */
+:root {
+    --ll-nav-h: 89px;
+}
+@media (min-width: 900px) {
+    :root { --ll-nav-h: 79px; }
+}
+
 /* Small uppercase labels: nav, buttons, field labels. */
 .ll-label {
     font-size: 12px;
@@ -56,16 +66,44 @@
 }
 
 /* ---- Site nav ----
-   Solid dark bar by default; `nav-overlay` makes it transparent over a full-bleed
-   hero image (homepage). Cream text in both cases. */
+   Solid dark bar in page flow by default, scrolling away with the page;
+   `nav-overlay` lays it transparently over the top of a full-bleed hero
+   (homepage). Cream text in both cases. */
 #navbar {
     background: var(--color-ll-bg);
     border-bottom: 1px solid var(--color-ll-line);
     color: var(--color-ll-ink);
 }
 #navbar.nav-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     background: transparent;
     border-bottom-color: transparent;
+}
+
+/* ---- Hero reveal (hero_reveal_controller.js), timings from the prototype ----
+   Full-screen hero (minus the nav) until the first interaction, then it shrinks,
+   the "Scroll to begin" cue fades and the content below fades in. */
+.ll-reveal-hero {
+    height: calc(100vh - var(--ll-nav-h));
+    transition: height 1.1s cubic-bezier(.3, .6, .2, 1);
+}
+.is-revealed .ll-reveal-hero { height: 58vh; }
+@media (min-width: 900px) {
+    .is-revealed .ll-reveal-hero { height: max(460px, 62vh); }
+}
+.ll-reveal-cue { transition: opacity .6s ease; }
+.is-revealed .ll-reveal-cue { opacity: 0; }
+.ll-reveal-body {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .9s ease .3s;
+}
+.is-revealed .ll-reveal-body {
+    opacity: 1;
+    pointer-events: auto;
 }
 #navbar a:hover,
 #navbar button:hover { opacity: .7; }

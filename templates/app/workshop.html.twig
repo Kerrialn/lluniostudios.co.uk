@@ -1,0 +1,108 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}The Workshop | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
+{% block body %}
+    {#
+        Hero: black-and-white workshop photos, cross-fading. PLACEHOLDER: no real
+        workshop photos yet (the design's are marked as stand-ins), so every slot
+        is "Workshop Image Coming Soon". Add real files as e.g.
+        { src: 'images/workshop/workshop-01.jpg' } and the empty slots go.
+    #}
+    {% set workshopPhotos = [] %}
+    {% set placeholderShades = ['bg-[#2b2b2b]', 'bg-[#333]', 'bg-[#262626]', 'bg-[#303030]', 'bg-[#292929]', 'bg-[#2e2e2e]'] %}
+
+    {# Origin story slideshow: real photos and videos of making the first lamp.
+       TODO: swap origin-06.mp4 for the clean version without the "link in bio"
+       caption once supplied. #}
+    {% set originMedia = [
+        { src: 'images/workshop/origin-01.jpg' },
+        { src: 'images/workshop/origin-02.jpg' },
+        { src: 'images/workshop/origin-03.jpg' },
+        { src: 'images/workshop/origin-04.jpg' },
+        { src: 'images/workshop/origin-05.jpg' },
+        { src: 'videos/workshop/origin-06.mp4', video: true },
+        { src: 'videos/workshop/origin-07.mp4', video: true },
+        { src: 'images/workshop/origin-08.jpg' },
+    ] %}
+
+    {#
+        Hero + reveal, matched to the Site v4 prototype: full screen (minus the
+        nav) until the first interaction, then it shrinks and the story fades in.
+        Title placement copies the Commissions / Lighting Designs intro: the
+        hidden lines are that intro's text, kept so the title gets the same
+        width, left edge and first-line indent.
+    #}
+    <div {{ stimulus_controller('hero-reveal') }}>
+    <section class="ll-reveal-hero relative overflow-hidden bg-[#2b2b2b]" {{ stimulus_controller('slideshow') }}>
+        {% if workshopPhotos is not empty %}
+            {% for photo in workshopPhotos %}
+                <div class="absolute inset-0 transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}" data-slideshow-target="slide">
+                    <img src="{{ asset(photo.src) }}" alt="" class="w-full h-full object-cover grayscale select-none" draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
+                </div>
+            {% endfor %}
+        {% else %}
+            {% for shade in placeholderShades %}
+                <div class="absolute inset-0 transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}" data-slideshow-target="slide">
+                    {{ include('partials/_image_coming_soon.html.twig', { title: 'Workshop', compact: true, class: shade }) }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="absolute inset-x-0 top-[18%] min-[900px]:top-[22%] flex justify-center min-[900px]:justify-end px-[clamp(20px,5vw,88px)] text-ll-ink pointer-events-none [text-shadow:0_1px_18px_rgba(0,0,0,.45)]">
+            <h1 class="w-max max-w-full flex flex-col items-start text-left font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
+                {# Scales down on narrow phones so the whole title fits (title + indent is ~16.1em, plus a little room). #}
+                <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/16.5))] pl-[1.4em] min-[900px]:pl-[4em]">Workshop &amp; Origin Story</span>
+                <span class="block h-0 overflow-hidden invisible whitespace-nowrap text-[30.3px]" aria-hidden="true">in our signature brutalist style,</span>
+                <span class="block h-0 overflow-hidden invisible whitespace-nowrap text-[30.3px] pl-[2.8em] min-[900px]:pl-[7em]" aria-hidden="true">custom‑built for you.</span>
+                <span class="block h-0 overflow-hidden invisible whitespace-nowrap text-[30.3px] pl-[1.4em] min-[900px]:pl-[4em]" aria-hidden="true">Your bespoke design</span>
+            </h1>
+        </div>
+        <div class="ll-reveal-cue absolute right-[clamp(20px,4vw,56px)] bottom-[clamp(20px,3vw,32px)] ll-label text-ll-ink pointer-events-none [text-shadow:0_1px_18px_rgba(0,0,0,.45)]" aria-hidden="true">Scroll to begin</div>
+    </section>
+
+    <section class="ll-reveal-body max-w-[1300px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(40px,6vw,96px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-[clamp(24px,4vw,64px)] items-stretch">
+        <div class="p-7 flex flex-col gap-2.5 text-[13px] text-ll-mute">
+            <p>Llunio Studios' journey started a couple of years ago with a birthday, a storage unit and a bag of cement.</p>
+            <p>I'd somehow begun a tradition of making one of my girlfriend's birthday presents, and that year I wanted to make her something nobody else could buy. I went with concrete. To this day I'm not entirely sure why, as I'd decided on the material before I knew what I was going to make, which in hindsight was an odd choice for a lamp. The first one came together under a single strip light, between stacked boxes and a motorcycle frame. It was heavy and a bit rough round the edges, and she loved it. She still has it today, and my back still hurts at the thought of moving it!</p>
+            <p>Making things has always been how I think. My working life has been spent in the engine rooms of ships as a marine engineer, and my spare time goes on stripping down and rebuilding custom motorcycles. Both teach you that things should be made properly and be fixable when they wear out. Somewhere along the way, that turned into wanting to make something whose only job was to look good and shed light.</p>
+            <p>People who saw that first lamp kept asking where they could get one. I couldn't find anything like it, here or abroad, so I set out to make more. Concrete really pushed back. It was too heavy to be practical, and every attempt to make it lighter made it weaker or duller. I went through aggregate after aggregate, tested pigments, ratios and pouring methods, and put plenty of casts in the bin. Slowly the material changed. It got lighter and stronger, and began to show the intricate detail I was after, along with subtle shifts in colour that no two pours repeat.</p>
+            <p>I call it liquid stone. Every Lumen Forma lamp is cast in it by hand, and every one comes out of the mould a little different from what I expected; that still hasn't changed.</p>
+        </div>
+
+        <div class="flex flex-col gap-3 self-start" {{ stimulus_controller('slideshow') }}>
+            <div class="relative w-full aspect-[4/5] overflow-hidden bg-ll-bg touch-pan-y select-none"
+                 role="region" aria-roledescription="slideshow" aria-label="The first lamp being made"
+                 data-action="touchstart->slideshow#touchStart touchmove->slideshow#touchMove touchend->slideshow#touchEnd">
+                {% for item in originMedia %}
+                    <div class="absolute inset-0 transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}" data-slideshow-target="slide">
+                        {% if item.video|default(false) %}
+                            <video src="{{ asset(item.src) }}" muted playsinline preload="metadata" class="w-full h-full object-contain"
+                                   aria-label="The first lamp being made, {{ loop.index }} of {{ loop.length }}"></video>
+                        {% else %}
+                            <img src="{{ asset(item.src) }}" alt="The first lamp being made, {{ loop.index }} of {{ loop.length }}"
+                                 class="w-full h-full object-contain" draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <button type="button" hidden data-slideshow-target="sound" data-action="slideshow#toggleSound"
+                        class="absolute right-1 bottom-1 z-10 w-11 h-11 flex items-center justify-center text-ll-ink opacity-55 hover:opacity-100 transition-opacity [filter:drop-shadow(0_0_3px_rgba(0,0,0,.55))]">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+                        <path d="M2.5 6h2.5l3.5-3v10l-3.5-3H2.5z"></path>
+                        <path d="M11 5.5c1 1 1 4 0 5M12.8 3.8c2 2 2 6.4 0 8.4" data-slideshow-target="soundOn" hidden></path>
+                        <path d="M11 6l3 4M14 6l-3 4" data-slideshow-target="soundOff"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex items-center justify-between gap-4 ll-label text-ll-mute">
+                <button type="button" class="min-h-11 flex items-center" data-action="slideshow#prev">← Back</button>
+                <span class="tabular-nums" data-slideshow-target="counter" aria-live="polite">01 / {{ '%02d'|format(originMedia|length) }}</span>
+                <button type="button" class="min-h-11 flex items-center" data-action="slideshow#next">Next →</button>
+            </div>
+        </div>
+    </section>
+    </div>
+    <noscript><style>.ll-reveal-body { opacity: 1; pointer-events: auto; }</style></noscript>
+{% endblock %}

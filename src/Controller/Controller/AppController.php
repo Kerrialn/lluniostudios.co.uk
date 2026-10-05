@@ -34,6 +34,24 @@ class AppController extends AbstractController
         ]);
     }
 
+    #[Route('/workshop', name: 'workshop', methods: ['GET'])]
+    public function workshop(): Response
+    {
+        return $this->render('app/workshop.html.twig');
+    }
+
+    #[Route('/contact', name: 'contact', methods: ['GET'])]
+    public function contact(): Response
+    {
+        return $this->render('app/contact.html.twig');
+    }
+
+    #[Route('/terms-and-conditions', name: 'terms', methods: ['GET'])]
+    public function terms(): Response
+    {
+        return $this->render('app/terms.html.twig');
+    }
+
     #[Route('/newsletter/verify/{token}', name: 'newsletter_verify_email', methods: ['GET'])]
     public function verifyNewsletterEmail(string $token): Response
     {

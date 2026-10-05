@@ -1,22 +1,23 @@
 {#
-    Site nav (design: Site v4 Unified).
+    Site nav (design: Site v4 Unified). A solid dark bar in page flow that
+    scrolls away with the page, as on the prototype's inner pages.
       - `light` -> transparent over a full-bleed hero image (homepage).
-        Otherwise a solid dark bar. Text is cream in both cases.
+    Text is cream throughout.
     Items with `route: null` are pages from later steps and render as
     dimmed, non-clickable placeholders.
 #}
 {% set overlay = light|default(false) %}
 {% set currentRoute = app.request.attributes.get('_route') %}
 {% set basketCount = cart_item_count() %}
-{# PLACEHOLDERS: Bespoke Commissions (Step 9) and The Workshop (Step 2) have no pages yet. #}
+{# PLACEHOLDER: Bespoke Commissions has no page until Step 9. #}
 {% set items = [
     { label: 'Lighting Designs', route: 'products', active: currentRoute in ['products', 'show_product', 'show_collection'] },
     { label: 'Bespoke Commissions', route: null, active: false },
-    { label: 'The Workshop', route: null, active: false },
+    { label: 'The Workshop', route: 'workshop', active: currentRoute == 'workshop' },
     { label: basketCount > 0 ? 'Basket (' ~ basketCount ~ ')' : 'Basket', route: 'cart', active: currentRoute starts with 'cart' },
 ] %}
 <nav id="navbar" aria-label="Main"
-     class="fixed top-0 inset-x-0 z-40 font-archivo {{ overlay ? 'nav-overlay' : '' }}"
+     class="relative z-40 font-archivo {{ overlay ? 'nav-overlay' : '' }}"
      {{ stimulus_controller('mobile-menu') }}>
     <div class="flex items-center justify-between gap-7 py-[22px] px-[clamp(20px,4vw,56px)]">
         <a href="{{ path('landing') }}" class="shrink-0">
