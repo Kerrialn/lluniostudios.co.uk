@@ -102,6 +102,17 @@ Images upload to `/public/uploads/images` via Vich Uploader with SmartUniqueName
 
 - **Mobile homepage photos:** a portrait pair (one dim, one bright) will be taken specifically for the homepage on upright phones. Phones will use them; desktop, tablet and sideways phones keep the current landscape pair (`public/images/home/hero-dim-*.jpg`, `hero-bright-*.jpg`). The template is already set up for them: see the "PENDING CONTENT" note in `templates/app/landing.html.twig` (add the files, set `portraitPhotos` to true) and fill in the photo's measurements in `assets/styles/app.css` under "Portrait photos for upright phones".
 - **Known phone limits until then:** with the landscape pair, upright phones with a tall visible screen (no browser bars, e.g. 390×844) get a small homepage heading (about 10.5–12.5px), and screens shorter than about 609px (e.g. 320×568) scroll slightly. Both are accepted for now and will be fixed by the portrait photos.
+- **Lumen Forma photos (configurator, `/lighting-designs`):** all or most of the current photos will be replaced with more finely edited versions. Real photos only; anything without one shows "Image Coming Soon" with its name, and one size's photos are never shown for another.
+  - **How to add or replace:** photos are listed in `src/Catalogue/LumenFormaPhotos.php` (`BY_SIZE` per size, `BY_OPTION` per option value) and stored in `public/images/lumen-forma/` as `<name>-2000.jpg` and `<name>-1000.jpg` (longest edge), re-encoded so all metadata (including GPS) is stripped. Each photo has its own desktop crop, phone framing (upright and sideways) and title-colour settings; recheck these when a photo is replaced, since a new edit may frame the lamp differently.
+  - **Sizes:**
+    - Gallery: 17 photos (`gallery-01` … `gallery-17`), in the prototype's brightest-to-darkest order: Re-Size APC_0182, APC_0145-1, Re-size APC_0170, APC_0041, APC_0069-1, APC_0172, APC_0050, Re-size APC_0199, Re-sized APC_0186, APC_0198, APC_0117, APC_0116, APC_0112, APC_0054, APC_0191, APC_0057, APC_0259. They are also the photos that cross-fade behind the title before the options open.
+    - Studio, Atelier, Estate, Monument: no photos yet ("Image Coming Soon").
+  - **Options** (one photo per value, shown on that option's stage): none in use yet, so every value shows "Image Coming Soon":
+    - The Pigment: White, Grey, Black, Custom.
+    - Cable Colour: Black Braided Cotton, Slate Grey, Raw Jute, Orange, Forest Green, Natural Linen, Black & White, Custom Textile / Length. **Parked:** real photos exist for Black & White and Orange (`uploads/Black & White-e27c1f7f.jpg` and `uploads/Orange.jpg` in the design zip) but are held back until the edited versions arrive.
+    - Footing Material: Brushed Copper, Brushed Greened Copper, Polished Copper, Brushed Aluminium, Brushed Blackened Aluminium, Polished Aluminium, Brushed Stainless Steel, Polished Stainless Steel, Custom Metal Finish.
+    - Bulb Style: Soft-Filament Amber Globe, XXL Spiral Filament, Tubular Amber LED, Smoked Glass LED, Crown Gold LED, Clear Vintage Edison, Custom Specification.
+    - Bulb Count (Atelier, Estate and Monument only): Single Array, Dual Array, Triple Array.
 
 ## For my brother
 

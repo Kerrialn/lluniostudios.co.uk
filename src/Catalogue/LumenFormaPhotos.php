@@ -59,6 +59,18 @@ final class LumenFormaPhotos
     ];
 
     /**
+     * Real photos of single option values, shown on that option's stage, keyed
+     * by option name then value (rows as above), e.g.
+     *   'Cable Colour' => ['Orange' => ['cable-orange', '50% 50%', false, false, false, '50% 50%', 'contain']],
+     * Any value without one shows "Image Coming Soon". None are in use yet:
+     * the prototype's two cable photos are parked until the finely edited
+     * versions arrive (see "Pending content" in CLAUDE.md).
+     *
+     * @var array<string, array<string, array{string, string, bool, bool, bool, string, string}>>
+     */
+    public const BY_OPTION = [];
+
+    /**
      * The photos cross-fading behind the title before the options are
      * revealed (the prototype uses the Gallery photographs).
      */
@@ -69,7 +81,17 @@ final class LumenFormaPhotos
      */
     public static function forSize(string $slug): array
     {
-        return array_map(static fn (array $row): array => [
+        return array_map(self::photo(...), self::BY_SIZE[$slug] ?? []);
+    }
+
+    /**
+     * @param array{string, string, bool, bool, bool, string, string} $row
+     *
+     * @return array{file: string, position: string, lightWide: bool, lightNarrow: bool, lightSideways: bool, upright: array{fit: string, position: string}, sideways: array{fit: string, position: string}}
+     */
+    private static function photo(array $row): array
+    {
+        return [
             'file' => $row[0],
             'position' => $row[1],
             'lightWide' => $row[2],
@@ -77,7 +99,30 @@ final class LumenFormaPhotos
             'lightSideways' => $row[4],
             'upright' => self::framing($row[5]),
             'sideways' => self::framing($row[6]),
-        ], self::BY_SIZE[$slug] ?? []);
+        ];
+    }
+
+    /**
+     * Every option photo, for the configurator.
+     *
+     * @return list<array{option: string, value: string, photo: array{file: string, position: string, lightWide: bool, lightNarrow: bool, lightSideways: bool, upright: array{fit: string, position: string}, sideways: array{fit: string, position: string}}}>
+     */
+    public static function forOptions(): array
+    {
+        /** @var array<string, array<string, array{string, string, bool, bool, bool, string, string}>> $byOption */
+        $byOption = self::BY_OPTION;
+        $photos = [];
+        foreach ($byOption as $option => $values) {
+            foreach ($values as $value => $row) {
+                $photos[] = [
+                    'option' => $option,
+                    'value' => $value,
+                    'photo' => self::photo($row),
+                ];
+            }
+        }
+
+        return $photos;
     }
 
     /**

@@ -18,7 +18,15 @@ import { Controller } from '@hotwired/stimulus';
  *    sizes only, and its choice is cleared when switching to a size without
  *    it. Moving past a stage with a required group still unchosen goes back
  *    to that stage with "Please choose ... to continue."
+ *  - Photo (7.3): after the reveal, The Scale and the review show the
+ *    chosen size's own gallery, which loops seamlessly both ways (arrows,
+ *    the side zones, swipe, arrow keys) with a clone at each end; option
+ *    stages show the chosen value's photo; anything without a real photo
+ *    shows "Image Coming Soon" with its name. Changing an option never moves
+ *    the gallery. Photos load only when needed.
  */
+const SLIDE = 'transform .7s cubic-bezier(.2,.7,.2,1)';
+const SWIPE_MIN = 50;
 const MIN_LAMPS = 1;
 // Most lamps one configuration can hold. Checkout is separately limited to
 // 2 lamps in the whole basket (BasketRules); 3 or more go to Reserve.
@@ -28,7 +36,8 @@ const SIDEWAYS = '(max-width: 899px) and (orientation: landscape)';
 
 export default class extends Controller {
     static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
-        'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity', 'modePlaceholder'];
+        'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity', 'modePlaceholder',
+        'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle'];
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         interval: { type: Number, default: 5000 },
@@ -41,6 +50,11 @@ export default class extends Controller {
         this.quantity = MIN_LAMPS;
         this.choices = {};
         this.warned = new Set();
+        this.photoIndex = 0;
+        this.slot = null;
+        this.dragX = 0;
+        this.onKey = (event) => this.keyPhoto(event);
+        window.addEventListener('keydown', this.onKey);
         this.groupsValue.forEach((group) => { if (group.default) this.choices[group.name] = group.default; });
         this.wide = window.matchMedia(WIDE);
         this.onMedia = () => this.renderIdle();
@@ -56,15 +70,20 @@ export default class extends Controller {
 
     disconnect() {
         clearInterval(this.timer);
+        clearTimeout(this.snapTimer);
+        window.removeEventListener('keydown', this.onKey);
         this.wide.removeEventListener('change', this.onMedia);
         this.sideways.removeEventListener('change', this.onMedia);
     }
 
     revealed() {
         this.revealedAlready = true;
+        this.revealedAt = performance.now();
         clearInterval(this.timer);
         this.idleIndex = 0;
         this.renderIdle();
+        if (this.hasIdleLayerTarget) this.idleLayerTarget.hidden = true;
+        this.renderPhoto();
     }
 
     advanceIdle() {
@@ -77,9 +96,12 @@ export default class extends Controller {
         this.load(this.idleIndex + 1);
     }
 
-    // Starts loading photo i (if it hasn't been yet) and returns it.
+    // Starts loading idle photo i (if it hasn't been yet) and returns it.
     load(i) {
-        const photo = this.idleTargets[i % this.idleTargets.length];
+        return this.loadImage(this.idleTargets[i % this.idleTargets.length]);
+    }
+
+    loadImage(photo) {
         if (photo && photo.dataset.src) {
             photo.srcset = photo.dataset.srcset;
             photo.src = photo.dataset.src;
@@ -127,6 +149,7 @@ export default class extends Controller {
         }
         this.renderStage();
         this.renderChoices();
+        this.renderPhoto();
     }
 
     // Choices -------------------------------------------------------------
@@ -135,11 +158,13 @@ export default class extends Controller {
         const { group, value } = event.currentTarget.dataset;
         if (group === 'size') {
             this.sizeValue = value;
+            this.slot = null;
             this.groupsValue.forEach((g) => { if (!this.available(g)) delete this.choices[g.name]; });
         } else {
             this.choices[group] = value;
         }
         this.renderChoices();
+        this.renderPhoto();
     }
 
     fewer() {
@@ -205,5 +230,132 @@ export default class extends Controller {
         const hasNext = this.step < stages.length - 1;
         this.nextTarget.hidden = !hasNext;
         this.nextTitleTarget.textContent = hasNext ? stages[this.step + 1] : '';
+    }
+
+    // Photo -----------------------------------------------------------------
+
+    renderPhoto() {
+        if (!this.revealedAlready) return;
+        const stageKey = this.stageKeysValue[this.step];
+        const showGallery = stageKey === 'scale' || stageKey === 'review';
+        const gallery = showGallery ? this.currentGallery() : null;
+
+        let photo = null;
+        let soonTitle = '';
+        if (showGallery) {
+            if (!gallery) soonTitle = (this.sizesValue.find((s) => s.slug === this.sizeValue) || {}).name || '';
+        } else {
+            const group = this.groupsValue.find((g) => g.stage === stageKey && this.available(g));
+            const value = group ? this.choices[group.name] : undefined;
+            photo = this.optionPhotoTargets.find((el) => el.dataset.group === group?.name && el.dataset.value === value) || null;
+            if (!photo) soonTitle = value || '';
+        }
+
+        this.galleryTargets.forEach((el) => { el.hidden = el !== gallery; });
+        this.optionPhotoTargets.forEach((el) => { el.hidden = el !== photo; });
+        if (photo) this.loadImage(photo);
+        this.soonTarget.hidden = Boolean(gallery || photo);
+        this.soonTitleTarget.textContent = soonTitle;
+        this.soonTitleTarget.hidden = !soonTitle;
+        this.soonTarget.setAttribute('aria-label', soonTitle ? `Image coming soon: ${soonTitle}` : 'Image coming soon');
+        if (gallery) this.renderGallery(true);
+    }
+
+    currentGallery() {
+        return this.galleryTargets.find((el) => el.dataset.size === this.sizeValue) || null;
+    }
+
+    galleryCount() {
+        const gallery = this.currentGallery();
+        return gallery ? Number(gallery.dataset.count) : 0;
+    }
+
+    // Track positions: with clones, position 0 is the last photo's clone and
+    // n + 1 the first photo's; photo i sits at i + 1.
+    renderGallery(instant = false) {
+        const gallery = this.currentGallery();
+        if (!gallery || gallery.hidden) return;
+        const n = this.galleryCount();
+        this.photoIndex = ((this.photoIndex % n) + n) % n;
+        if (this.slot === null) this.slot = n > 1 ? this.photoIndex + 1 : 0;
+
+        const track = gallery.querySelector('[data-gallery-track]');
+        track.style.transition = instant || this.dragging ? 'none' : SLIDE;
+        track.style.transform = `translateX(calc(${-this.slot * 100}% + ${this.dragX}px))`;
+        const pad = (v) => String(v).padStart(2, '0');
+        gallery.querySelector('[data-gallery-count]').textContent = `${pad(this.photoIndex + 1)} / ${pad(n)}`;
+
+        const imgs = track.children;
+        [this.slot - 1, this.slot, this.slot + 1].forEach((k) => this.loadImage(imgs[k]));
+    }
+
+    previousPhoto() {
+        this.movePhoto(-1);
+    }
+
+    nextPhoto() {
+        this.movePhoto(1);
+    }
+
+    movePhoto(direction) {
+        const n = this.galleryCount();
+        if (n < 2 || !this.currentGallery() || this.currentGallery().hidden) return;
+        clearTimeout(this.snapTimer);
+
+        // Sitting on a clone (a quick second press): jump to the real photo first.
+        if (this.slot === 0 || this.slot === n + 1) {
+            this.slot = this.photoIndex + 1;
+            this.renderGallery(true);
+            void this.currentGallery().offsetWidth;
+        }
+
+        this.photoIndex = (this.photoIndex + direction + n) % n;
+        this.slot = Math.max(0, Math.min(n + 1, this.slot + direction));
+        this.renderGallery();
+
+        // Slid onto a clone: once the slide ends, swap to the real photo unseen.
+        if (this.slot === 0 || this.slot === n + 1) {
+            this.snapTimer = setTimeout(() => {
+                this.slot = this.photoIndex + 1;
+                this.renderGallery(true);
+            }, 720);
+        }
+    }
+
+    swipeStart(event) {
+        const t = event.touches[0];
+        this.touchStart = [t.clientX, t.clientY];
+        this.dragging = true;
+        this.dragX = 0;
+    }
+
+    swipeMove(event) {
+        if (!this.touchStart) return;
+        const t = event.touches[0];
+        const dx = t.clientX - this.touchStart[0];
+        const dy = t.clientY - this.touchStart[1];
+        if (Math.abs(dx) > Math.abs(dy)) {
+            this.dragX = dx;
+            this.renderGallery();
+        }
+    }
+
+    swipeEnd() {
+        if (!this.touchStart) return;
+        const dx = this.dragX;
+        this.touchStart = null;
+        this.dragging = false;
+        this.dragX = 0;
+        if (dx < -SWIPE_MIN) this.movePhoto(1);
+        else if (dx > SWIPE_MIN) this.movePhoto(-1);
+        else this.renderGallery();
+    }
+
+    keyPhoto(event) {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        // The key press that revealed the panel doesn't also move the gallery.
+        if (!this.revealedAlready || event.timeStamp <= this.revealedAt) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName || '')) return;
+        this.movePhoto(event.key === 'ArrowRight' ? 1 : -1);
     }
 }

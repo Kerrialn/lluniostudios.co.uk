@@ -8,8 +8,10 @@
     and the title and "Scroll to begin" fade. No memory between visits. The
     panel frame moves between the six stages.
     Sub-step 7.2: the stages' size, option lists, specifications and quantity
-    (data from LumenFormaConfigurator). Photos per stage, Customise All /
-    Individually, and the review and button follow in 7.3-7.5.
+    (data from LumenFormaConfigurator).
+    Sub-step 7.3: the photo beside the panel per stage (size galleries, option
+    photos, "Image Coming Soon"; the photo list is in CLAUDE.md, Pending content). Customise All / Individually, and the review
+    and button follow in 7.4-7.5.
     No footer on this page, as in the prototype.
 #}
 {% block title %}Lighting Designs | Llunio Studios{% endblock %}
@@ -25,6 +27,7 @@
             <div class="ll-cfg-photo">
                 {# Only the first photo loads with the page; the controller loads each
                    of the others one photo ahead of the cross-fade. #}
+                <div class="absolute inset-0" data-configurator-target="idleLayer">
                 {% for photo in idlePhotos %}
                     {% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
                     {% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
@@ -34,6 +37,46 @@
                          style="--pos: {{ photo.position }}; --fit-up: {{ photo.upright.fit }}; --pos-up: {{ photo.upright.position }}; --fit-side: {{ photo.sideways.fit }}; --pos-side: {{ photo.sideways.position }}"
                          data-configurator-target="idle" data-light-wide="{{ photo.lightWide ? 1 : 0 }}" data-light-narrow="{{ photo.lightNarrow ? 1 : 0 }}" data-light-sideways="{{ photo.lightSideways ? 1 : 0 }}">
                 {% endfor %}
+                </div>
+
+                {# After the reveal: the photo for the current stage. The Scale and the
+                   review show the size's own gallery (looping both ways: arrows, the
+                   side zones, swipe, the arrow keys); option stages show that option's
+                   photo; anything without a real photo shows "Image Coming Soon". #}
+                {% for slug, photos in galleries %}
+                    {% set sizeName = (sizes|filter(s => s.slug == slug)|first).name %}
+                    {% set loopPhotos = photos|length > 1 ? [photos|last]|merge(photos)|merge([photos|first]) : photos %}
+                    <div class="absolute inset-0 overflow-hidden touch-pan-y select-none" hidden
+                         role="region" aria-roledescription="carousel" aria-label="{{ sizeName }} photos"
+                         data-configurator-target="gallery" data-size="{{ slug }}" data-count="{{ photos|length }}"
+                         data-action="touchstart->configurator#swipeStart touchmove->configurator#swipeMove touchend->configurator#swipeEnd touchcancel->configurator#swipeEnd">
+                        <div class="flex h-full" data-gallery-track>
+                            {% for photo in loopPhotos %}
+                                {{ include('configurator/_photo.html.twig', { photo: photo, alt: 'Lumen Forma, ' ~ sizeName, class: 'flex-none w-full h-full' }) }}
+                            {% endfor %}
+                        </div>
+                        <div aria-hidden="true" class="absolute left-0 inset-y-0 w-[26%] cursor-w-resize" data-action="click->configurator#previousPhoto"></div>
+                        <div aria-hidden="true" class="absolute right-0 inset-y-0 w-[26%] cursor-e-resize" data-action="click->configurator#nextPhoto"></div>
+                        <div class="absolute left-[clamp(20px,3vw,40px)] right-[clamp(20px,3vw,40px)] bottom-[clamp(20px,3vw,32px)] flex flex-wrap items-center justify-between gap-x-5 gap-y-2.5 text-[11px] uppercase tracking-[0.16em] text-ll-ink [text-shadow:0_1px_12px_rgba(0,0,0,.6)]">
+                            <span>{{ sizeName }}</span>
+                            <div class="flex items-center gap-[18px]">
+                                <button type="button" class="text-[15px] tracking-normal px-0.5 py-1.5" aria-label="Previous photo" data-action="configurator#previousPhoto">←</button>
+                                <span class="tabular-nums" aria-live="polite" data-gallery-count>01 / {{ '%02d'|format(photos|length) }}</span>
+                                <button type="button" class="text-[15px] tracking-normal px-0.5 py-1.5" aria-label="Next photo" data-action="configurator#nextPhoto">→</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                {% for item in optionPhotos %}
+                    {{ include('configurator/_photo.html.twig', { photo: item.photo, alt: 'Lumen Forma ' ~ item.option|lower ~ ', ' ~ item.value, class: 'absolute inset-0 w-full h-full',
+                        attrs: 'hidden data-configurator-target="optionPhoto" data-group="' ~ item.option|e('html_attr') ~ '" data-value="' ~ item.value|e('html_attr') ~ '"' }) }}
+                {% endfor %}
+                <div class="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center bg-ll-surface border-r border-[rgba(236,227,211,.08)]"
+                     role="img" aria-label="Image coming soon" hidden data-configurator-target="soon">
+                    <div class="font-light uppercase tracking-[0.06em] text-[clamp(26px,3vw,44px)] leading-tight">Image Coming Soon</div>
+                    <div class="w-10 h-px bg-ll-ink/35"></div>
+                    <div class="text-[11px] font-medium uppercase tracking-[0.2em] text-ll-mute" data-configurator-target="soonTitle"></div>
+                </div>
 
                 {# Title over the photo; the hidden lines give it the same left edge and
                    indent as the Commissions intro (as on the Workshop page). #}

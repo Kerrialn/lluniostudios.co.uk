@@ -1,0 +1,12 @@
+{#
+    One configurator photo with its per-photo framing (LumenFormaPhotos).
+    Loaded only when the controller asks for it (data-src), unless eager.
+    Options: photo, alt, class, eager (bool), attrs (raw extra attributes).
+#}
+{% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
+{% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
+<img {% if eager|default(false) %}src="{{ src }}" srcset="{{ srcset }}"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
+     sizes="100vw" alt="{{ alt }}" draggable="false"
+     class="ll-cfg-img select-none {{ class|default('') }}"
+     style="--pos: {{ photo.position }}; --fit-up: {{ photo.upright.fit }}; --pos-up: {{ photo.upright.position }}; --fit-side: {{ photo.sideways.fit }}; --pos-side: {{ photo.sideways.position }}"
+     {{ attrs|default('')|raw }}>
