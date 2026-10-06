@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{#
+    Lumen Forma configurator ("Lighting Designs"), Site v4 prototype.
+    Sub-step 7.1: full-bleed photo with the Gallery photos cross-fading behind
+    the title until the visitor scrolls, clicks, taps or presses a key; then
+    the options panel (25% wide, min 300px; below the photo on phones) reveals
+    and the title and "Scroll to begin" fade. No memory between visits. The
+    panel frame moves between the six stages; their options come in 7.2-7.5.
+    No footer on this page, as in the prototype.
+#}
+{% block title %}Lighting Designs | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block body %}
+    {% set pad = '%02d' %}
+    <div {{ stimulus_controller('hero-reveal')|stimulus_controller('configurator', { stages: stages }) }}
+         data-action="hero-reveal:revealed->configurator#revealed">
+        <div class="ll-cfg-row">
+            {# Photo #}
+            <div class="ll-cfg-photo">
+                {# Only the first photo loads with the page; the controller loads each
+                   of the others one photo ahead of the cross-fade. #}
+                {% for photo in idlePhotos %}
+                    {% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
+                    {% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
+                    <img {% if loop.first %}src="{{ src }}" srcset="{{ srcset }}" fetchpriority="high"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
+                         sizes="100vw" alt="Lumen Forma" draggable="false"
+                         class="ll-cfg-img absolute inset-0 w-full h-full select-none transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}"
+                         style="--pos: {{ photo.position }}; --fit-up: {{ photo.upright.fit }}; --pos-up: {{ photo.upright.position }}; --fit-side: {{ photo.sideways.fit }}; --pos-side: {{ photo.sideways.position }}"
+                         data-configurator-target="idle" data-light-wide="{{ photo.lightWide ? 1 : 0 }}" data-light-narrow="{{ photo.lightNarrow ? 1 : 0 }}" data-light-sideways="{{ photo.lightSideways ? 1 : 0 }}">
+                {% endfor %}
+
+                {# Title over the photo; the hidden lines give it the same left edge and
+                   indent as the Commissions intro (as on the Workshop page). #}
+                <div class="ll-cfg-hero ll-reveal-cue absolute inset-x-0 top-[18%] min-[900px]:top-[22%] flex flex-col items-center min-[900px]:items-end gap-[18px] px-[clamp(20px,5vw,88px)] pointer-events-none" data-configurator-target="hero">
+                    <div class="w-max max-w-full flex flex-col gap-[18px]">
+                        <div aria-hidden="true" class="h-0 overflow-hidden invisible flex flex-col items-start font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
+                            <span class="block whitespace-nowrap text-[30.3px] pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Your bespoke design</span>
+                            <span class="block whitespace-nowrap text-[30.3px]">in our signature brutalist style,</span>
+                            <span class="block whitespace-nowrap text-[30.3px] pl-[calc(2.8*30.3px)] min-[900px]:pl-[calc(7*30.3px)]">custom‑built for you.</span>
+                        </div>
+                        <h1 class="-mt-[18px] flex flex-col items-start font-light text-[clamp(28px,2.9vw,48px)] leading-[1.04] uppercase tracking-[0.03em]">
+                            <span class="block whitespace-nowrap pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Lumen Forma</span>
+                        </h1>
+                        {# The prototype's three staggered lines, never wrapped. Below 400px
+                           the long middle line doesn't fit, so the copy is set as four
+                           (indents 1.4 / 0 / 1.4 / 2.8); below 375px the text eases down
+                           in size so the first line still fits at 320px. #}
+                        <p class="flex flex-col items-start leading-[1.55] whitespace-nowrap">
+                            <span class="block text-[min(17px,calc((100vw_-_82px)/16.5))] pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Hand-cast liquid stone lighting series.</span>
+                            <span class="block text-[min(18px,calc((100vw_-_82px)/15.6))]">Individually poured, cured,<span class="hidden min-[400px]:inline"> and hand-finished</span></span>
+                            <span class="block text-[min(18px,calc((100vw_-_82px)/15.6))] pl-[calc(1.4*30.3px)] min-[400px]:hidden">and hand-finished to order</span>
+                            <span class="block text-[min(18px,calc((100vw_-_82px)/15.6))] pl-[calc(2.8*30.3px)] min-[900px]:pl-[calc(7*30.3px)]"><span class="hidden min-[400px]:inline">to order </span>in our Dorset Studio.</span>
+                        </p>
+                    </div>
+                </div>
+                {# Sideways phones: bottom-left, over the dark surround of the whole-lamp photos. #}
+                <div class="ll-cfg-hero ll-reveal-cue absolute right-[clamp(20px,4vw,56px)] max-[899px]:landscape:right-auto max-[899px]:landscape:left-[clamp(20px,4vw,56px)] bottom-[clamp(20px,3vw,32px)] ll-label pointer-events-none" aria-hidden="true" data-configurator-target="hero">Scroll to begin</div>
+            </div>
+
+            {# Options panel #}
+            <div class="ll-cfg-panel">
+                <div class="ll-cfg-panel-inner">
+                    <div class="flex justify-between items-start gap-4 flex-wrap">
+                        <div class="flex flex-col gap-2 flex-[1_1_260px] min-w-0">
+                            <span class="text-[18px] uppercase tracking-[0.16em] text-ll-mute">Lumen Forma</span>
+                            <p class="text-[13px] leading-[1.55] text-ll-mute max-w-[400px] [text-wrap:pretty]" data-configurator-target="intro">Hand-cast liquid stone lighting series. Individually poured, cured, and hand-finished to order in our Dorset Studio.</p>
+                        </div>
+                        <ol class="flex gap-1.5" aria-label="Stages">
+                            {% for stage in stages %}
+                                <li>
+                                    <button type="button" class="ll-cfg-step" title="{{ stage }}" aria-label="{{ stage }}"
+                                            data-configurator-target="step" data-step="{{ loop.index0 }}" data-action="configurator#jump">
+                                        <span class="text-[11px] tabular-nums">{{ pad|format(loop.index) }}</span>
+                                        <span class="ll-cfg-step-line"></span>
+                                    </button>
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+
+                    <div class="flex flex-col gap-3.5">
+                        <span class="text-[11px] uppercase tracking-[0.2em] text-ll-mute" data-configurator-target="stageNumber">01 / {{ pad|format(stages|length) }}</span>
+                        <h2 class="font-light text-[15px] leading-[1.02] uppercase tracking-[0.03em]" data-configurator-target="stageTitle">{{ stages|first }}</h2>
+                    </div>
+
+                    {# PLACEHOLDERS: each stage's options arrive in sub-steps 7.2-7.5. #}
+                    {% for stage in stages %}
+                        <div data-configurator-target="stage" {{ loop.first ? '' : 'hidden' }}>
+                            <div class="border border-dashed border-ll-line p-4 text-[13px] text-ll-mute">
+                                {% if loop.last %}[Review and button arrive in sub-step 7.5]{% else %}[{{ stage }} options arrive in sub-step 7.2]{% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <div class="flex-1"></div>
+                    <div class="flex flex-wrap justify-between items-center gap-x-4 gap-y-3 border-t border-ll-line pt-[18px]">
+                        <button type="button" class="text-xs uppercase tracking-[0.14em] text-ll-mute opacity-0" disabled
+                                data-configurator-target="back" data-action="configurator#back">← <span data-configurator-target="backTitle"></span></button>
+                        <button type="button" class="ml-auto text-right max-w-full text-xs uppercase tracking-[0.14em] min-[900px]:tracking-[0.03em] min-[900px]:whitespace-nowrap border-b border-ll-ink pb-[3px]"
+                                data-configurator-target="next" data-action="configurator#next"><span data-configurator-target="nextTitle">{{ stages[1] }}</span> →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

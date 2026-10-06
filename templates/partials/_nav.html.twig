@@ -14,7 +14,7 @@
 {% set basketCount = cart_item_count() %}
 {# PLACEHOLDER: Bespoke Commissions has no page until Step 9. #}
 {% set items = [
-    { label: 'Lighting Designs', route: 'products', active: currentRoute in ['products', 'show_product', 'show_collection'] },
+    { label: 'Lighting Designs', route: 'lighting_designs', active: currentRoute in ['lighting_designs', 'products', 'show_product', 'show_collection'] },
     { label: 'Bespoke Commissions', route: null, active: false },
     { label: 'The Workshop', route: 'workshop', active: currentRoute == 'workshop' },
     { label: basketCount > 0 ? 'Basket (' ~ basketCount ~ ')' : 'Basket', route: 'cart', active: currentRoute starts with 'cart' },

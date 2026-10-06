@@ -28,6 +28,8 @@ export default class extends Controller {
     reveal() {
         this.element.classList.add('is-revealed');
         this.stopListening();
+        // Lets other controllers react, e.g. data-action="hero-reveal:revealed->configurator#revealed".
+        this.dispatch('revealed');
     }
 
     stopListening() {
