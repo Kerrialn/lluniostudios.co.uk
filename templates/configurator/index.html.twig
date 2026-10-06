@@ -10,8 +10,11 @@
     Sub-step 7.2: the stages' size, option lists, specifications and quantity
     (data from LumenFormaConfigurator).
     Sub-step 7.3: the photo beside the panel per stage (size galleries, option
-    photos, "Image Coming Soon"; the photo list is in CLAUDE.md, Pending content). Customise All / Individually, and the review
-    and button follow in 7.4-7.5.
+    photos, "Image Coming Soon"; the photo list is in CLAUDE.md, Pending
+    content).
+    Sub-step 7.4: Customise All / Individually for 2 or more lamps, with
+    Lamp 1, Lamp 2, ... tabs on the option stages. The review and button
+    follow in 7.5.
     No footer on this page, as in the prototype.
 #}
 {% block title %}Lighting Designs | Llunio Studios{% endblock %}
@@ -132,9 +135,14 @@
                         <h2 class="font-light text-[15px] leading-[1.02] uppercase tracking-[0.03em]" data-configurator-target="stageTitle">{{ stages|first }}</h2>
                     </div>
 
-                    {# Stages. Options are plain lists (the prototype's starting choices are
-                       set by the controller); a group only some sizes have (Bulb Count) shows
-                       for those sizes only. #}
+                    {# Customise Individually: which lamp the option stages are editing
+                       (Lamp 1, Lamp 2, ...; built by the controller). #}
+                    <div class="flex flex-wrap gap-x-[22px] gap-y-1.5 border-b border-ll-line-soft" role="group" aria-label="Lamp being configured"
+                         data-configurator-target="units" hidden></div>
+
+                    {# Stages. Options are plain lists, all starting empty (Gallery is the
+                       starting size); a group only some sizes have (Bulb Count) shows for
+                       those sizes only. #}
                     {% for stage in stages %}
                         {% set stageKey = stageKeys[loop.index0] %}
                         <div class="flex flex-col gap-[clamp(28px,4vw,48px)]" data-configurator-target="stage" {{ loop.first ? '' : 'hidden' }}>
@@ -173,9 +181,20 @@
                                             <button type="button" class="px-4 py-2" aria-label="More lamps" data-action="configurator#more">+</button>
                                         </div>
                                     </div>
-                                    {# PLACEHOLDERS: the Customise All / Individually choice (2+ lamps) arrives in
-                                       7.4; the purchase route note and button in 7.5. #}
-                                    <div class="border border-dashed border-ll-line p-4 text-[13px] text-ll-mute" data-configurator-target="modePlaceholder" hidden>[Customise All / Individually arrives in sub-step 7.4]</div>
+                                    {# Customise All / Individually, for 2 or more lamps. PLACEHOLDER: the
+                                       purchase route note and button arrive in 7.5. #}
+                                    <div class="flex flex-col gap-3" data-configurator-target="modes" hidden>
+                                        <span id="cfg-modes" class="text-[14px]">How would you like to configure your lamps?</span>
+                                        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-2" role="group" aria-labelledby="cfg-modes">
+                                            {% for mode in [{ key: 'all', label: 'Customise All', description: 'Apply the same configuration to every lamp.' }, { key: 'individual', label: 'Customise Individually', description: 'Configure each lamp separately.' }] %}
+                                                <button type="button" class="ll-cfg-mode" aria-pressed="false"
+                                                        data-configurator-target="mode" data-mode="{{ mode.key }}" data-action="configurator#chooseMode">
+                                                    <span class="text-[11px] uppercase tracking-[0.16em] text-ll-ink">{{ mode.label }}</span>
+                                                    <span class="text-[12px] leading-[1.45] text-ll-mute">{{ mode.description }}</span>
+                                                </button>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
                                     <div class="border border-dashed border-ll-line p-4 text-[13px] text-ll-mute">[Purchase route arrives in sub-step 7.5]</div>
                                 </div>
                             {% elseif stageKey == 'review' %}

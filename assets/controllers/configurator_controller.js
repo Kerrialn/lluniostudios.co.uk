@@ -12,18 +12,22 @@ import { Controller } from '@hotwired/stimulus';
  *    photo shows.
  *  - The options panel moves between the six stages with Back / Next and the
  *    01-06 indicator.
- *  - Stages (7.2): size, options and quantity, starting from the prototype's
- *    choices (Gallery and three pre-selected options; The Pigment and Bulb
- *    Count empty). A group only some sizes have (Bulb Count) shows for those
- *    sizes only, and its choice is cleared when switching to a size without
- *    it. Moving past a stage with a required group still unchosen goes back
- *    to that stage with "Please choose ... to continue."
+ *  - Stages (7.2): size, options and quantity. Gallery starts selected;
+ *    every option starts empty and must be chosen. A group only some sizes
+ *    have (Bulb Count) shows for those sizes only, and its choice is cleared
+ *    when switching to a size without it. Moving past a stage (by Next or the
+ *    stage numbers) with a choice still missing goes back to that stage with
+ *    "Please choose a ... to continue."
  *  - Photo (7.3): after the reveal, The Scale and the review show the
  *    chosen size's own gallery, which loops seamlessly both ways (arrows,
  *    the side zones, swipe, arrow keys) with a clone at each end; option
  *    stages show the chosen value's photo; anything without a real photo
  *    shows "Image Coming Soon" with its name. Changing an option never moves
  *    the gallery. Photos load only when needed.
+ *  - Customise All / Individually (7.4), for 2 or more lamps: individually,
+ *    the option stages show Lamp 1, Lamp 2, ... tabs. Each lamp starts from
+ *    the shared choices and keeps its own changes; every choice is needed for
+ *    every lamp (moving on opens the first lamp missing one on that stage).
  */
 const SLIDE = 'transform .7s cubic-bezier(.2,.7,.2,1)';
 const SWIPE_MIN = 50;
@@ -36,8 +40,8 @@ const SIDEWAYS = '(max-width: 899px) and (orientation: landscape)';
 
 export default class extends Controller {
     static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
-        'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity', 'modePlaceholder',
-        'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle'];
+        'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity',
+        'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle', 'modes', 'mode', 'units'];
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         interval: { type: Number, default: 5000 },
@@ -50,12 +54,14 @@ export default class extends Controller {
         this.quantity = MIN_LAMPS;
         this.choices = {};
         this.warned = new Set();
+        this.mode = 'all';
+        this.lampChoices = [];
+        this.unit = 0;
         this.photoIndex = 0;
         this.slot = null;
         this.dragX = 0;
         this.onKey = (event) => this.keyPhoto(event);
         window.addEventListener('keydown', this.onKey);
-        this.groupsValue.forEach((group) => { if (group.default) this.choices[group.name] = group.default; });
         this.wide = window.matchMedia(WIDE);
         this.onMedia = () => this.renderIdle();
         this.sideways = window.matchMedia(SIDEWAYS);
@@ -139,11 +145,16 @@ export default class extends Controller {
 
     goTo(step) {
         const target = Math.max(0, Math.min(this.stagesValue.length - 1, step));
-        const missing = this.groupsValue.find((group) => group.required && this.available(group)
-            && !this.choices[group.name] && this.stageOf(group) < target);
-        if (missing) {
-            this.warned.add(missing.name);
-            this.step = this.stageOf(missing);
+        // The first stage before the target with a choice missing for any lamp.
+        const lamps = this.lampConfigurations();
+        const isMissing = (group) => this.available(group) && lamps.some((lamp) => !lamp[group.name]);
+        const first = this.groupsValue.find((group) => this.stageOf(group) < target && isMissing(group));
+        if (first) {
+            const stage = this.stageOf(first);
+            const missing = this.groupsValue.filter((group) => this.stageOf(group) === stage && isMissing(group));
+            missing.forEach((group) => this.warned.add(group.name));
+            this.step = stage;
+            if (this.individually()) this.unit = lamps.findIndex((lamp) => missing.some((group) => !lamp[group.name]));
         } else {
             this.step = target;
         }
@@ -159,7 +170,13 @@ export default class extends Controller {
         if (group === 'size') {
             this.sizeValue = value;
             this.slot = null;
-            this.groupsValue.forEach((g) => { if (!this.available(g)) delete this.choices[g.name]; });
+            this.groupsValue.forEach((g) => {
+                if (this.available(g)) return;
+                delete this.choices[g.name];
+                this.lampChoices.forEach((lamp) => { if (lamp) delete lamp[g.name]; });
+            });
+        } else if (this.individually()) {
+            this.lampChoices[this.unit] = { ...(this.lampChoices[this.unit] || {}), [group]: value };
         } else {
             this.choices[group] = value;
         }
@@ -169,7 +186,40 @@ export default class extends Controller {
 
     fewer() {
         this.quantity = Math.max(MIN_LAMPS, this.quantity - 1);
+        this.unit = Math.min(this.unit, this.quantity - 1);
         this.renderChoices();
+    }
+
+    chooseMode(event) {
+        this.mode = event.currentTarget.dataset.mode;
+        this.renderChoices();
+    }
+
+    chooseUnit(event) {
+        this.unit = Number(event.currentTarget.dataset.unit);
+        this.renderChoices();
+        this.renderPhoto();
+    }
+
+    individually() {
+        return this.quantity >= 2 && this.mode === 'individual';
+    }
+
+    // One lamp's choices: the shared ones, overridden by its own.
+    choicesFor(i) {
+        return { ...this.choices, ...(this.lampChoices[i] || {}) };
+    }
+
+    // The choices being edited: the current lamp's, or the shared ones.
+    current() {
+        return this.individually() ? this.choicesFor(this.unit) : this.choices;
+    }
+
+    // Every lamp's choices (one entry when customising all).
+    lampConfigurations() {
+        return this.individually()
+            ? Array.from({ length: this.quantity }, (_, i) => this.choicesFor(i))
+            : [this.choices];
     }
 
     more() {
@@ -189,9 +239,10 @@ export default class extends Controller {
         const size = this.sizesValue.find((s) => s.slug === this.sizeValue) || this.sizesValue[0];
         if (!size) return;
 
+        const current = this.current();
         this.optionTargets.forEach((el) => {
             const { group, value } = el.dataset;
-            const selected = group === 'size' ? value === size.slug : this.choices[group] === value;
+            const selected = group === 'size' ? value === size.slug : current[group] === value;
             el.classList.toggle('is-selected', selected);
             el.setAttribute('aria-pressed', selected ? 'true' : 'false');
         });
@@ -200,14 +251,44 @@ export default class extends Controller {
         });
         this.warningTargets.forEach((el) => {
             const name = el.dataset.group;
-            el.hidden = !(this.warned.has(name) && !this.choices[name]);
+            el.hidden = !(this.warned.has(name) && !current[name]);
         });
 
         if (this.hasSizeNoteTarget) this.sizeNoteTarget.textContent = size.note;
         if (this.hasSpecTarget) this.specTarget.textContent = `${size.name} · ${size.price}`;
         this.dimensionTargets.forEach((el) => { el.textContent = size[el.dataset.dimension] ?? '—'; });
         if (this.hasQuantityTarget) this.quantityTarget.textContent = String(this.quantity);
-        if (this.hasModePlaceholderTarget) this.modePlaceholderTarget.hidden = this.quantity < 2;
+        if (this.hasModesTarget) this.modesTarget.hidden = this.quantity < 2;
+        this.modeTargets.forEach((el) => {
+            const selected = el.dataset.mode === this.mode;
+            el.classList.toggle('is-selected', selected);
+            el.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        });
+        this.renderUnits();
+    }
+
+    // Lamp tabs: only when customising individually, on the option stages.
+    renderUnits() {
+        if (!this.hasUnitsTarget) return;
+        const key = this.stageKeysValue[this.step];
+        const show = this.individually() && key !== 'scale' && key !== 'review';
+        this.unitsTarget.hidden = !show;
+        if (!show) return;
+        if (this.unitsTarget.children.length !== this.quantity) {
+            this.unitsTarget.replaceChildren(...Array.from({ length: this.quantity }, (_, i) => {
+                const tab = document.createElement('button');
+                tab.type = 'button';
+                tab.className = 'll-cfg-unit';
+                tab.dataset.unit = String(i);
+                tab.dataset.action = 'configurator#chooseUnit';
+                tab.textContent = `Lamp ${i + 1}`;
+                return tab;
+            }));
+        }
+        [...this.unitsTarget.children].forEach((tab, i) => {
+            tab.classList.toggle('is-current', i === this.unit);
+            tab.setAttribute('aria-pressed', i === this.unit ? 'true' : 'false');
+        });
     }
 
     renderStage() {
@@ -246,7 +327,7 @@ export default class extends Controller {
             if (!gallery) soonTitle = (this.sizesValue.find((s) => s.slug === this.sizeValue) || {}).name || '';
         } else {
             const group = this.groupsValue.find((g) => g.stage === stageKey && this.available(g));
-            const value = group ? this.choices[group.name] : undefined;
+            const value = group ? this.current()[group.name] : undefined;
             photo = this.optionPhotoTargets.find((el) => el.dataset.group === group?.name && el.dataset.value === value) || null;
             if (!photo) soonTitle = value || '';
         }

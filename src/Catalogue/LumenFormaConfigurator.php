@@ -44,7 +44,7 @@ final class LumenFormaConfigurator
     /**
      * Option groups in stage order, then position.
      *
-     * @return list<array{name: string, stage: string, values: list<array{value: string, request: bool}>, sizes: list<string>, default: ?string, required: bool, warning: string}>
+     * @return list<array{name: string, stage: string, values: list<array{value: string, request: bool}>, sizes: list<string>, warning: string}>
      */
     public function groups(): array
     {
@@ -53,7 +53,6 @@ final class LumenFormaConfigurator
             foreach ($product->getProductOptions() as $option) {
                 $name = $option->getName();
                 if (! isset($groups[$name])) {
-                    $default = LumenFormaCatalogue::DEFAULT_VALUES[$name] ?? null;
                     $groups[$name] = [
                         'name' => $name,
                         'stage' => (string) $option->getStage(),
@@ -63,9 +62,7 @@ final class LumenFormaConfigurator
                             'request' => $value->isGoesToRequest(),
                         ], $option->getProductOptionValues()->toArray())),
                         'sizes' => [],
-                        'default' => $default,
-                        'required' => null === $default,
-                        'warning' => 'Please choose a ' . mb_strtolower((string) preg_replace('/^The /', '', $name)) . ' to continue.',
+                        'warning' => self::warning($name),
                     ];
                 }
                 $groups[$name]['sizes'][] = (string) $product->getSlug();
@@ -105,6 +102,17 @@ final class LumenFormaConfigurator
         }
 
         return $products;
+    }
+
+    /**
+     * Shown when moving past an option without choosing, e.g. "Please choose
+     * a cable to continue.".
+     */
+    public static function warning(string $option): string
+    {
+        $noun = LumenFormaCatalogue::CHOICE_NOUNS[$option] ?? mb_strtolower((string) preg_replace('/^The /', '', $option));
+
+        return 'Please choose a ' . $noun . ' to continue.';
     }
 
     public static function sizeName(Product $product): string

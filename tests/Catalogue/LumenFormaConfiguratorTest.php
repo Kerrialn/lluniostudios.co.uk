@@ -28,17 +28,21 @@ final class LumenFormaConfiguratorTest extends TestCase
         self::assertSame('Starting at £7,999', LumenFormaConfigurator::priceLabel(self::product('Lumen Forma Monument', 799900, false)));
     }
 
-    public function testStartingChoicesLeaveThePigmentEmpty(): void
+    public function testStartsOnGalleryWithEveryOptionEmpty(): void
     {
         self::assertSame('lumen-forma-gallery', LumenFormaCatalogue::DEFAULT_SIZE);
-        self::assertArrayNotHasKey('The Pigment', LumenFormaCatalogue::DEFAULT_VALUES);
-        self::assertArrayNotHasKey('Bulb Count', LumenFormaCatalogue::DEFAULT_VALUES);
-        self::assertSame(['Cable Colour', 'Footing Material', 'Bulb Style'], array_keys(LumenFormaCatalogue::DEFAULT_VALUES));
+        self::assertFalse(\defined(LumenFormaCatalogue::class . '::DEFAULT_VALUES'), 'No option is pre-selected.');
+    }
 
-        $values = array_column(LumenFormaCatalogue::OPTIONS, 'values', 'name');
-        foreach (LumenFormaCatalogue::DEFAULT_VALUES as $option => $value) {
-            self::assertContains($value, $values[$option]);
-        }
+    public function testEveryOptionHasAChoiceMessage(): void
+    {
+        self::assertSame('Please choose a pigment to continue.', LumenFormaConfigurator::warning('The Pigment'));
+        self::assertSame('Please choose a cable to continue.', LumenFormaConfigurator::warning('Cable Colour'));
+        self::assertSame('Please choose a footing to continue.', LumenFormaConfigurator::warning('Footing Material'));
+        self::assertSame('Please choose a bulb style to continue.', LumenFormaConfigurator::warning('Bulb Style'));
+        self::assertSame('Please choose a bulb count to continue.', LumenFormaConfigurator::warning('Bulb Count'));
+
+        self::assertSame(array_column(LumenFormaCatalogue::OPTIONS, 'name'), array_keys(LumenFormaCatalogue::CHOICE_NOUNS));
     }
 
     private static function product(string $title, int $pence, bool $direct): Product

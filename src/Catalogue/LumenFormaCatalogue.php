@@ -120,19 +120,22 @@ final class LumenFormaCatalogue
     ];
 
     /**
-     * The configurator's starting choices (as in the prototype): Gallery,
-     * with these three options pre-selected. The Pigment and Bulb Count
-     * start empty and must be chosen.
+     * The configurator starts on Gallery. Every option starts empty and must
+     * be chosen (for every lamp) before moving on.
      */
     public const DEFAULT_SIZE = 'lumen-forma-gallery';
 
     /**
+     * How each option is named in "Please choose a ... to continue.".
+     *
      * @var array<string, string>
      */
-    public const DEFAULT_VALUES = [
-        'Cable Colour' => 'Black Braided Cotton',
-        'Footing Material' => 'Brushed Aluminium',
-        'Bulb Style' => 'XXL Spiral Filament',
+    public const CHOICE_NOUNS = [
+        'The Pigment' => 'pigment',
+        'Cable Colour' => 'cable',
+        'Footing Material' => 'footing',
+        'Bulb Style' => 'bulb style',
+        'Bulb Count' => 'bulb count',
     ];
 
     public static function goesToRequest(string $value): bool

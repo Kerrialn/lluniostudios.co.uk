@@ -498,5 +498,34 @@
     color: var(--color-ll-ink);
 }
 
+/* Customise All / Individually cards, and the Lamp 1, Lamp 2, ... tabs. */
+.ll-cfg-mode {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    text-align: left;
+    border: 1px solid var(--color-ll-line);
+    background: transparent;
+    transition: border-color .3s;
+}
+.ll-cfg-mode.is-selected {
+    border-color: var(--color-ll-ink);
+    background: rgba(236, 227, 211, .06);
+}
+.ll-cfg-unit {
+    padding: 0 0 10px;
+    margin: 0 0 -1px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--color-ll-mute);
+    border-bottom: 1px solid transparent;
+}
+.ll-cfg-unit.is-current {
+    color: var(--color-ll-ink);
+    border-bottom-color: var(--color-ll-ink);
+}
+
 /* Lock page scroll while the full-screen mobile menu is open. */
 html.ll-menu-open { overflow: hidden; }
