@@ -30,3 +30,6 @@ phpstan.neon
 !/docker/php/zz-opcache-dev.ini
 
 /public/uploads/*
+
+# Headless Chrome profiles from local browser test runs
+/chrome-profile*/

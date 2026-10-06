@@ -12,18 +12,36 @@ import { Controller } from '@hotwired/stimulus';
  *    photo shows.
  *  - The options panel moves between the six stages with Back / Next and the
  *    01-06 indicator.
+ *  - Stages (7.2): size, options and quantity, starting from the prototype's
+ *    choices (Gallery and three pre-selected options; The Pigment and Bulb
+ *    Count empty). A group only some sizes have (Bulb Count) shows for those
+ *    sizes only, and its choice is cleared when switching to a size without
+ *    it. Moving past a stage with a required group still unchosen goes back
+ *    to that stage with "Please choose ... to continue."
  */
+const MIN_LAMPS = 1;
+// Most lamps one configuration can hold. Checkout is separately limited to
+// 2 lamps in the whole basket (BasketRules); 3 or more go to Reserve.
+const MAX_LAMPS = 10;
 const WIDE = '(min-width: 900px)';
 const SIDEWAYS = '(max-width: 899px) and (orientation: landscape)';
 
 export default class extends Controller {
-    static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle'];
-    static values = { stages: Array, interval: { type: Number, default: 5000 } };
+    static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
+        'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity', 'modePlaceholder'];
+    static values = {
+        stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
+        interval: { type: Number, default: 5000 },
+    };
 
     connect() {
         this.idleIndex = 0;
         this.step = 0;
         this.revealedAlready = false;
+        this.quantity = MIN_LAMPS;
+        this.choices = {};
+        this.warned = new Set();
+        this.groupsValue.forEach((group) => { if (group.default) this.choices[group.name] = group.default; });
         this.wide = window.matchMedia(WIDE);
         this.onMedia = () => this.renderIdle();
         this.sideways = window.matchMedia(SIDEWAYS);
@@ -31,6 +49,7 @@ export default class extends Controller {
         this.sideways.addEventListener('change', this.onMedia);
         this.renderIdle();
         this.renderStage();
+        this.renderChoices();
         this.load(1);
         this.timer = setInterval(() => this.advanceIdle(), this.intervalValue);
     }
@@ -97,8 +116,73 @@ export default class extends Controller {
     }
 
     goTo(step) {
-        this.step = Math.max(0, Math.min(this.stagesValue.length - 1, step));
+        const target = Math.max(0, Math.min(this.stagesValue.length - 1, step));
+        const missing = this.groupsValue.find((group) => group.required && this.available(group)
+            && !this.choices[group.name] && this.stageOf(group) < target);
+        if (missing) {
+            this.warned.add(missing.name);
+            this.step = this.stageOf(missing);
+        } else {
+            this.step = target;
+        }
         this.renderStage();
+        this.renderChoices();
+    }
+
+    // Choices -------------------------------------------------------------
+
+    choose(event) {
+        const { group, value } = event.currentTarget.dataset;
+        if (group === 'size') {
+            this.sizeValue = value;
+            this.groupsValue.forEach((g) => { if (!this.available(g)) delete this.choices[g.name]; });
+        } else {
+            this.choices[group] = value;
+        }
+        this.renderChoices();
+    }
+
+    fewer() {
+        this.quantity = Math.max(MIN_LAMPS, this.quantity - 1);
+        this.renderChoices();
+    }
+
+    more() {
+        this.quantity = Math.min(MAX_LAMPS, this.quantity + 1);
+        this.renderChoices();
+    }
+
+    available(group) {
+        return group.sizes.includes(this.sizeValue);
+    }
+
+    stageOf(group) {
+        return this.stageKeysValue.indexOf(group.stage);
+    }
+
+    renderChoices() {
+        const size = this.sizesValue.find((s) => s.slug === this.sizeValue) || this.sizesValue[0];
+        if (!size) return;
+
+        this.optionTargets.forEach((el) => {
+            const { group, value } = el.dataset;
+            const selected = group === 'size' ? value === size.slug : this.choices[group] === value;
+            el.classList.toggle('is-selected', selected);
+            el.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        });
+        this.groupTargets.forEach((el) => {
+            el.hidden = !el.dataset.sizes.split(',').includes(size.slug);
+        });
+        this.warningTargets.forEach((el) => {
+            const name = el.dataset.group;
+            el.hidden = !(this.warned.has(name) && !this.choices[name]);
+        });
+
+        if (this.hasSizeNoteTarget) this.sizeNoteTarget.textContent = size.note;
+        if (this.hasSpecTarget) this.specTarget.textContent = `${size.name} · ${size.price}`;
+        this.dimensionTargets.forEach((el) => { el.textContent = size[el.dataset.dimension] ?? '—'; });
+        if (this.hasQuantityTarget) this.quantityTarget.textContent = String(this.quantity);
+        if (this.hasModePlaceholderTarget) this.modePlaceholderTarget.hidden = this.quantity < 2;
     }
 
     renderStage() {

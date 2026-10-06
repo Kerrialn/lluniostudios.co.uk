@@ -475,5 +475,28 @@
     background: currentColor;
 }
 
+/* Option lists (configurator stages): plain rows; the chosen one is cream,
+   heavier and indented behind a cream rule, as in the prototype. */
+.ll-cfg-opt {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--color-ll-line-soft);
+    border-left: 1px solid transparent;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-weight: 400;
+    color: var(--color-ll-mute);
+    transition: padding .3s, color .3s;
+}
+.ll-cfg-opt.is-selected {
+    padding-left: 14px;
+    border-left-color: var(--color-ll-ink);
+    font-weight: 500;
+    color: var(--color-ll-ink);
+}
+
 /* Lock page scroll while the full-screen mobile menu is open. */
 html.ll-menu-open { overflow: hidden; }

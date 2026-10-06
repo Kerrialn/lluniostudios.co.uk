@@ -6,7 +6,10 @@
     the title until the visitor scrolls, clicks, taps or presses a key; then
     the options panel (25% wide, min 300px; below the photo on phones) reveals
     and the title and "Scroll to begin" fade. No memory between visits. The
-    panel frame moves between the six stages; their options come in 7.2-7.5.
+    panel frame moves between the six stages.
+    Sub-step 7.2: the stages' size, option lists, specifications and quantity
+    (data from LumenFormaConfigurator). Photos per stage, Customise All /
+    Individually, and the review and button follow in 7.3-7.5.
     No footer on this page, as in the prototype.
 #}
 {% block title %}Lighting Designs | Llunio Studios{% endblock %}
@@ -15,7 +18,7 @@
 
 {% block body %}
     {% set pad = '%02d' %}
-    <div {{ stimulus_controller('hero-reveal')|stimulus_controller('configurator', { stages: stages }) }}
+    <div {{ stimulus_controller('hero-reveal')|stimulus_controller('configurator', { stages: stages, stageKeys: stageKeys, sizes: sizes, groups: groups, size: defaultSize }) }}
          data-action="hero-reveal:revealed->configurator#revealed">
         <div class="ll-cfg-row">
             {# Photo #}
@@ -86,12 +89,71 @@
                         <h2 class="font-light text-[15px] leading-[1.02] uppercase tracking-[0.03em]" data-configurator-target="stageTitle">{{ stages|first }}</h2>
                     </div>
 
-                    {# PLACEHOLDERS: each stage's options arrive in sub-steps 7.2-7.5. #}
+                    {# Stages. Options are plain lists (the prototype's starting choices are
+                       set by the controller); a group only some sizes have (Bulb Count) shows
+                       for those sizes only. #}
                     {% for stage in stages %}
-                        <div data-configurator-target="stage" {{ loop.first ? '' : 'hidden' }}>
-                            <div class="border border-dashed border-ll-line p-4 text-[13px] text-ll-mute">
-                                {% if loop.last %}[Review and button arrive in sub-step 7.5]{% else %}[{{ stage }} options arrive in sub-step 7.2]{% endif %}
-                            </div>
+                        {% set stageKey = stageKeys[loop.index0] %}
+                        <div class="flex flex-col gap-[clamp(28px,4vw,48px)]" data-configurator-target="stage" {{ loop.first ? '' : 'hidden' }}>
+                            {% if stageKey == 'scale' %}
+                                <div class="flex flex-col gap-4" role="group" aria-labelledby="cfg-group-size">
+                                    <div class="flex justify-between items-baseline gap-4 flex-wrap border-b border-ll-line-soft pb-2.5"><span id="cfg-group-size" class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Size</span></div>
+                                    <div class="flex flex-col">
+                                        {% for size in sizes %}
+                                            <button type="button" class="ll-cfg-opt" aria-pressed="false"
+                                                    data-configurator-target="option" data-group="size" data-value="{{ size.slug }}" data-action="configurator#choose">{{ size.name }}</button>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="text-[12px] text-ll-mute" data-configurator-target="sizeNote"></div>
+                                    <div class="flex flex-col gap-3 pt-4 border-t border-ll-line-soft w-full max-w-[521px]">
+                                        <div class="flex justify-between items-baseline gap-4 flex-wrap">
+                                            <span class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Specifications</span>
+                                            <span class="text-[13px]" data-configurator-target="spec"></span>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2.5">
+                                            {% for dimension in ['Length', 'Width', 'Height'] %}
+                                                <div class="flex flex-col gap-1 border-l border-ll-line py-px pl-3">
+                                                    <span class="text-[10.5px] uppercase tracking-[0.16em] text-ll-mute">{{ dimension }}</span>
+                                                    <span class="text-base leading-[1.2] tabular-nums"><span data-configurator-target="dimension" data-dimension="{{ dimension|lower }}"></span><span class="text-xs text-ll-mute ml-[3px]">cm</span></span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-[11px] text-ll-mute">Measurements may vary slightly due to the handmade nature</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-[18px] pt-[22px] border-t border-ll-line-soft">
+                                    <div class="flex justify-between items-center gap-4 flex-wrap">
+                                        <span id="cfg-quantity" class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Quantity</span>
+                                        <div class="flex border border-[rgba(236,227,211,.3)] text-[15px]" role="group" aria-labelledby="cfg-quantity">
+                                            <button type="button" class="px-4 py-2" aria-label="Fewer lamps" data-action="configurator#fewer">−</button>
+                                            <span class="px-3.5 py-2 min-w-10 text-center tabular-nums" aria-live="polite" data-configurator-target="quantity">1</span>
+                                            <button type="button" class="px-4 py-2" aria-label="More lamps" data-action="configurator#more">+</button>
+                                        </div>
+                                    </div>
+                                    {# PLACEHOLDERS: the Customise All / Individually choice (2+ lamps) arrives in
+                                       7.4; the purchase route note and button in 7.5. #}
+                                    <div class="border border-dashed border-ll-line p-4 text-[13px] text-ll-mute" data-configurator-target="modePlaceholder" hidden>[Customise All / Individually arrives in sub-step 7.4]</div>
+                                    <div class="border border-dashed border-ll-line p-4 text-[13px] text-ll-mute">[Purchase route arrives in sub-step 7.5]</div>
+                                </div>
+                            {% elseif stageKey == 'review' %}
+                                {# PLACEHOLDER: review rows and the button arrive in 7.5. #}
+                                <div class="border border-dashed border-ll-line p-4 text-[13px] text-ll-mute">[Review and button arrive in sub-step 7.5]</div>
+                            {% else %}
+                                {% for group in groups|filter(g => g.stage == stageKey) %}
+                                    {% set groupId = 'cfg-group-' ~ group.name|lower|replace({' ': '-'}) %}
+                                    <div class="flex flex-col gap-4" role="group" aria-labelledby="{{ groupId }}"
+                                         data-configurator-target="group" data-group="{{ group.name }}" data-sizes="{{ group.sizes|join(',') }}">
+                                        <div class="flex justify-between items-baseline gap-4 flex-wrap border-b border-ll-line-soft pb-2.5"><span id="{{ groupId }}" class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">{{ group.name }}</span></div>
+                                        <div class="flex flex-col">
+                                            {% for value in group.values %}
+                                                <button type="button" class="ll-cfg-opt" aria-pressed="false"
+                                                        data-configurator-target="option" data-group="{{ group.name }}" data-value="{{ value.value }}" data-action="configurator#choose">{{ value.value }}</button>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="text-[12px] text-ll-mute" role="alert" data-configurator-target="warning" data-group="{{ group.name }}" hidden>{{ group.warning }}</div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
                         </div>
                     {% endfor %}
 
