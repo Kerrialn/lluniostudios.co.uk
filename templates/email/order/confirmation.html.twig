@@ -13,8 +13,11 @@
             <tr>
                 <td style="padding:6px 0;">
                     {{ item.quantity }} × {{ item.productTitle }}
-                    {% for opt in item.optionsSnapshot %}
-                        <br><small>{{ opt.option }}: {{ opt.value }}</small>
+                    {% for group in item.lampConfigurations %}
+                        {% if group.label %}<br><small><strong>{{ group.label }}</strong></small>{% endif %}
+                        {% for opt in group.options %}
+                            <br><small>{{ opt.option }}: {{ opt.value }}</small>
+                        {% endfor %}
                     {% endfor %}
                 </td>
                 <td align="right" style="padding:6px 0;">{{ item.lineTotalInGbp|format_currency('GBP') }}</td>

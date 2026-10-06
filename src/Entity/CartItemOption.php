@@ -8,9 +8,10 @@ use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: CartItemOptionRepository::class)]
+// One value per option per lamp (lamp 0 = every lamp on the line).
 #[ORM\UniqueConstraint(
-    name: 'cart_item_optval_unique',
-    columns: ['cart_item_id', 'product_option_value_id']
+    name: 'cart_item_option_lamp_unique',
+    columns: ['cart_item_id', 'product_option_id', 'lamp']
 )]
 class CartItemOption
 {
@@ -32,15 +33,26 @@ class CartItemOption
     #[ORM\JoinColumn(name: 'product_option_value_id', referencedColumnName: 'id')]
     private ProductOptionValue $productOptionValue;
 
+    /**
+     * Which lamp on the line this choice is for: 0 = every lamp, or 1..n when
+     * the line is customised individually.
+     */
+    #[ORM\Column(options: [
+        'default' => 0,
+    ])]
+    private int $lamp = 0;
+
     public function __construct(
         CartItem $cartItem,
         ProductOption $productOption,
-        ProductOptionValue $productOptionValue
+        ProductOptionValue $productOptionValue,
+        int $lamp = 0,
     )
     {
         $this->cartItem = $cartItem;
         $this->productOption = $productOption;
         $this->productOptionValue = $productOptionValue;
+        $this->lamp = $lamp;
         $cartItem->addCartItemOption($this);
     }
 
@@ -72,6 +84,11 @@ class CartItemOption
     public function getProductOptionValue(): ProductOptionValue
     {
         return $this->productOptionValue;
+    }
+
+    public function getLamp(): int
+    {
+        return $this->lamp;
     }
 
     public function setProductOptionValue(ProductOptionValue $productOptionValue): void

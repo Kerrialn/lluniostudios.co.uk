@@ -26,7 +26,6 @@ final class CartResolver
         private readonly Security $security,
         private readonly RequestStack $requestStack,
         private readonly EntityManagerInterface $entityManager,
-        private readonly CartHelper $cartHelper,
     ) {
     }
 
@@ -81,8 +80,11 @@ final class CartResolver
     }
 
     /**
-     * Move the anonymous session cart onto the given user, merging with any
-     * cart the user already has. Called when a user is established at checkout.
+     * Move the anonymous session cart onto the given user, adding its lines to
+     * any cart the user already has (lines are never merged: each Add to
+     * Basket stays its own line). Called when a user is established at
+     * checkout. The result may exceed the checkout limit; BasketRules
+     * catches that before payment.
      */
     public function attachToUser(User $user): Cart
     {
@@ -95,12 +97,11 @@ final class CartResolver
         $userCart = $user->getCart();
 
         if ($sessionCart instanceof Cart && $userCart instanceof Cart && $sessionCart !== $userCart) {
-            // Merge session items into the user's existing cart, then drop the session cart.
+            // Move session lines into the user's existing cart, then drop the session cart.
             foreach ($sessionCart->getCartItems()->toArray() as $cartItem) {
                 $sessionCart->removeCartItem($cartItem);
                 $userCart->addCartItem($cartItem);
             }
-            $this->cartHelper->mergeCartItemDuplication($userCart);
             $this->entityManager->remove($sessionCart);
         } elseif ($sessionCart instanceof Cart && ! $userCart instanceof Cart) {
             $user->setCart($sessionCart);

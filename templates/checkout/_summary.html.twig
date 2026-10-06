@@ -4,9 +4,12 @@
         {% for item in cart.cartItems %}
             <div class="flex justify-between gap-3 py-3 text-sm">
                 <div>
-                    <span class="text-gray-900">{{ item.quantity }} × {{ item.product.title|title }}</span>
-                    {% for option in item.cartItemOptions %}
-                        <div class="text-gray-500 text-xs">{{ option.productOption.name }}: {{ option.productOptionValue.value }}</div>
+                    <span class="text-gray-900">{{ item.quantity }} × {{ item.product.title }}</span>
+                    {% for group in item.lampConfigurations %}
+                        {% if group.label %}<div class="text-gray-700 text-xs mt-1">{{ group.label }}</div>{% endif %}
+                        {% for option in group.options %}
+                            <div class="text-gray-500 text-xs">{{ option.productOption.name }}: {{ option.productOptionValue.value }}</div>
+                        {% endfor %}
                     {% endfor %}
                 </div>
                 <span class="text-gray-900 whitespace-nowrap">{{ item.lineTotalInGbp|format_currency('GBP') }}</span>

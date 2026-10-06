@@ -36,12 +36,16 @@ final readonly class OrderFactory
                 continue;
             }
 
+            // In configurator order; lamp 0 = every lamp on the line, 1..n = that lamp.
             $options = [];
-            foreach ($cartItem->getCartItemOptions() as $option) {
-                $options[] = [
-                    'option' => (string) $option->getProductOption()->getName(),
-                    'value' => (string) $option->getProductOptionValue()->getValue(),
-                ];
+            foreach ($cartItem->getLampConfigurations() as $index => $group) {
+                foreach ($group['options'] as $option) {
+                    $options[] = [
+                        'option' => $option->getProductOption()->getName(),
+                        'value' => $option->getProductOptionValue()->getValue(),
+                        'lamp' => $cartItem->isCustomisedIndividually() ? $index + 1 : 0,
+                    ];
+                }
             }
 
             $order->addItem(new OrderItem(

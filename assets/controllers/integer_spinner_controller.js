@@ -14,12 +14,14 @@ export default class extends Controller {
         const value = parseFloat(this.inputTarget.value) || 0;
         const min = this.inputTarget.hasAttribute('min') ? parseFloat(this.inputTarget.min) : null;
         this.inputTarget.value = (min !== null) ? Math.max(value - 1, min) : (value - 1);
+        this.announce();
     }
 
     increment() {
         const value = parseFloat(this.inputTarget.value) || 0;
         const max = this.inputTarget.hasAttribute('max') ? parseFloat(this.inputTarget.max) : null;
         this.inputTarget.value = (max !== null) ? Math.min(value + 1, max) : (value + 1);
+        this.announce();
     }
 
     keydown(event) {
@@ -36,5 +38,11 @@ export default class extends Controller {
         if (max !== null && newValue > max) newValue = max;
 
         this.inputTarget.value = newValue;
+        this.announce();
+    }
+
+    // Let other controllers (e.g. purchase-route) react to the new value.
+    announce() {
+        this.inputTarget.dispatchEvent(new Event('input', { bubbles: true }));
     }
 }

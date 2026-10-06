@@ -1,45 +1,109 @@
 {% extends 'base.html.twig' %}
+
+{#
+    The basket ("Your Studio Order"), matched to the Site v4 prototype. Each
+    Add to Basket is its own line; a line shows one configuration, or one per
+    lamp when customised individually. Instant checkout is limited by
+    BasketRules (2 lamps in total, direct sizes, no Custom options); a basket
+    that can't check out shows the prototype's "Reserve Your Design" button and
+    purchase route note instead of the payment buttons.
+
+    Not here yet: the gift option (saved on the order with the checkout, Step 10).
+#}
+{% block title %}Basket | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
 {% block body %}
-    <div class="mx-auto max-w-3xl px-4 pt-28 pb-16">
-        <h1 class="boldonse-regular text-3xl text-gray-900 mb-8">Cart</h1>
+    {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-sm' %}
+    {% set rowKey = 'll-label text-[11px] text-ll-mute' %}
+    {% set textLink = 'self-start text-xs text-ll-mute ll-link hover:text-ll-ink' %}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
+        <div class="flex justify-between items-baseline gap-4 flex-wrap">
+            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Studio Order</h1>
+            {% if cart.cartItems is not empty %}
+                <span class="ll-label text-[11px] text-ll-mute">
+                    {{ lampCount }} {{ lampCount == 1 ? 'lamp' : 'lamps' }}{% if cart.cartItems|length > 1 %} · {{ cart.cartItems|length }} items{% endif %}
+                </span>
+            {% endif %}
+        </div>
 
         {% if cart.cartItems is empty %}
-            <p class="text-gray-500 mb-6 text-center">Your cart is empty.</p>
+            <div class="flex flex-col items-start gap-5 py-6 border-t border-ll-line">
+                <p class="text-ll-mute">Your basket is empty.</p>
+                <a href="{{ path('products') }}" class="border border-ll-ink px-[22px] py-3.5 ll-label">Explore our lighting designs</a>
+            </div>
         {% else %}
-            <div class="divide-y divide-gray-100 border-y border-gray-100 mb-6">
-                {% for item in cart.cartItems %}
-                    <div class="flex justify-between items-start gap-4 py-4">
-                        <div class="flex-1">
-                            <h2 class="font-medium text-gray-900">{{ item.product.title|title }}</h2>
-                            {% for option in item.cartItemOptions %}
-                                <p class="text-sm text-gray-500">{{ option.productOption.name }}: {{ option.productOptionValue.value }}</p>
-                            {% endfor %}
-                            <p class="text-sm text-gray-500 mt-1">{{ item.unitPriceInGbp|format_currency('GBP') }} each</p>
+            <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
+                <div class="flex-[1.5_1_460px] min-w-0 flex flex-col border-t border-ll-line">
+                    {% for item in cart.cartItems %}
+                        {% set product = item.product %}
+                        <div class="grid grid-cols-[clamp(96px,14vw,160px)_minmax(0,1fr)] gap-[clamp(18px,3vw,32px)] py-7 border-b border-ll-line">
+                            {% if product.cardImage %}
+                                <img src="{{ asset('uploads/images/' ~ product.cardImage.filename) }}" alt="{{ product.title }}" class="w-full aspect-[3/4] object-cover">
+                            {% else %}
+                                <div class="relative w-full aspect-[3/4]">
+                                    {{ include('partials/_image_coming_soon.html.twig', { compact: true }) }}
+                                </div>
+                            {% endif %}
+
+                            <div class="flex flex-col gap-[18px] min-w-0">
+                                <div class="flex justify-between items-baseline gap-4 flex-wrap">
+                                    <h2 class="ll-heading text-[clamp(17px,1.4vw,20px)]">{{ product.title }}</h2>
+                                    <span class="text-[15px]">
+                                        {{ item.lineTotalInGbp|format_currency('GBP', {fraction_digit: 0}) }}
+                                        {% if item.quantity > 1 %}<span class="block text-right text-xs text-ll-mute">{{ item.unitPriceInGbp|format_currency('GBP', {fraction_digit: 0}) }} each</span>{% endif %}
+                                    </span>
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <div class="{{ row }}"><span class="{{ rowKey }}">Quantity</span><span class="text-right">{{ item.quantity }}</span></div>
+                                    {% if item.quantity >= 2 %}
+                                        <div class="{{ row }}"><span class="{{ rowKey }}">Configuration</span><span class="text-right">{{ item.customisedIndividually ? 'Customise Individually' : 'Customise All' }}</span></div>
+                                    {% endif %}
+                                </div>
+
+                                {% for group in item.lampConfigurations %}
+                                    <div class="flex flex-col">
+                                        {% if group.label %}
+                                            <div class="text-[13px] pt-1.5 pb-2 border-b border-ll-ink">{{ group.label }}</div>
+                                        {% endif %}
+                                        {% for option in group.options %}
+                                            <div class="{{ row }}"><span class="{{ rowKey }}">{{ option.productOption.name }}</span><span class="text-right">{{ option.productOptionValue.value }}</span></div>
+                                        {% endfor %}
+                                    </div>
+                                {% endfor %}
+
+                                <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                                    {% if not item.customisedIndividually %}
+                                        <a href="{{ path('show_product', {slug: product.slug, edit: item.id}) }}" class="{{ textLink }}">Edit configuration</a>
+                                    {% endif %}
+                                    <form action="{{ path('cart_remove_item', {id: item.id}) }}" method="post" class="flex">
+                                        <button type="submit" class="{{ textLink }}">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <div class="font-semibold text-gray-900 mb-2">{{ item.lineTotalInGbp|format_currency('GBP') }}</div>
-                            <form action="{{ path('cart_update_item', {id: item.id}) }}" method="post" class="flex items-center gap-1 justify-end">
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="999"
-                                       class="w-16 rounded-lg border border-gray-300 bg-gray-50 p-1.5 text-sm text-center text-gray-900">
-                                <button type="submit" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50">Update</button>
-                            </form>
-                            <form action="{{ path('cart_remove_item', {id: item.id}) }}" method="post" class="mt-1">
-                                <button type="submit" class="text-sm text-red-600 hover:underline">Remove</button>
-                            </form>
-                        </div>
+                    {% endfor %}
+                </div>
+
+                <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-[18px] p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
+                    <p class="text-[13px] text-ll-mute leading-normal">Hand-cast to order in our Dorset Studio. Dispatched within {{ lead_time.label }} depending on casting schedule.</p>
+                    <div class="flex flex-col">
+                        <div class="flex justify-between gap-3 text-[13px] py-2.5 border-t border-ll-line"><span>Subtotal</span><span class="text-right">{{ cart.totalInGbp|format_currency('GBP', {fraction_digit: 0}) }}</span></div>
+                        <div class="flex justify-between gap-3 text-[13px] py-2.5 border-t border-b border-ll-line"><span>DPD Next Day Delivery</span><span class="text-right">Calculated before payment</span></div>
                     </div>
-                {% endfor %}
-            </div>
 
-            <div class="flex justify-between items-center mb-8">
-                <span class="text-gray-500">{{ cart.itemCount }} item{{ cart.itemCount != 1 ? 's' }}</span>
-                <span class="text-xl font-semibold text-gray-900">Total: {{ cart.totalInGbp|format_currency('GBP') }}</span>
+                    {% if checkoutBlockers is not empty %}
+                        {# Over the lamp limit, a Request size or a Custom choice: the whole order goes by request. #}
+                        {{ include('partials/_purchase_route.html.twig', { reserve: true, note: routeNote, href: path('basket_request') }) }}
+                    {% else %}
+                        {# Both lead to checkout for now; the separate Express Payment page comes with Step 10. #}
+                        <a href="{{ path('checkout') }}" class="border border-ll-ink py-[15px] text-center text-[13px]">Express Payment (Apple Pay / Google Pay)</a>
+                        <a href="{{ path('checkout') }}" class="bg-ll-ink text-ll-bg py-[18px] text-center ll-label">Proceed to Payment</a>
+                    {% endif %}
+                    <a href="{{ path('terms') }}" class="text-xs text-ll-mute text-center underline">Terms &amp; Conditions</a>
+                </aside>
             </div>
-
-            <a href="{{ path('checkout') }}"
-               class="block w-full text-center rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800">
-                Proceed to checkout
-            </a>
         {% endif %}
     </div>
 {% endblock %}

@@ -42,19 +42,39 @@
                     <div class="mb-8 space-y-3 leading-relaxed text-gray-600">{{ product.description|raw }}</div>
                 {% endif %}
 
-                {{ form_start(cartItemForm) }}
-                    <div class="space-y-4">
-                        {{ form_row(cartItemForm.quantity) }}
-                        {% for productOption in product.getProductOptions() %}
-                            {% set fieldName = productOption.name|webalize %}
-                            {{ form_row(attribute(cartItemForm, fieldName)) }}
-                        {% endfor %}
-                    </div>
-                    <button type="submit"
-                            class="mt-6 w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800 focus:ring-4 focus:ring-gray-300">
-                        Add to cart
-                    </button>
-                {{ form_end(cartItemForm) }}
+                {% if editing %}
+                    <p class="mb-4 text-sm text-gray-500">Editing a lamp in your basket. Your changes replace it.</p>
+                {% endif %}
+
+                {# The purchase-route controller switches the button between "Cast Your Lamp"
+                   and "Reserve Your Design" as the quantity and options change. #}
+                <div {{ stimulus_controller('purchase-route', {
+                    basketLamps: basketLamps,
+                    max: constant('App\\Service\\BasketRules::MAX_CHECKOUT_LAMPS'),
+                    direct: product.directOrder,
+                    notes: {
+                        direct: constant('App\\Service\\BasketRules::ROUTE_NOTE_DIRECT'),
+                        quantity: constant('App\\Service\\BasketRules::ROUTE_NOTES')[constant('App\\Service\\BasketRules::LIMIT_MESSAGE')],
+                        size: constant('App\\Service\\BasketRules::ROUTE_NOTES')[constant('App\\Service\\BasketRules::REQUEST_SIZE_MESSAGE')],
+                        custom: constant('App\\Service\\BasketRules::ROUTE_NOTES')[constant('App\\Service\\BasketRules::CUSTOM_OPTION_MESSAGE')],
+                        directSub: constant('App\\Service\\BasketRules::SUB_DIRECT'),
+                        reserveSub: constant('App\\Service\\BasketRules::SUB_RESERVE'),
+                    },
+                }) }}>
+                    {{ form_start(cartItemForm) }}
+                        <div class="space-y-4">
+                            {{ form_row(cartItemForm.quantity) }}
+                            {% for productOption in product.getProductOptions() %}
+                                {% set fieldName = productOption.name|webalize %}
+                                {{ form_row(attribute(cartItemForm, fieldName)) }}
+                            {% endfor %}
+                        </div>
+                        {# Prototype styling is for the dark theme; this page turns dark in Step 7. #}
+                        <div class="mt-6 bg-ll-bg text-ll-ink p-5">
+                            {{ include('partials/_purchase_route.html.twig', { reserve: reserve, note: routeNote, live: true }) }}
+                        </div>
+                    {{ form_end(cartItemForm) }}
+                </div>
             </div>
         </div>
     </div>

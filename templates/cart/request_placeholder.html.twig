@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{#
+    PLACEHOLDER until Step 8: "Reserve Your Design" (product page or basket) lands here.
+    The real Request form will send every lamp in the basket as one request
+    (contact, delivery address, access notes, custom details), then empty the
+    basket and show "Reservation received".
+#}
+{% block title %}Reserve Your Design | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
+{% block body %}
+    <div class="max-w-[760px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
+        <a href="{{ path('cart') }}" class="text-[13px] text-ll-mute">← Your Studio Order</a>
+        <h1 class="ll-heading text-[clamp(30px,3.8vw,52px)] leading-[1.06]">Reserve Your Design</h1>
+        <p class="text-ll-mute">Larger and custom orders are packed and quoted by hand. No payment is taken today.</p>
+
+        <div class="border border-dashed border-ll-line p-5 text-[15px] leading-relaxed">
+            [Request form coming soon]
+            <span class="block mt-2 text-ll-mute text-sm">
+                It will send the {{ lampCount }} {{ lampCount == 1 ? 'lamp' : 'lamps' }} in your basket as one request, then empty your basket.
+            </span>
+        </div>
+    </div>
+{% endblock %}

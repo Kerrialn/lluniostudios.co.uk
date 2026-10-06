@@ -12,6 +12,7 @@ use App\Payment\StripePaymentClient;
 use App\Repository\AddressRepository;
 use App\Repository\OrderRepository;
 use App\Repository\UserRepository;
+use App\Service\BasketRules;
 use App\Service\CartResolver;
 use App\Service\LoginCodeService;
 use App\Service\OrderFactory;
@@ -37,6 +38,7 @@ class CheckoutController extends AbstractController
 
     public function __construct(
         private readonly CartResolver $cartResolver,
+        private readonly BasketRules $basketRules,
         private readonly AddressRepository $addressRepository,
         private readonly OrderRepository $orderRepository,
         private readonly UserRepository $userRepository,
@@ -67,6 +69,11 @@ class CheckoutController extends AbstractController
     {
         $cart = $this->cartResolver->getCart();
         if ($cart->isEmpty()) {
+            return $this->redirectToRoute('cart');
+        }
+
+        // Safety net: 3+ lamps, Request sizes or Custom options never reach payment.
+        if (! $this->basketRules->canCheckout($cart)) {
             return $this->redirectToRoute('cart');
         }
 
@@ -147,6 +154,11 @@ class CheckoutController extends AbstractController
 
         $cart = $this->cartResolver->getCart();
         if ($cart->isEmpty()) {
+            return $this->redirectToRoute('cart');
+        }
+
+        // Safety net: 3+ lamps, Request sizes or Custom options never reach payment.
+        if (! $this->basketRules->canCheckout($cart)) {
             return $this->redirectToRoute('cart');
         }
 

@@ -9,6 +9,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         'file_name_pattern' => '*.twig',
         'globals' => [
             'is_under_maintenance' => '%env(APP_UNDER_MAINTENANCE)%',
+            'lead_time' => '@App\Catalogue\LeadTime',
         ],
         'form_themes' => [
             'form/theme/tailwind_layout.html.twig',

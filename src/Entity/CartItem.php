@@ -26,6 +26,16 @@ class CartItem
     #[ORM\Column(type: Types::STRING, nullable: true)]
     private null|string $hash = null;
 
+    /**
+     * "Customise Individually": each lamp on this line has its own options
+     * (CartItemOption::$lamp 1..quantity). Otherwise every option applies to
+     * all lamps on the line (lamp 0).
+     */
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
+    private bool $customisedIndividually = false;
+
     #[ORM\Column(type: Types::STRING, length: 255)]
     private string|null $unitPrice = null;
 
@@ -151,9 +161,44 @@ class CartItem
         $this->hash = $hash;
     }
 
-    public function increaseQuantity(int $amount): void
+    public function isCustomisedIndividually(): bool
     {
-        $this->quantity += $amount;
+        return $this->customisedIndividually;
+    }
+
+    public function setCustomisedIndividually(bool $customisedIndividually): void
+    {
+        $this->customisedIndividually = $customisedIndividually;
+    }
+
+    /**
+     * The configuration for display: one group for the whole line (label
+     * null), or one group per lamp ("Lamp 1", "Lamp 2", ...) when customised
+     * individually. Options are in configurator order.
+     *
+     * @return list<array{label: ?string, options: list<CartItemOption>}>
+     */
+    public function getLampConfigurations(): array
+    {
+        $options = $this->cartItemOptions->toArray();
+        usort($options, static fn (CartItemOption $a, CartItemOption $b): int => $a->getProductOption()->getPosition() <=> $b->getProductOption()->getPosition());
+
+        if (! $this->customisedIndividually) {
+            return [[
+                'label' => null,
+                'options' => $options,
+            ]];
+        }
+
+        $groups = [];
+        for ($lamp = 1; $lamp <= ($this->quantity ?? 1); $lamp++) {
+            $groups[] = [
+                'label' => 'Lamp ' . $lamp,
+                'options' => array_values(array_filter($options, static fn (CartItemOption $option): bool => $option->getLamp() === $lamp)),
+            ];
+        }
+
+        return $groups;
     }
 
     public function getLineTotal(): int

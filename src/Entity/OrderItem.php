@@ -37,13 +37,13 @@ class OrderItem
     /**
      * Snapshot of selected options: list of {option, value} pairs.
      *
-     * @var array<int, array{option: string, value: string}>
+     * @var array<int, array{option: string, value: string, lamp?: int}>
      */
     #[ORM\Column(type: Types::JSON)]
     private array $optionsSnapshot = [];
 
     /**
-     * @param array<int, array{option: string, value: string}> $optionsSnapshot
+     * @param array<int, array{option: string, value: string, lamp?: int}> $optionsSnapshot lamp 0 (or absent) = every lamp, 1..n = that lamp
      */
     public function __construct(
         Product $product,
@@ -100,11 +100,37 @@ class OrderItem
     }
 
     /**
-     * @return array<int, array{option: string, value: string}>
+     * @return array<int, array{option: string, value: string, lamp?: int}>
      */
     public function getOptionsSnapshot(): array
     {
         return $this->optionsSnapshot;
+    }
+
+    /**
+     * The snapshot grouped for display: one group (label null), or one per
+     * lamp ("Lamp 1", ...) when the lamps were configured individually.
+     *
+     * @return list<array{label: ?string, options: list<array{option: string, value: string}>}>
+     */
+    public function getLampConfigurations(): array
+    {
+        $groups = [];
+        foreach ($this->optionsSnapshot as $entry) {
+            $lamp = (int) ($entry['lamp'] ?? 0);
+            $groups[$lamp] ??= [
+                'label' => $lamp === 0 ? null : 'Lamp ' . $lamp,
+                'options' => [],
+            ];
+            $groups[$lamp]['options'][] = [
+                'option' => $entry['option'],
+                'value' => $entry['value'],
+            ];
+        }
+
+        ksort($groups);
+
+        return array_values($groups);
     }
 
     public function getLineTotal(): int

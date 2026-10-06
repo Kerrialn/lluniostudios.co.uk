@@ -2,9 +2,13 @@
 
 namespace App\Service;
 
-use App\Entity\Cart;
 use App\Entity\CartItem;
 
+/**
+ * Fingerprint of a basket line's configuration (product, and each option's
+ * value per lamp). Identical lines are no longer merged; the hash is kept as a
+ * record of the configuration.
+ */
 final readonly class CartHelper
 {
     public function generateCartItemHash(CartItem $cartItem): string
@@ -15,9 +19,8 @@ final readonly class CartHelper
 
         $options = [];
         foreach ($cartItem->getCartItemOptions() as $option) {
-            $optionId = (string) $option->getProductOption()->getId();
-            $valueId = (string) $option->getProductOptionValue()->getId();
-            $options[$optionId] = $valueId;
+            $key = $option->getProductOption()->getId() . ':' . $option->getLamp();
+            $options[$key] = (string) $option->getProductOptionValue()->getId();
         }
 
         ksort($options);
@@ -25,26 +28,4 @@ final readonly class CartHelper
 
         return hash('sha256', json_encode($data));
     }
-
-    public function mergeCartItemDuplication(Cart $cart): void
-    {
-        $seen = [];
-        $toRemove = [];
-
-        foreach ($cart->getCartItems() as $cartItem) {
-            $hash = $cartItem->getHash();
-
-            if (isset($seen[$hash])) {
-                $seen[$hash]->increaseQuantity($cartItem->getQuantity());
-                $toRemove[] = $cartItem;
-            } else {
-                $seen[$hash] = $cartItem;
-            }
-        }
-
-        foreach ($toRemove as $cartItem) {
-            $cart->removeCartItem($cartItem);
-        }
-    }
 }
-
