@@ -27,7 +27,8 @@ import { Controller } from '@hotwired/stimulus';
  *  - Customise All / Individually (7.4), for 2 or more lamps: individually,
  *    the option stages show Lamp 1, Lamp 2, ... tabs. Each lamp starts from
  *    the shared choices and keeps its own changes; every choice is needed for
- *    every lamp (moving on opens the first lamp missing one on that stage).
+ *    every lamp (moving on opens the first lamp missing one on that stage);
+ *    otherwise a new stage always opens on Lamp 1.
  *  - Review and purchase route (7.5): the review lists every choice (or each
  *    lamp's), each row opening its stage. The button is "Cast Your Lamp" (adds
  *    the design to the basket) unless the design must be reserved: a Request
@@ -36,6 +37,8 @@ import { Controller } from '@hotwired/stimulus';
  *    the "Purchase route" note, on The Scale and under the button, says why.
  *    Choosing a Custom value shows a short line under that list (for the lamp
  *    being edited). The server checks again.
+ *  - Editing a basket line (7.6, edit value): starts from that line's size,
+ *    quantity, choices (per lamp when customised individually) on the review.
  */
 const SLIDE = 'transform .7s cubic-bezier(.2,.7,.2,1)';
 const SWIPE_MIN = 50;
@@ -51,7 +54,7 @@ export default class extends Controller {
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         maxLamps: { type: Number, default: 10 }, basketLamps: Number, maxCheckout: { type: Number, default: 2 },
-        requestUrl: String, notes: Object,
+        requestUrl: String, notes: Object, edit: { type: Object, default: {} },
         interval: { type: Number, default: 5000 },
     };
 
@@ -65,6 +68,7 @@ export default class extends Controller {
         this.mode = 'all';
         this.lampChoices = [];
         this.unit = 0;
+        if (this.editValue?.id) this.loadDesign(this.editValue);
         this.photoIndex = 0;
         this.slot = null;
         this.dragX = 0;
@@ -151,7 +155,7 @@ export default class extends Controller {
         this.goTo(Number(event.currentTarget.dataset.step));
     }
 
-    goTo(step) {
+    goTo(step, lamp = undefined) {
         const target = Math.max(0, Math.min(this.stagesValue.length - 1, step));
         // The first stage before the target with a choice missing for any lamp.
         const lamps = this.lampConfigurations();
@@ -161,9 +165,12 @@ export default class extends Controller {
             const stage = this.stageOf(first);
             const missing = this.groupsValue.filter((group) => this.stageOf(group) === stage && isMissing(group));
             missing.forEach((group) => this.warned.add(group.name));
-            this.step = stage;
+            // Opens the first lamp missing a choice there.
             if (this.individually()) this.unit = lamps.findIndex((lamp) => missing.some((group) => !lamp[group.name]));
+            this.step = stage;
         } else {
+            // A new stage opens on Lamp 1 (or on the lamp asked for, e.g. a review row).
+            if (target !== this.step || lamp !== undefined) this.unit = lamp ?? 0;
             this.step = target;
         }
         this.renderStage();
@@ -329,6 +336,18 @@ export default class extends Controller {
         this.nextTitleTarget.textContent = hasNext ? stages[this.step + 1] : '';
     }
 
+    // The basket line being edited: its design, opened on the review.
+    loadDesign(design) {
+        if (this.sizesValue.some((s) => s.slug === design.size)) this.sizeValue = design.size;
+        this.quantity = Math.max(1, Math.min(this.maxLampsValue, design.quantity || 1));
+        this.mode = design.mode === 'individual' ? 'individual' : 'all';
+        this.lampChoices = (design.lamps || []).map((lamp) => ({ ...lamp }));
+        // A line customised lamp by lamp has no shared choices; Lamp 1's are the
+        // starting point if the customer switches to Customise All.
+        this.choices = { ...(this.lampChoices[0] || {}), ...(design.choices || {}) };
+        this.step = this.stageKeysValue.indexOf('review');
+    }
+
     // Review and purchase route -----------------------------------------
 
     currentSize() {
@@ -385,12 +404,12 @@ export default class extends Controller {
         this.reviewTarget.replaceChildren(...rows.map(([key, value, stage, lamp]) => {
             const row = document.createElement('button');
             row.type = 'button';
-            row.className = 'flex justify-between gap-4 w-full py-[11px] border-b border-ll-line-soft text-[13px] text-left';
+            row.className = 'll-cfg-review-row flex justify-between gap-4 w-full py-[11px] border-b border-ll-line-soft text-[13px] text-left';
             row.dataset.action = 'configurator#reviewRow';
             row.dataset.stage = String(stage);
             if (lamp !== undefined) row.dataset.lamp = String(lamp);
             const k = document.createElement('span');
-            k.className = 'self-center text-[10.5px] uppercase tracking-[0.12em] text-ll-mute';
+            k.className = 'll-cfg-review-key self-center text-[10.5px] uppercase tracking-[0.12em] text-ll-mute';
             k.textContent = key;
             const v = document.createElement('span');
             v.className = 'text-right';
@@ -402,8 +421,7 @@ export default class extends Controller {
 
     reviewRow(event) {
         const { stage, lamp } = event.currentTarget.dataset;
-        if (lamp !== undefined) this.unit = Number(lamp);
-        this.goTo(Number(stage));
+        this.goTo(Number(stage), lamp === undefined ? undefined : Number(lamp));
     }
 
     // The button: add to the basket, or go to the request route.

@@ -108,6 +108,17 @@
 #navbar a:hover,
 #navbar button:hover { opacity: .7; }
 
+/* Clickable things show the hand pointer (Tailwind v4 leaves buttons on the
+   arrow). Hover feedback on the dark pages follows the nav: muted text
+   brightens to cream (hover:text-ll-ink), cream text and outlined buttons dim
+   slightly (hover:opacity-70), and cream filled buttons dim a touch (.ll-cta). */
+@layer base {
+    button:not(:disabled),
+    [role="button"]:not([aria-disabled="true"]) { cursor: pointer; }
+}
+.ll-cta { transition: opacity .3s; }
+.ll-cta:hover { opacity: .85; }
+
 /* ---- Homepage ("Test 2" hero, bulb_dimmer_controller.js) ----
    Everything drawn on the photo (intro text, nav links and menu button, logo,
    footer icons) switches from the bulb's amber to near-black once brightness
@@ -466,7 +477,9 @@
     width: 34px;
     padding: 6px 2px;
     color: rgba(236, 227, 211, .28);
+    transition: color .3s;
 }
+.ll-cfg-step:hover { color: var(--color-ll-ink); }
 .ll-cfg-step.is-past { color: var(--color-ll-mute); }
 .ll-cfg-step.is-current { color: var(--color-ll-ink); }
 .ll-cfg-step-line {
@@ -491,6 +504,7 @@
     color: var(--color-ll-mute);
     transition: padding .3s, color .3s;
 }
+.ll-cfg-opt:hover { color: var(--color-ll-ink); }
 .ll-cfg-opt.is-selected {
     padding-left: 14px;
     border-left-color: var(--color-ll-ink);
@@ -509,6 +523,7 @@
     background: transparent;
     transition: border-color .3s;
 }
+.ll-cfg-mode:hover { border-color: rgba(236, 227, 211, .5); }
 .ll-cfg-mode.is-selected {
     border-color: var(--color-ll-ink);
     background: rgba(236, 227, 211, .06);
@@ -521,7 +536,12 @@
     letter-spacing: .16em;
     color: var(--color-ll-mute);
     border-bottom: 1px solid transparent;
+    transition: color .3s;
 }
+.ll-cfg-unit:hover { color: var(--color-ll-ink); }
+/* Review rows (built by the controller): the label brightens on hover. */
+.ll-cfg-review-key { transition: color .3s; }
+.ll-cfg-review-row:hover .ll-cfg-review-key { color: var(--color-ll-ink); }
 .ll-cfg-unit.is-current {
     color: var(--color-ll-ink);
     border-bottom-color: var(--color-ll-ink);

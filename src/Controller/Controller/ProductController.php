@@ -110,9 +110,8 @@ class ProductController extends AbstractController
                 $cart->addCartItem($line);
             }
 
+            // No message: the basket page and the count in the nav show the change.
             $this->cartRepository->save(cart: $cart, flush: true);
-
-            $this->addFlash('message', $editing instanceof CartItem ? 'Your basket has been updated' : 'Added to your basket');
 
             return $this->redirectToRoute('cart');
         }

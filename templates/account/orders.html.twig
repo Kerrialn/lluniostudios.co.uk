@@ -9,7 +9,7 @@
 
         {% if orders is empty %}
             <p class="text-gray-500">You haven't placed any orders yet.</p>
-            <a href="{{ path('products') }}" class="inline-block mt-4 text-sm text-gray-900 underline">Browse products</a>
+            <a href="{{ path('lighting_designs') }}" class="inline-block mt-4 text-sm text-gray-900 underline">Browse products</a>
         {% else %}
             <div class="space-y-4">
                 {% for order in orders %}

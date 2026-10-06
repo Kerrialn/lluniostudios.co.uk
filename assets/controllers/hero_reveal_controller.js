@@ -5,15 +5,23 @@ import { Controller } from '@hotwired/stimulus';
  * (scroll, wheel, click/tap, touch-move or key), as in the Site v4 prototype:
  * the hero shrinks, "Scroll to begin" fades and the content below fades in.
  * Interactions in the first 500ms after arriving are ignored (e.g. scroll
- * restoration). Nothing is remembered: every visit starts unrevealed.
+ * restoration). Nothing is remembered: every visit starts unrevealed, unless
+ * the page asks to open revealed (open value, e.g. editing a basket line).
  * The visual states live in app.css (.ll-reveal-*).
  */
 const EVENTS = ['wheel', 'scroll', 'click', 'keydown', 'touchmove'];
 
 export default class extends Controller {
+    static values = { open: Boolean };
+
     connect() {
         this.arrivedAt = Date.now();
         this.element.classList.remove('is-revealed');
+        if (this.openValue) {
+            // After the other controllers on the page have connected, so they hear it.
+            requestAnimationFrame(() => this.reveal());
+            return;
+        }
         this.onInteract = () => {
             if (Date.now() - this.arrivedAt < 500) return;
             this.reveal();

@@ -158,6 +158,19 @@ final class LumenFormaConfiguratorReadTest extends TestCase
         ]];
     }
 
+    public function testOnlyTheLightKeepsItsHeadings(): void
+    {
+        $headings = array_column($this->configurator()->groups(), 'heading', 'name');
+
+        self::assertSame([
+            'The Pigment' => false,
+            'Cable Colour' => false,
+            'Footing Material' => false,
+            'Bulb Style' => true,
+            'Bulb Count' => true,
+        ], $headings);
+    }
+
     #[\PHPUnit\Framework\Attributes\DataProvider('invalidDesigns')]
     public function testRefusesIncompleteOrUnknownDesigns(mixed $data): void
     {

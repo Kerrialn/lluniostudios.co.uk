@@ -45,7 +45,7 @@ final class LumenFormaConfigurator
     /**
      * Option groups in stage order, then position.
      *
-     * @return list<array{name: string, stage: string, values: list<array{value: string, request: bool}>, sizes: list<string>, warning: string}>
+     * @return list<array{name: string, stage: string, values: list<array{value: string, request: bool}>, sizes: list<string>, warning: string, heading: bool}>
      */
     public function groups(): array
     {
@@ -64,6 +64,7 @@ final class LumenFormaConfigurator
                         ], $option->getProductOptionValues()->toArray())),
                         'sizes' => [],
                         'warning' => self::warning($name),
+                        'heading' => ! \in_array($name, LumenFormaCatalogue::UNTITLED_OPTIONS, true),
                     ];
                 }
                 $groups[$name]['sizes'][] = (string) $product->getSlug();

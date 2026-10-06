@@ -97,9 +97,9 @@
                 </button>
             </div>
             <div class="flex items-center justify-between gap-4 ll-label text-ll-mute">
-                <button type="button" class="min-h-11 flex items-center" data-action="slideshow#prev">← Back</button>
+                <button type="button" class="min-h-11 flex items-center transition-colors hover:text-ll-ink" data-action="slideshow#prev">← Back</button>
                 <span class="tabular-nums" data-slideshow-target="counter" aria-live="polite">01 / {{ '%02d'|format(originMedia|length) }}</span>
-                <button type="button" class="min-h-11 flex items-center" data-action="slideshow#next">Next →</button>
+                <button type="button" class="min-h-11 flex items-center transition-colors hover:text-ll-ink" data-action="slideshow#next">Next →</button>
             </div>
         </div>
     </section>

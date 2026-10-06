@@ -11,7 +11,7 @@
 #}
 {% set reserve = reserve|default(false) %}
 {% set live = live|default(false) %}
-{% set ctaClass = 'block w-full bg-[#ece3d3] text-[#15120e] p-[18px] text-center font-medium text-xs uppercase tracking-[0.16em]' %}
+{% set ctaClass = 'll-cta block w-full bg-[#ece3d3] text-[#15120e] p-[18px] text-center font-medium text-xs uppercase tracking-[0.16em]' %}
 <div class="flex flex-col gap-[18px] font-archivo">
     <div class="flex flex-col gap-1.5 border-l py-0.5 pl-3.5 {{ reserve ? 'border-ll-ink' : 'border-ll-line' }}" {% if live %}data-purchase-route-target="route"{% endif %}>
         <span class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Purchase route</span>

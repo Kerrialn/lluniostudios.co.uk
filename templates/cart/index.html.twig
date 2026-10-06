@@ -30,7 +30,7 @@
         {% if cart.cartItems is empty %}
             <div class="flex flex-col items-start gap-5 py-6 border-t border-ll-line">
                 <p class="text-ll-mute">Your basket is empty.</p>
-                <a href="{{ path('products') }}" class="border border-ll-ink px-[22px] py-3.5 ll-label">Explore our lighting designs</a>
+                <a href="{{ path('lighting_designs') }}" class="border border-ll-ink px-[22px] py-3.5 ll-label transition-opacity hover:opacity-70">Explore our lighting designs</a>
             </div>
         {% else %}
             <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
@@ -74,7 +74,11 @@
                                 {% endfor %}
 
                                 <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                                    {% if not item.customisedIndividually %}
+                                    {# Lumen Forma lines open in the configurator (per-lamp lines too);
+                                       other products on their product page. #}
+                                    {% if product.slug in configuratorSlugs %}
+                                        <a href="{{ path('lighting_designs', {edit: item.id}) }}" class="{{ textLink }}">Edit configuration</a>
+                                    {% elseif not item.customisedIndividually %}
                                         <a href="{{ path('show_product', {slug: product.slug, edit: item.id}) }}" class="{{ textLink }}">Edit configuration</a>
                                     {% endif %}
                                     <form action="{{ path('cart_remove_item', {id: item.id}) }}" method="post" class="flex">
@@ -98,10 +102,10 @@
                         {{ include('partials/_purchase_route.html.twig', { reserve: true, note: routeNote, href: path('basket_request') }) }}
                     {% else %}
                         {# Both lead to checkout for now; the separate Express Payment page comes with Step 10. #}
-                        <a href="{{ path('checkout') }}" class="border border-ll-ink py-[15px] text-center text-[13px]">Express Payment (Apple Pay / Google Pay)</a>
-                        <a href="{{ path('checkout') }}" class="bg-ll-ink text-ll-bg py-[18px] text-center ll-label">Proceed to Payment</a>
+                        <a href="{{ path('checkout') }}" class="border border-ll-ink py-[15px] text-center text-[13px] transition-opacity hover:opacity-70">Express Payment (Apple Pay / Google Pay)</a>
+                        <a href="{{ path('checkout') }}" class="ll-cta bg-ll-ink text-ll-bg py-[18px] text-center ll-label">Proceed to Payment</a>
                     {% endif %}
-                    <a href="{{ path('terms') }}" class="text-xs text-ll-mute text-center underline">Terms &amp; Conditions</a>
+                    <a href="{{ path('terms') }}" class="text-xs text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
                 </aside>
             </div>
         {% endif %}

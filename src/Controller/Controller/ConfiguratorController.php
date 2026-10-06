@@ -44,11 +44,17 @@ final class ConfiguratorController extends AbstractController
     ) {
     }
 
+    /**
+     * With ?edit=<basket line> ("Edit configuration" in the basket) the panel
+     * opens on the review with that line's design loaded, including per-lamp
+     * configurations; the button then updates the line in place.
+     */
     #[Route(path: '/lighting-designs', name: 'lighting_designs', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $configurator = $this->configurator;
         $cart = $this->cartResolver->peekCart();
+        $editing = $this->editableLine((string) $request->query->get('edit', ''));
         $sizes = $configurator->sizes();
 
         // Each size's own photos; sizes without any show "Image Coming Soon".
@@ -70,7 +76,9 @@ final class ConfiguratorController extends AbstractController
             'galleries' => $galleries,
             'optionPhotos' => LumenFormaPhotos::forOptions(),
             'maxLamps' => LumenFormaCatalogue::MAX_LAMPS_PER_CONFIGURATION,
-            'basketLamps' => null === $cart ? 0 : $this->basketRules->lampCount($cart),
+            'basketLamps' => null === $cart ? 0 : $this->basketRules->lampCount($cart, $editing),
+            'editing' => $editing,
+            'edit' => null === $editing ? null : $this->designOf($editing),
         ]);
     }
 
@@ -104,32 +112,110 @@ final class ConfiguratorController extends AbstractController
         }
 
         $cart = $this->cartResolver->getCart();
-        $refusal = $this->basketRules->refusalForAdd($cart, $configuration->product, $configuration->quantity, $configuration->values());
+        $editing = $this->editableLine((string) $request->request->get('edit', ''));
+        $refusal = $this->basketRules->refusalForAdd($cart, $configuration->product, $configuration->quantity, $configuration->values(), $editing);
         if (null !== $refusal) {
-            // "Reserve Your Design" (a placeholder until Step 8).
+            // "Reserve Your Design" (a placeholder until Step 8). A line being
+            // edited stays as it was.
             return $this->redirectToRoute('basket_request');
         }
 
-        $line = new CartItem(quantity: $configuration->quantity, product: $configuration->product);
+        $line = $editing ?? new CartItem(quantity: $configuration->quantity, product: $configuration->product);
+        $line->setProduct($configuration->product);
+        $line->setQuantity($configuration->quantity);
         $line->setUnitPrice($configuration->product->getPrice());
         $line->setCustomisedIndividually($configuration->individually);
-        foreach ($configuration->lamps as $index => $choices) {
-            foreach ($choices as [$option, $value]) {
-                new CartItemOption(
-                    cartItem: $line,
-                    productOption: $option,
-                    productOptionValue: $value,
-                    lamp: $configuration->individually ? $index + 1 : 0,
-                );
+        $this->applyDesign($line, $configuration);
+        $line->setHash($this->cartHelper->generateCartItemHash($line));
+        if (! $editing instanceof CartItem) {
+            $cart->addCartItem($line);
+        }
+
+        // No message: the basket page and the count in the nav show the change.
+        $this->cartRepository->save(cart: $cart, flush: true);
+
+        return $this->redirectToRoute('cart');
+    }
+
+    /**
+     * A line in the visitor's basket that the configurator can edit (one of the
+     * Lumen Forma sizes), or null.
+     */
+    private function editableLine(string $id): ?CartItem
+    {
+        $cart = $this->cartResolver->peekCart();
+        if ('' === $id || null === $cart) {
+            return null;
+        }
+
+        $slugs = array_column(LumenFormaCatalogue::SIZES, 'slug');
+        foreach ($cart->getCartItems() as $line) {
+            if ((string) $line->getId() === $id && \in_array($line->getProduct()?->getSlug(), $slugs, true)) {
+                return $line;
             }
         }
 
-        $line->setHash($this->cartHelper->generateCartItemHash($line));
-        $cart->addCartItem($line);
-        $this->cartRepository->save(cart: $cart, flush: true);
+        return null;
+    }
 
-        $this->addFlash('message', 'Added to your basket');
+    /**
+     * A basket line's design in the configurator's terms: the shared choices
+     * (lamp 0), or each lamp's when customised individually.
+     *
+     * @return array{id: string, size: string, quantity: int, mode: string, choices: array<string, string>, lamps: list<array<string, string>>}
+     */
+    private function designOf(CartItem $line): array
+    {
+        $quantity = $line->getQuantity() ?? 1;
+        $choices = [];
+        $lamps = $line->isCustomisedIndividually() ? array_fill(0, $quantity, []) : [];
+        foreach ($line->getCartItemOptions() as $chosen) {
+            $name = $chosen->getProductOption()->getName();
+            $value = $chosen->getProductOptionValue()->getValue();
+            if (0 === $chosen->getLamp()) {
+                $choices[$name] = $value;
+            } elseif (isset($lamps[$chosen->getLamp() - 1])) {
+                $lamps[$chosen->getLamp() - 1][$name] = $value;
+            }
+        }
 
-        return $this->redirectToRoute('cart');
+        return [
+            'id' => (string) $line->getId(),
+            'size' => (string) $line->getProduct()?->getSlug(),
+            'quantity' => $quantity,
+            'mode' => $line->isCustomisedIndividually() ? 'individual' : 'all',
+            'choices' => $choices,
+            'lamps' => $lamps,
+        ];
+    }
+
+    /**
+     * Set the line's options to the design, one row per option per lamp
+     * (lamp 0 = every lamp). Existing rows are updated in place, so the
+     * database never holds two rows for the same option and lamp mid-save.
+     */
+    private function applyDesign(CartItem $line, LumenFormaConfiguration $configuration): void
+    {
+        $existing = [];
+        foreach ($line->getCartItemOptions() as $chosen) {
+            $existing[$chosen->getProductOption()->getId() . ':' . $chosen->getLamp()] = $chosen;
+        }
+
+        foreach ($configuration->lamps as $index => $choices) {
+            $lamp = $configuration->individually ? $index + 1 : 0;
+            foreach ($choices as [$option, $value]) {
+                $key = $option->getId() . ':' . $lamp;
+                if (isset($existing[$key])) {
+                    $existing[$key]->setProductOptionValue($value);
+                    unset($existing[$key]);
+                } else {
+                    new CartItemOption(cartItem: $line, productOption: $option, productOptionValue: $value, lamp: $lamp);
+                }
+            }
+        }
+
+        foreach ($existing as $leftover) {
+            $line->removeCartItemOption($leftover);
+        }
     }
 }

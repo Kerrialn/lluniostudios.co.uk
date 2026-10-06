@@ -133,6 +133,15 @@ final class LumenFormaCatalogue
     public const MAX_LAMPS_PER_CONFIGURATION = 10;
 
     /**
+     * Options listed without a heading in the configurator (the stage title
+     * already says what they are). The Light keeps its two headings, which
+     * tell Bulb Style and Bulb Count apart.
+     *
+     * @var list<string>
+     */
+    public const UNTITLED_OPTIONS = ['The Pigment', 'Cable Colour', 'Footing Material'];
+
+    /**
      * How each option is named in "Please choose a ... to continue.".
      *
      * @var array<string, string>

@@ -2,6 +2,7 @@
 
 namespace App\Controller\Controller;
 
+use App\Catalogue\LumenFormaCatalogue;
 use App\Entity\CartItem;
 use App\Repository\CartRepository;
 use App\Service\BasketRules;
@@ -34,6 +35,8 @@ class CartController extends AbstractController
             'lampCount' => $this->basketRules->lampCount($cart),
             'checkoutBlockers' => $blockers,
             'routeNote' => $this->basketRules->routeNote($blockers),
+            // Lines of these sizes are edited in the configurator.
+            'configuratorSlugs' => array_column(LumenFormaCatalogue::SIZES, 'slug'),
         ]);
     }
 
