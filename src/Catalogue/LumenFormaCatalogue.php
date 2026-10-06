@@ -30,7 +30,7 @@ final class LumenFormaCatalogue
     public const SIZES = [
         [
             'slug' => 'lumen-forma-studio',
-            'title' => 'Lumen Forma Studio (XS)',
+            'title' => 'Lumen Forma Studio',
             'price' => 39900,
             'direct' => true,
             'lengthMm' => 150,
@@ -40,7 +40,7 @@ final class LumenFormaCatalogue
         ],
         [
             'slug' => 'lumen-forma-gallery',
-            'title' => 'Lumen Forma Gallery (S)',
+            'title' => 'Lumen Forma Gallery',
             'price' => 79900,
             'direct' => true,
             'lengthMm' => 220,
@@ -50,7 +50,7 @@ final class LumenFormaCatalogue
         ],
         [
             'slug' => 'lumen-forma-atelier',
-            'title' => 'Lumen Forma Atelier (M)',
+            'title' => 'Lumen Forma Atelier',
             'price' => 169900,
             'direct' => false,
             'lengthMm' => 300,
@@ -60,7 +60,7 @@ final class LumenFormaCatalogue
         ],
         [
             'slug' => 'lumen-forma-estate',
-            'title' => 'Lumen Forma Estate (L)',
+            'title' => 'Lumen Forma Estate',
             'price' => 349900,
             'direct' => false,
             'lengthMm' => 380,
@@ -70,7 +70,7 @@ final class LumenFormaCatalogue
         ],
         [
             'slug' => 'lumen-forma-monument',
-            'title' => 'Lumen Forma Monument (XL)',
+            'title' => 'Lumen Forma Monument',
             'price' => 799900,
             'direct' => false,
             'lengthMm' => 450,

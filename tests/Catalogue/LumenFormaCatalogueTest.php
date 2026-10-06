@@ -23,6 +23,13 @@ final class LumenFormaCatalogueTest extends TestCase
         self::assertSame(['lumen-forma-studio', 'lumen-forma-gallery'], $direct);
     }
 
+    public function testTitlesHaveNoSizeAbbreviations(): void
+    {
+        $titles = array_column(LumenFormaCatalogue::SIZES, 'title');
+
+        self::assertSame(['Lumen Forma Studio', 'Lumen Forma Gallery', 'Lumen Forma Atelier', 'Lumen Forma Estate', 'Lumen Forma Monument'], $titles);
+    }
+
     public function testStageTwoIsThePigment(): void
     {
         $pigment = LumenFormaCatalogue::OPTIONS[0];
