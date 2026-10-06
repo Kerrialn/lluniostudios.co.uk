@@ -28,22 +28,30 @@ import { Controller } from '@hotwired/stimulus';
  *    the option stages show Lamp 1, Lamp 2, ... tabs. Each lamp starts from
  *    the shared choices and keeps its own changes; every choice is needed for
  *    every lamp (moving on opens the first lamp missing one on that stage).
+ *  - Review and purchase route (7.5): the review lists every choice (or each
+ *    lamp's), each row opening its stage. The button is "Cast Your Lamp" (adds
+ *    the design to the basket) unless the design must be reserved: a Request
+ *    size, a Custom value, or more than the checkout limit of lamps in the
+ *    whole basket. Then it is "Reserve Your Design" (the request route) and
+ *    the "Purchase route" note, on The Scale and under the button, says why.
+ *    Choosing a Custom value shows a short line under that list (for the lamp
+ *    being edited). The server checks again.
  */
 const SLIDE = 'transform .7s cubic-bezier(.2,.7,.2,1)';
 const SWIPE_MIN = 50;
 const MIN_LAMPS = 1;
-// Most lamps one configuration can hold. Checkout is separately limited to
-// 2 lamps in the whole basket (BasketRules); 3 or more go to Reserve.
-const MAX_LAMPS = 10;
 const WIDE = '(min-width: 900px)';
 const SIDEWAYS = '(max-width: 899px) and (orientation: landscape)';
 
 export default class extends Controller {
     static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
         'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity',
-        'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle', 'modes', 'mode', 'units'];
+        'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle', 'modes', 'mode', 'units',
+        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'customNote'];
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
+        maxLamps: { type: Number, default: 10 }, basketLamps: Number, maxCheckout: { type: Number, default: 2 },
+        requestUrl: String, notes: Object,
         interval: { type: Number, default: 5000 },
     };
 
@@ -223,7 +231,7 @@ export default class extends Controller {
     }
 
     more() {
-        this.quantity = Math.min(MAX_LAMPS, this.quantity + 1);
+        this.quantity = Math.min(this.maxLampsValue, this.quantity + 1);
         this.renderChoices();
     }
 
@@ -249,6 +257,12 @@ export default class extends Controller {
         this.groupTargets.forEach((el) => {
             el.hidden = !el.dataset.sizes.split(',').includes(size.slug);
         });
+        // "Custom options are developed with you..." under a list whose chosen
+        // value (for the lamp being edited) is a Custom one.
+        this.customNoteTargets.forEach((el) => {
+            const group = this.groupsValue.find((g) => g.name === el.dataset.group);
+            el.hidden = !group?.values.some((v) => v.request && v.value === current[group.name]);
+        });
         this.warningTargets.forEach((el) => {
             const name = el.dataset.group;
             el.hidden = !(this.warned.has(name) && !current[name]);
@@ -265,6 +279,8 @@ export default class extends Controller {
             el.setAttribute('aria-pressed', selected ? 'true' : 'false');
         });
         this.renderUnits();
+        this.renderRoute();
+        this.renderReview();
     }
 
     // Lamp tabs: only when customising individually, on the option stages.
@@ -311,6 +327,100 @@ export default class extends Controller {
         const hasNext = this.step < stages.length - 1;
         this.nextTarget.hidden = !hasNext;
         this.nextTitleTarget.textContent = hasNext ? stages[this.step + 1] : '';
+    }
+
+    // Review and purchase route -----------------------------------------
+
+    currentSize() {
+        return this.sizesValue.find((s) => s.slug === this.sizeValue) || this.sizesValue[0];
+    }
+
+    // Why this design must be reserved, as the note's sentences ([] = Cast Your
+    // Lamp). As BasketRules::routeNote(): the size and Custom notes (or one
+    // combined note when both apply), then the 3-or-more-lamps note.
+    reserveReasons() {
+        const size = !this.currentSize().direct;
+        const custom = this.lampConfigurations().some((lamp) => this.groupsValue.some((group) => this.available(group)
+            && group.values.some((v) => v.request && v.value === lamp[group.name])));
+        const reasons = [];
+        if (size && custom) reasons.push(this.notesValue.sizeAndCustom);
+        else if (size) reasons.push(this.notesValue.size);
+        else if (custom) reasons.push(this.notesValue.custom);
+        if (this.basketLampsValue + this.quantity > this.maxCheckoutValue) reasons.push(this.notesValue.quantity);
+        return reasons;
+    }
+
+    renderRoute() {
+        const reasons = this.reserveReasons();
+        const reserve = reasons.length > 0;
+        // On The Scale and under the button on the review.
+        this.routeTargets.forEach((el) => {
+            el.classList.toggle('border-ll-ink', reserve);
+            el.classList.toggle('border-ll-line', !reserve);
+        });
+        this.routeNoteTargets.forEach((el) => { el.textContent = reserve ? reasons.join(' ') : this.notesValue.direct; });
+        if (this.hasCtaTarget) {
+            this.ctaTarget.textContent = reserve ? 'Reserve Your Design' : 'Cast Your Lamp';
+            this.ctaSubTarget.textContent = reserve ? this.notesValue.reserveSub : this.notesValue.directSub;
+        }
+    }
+
+    renderReview() {
+        if (!this.hasReviewTarget) return;
+        const size = this.currentSize();
+        const groups = this.groupsValue.filter((group) => this.available(group));
+        const stageOfKey = (key) => this.stageKeysValue.indexOf(key);
+        const rows = [
+            ['Size', size.name, 0], ['Price', size.price, 0], ['Quantity', String(this.quantity), 0],
+        ];
+        if (this.quantity >= 2) rows.push(['Configuration', this.individually() ? 'Customise Individually' : 'Customise All', 0]);
+        if (this.individually()) {
+            this.lampConfigurations().forEach((lamp, i) => {
+                rows.push([`Lamp ${i + 1}`, groups.map((g) => lamp[g.name]).filter(Boolean).join(' · ') || '—', stageOfKey(groups[0]?.stage), i]);
+            });
+        } else {
+            groups.forEach((g) => rows.push([g.name, this.choices[g.name] || '—', this.stageOf(g)]));
+        }
+
+        this.reviewTarget.replaceChildren(...rows.map(([key, value, stage, lamp]) => {
+            const row = document.createElement('button');
+            row.type = 'button';
+            row.className = 'flex justify-between gap-4 w-full py-[11px] border-b border-ll-line-soft text-[13px] text-left';
+            row.dataset.action = 'configurator#reviewRow';
+            row.dataset.stage = String(stage);
+            if (lamp !== undefined) row.dataset.lamp = String(lamp);
+            const k = document.createElement('span');
+            k.className = 'self-center text-[10.5px] uppercase tracking-[0.12em] text-ll-mute';
+            k.textContent = key;
+            const v = document.createElement('span');
+            v.className = 'text-right';
+            v.textContent = value;
+            row.append(k, v);
+            return row;
+        }));
+    }
+
+    reviewRow(event) {
+        const { stage, lamp } = event.currentTarget.dataset;
+        if (lamp !== undefined) this.unit = Number(lamp);
+        this.goTo(Number(stage));
+    }
+
+    // The button: add to the basket, or go to the request route.
+    cast(event) {
+        if (this.reserveReasons().length > 0) {
+            event.preventDefault();
+            window.location.assign(this.requestUrlValue);
+            return;
+        }
+        this.configurationTarget.value = JSON.stringify({
+            size: this.sizeValue,
+            quantity: this.quantity,
+            mode: this.individually() ? 'individual' : 'all',
+            lamps: this.lampConfigurations().map((lamp) => Object.fromEntries(this.groupsValue
+                .filter((group) => this.available(group))
+                .map((group) => [group.name, lamp[group.name]]))),
+        });
     }
 
     // Photo -----------------------------------------------------------------

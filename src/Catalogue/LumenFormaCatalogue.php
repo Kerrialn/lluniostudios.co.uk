@@ -126,6 +126,13 @@ final class LumenFormaCatalogue
     public const DEFAULT_SIZE = 'lumen-forma-gallery';
 
     /**
+     * Most lamps one configuration (one basket line) can hold. Checkout is
+     * separately limited to BasketRules::MAX_CHECKOUT_LAMPS in the whole
+     * basket; more than that goes to Reserve.
+     */
+    public const MAX_LAMPS_PER_CONFIGURATION = 10;
+
+    /**
      * How each option is named in "Please choose a ... to continue.".
      *
      * @var array<string, string>

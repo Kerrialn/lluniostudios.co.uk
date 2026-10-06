@@ -112,14 +112,32 @@ final class BasketRulesTest extends TestCase
         self::assertSame(BasketRules::LIMIT_MESSAGE, $this->rules->refusalForAdd($cart, $this->product(), 3, [$this->value('Black')], $line));
     }
 
-    public function testRouteNotesUseThePrototypeWordingInItsOrder(): void
+    public function testRouteNotes(): void
     {
+        $size = 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.';
+        $custom = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
+        $both = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery quoted individually.';
+        $limit = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
+
         self::assertSame('Direct order and checkout.', $this->rules->routeNote([]));
-        self::assertSame(
-            'Quantities of three or more proceed through the Reserve request process, not direct checkout. Custom options proceed through the Reserve request process.',
-            $this->rules->routeNote([BasketRules::CUSTOM_OPTION_MESSAGE, BasketRules::LIMIT_MESSAGE]),
-        );
-        self::assertSame('This size requires a delivery quote.', $this->rules->routeNote([BasketRules::REQUEST_SIZE_MESSAGE]));
+        self::assertSame($size, $this->rules->routeNote([BasketRules::REQUEST_SIZE_MESSAGE]));
+        self::assertSame($custom, $this->rules->routeNote([BasketRules::CUSTOM_OPTION_MESSAGE]));
+        self::assertSame($limit, $this->rules->routeNote([BasketRules::LIMIT_MESSAGE]));
+
+        // A Request size and a Custom choice: one combined note, in either order.
+        self::assertSame($both, $this->rules->routeNote([BasketRules::REQUEST_SIZE_MESSAGE, BasketRules::CUSTOM_OPTION_MESSAGE]));
+        self::assertSame($both, $this->rules->routeNote([BasketRules::CUSTOM_OPTION_MESSAGE, BasketRules::REQUEST_SIZE_MESSAGE]));
+
+        // The 3-or-more note always comes after the others, never repeated.
+        self::assertSame($size . ' ' . $limit, $this->rules->routeNote([BasketRules::LIMIT_MESSAGE, BasketRules::REQUEST_SIZE_MESSAGE]));
+        self::assertSame($custom . ' ' . $limit, $this->rules->routeNote([BasketRules::LIMIT_MESSAGE, BasketRules::CUSTOM_OPTION_MESSAGE]));
+        self::assertSame($both . ' ' . $limit, $this->rules->routeNote([BasketRules::LIMIT_MESSAGE, BasketRules::CUSTOM_OPTION_MESSAGE, BasketRules::REQUEST_SIZE_MESSAGE, BasketRules::CUSTOM_OPTION_MESSAGE]));
+    }
+
+    public function testCustomChoiceLine(): void
+    {
+        // Shown in the configurator under a list as soon as a Custom value is chosen.
+        self::assertSame('Custom options are developed with you and quoted individually.', BasketRules::CUSTOM_CHOICE_NOTE);
     }
 
     public function testRequestSizesAndCustomValuesAreRefusedOnAdd(): void

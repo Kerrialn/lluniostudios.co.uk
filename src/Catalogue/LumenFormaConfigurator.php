@@ -6,6 +6,7 @@ namespace App\Catalogue;
 
 use App\Entity\Product;
 use App\Entity\ProductOption;
+use App\Entity\ProductOptionValue;
 use App\Repository\ProductRepository;
 
 /**
@@ -77,6 +78,71 @@ final class LumenFormaConfigurator
 
             return $group;
         }, $groups);
+    }
+
+    /**
+     * Read a design sent by the configurator:
+     *   { size: <slug>, quantity: 1..MAX, mode: 'all'|'individual',
+     *     lamps: [ { <option name>: <value>, ... }, ... ] }
+     * with one entry in lamps for all lamps, or one per lamp when customising
+     * individually. Every option the size has must be chosen, by its exact
+     * name and value. Returns null for anything incomplete or unknown.
+     */
+    public function read(mixed $data): ?LumenFormaConfiguration
+    {
+        if (! \is_array($data) || ! \is_string($data['size'] ?? null) || ! \is_int($data['quantity'] ?? null) || ! \is_array($data['lamps'] ?? null)) {
+            return null;
+        }
+
+        $product = null;
+        foreach ($this->products() as $candidate) {
+            if ($candidate->getSlug() === $data['size']) {
+                $product = $candidate;
+            }
+        }
+
+        $quantity = $data['quantity'];
+        if (! $product instanceof Product || $quantity < 1 || $quantity > LumenFormaCatalogue::MAX_LAMPS_PER_CONFIGURATION) {
+            return null;
+        }
+
+        $individually = $quantity >= 2 && 'individual' === ($data['mode'] ?? null);
+        $lampsData = array_values($data['lamps']);
+        if (\count($lampsData) !== ($individually ? $quantity : 1)) {
+            return null;
+        }
+
+        $lamps = [];
+        foreach ($lampsData as $chosen) {
+            if (! \is_array($chosen)) {
+                return null;
+            }
+
+            $choices = [];
+            foreach ($product->getProductOptions() as $option) {
+                $wanted = $chosen[$option->getName()] ?? null;
+                $match = null;
+                foreach ($option->getProductOptionValues() as $value) {
+                    if ($value->getValue() === $wanted) {
+                        $match = $value;
+                    }
+                }
+
+                if (! $match instanceof ProductOptionValue) {
+                    return null;
+                }
+
+                $choices[] = [$option, $match];
+            }
+
+            if (\count($chosen) !== \count($choices)) {
+                return null;
+            }
+
+            $lamps[] = $choices;
+        }
+
+        return new LumenFormaConfiguration($product, $quantity, $individually, $lamps);
     }
 
     /**

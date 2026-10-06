@@ -35,10 +35,14 @@ export default class extends Controller {
         const custom = [...this.element.querySelectorAll('select')]
             .some((select) => select.selectedOptions[0]?.dataset.goesToRequest === '1');
 
+        // As BasketRules::routeNote(): the size and Custom notes (or one combined
+        // note when both apply), then the 3-or-more-lamps note.
+        const size = !this.directValue;
         const notes = [];
+        if (size && custom) notes.push(this.notesValue.sizeAndCustom);
+        else if (size) notes.push(this.notesValue.size);
+        else if (custom) notes.push(this.notesValue.custom);
         if (this.basketLampsValue + quantity > this.maxValue) notes.push(this.notesValue.quantity);
-        if (!this.directValue) notes.push(this.notesValue.size);
-        if (custom) notes.push(this.notesValue.custom);
 
         const reserve = notes.length > 0;
         this.ctaTarget.textContent = reserve ? 'Reserve Your Design' : 'Cast Your Lamp';

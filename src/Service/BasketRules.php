@@ -29,8 +29,8 @@ final class BasketRules
     public const CUSTOM_OPTION_MESSAGE = 'Custom options are quoted by hand: we confirm the details with you before any payment.';
 
     /**
-     * The Site v4 prototype's "Purchase route" notes, shown under the button on
-     * the product page and in the basket. Several reasons are joined in this order.
+     * The "Purchase route" notes, shown with the button in the configurator,
+     * on the product page and in the basket (see routeNote()).
      */
     public const ROUTE_NOTE_DIRECT = 'Direct order and checkout.';
 
@@ -43,9 +43,21 @@ final class BasketRules
 
     public const ROUTE_NOTES = [
         self::LIMIT_MESSAGE => 'Quantities of three or more proceed through the Reserve request process, not direct checkout.',
-        self::REQUEST_SIZE_MESSAGE => 'This size requires a delivery quote.',
-        self::CUSTOM_OPTION_MESSAGE => 'Custom options proceed through the Reserve request process.',
+        self::REQUEST_SIZE_MESSAGE => 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.',
+        self::CUSTOM_OPTION_MESSAGE => 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.',
     ];
+
+    /**
+     * Shown in the configurator under an option list as soon as a Custom value
+     * is chosen there.
+     */
+    public const CUSTOM_CHOICE_NOTE = 'Custom options are developed with you and quoted individually.';
+
+    /**
+     * Replaces the two notes above when a Request size and a Custom choice
+     * both apply.
+     */
+    public const ROUTE_NOTE_SIZE_AND_CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery quoted individually.';
 
     public function lampCount(Cart $cart, ?CartItem $except = null): int
     {
@@ -90,13 +102,31 @@ final class BasketRules
 
     /**
      * The "Purchase route" note for these reasons (from checkoutBlockers() or
-     * refusalForAdd()); the direct-order note when there are none.
+     * refusalForAdd()); the direct-order note when there are none. A Request
+     * size and a Custom choice have one note each, or a single combined note
+     * when both apply; the 3-or-more-lamps note follows after.
+     * purchase_route_controller.js and configurator_controller.js build the
+     * same note in the page.
      *
      * @param list<string> $reasons
      */
     public function routeNote(array $reasons): string
     {
-        $notes = array_values(array_intersect_key(self::ROUTE_NOTES, array_flip($reasons)));
+        $size = \in_array(self::REQUEST_SIZE_MESSAGE, $reasons, true);
+        $custom = \in_array(self::CUSTOM_OPTION_MESSAGE, $reasons, true);
+
+        $notes = [];
+        if ($size && $custom) {
+            $notes[] = self::ROUTE_NOTE_SIZE_AND_CUSTOM;
+        } elseif ($size) {
+            $notes[] = self::ROUTE_NOTES[self::REQUEST_SIZE_MESSAGE];
+        } elseif ($custom) {
+            $notes[] = self::ROUTE_NOTES[self::CUSTOM_OPTION_MESSAGE];
+        }
+
+        if (\in_array(self::LIMIT_MESSAGE, $reasons, true)) {
+            $notes[] = self::ROUTE_NOTES[self::LIMIT_MESSAGE];
+        }
 
         return $notes === [] ? self::ROUTE_NOTE_DIRECT : implode(' ', $notes);
     }

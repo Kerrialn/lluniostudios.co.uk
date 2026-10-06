@@ -18,7 +18,7 @@
     --color-dark-backdrop: #111827;
 
     /* Llunio design system (Site v4 Unified). Use as bg-ll-bg, text-ll-ink, border-ll-line, ... */
-    --font-archivo: 'Archivo', system-ui, sans-serif;
+    --font-archivo: 'Archivo', sans-serif; /* as the prototype: glyphs Archivo lacks (← → − ·) fall back to the same font */
     --color-ll-bg: #15120e;
     --color-ll-surface: #1c1813;
     --color-ll-ink: #ece3d3;
