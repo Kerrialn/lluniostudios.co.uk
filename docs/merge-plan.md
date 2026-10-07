@@ -4,7 +4,7 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 8 committed).
+Last updated: 7 October 2026 (Step 8 committed; browser checks saved in `tests/browser/`).
 
 ---
 
@@ -24,7 +24,7 @@ Last updated: 7 October 2026 (Step 8 committed).
   - Admin sign-in is by emailed 6-digit code; the local admin is `lluniostudios@gmail.com` (the code arrives in Mailpit). Promote others with `php bin/console app:user:promote <email>`.
   - The Lumen Forma sizes are created by `php bin/console app:lumen-forma:setup` (only what is missing). They are deliberately **unpublished**: the configurator doesn't need publishing; the old product pages do, and those pages are being retired.
 - **Checks after every step:** `composer test`, `composer phpstan`, `composer check-cs` (`composer fix-cs` to fix), `php bin/console lint:twig templates`, `npm run build`. Then click through at desktop (1440) and phone (390) widths against the matching prototype screen.
-  - Browser checks during Steps 6–8 were headless-Chrome scripts in the session's scratchpad; they are not kept in the repo. Re-create checks as needed for new steps.
+  - **Browser checks:** `node tests/browser/run-all.mjs` runs the end-to-end checks for Steps 6–8 against the local site in headless Chrome (about 15 minutes; `--clean` removes the test baskets, requests and emails afterwards). `tests/browser/compare/` measures our pages against the prototype (set `PROTOTYPE_DIR` to the unzipped brief). See `tests/browser/README.md`; add a check there for each new step.
 
 ### How the work is done (standing rules)
 
