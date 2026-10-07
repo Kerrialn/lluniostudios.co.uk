@@ -31,6 +31,18 @@ class Cart
     #[ORM\OneToOne(targetEntity: User::class, mappedBy: 'cart')]
     private ?User $user = null;
 
+    /**
+     * "This is a gift" (basket, Step 10.1): the whole order is a gift, to
+     * arrive by giftArriveBy. Carried to payment and onto the order.
+     */
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
+    private bool $gift = false;
+
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?DateTimeImmutable $giftArriveBy = null;
+
     public function __construct()
     {
         $this->createdAt = new DateTimeImmutable();
@@ -80,6 +92,25 @@ class Cart
         }
 
         return $this;
+    }
+
+    public function isGift(): bool
+    {
+        return $this->gift;
+    }
+
+    public function getGiftArriveBy(): ?DateTimeImmutable
+    {
+        return $this->giftArriveBy;
+    }
+
+    /**
+     * Mark the order as a gift arriving by this date, or not a gift (null).
+     */
+    public function setGiftArriveBy(?DateTimeImmutable $arriveBy): void
+    {
+        $this->gift = $arriveBy instanceof DateTimeImmutable;
+        $this->giftArriveBy = $arriveBy;
     }
 
     public function getUser(): ?User

@@ -6,10 +6,12 @@
     lamp when customised individually. Instant checkout is limited by
     BasketRules (2 lamps in total, direct sizes, no Custom options); a basket
     that can't check out shows the prototype's "Reserve Your Design" button and
-    purchase route note instead of the payment buttons.
-
-    Not here yet: the gift option (saved on the order with the checkout, Step 10).
+    purchase route note instead of "Proceed to Payment".
+    "This is a gift" asks when it must arrive (no earlier than GiftDate's
+    earliest date); the choice is checked and saved on the basket when
+    "Proceed to Payment" is pressed (CartController, BasketProceedForm).
 #}
+{% form_theme proceedForm 'form_div_layout.html.twig' %}
 {% block title %}Basket | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
@@ -98,11 +100,28 @@
                         {# Over the lamp limit, a Request size or a Custom choice: the whole order goes by request. #}
                         {{ include('partials/_purchase_route.html.twig', { reserve: true, note: routeNote, href: path('basket_request', {basket: 1}) }) }}
                     {% else %}
-                        {# Both lead to checkout for now; the separate Express Payment page comes with Step 10. #}
-                        <a href="{{ path('checkout') }}" class="border border-ll-ink py-[15px] text-center text-[13px] transition-opacity hover:opacity-70">Express Payment (Apple Pay / Google Pay)</a>
-                        <a href="{{ path('checkout') }}" class="ll-cta bg-ll-ink text-ll-bg py-[18px] text-center ll-label">Proceed to Payment</a>
+                        {{ form_start(proceedForm, { attr: { class: 'flex flex-col gap-[18px]', novalidate: 'novalidate' } }) }}
+                            {% set dateErrors = proceedForm.arriveBy.vars.errors %}
+                            {# The date appears once "This is a gift" is ticked (no script needed). #}
+                            <div class="group flex flex-col gap-3">
+                                <label class="min-h-11 flex items-center gap-3 text-[13px] cursor-pointer select-none transition-opacity hover:opacity-70">
+                                    {{ form_widget(proceedForm.gift, { attr: { class: 'peer sr-only' } }) }}
+                                    <span class="flex-none w-4 h-4 border border-ll-ink flex items-center justify-center peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink [&>span]:bg-transparent peer-checked:[&>span]:bg-ll-ink" aria-hidden="true"><span class="w-2 h-2"></span></span>
+                                    This is a gift
+                                </label>
+                                <div class="hidden group-has-[:checked]:flex flex-col gap-2">
+                                    <label for="{{ proceedForm.arriveBy.vars.id }}" class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">When does it need to arrive by? *</label>
+                                    {{ form_widget(proceedForm.arriveBy, { attr: { class: 'w-full min-h-11 bg-transparent text-ll-ink border ' ~ (dateErrors is empty ? 'border-ll-line' : 'border-ll-ink') ~ ' rounded-none px-3 py-2.5 text-sm leading-[1.5] outline-none [&::-webkit-datetime-edit-fields-wrapper]:py-px focus:border-ll-ink [color-scheme:dark]' } }) }}
+                                    <div class="text-xs text-ll-mute leading-normal">Each lamp is made by hand. Please allow {{ lead_time.label }}.</div>
+                                    {% for error in dateErrors %}
+                                        <div class="text-xs text-ll-ink" role="alert">{{ error.message }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <button type="submit" class="ll-cta bg-ll-ink text-ll-bg py-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]">Proceed to Payment</button>
+                        {{ form_end(proceedForm) }}
                     {% endif %}
-                    <a href="{{ path('terms') }}" class="text-xs text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
+                    <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
                 </aside>
             </div>
         {% endif %}

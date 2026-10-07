@@ -26,6 +26,8 @@ const CHECKS = [
     ['commissions.mjs', '1440', '900'],
     ['commissions.mjs', '390', '844'],
     ['commissions-saving.mjs'],
+    ['basket-gift.mjs', '1440', '900'],
+    ['basket-gift.mjs', '390', '844'],
 ];
 
 const args = process.argv.slice(2);

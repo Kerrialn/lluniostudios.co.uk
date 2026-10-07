@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 9 done; the full browser run for 9.2 and 9.3 is due before Step 10 starts).
+Last updated: 7 October 2026 (Step 10.1 committed; 10.2 in progress).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Nothing has been pushed yet. Never push to `main` or merge anything unless asked. To push: `git push -u origin symfony-7.4-upgrade design-foundation`.
-- **Next step:** first the deferred full browser run for 9.2 and 9.3 (`node tests/browser/run-all.mjs --clean`, when the machine is free), then Step 10 (checkout reshape). See "Steps" below.
+- **Next step:** Step 10 (checkout reshape), starting with 10.1. See "Steps" below.
 - **The prototype:** `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip`. Inside it:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Unzip and open it in Chrome. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (02 is built; see Step 8).
@@ -54,8 +54,8 @@ Last updated: 7 October 2026 (Step 9 done; the full browser run for 9.2 and 9.3 
 | 7 | Configurator (`/lighting-designs`), 7.1–7.6 | Done | `574bf32`, `45c4635`, `6770e92`, `93a019f`, `27b1ae3`, `b024fde` |
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
 | — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
-| 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (full browser run for 9.2 and 9.3 deferred; due before Step 10) | `73bdb27` (9.1), `74ce773` (9.2) |
-| 10 | Checkout reshape (Stripe, gift, guest) | Not started | — |
+| 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (deferred full browser run for 9.2 and 9.3 done 7 October 2026: 17 of 17 passed) | `73bdb27` (9.1), `74ce773` (9.2), `2a3e0f9` (9.3) |
+| 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | In progress (10.1 done; 10.2 next) | — |
 | 10b | Quotes in admin | Not started | — |
 | 11 | Order journey emails 01, 03–06 | Not started | — |
 | 12 | Launch checks | Not started | — |
@@ -97,6 +97,12 @@ Last updated: 7 October 2026 (Step 9 done; the full browser run for 9.2 and 9.3 
 | Commission required fields | Home: name, email, preferred contact, idea; phone too when Phone is chosen. Project: company, contact name, email, project type, location & schedule; the rest optional, uploads included | Decided 7 October 2026. **Project Type starts empty ("Please choose") and is required**, so nothing is pre-selected (the prototype starts on High-End Residential). |
 | Email 03 contact line | Home: "by email" or "by phone", as chosen; Project: "by email" | Decided 7 October 2026. |
 | Thank-you pages | **"Reservation received" and "Commission submitted" laid out like the site's other text pages** (Contact, Terms): heading ("Reservation Received" / "Commission Submitted"), then the prototype's message under a rule in 15px muted text, then "Confirmation has been sent to the email address provided." (wording decided 7 October 2026) **No reference numbers on these pages** (they are in the confirmation emails). | Decided 7 October 2026; shared template `templates/partials/_received.html.twig`. Differs from the prototype's centred message screen. |
+| Accounts and sign-in | **Checkout never asks anyone to sign in; accounts stay in the background** | Decided 7 October 2026 (answers question 6). Every order is linked automatically to the account for its email. Sign-in email: a one-click "Sign in" button with the 6-digit code underneath as a backup. `/account` (order history) kept and restyled to match the design, reached by a small "Your orders" link on the Contact page instead of the footer. Existing accounts kept. |
+| "View your order" | **Every order email has a "View your order" link** (built in Step 11) | Decided 7 October 2026 (answers question 7). No separate "Find my order" feature. |
+| Delivery area | **UK mainland only at checkout** | Decided 7 October 2026 (answers question 2). Postcodes in the Scottish Highlands and Islands, Northern Ireland, the Isle of Man, the Isles of Scilly or the Channel Islands switch "Pay" to "Reserve Your Design" with a short note; the order goes through the request route with the basket and address carried over. The same rule applies to Apple Pay / Google Pay addresses. |
+| Express Payment | **Apple Pay and Google Pay at the top of the Card Payment page**; no separate Express Payment page | Decided 7 October 2026 (answers question 1). The basket has a single "Proceed to Payment" button. |
+| Gift date | **Earliest arrive-by date: today + 14 calendar days, then 2 working days for DPD** | Decided 7 October 2026. |
+| Order confirmation page | **Like the other thank-you pages**: heading "Order & Slot Confirmed", then "Added to Studio Casting Schedule", "Gift · Arrive by [date]" if a gift, and "Confirmation has been sent to the email address provided." | Decided 7 October 2026. |
 | Browser check output | **`var/browser-checks/` in the project** (ignored by git) | Decided 7 October 2026: screenshots and saved emails stay inside the project, not the system temp folder (`OUT_DIR` in `tests/browser/lib.mjs`). |
 | Commission details | Reference `LC-YYYYMMDD-XXXXXX` (like requests' `LR-…`); admin statuses New / Contacted / Closed; a hidden spam-trap field and a limit on repeat sends | Defaults accepted 7 October 2026. |
 
@@ -148,7 +154,7 @@ One line per Add to Basket (no merging), per-lamp configurations (`cart_item_opt
 - Browser check `old-shop-redirects.mjs` replaces `product-page-and-basket.mjs`. The purchase-route notes it checked on the product page are covered by `configurator-add-to-basket.mjs`; its basket checks (2-lamp limit, over-limit basket, checkout bounce) are kept, filling the basket through the configurator.
 - To undo: revert the commit (nothing in the database changes).
 
-### Step 9: Bespoke Commissions (done; full browser run for 9.2 and 9.3 pending)
+### Step 9: Bespoke Commissions (done)
 Two forms (Home: name, email, phone, preferred contact, idea, files; Project: company, contact, email, phone, project type, location & schedule, project, integration, files), an enquiry record and admin list, "Commission submitted" page (prototype message), email 03 (design template), notification to `STUDIO_NOTIFICATION_EMAIL`. Decisions are in the table above (uploads, files, hero photos, intro text, required fields, email 03 line).
 - **9.1 (done):** `/bespoke-commissions` (`CommissionController`, `templates/commissions/`, `commission_controller.js`; forms `CommissionHomeForm`, `CommissionProjectForm`, shared `CommissionFields`).
   - Hero: the eight photos cross-fading every 5 seconds (`slideshow`), the title visible on load in its staggered positions, "Scroll to begin", reveal on first interaction (`hero-reveal`). Matched to the prototype by measurement (`tests/browser/compare/commissions.mjs`).
@@ -173,16 +179,22 @@ Two forms (Home: name, email, phone, preferred contact, idea, files; Project: co
   - "Commission submitted" (`/bespoke-commissions/received`): heading "Commission Submitted", the prototype's message for the form used (Home: "Your vision is in our hands. …"; Project: "We are reviewing the architectural scope and structural parameters …") and "Confirmation has been sent to the email address provided.", laid out like the Contact page; no reference number. "Reservation received" restyled the same way (heading "Reservation Received", same confirmation line, request number removed). Both use `templates/partials/_received.html.twig`. A spam-trapped enquiry sees the same page (nothing saved or sent).
   - Email 03 (`templates/email/commission/received.html.twig`, subject "Your commission enquiry" as the design's title): "Dear <name>", "We'll be in touch by phone/email …" as decided, the enquiry reference, the commission type ("For Your Home" / "For Your Project"), "Dorset Studio"; no studio phone line until question 18 is answered.
   - Studio notification to `STUDIO_NOTIFICATION_EMAIL` ("New commission enquiry LC-… from <name or company>"): every detail, the file names and sizes (not attached) and a link to the enquiry in admin; replies go to the customer. A mail problem is logged and never stops the enquiry being saved.
-  - Unit test `tests/Form/CommissionFieldsTest.php` (the upload rules). Browser checks extended (`commissions-saving.mjs`: the page and its layout against Contact, email 03 for both forms, the notification; `reserve.mjs`: the restyled page, request number now read from the database; `commissions.mjs`; `clean-up.mjs` removes the test notifications). At your request (7 October 2026, machine busy ingesting video), only the unit tests, phpstan, code style and the relevant browser checks (`commissions-saving.mjs`, `reserve.mjs`, both passing) were run while building; 9.3 was committed without the full browser run at your request (7 October 2026: the machine was busy ingesting video and couldn't be paused). **The full browser run for 9.2 and 9.3 must be done before Step 10 starts.** Under load, `reserve.mjs` can fail at its first page ("Reserve Your Design opens the request form") because it waits a fixed time; it passes when re-run.
+  - Unit test `tests/Form/CommissionFieldsTest.php` (the upload rules). Browser checks extended (`commissions-saving.mjs`: the page and its layout against Contact, email 03 for both forms, the notification; `reserve.mjs`: the restyled page, request number now read from the database; `commissions.mjs`; `clean-up.mjs` removes the test notifications). At your request (7 October 2026, machine busy ingesting video), only the unit tests, phpstan, code style and the relevant browser checks (`commissions-saving.mjs`, `reserve.mjs`, both passing) were run while building; 9.3 was committed without the full browser run at your request (7 October 2026: the machine was busy ingesting video and couldn't be paused). The deferred full browser run for 9.2 and 9.3 was done on 7 October 2026 once the machine was free: 17 of 17 passed. Under load, `reserve.mjs` can fail at its first page ("Reserve Your Design opens the request form") because it waits a fixed time; it passes when re-run.
 
-### Step 10: Checkout reshape (not started; highest risk: payments)
-- One Card Payment page: contact, delivery address (DPD character limits: name, company, address lines, town and county 35; postcode 8; notes 50; phone 15, to confirm with DPD), gift fields, billing address ("same as delivery"), Stripe card box, summary, "Pay £X".
-- Express Payment via Stripe's wallet buttons (layout: question 1).
-- Guest checkout (no sign-in code interruption): questions 6 and 7.
-- Gift option: tick box, arrive-by date (earliest today + 14 days lead + 2 days DPD), recipient's name and mobile; "Gift · Arrive by [date]" on summaries, confirmation and emails; saved on the order.
-- Restyled confirmation: "Order & Slot Confirmed / Added to Studio Casting Schedule".
-- Delivery wording as in Decisions. No size abbreviations anywhere.
-- Tested end to end with Stripe test keys before anything goes live.
+### Step 10: Checkout reshape (in progress; highest risk: payments)
+Decisions of 7 October 2026 are in the table above (Accounts and sign-in, "View your order", Delivery area, Express Payment, Gift date, Order confirmation page). The deferred full browser run for 9.2 and 9.3 passed (17 of 17) before 10.1 started.
+- **10.1 Basket (done):** the "This is a gift" tick box with "When does it need to arrive by?" (earliest: today + 14 calendar days, then 2 working days for DPD; "Please choose a date…" messages as the prototype), and a single "Proceed to Payment" button (no Express Payment button). Delivery wording as in Decisions.
+  - "Proceed to Payment" is now a small form (`BasketProceedForm`, handled by `CartController::index`): the server checks the date and saves the choice on the basket (`Cart::$gift`, `Cart::$giftArriveBy`), then goes on to checkout. Unticking clears it. Works without JavaScript (the date shows once the box is ticked, by CSS). Shown only when the basket can check out.
+  - Earliest date: `GiftDate::earliest()` (UK time). Working days skip weekends and England and Wales bank holidays (Christmas and New Year substitutes included; one-off holidays such as a coronation are not). Unit tests `tests/Catalogue/GiftDateTest.php`.
+  - Matched to the prototype's basket with the gift ticked (`tests/browser/compare/basket-gift.mjs`): same positions and sizes, except the intended ones (no Express Payment button, so "Proceed to Payment" and Terms sit higher; "Dorset Studio" and "DPD Next Day Delivery" wording, so the phone layout wraps one line less). Also brought "Proceed to Payment" and the Terms link to the prototype's letter spacing and line height.
+  - Migration `Version20261007180000` (two columns on `cart`; undo with `doctrine:migrations:migrate prev`, which forgets any gift choices on baskets).
+  - Browser check `basket-gift.mjs` (desktop and phone); `old-shop-redirects.mjs` now looks for the "Proceed to Payment" button instead of the old payment links.
+- **10.2 Card Payment page (no payment yet):** one page replacing the address and delivery steps: Contact (email; phone for delivery updates), Delivery address (DPD character limits: name, company, address lines, town and county 35; postcode 8; notes 50; phone 15, to confirm with DPD; for a gift, the recipient's name and mobile), Billing address ("Same as delivery address"), the order summary with the DPD price worked out from the postcode, "Pay £X", the "processed securely" line and a Terms & Conditions link. Never asks anyone to sign in. Postcodes outside the UK mainland (Scottish Highlands and Islands, Northern Ireland, Isle of Man, Isles of Scilly, Channel Islands) switch "Pay" to "Reserve Your Design" with a short note, and send the order through the request route with the basket and address carried over.
+- **10.3 Paying by card (Stripe test mode):** Stripe's secure card box in "Card details", the order created and paid, every order linked automatically to the account for its email (created quietly if new; no sign-in asked).
+- **10.4 Apple Pay and Google Pay:** Stripe's wallet buttons at the top of the Card Payment page; the wallet's address goes through the same UK mainland rule (outside it: the request route instead of payment).
+- **10.5 Confirmation and gift details:** "Order & Slot Confirmed" laid out like the other thank-you pages ("Added to Studio Casting Schedule", "Gift · Arrive by [date]" if a gift, "Confirmation has been sent to the email address provided."); gift details saved on the order and shown in admin (in emails from Step 11).
+- **10.6 Sign-in and order history:** the sign-in email gets a one-click "Sign in" button with the 6-digit code underneath as a backup; `/account` (order history) restyled to match the design; a small "Your orders" link on the Contact page instead of the footer's "Sign in".
+- Tested end to end with Stripe test keys before anything goes live; each sub-step notes how to undo it. No size abbreviations anywhere.
 
 ### Step 10b: Quotes (not started; after Step 10)
 - Each request in admin shows its status: New, Quoted, Paid (exists since Step 8).
@@ -207,7 +219,7 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 - Real product photography only; "Image Coming Soon" for anything missing; never the prototype's `scraps/` folder or the workshop stand-ins (`IMG_0745–0751`, marked temporary by the design).
 - Routing: Studio or Gallery, no Custom choice, at most 2 lamps in the whole basket → "Cast Your Lamp" → basket → checkout. Everything else → "Reserve Your Design" → request, with no payment taken (stated clearly).
 - Lead time 7–14 days is one setting (`LeadTime`, Twig `lead_time`).
-- Gift option (Step 10): arrive-by date, earliest today + 14 + 2 days; recipient's name and mobile.
+- Gift option (Step 10): arrive-by date, earliest today + 14 calendar days, then 2 working days for DPD; recipient's name and mobile.
 - Trading-name line in the footer and emails.
 
 ---
@@ -215,10 +227,7 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 ## Questions still open
 
 **Checkout and delivery**
-1. **Express Payment layout:** a separate page as in the design, or Apple Pay / Google Pay at the top of the single payment page (Stripe's usual layout)?
-2. **Delivery area:** UK mainland only? Exclusions (Highlands, islands, Northern Ireland)?
-6. **Accounts:** remove customer sign-in and `/account` (guest checkout), or keep accounts in the background? What happens to existing accounts?
-7. **"View your order" in email 01:** a private order-status page without sign-in, or remove the button?
+None open (questions 1, 2, 6 and 7 answered 7 October 2026).
 
 **Product and configurator**
 8. **Atelier weight** (for delivery estimates on requests).
@@ -236,4 +245,4 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 23. **Origin story and T&Cs:** final as written? Checked for consumer-law wording?
 24. **Go-live:** a launch date or gift-season deadline that should change the order of steps?
 
-Answered (for reference): commission uploads (15); Lumen Forma is the only product line at launch (part of 20); remove the old shop code; studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.
+Answered (for reference): Express Payment layout (1), delivery area (2), accounts (6), "View your order" (7), gift date, order confirmation page; commission uploads (15); Lumen Forma is the only product line at launch (part of 20); remove the old shop code; studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.

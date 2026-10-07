@@ -2,8 +2,10 @@
 
 namespace App\Controller\Controller;
 
+use App\Catalogue\GiftDate;
 use App\Catalogue\LumenFormaCatalogue;
 use App\Entity\CartItem;
+use App\Form\Form\BasketProceedForm;
 use App\Repository\CartRepository;
 use App\Service\BasketRules;
 use App\Service\CartResolver;
@@ -21,16 +23,41 @@ class CartController extends AbstractController
         private readonly CartRepository $cartRepository,
         private readonly CartResolver $cartResolver,
         private readonly BasketRules $basketRules,
+        private readonly GiftDate $giftDate,
     ) {
     }
 
+    /**
+     * The basket, and "Proceed to Payment": the gift choice ("This is a
+     * gift" with an arrive-by date) is checked and saved on the basket, then
+     * the customer goes on to checkout.
+     */
     #[Route(path: '/basket', name: 'cart')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $cart = $this->cartResolver->getCart();
         $blockers = $this->basketRules->checkoutBlockers($cart);
+        $earliest = $this->giftDate->earliest();
+
+        $proceedForm = $this->createForm(BasketProceedForm::class, [
+            'gift' => $cart->isGift(),
+            'arriveBy' => $cart->getGiftArriveBy(),
+        ], [
+            'earliest' => $earliest,
+        ]);
+        $proceedForm->handleRequest($request);
+        if ($proceedForm->isSubmitted() && $blockers === [] && ! $cart->isEmpty() && $proceedForm->isValid()) {
+            /** @var array{gift: bool, arriveBy: ?\DateTimeImmutable} $choice */
+            $choice = $proceedForm->getData();
+            $cart->setGiftArriveBy($choice['gift'] ? $choice['arriveBy'] : null);
+            $this->cartRepository->save($cart, true);
+
+            return $this->redirectToRoute('checkout');
+        }
 
         return $this->render('cart/index.html.twig', [
+            'proceedForm' => $proceedForm,
+            'giftEarliest' => $earliest,
             'cart' => $cart,
             'lampCount' => $this->basketRules->lampCount($cart),
             'checkoutBlockers' => $blockers,

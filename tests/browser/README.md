@@ -1,6 +1,6 @@
 # Browser checks
 
-End-to-end checks for the design merge (`docs/merge-plan.md`, Steps 6–9 and the old shop redirects), run against the **local** site in a headless Google Chrome. They click through the pages as a customer would and print `PASS` / `FAIL` for each check, then `ALL PASSED` or `SOME CHECKS FAILED`.
+End-to-end checks for the design merge (`docs/merge-plan.md`, Steps 6–10 and the old shop redirects), run against the **local** site in a headless Google Chrome. They click through the pages as a customer would and print `PASS` / `FAIL` for each check, then `ALL PASSED` or `SOME CHECKS FAILED`.
 
 They are not part of `composer test` (they need the running site, Chrome and Mailpit) and only ever touch your local site and database.
 
@@ -21,7 +21,7 @@ node tests/browser/run-all.mjs reserve configurator-edit    # just these
 node tests/browser/reserve.mjs            # one check on its own, with every PASS/FAIL line
 ```
 
-A full run takes about 15 minutes. A few checks take a size: `configurator-photos.mjs`, `configurator-custom-notes.mjs`, `configurator-edit.mjs` and `commissions.mjs` accept `1440 900` (desktop, the default) or `390 844` (phone); `run-all` runs both.
+A full run takes about 15 minutes. A few checks take a size: `configurator-photos.mjs`, `configurator-custom-notes.mjs`, `configurator-edit.mjs`, `commissions.mjs` and `basket-gift.mjs` accept `1440 900` (desktop, the default) or `390 844` (phone); `run-all` runs both.
 
 | Check | What it covers |
 |---|---|
@@ -35,10 +35,12 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 | `configurator-edit.mjs` | "Edit configuration" from the basket: loaded design, updates in place, per-lamp lines, Reserve leaves the line unchanged; links to the configurator. |
 | `configurator-hover-and-headings.mjs` | Which option headings show, the hand pointer and hover feedback. |
 | `commissions-saving.mjs` | Bespoke Commissions enquiries saved with their files kept privately; "Commission submitted" with each form's message and the reference; email 03 (both forms) and the studio notification in Mailpit; the server's own checks with the page's bypassed (file type, 50MB a file, 100MB in total, over 110MB at once, the phone rule); the spam trap; the limit of 5 an hour; admin: the Commissions list, an enquiry's page, file downloads (admin only), deleting an enquiry deleting its files. Signs in to admin as `lluniostudios@gmail.com` (code from Mailpit) and clears the enquiry limit before and after. |
+| `basket-gift.mjs` | The basket's "This is a gift": the date and its note, the earliest date allowed, both messages, the choice saved on the basket and kept, unticking clearing it; a single "Proceed to Payment"; no gift box when the basket goes by request; hover feedback. |
 | `reserve.mjs` | Reserve Your Design end to end: what it carries, the form and its messages, the saved request, the emptied basket, email 02 and the studio notification in Mailpit. |
 | `old-shop-redirects.mjs` | `/products` and `/collections` (and anything under them) permanently redirect to Lighting Designs, and no page links to them; the basket's purchase route and 2-lamp limit (Step 6), with the basket filled through the configurator. |
 | `commissions.mjs` | Bespoke Commissions: the nav and homepage links, the hero (eight photos, title visible on load, reveal), the For Your Home / For Your Project tabs, each form's fields and required-field messages, the phone becoming required when Phone is chosen, the file chooser's checks (type, 50MB a file, 100MB in total), hover feedback. |
 | `commissions-saving.mjs` | Bespoke Commissions enquiries saved with their files kept privately; "Commission submitted" with each form's message and the reference; email 03 (both forms) and the studio notification in Mailpit; the server's own checks with the page's bypassed (file type, 50MB a file, 100MB in total, over 110MB at once, the phone rule); the spam trap; the limit of 5 an hour; admin: the Commissions list, an enquiry's page, file downloads (admin only), deleting an enquiry deleting its files. Signs in to admin as `lluniostudios@gmail.com` (code from Mailpit) and clears the enquiry limit before and after. |
+| `basket-gift.mjs` | The basket's "This is a gift": the date and its note, the earliest date allowed, both messages, the choice saved on the basket and kept, unticking clearing it; a single "Proceed to Payment"; no gift box when the basket goes by request; hover feedback. |
 
 ### Comparing with the prototype
 
@@ -48,6 +50,7 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/stages.mjs 1440 900
 PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/review.mjs 390 844 two
 PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/commissions.mjs 1440 900
+PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/basket-gift.mjs 390 844
 ```
 
 They print only the differences (often expected ones, such as "Gallery" where the prototype says "Gallery (S)").
