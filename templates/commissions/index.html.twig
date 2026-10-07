@@ -84,6 +84,10 @@
                     {{ include('commissions/_field.html.twig', { child: homeForm.idea, label: 'Tell us about your idea *', kind: 'area', help: "Where it might live, roughly how big, anything that's inspired you. Don't worry if it's not fully formed, we'll talk it through together." }) }}
                     {{ include('commissions/_field.html.twig', { child: homeForm.files, label: 'Share a photo of the space or anything that inspired you', hint: '(optional)', kind: 'files', drop: 'Choose photos or files — ' ~ uploadText }) }}
                 </div>
+                {{ include('commissions/_honeypot.html.twig', { child: homeForm.website }) }}
+                {% for error in homeForm.vars.errors %}
+                    <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+                {% endfor %}
                 <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Request Your Custom Design</button>
             {{ form_end(homeForm) }}
         </div>
@@ -101,6 +105,10 @@
                     {{ include('commissions/_field.html.twig', { child: projectForm.integration, label: 'Integration Requirements', kind: 'area' }) }}
                     {{ include('commissions/_field.html.twig', { child: projectForm.files, label: 'Documentation Upload', kind: 'files', drop: 'Attach architectural elevation drawings, CAD files, or spatial mood boards — ' ~ uploadText }) }}
                 </div>
+                {{ include('commissions/_honeypot.html.twig', { child: projectForm.website }) }}
+                {% for error in projectForm.vars.errors %}
+                    <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+                {% endfor %}
                 <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Request Custom Collaboration</button>
             {{ form_end(projectForm) }}
         </div>

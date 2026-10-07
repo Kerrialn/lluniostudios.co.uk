@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Address;
 use App\Entity\Cart;
+use App\Entity\CommissionEnquiry;
 use App\Entity\DesignRequest;
 use App\Entity\Order;
 use App\Entity\Product;
@@ -41,6 +42,7 @@ class DashboardController extends AbstractDashboardController
          yield MenuItem::linkToCrud('Cart', 'fas fa-list', Cart::class);
          yield MenuItem::linkToCrud('Order', 'fas fa-receipt', Order::class);
          yield MenuItem::linkToCrud('Requests', 'fas fa-envelope-open-text', DesignRequest::class);
+         yield MenuItem::linkToCrud('Commissions', 'fas fa-pen-ruler', CommissionEnquiry::class);
          yield MenuItem::linkToCrud('Address', 'fas fa-location-dot', Address::class);
          yield MenuItem::linkToCrud('User', 'fas fa-list', User::class);
     }

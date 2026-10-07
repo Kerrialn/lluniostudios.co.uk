@@ -5,6 +5,7 @@ services:
         volumes:
             - .:/app:cached
             - ./docker/php/zz-opcache-dev.ini:/usr/local/etc/php/conf.d/zz-opcache-dev.ini
+            - ./docker/php/zz-uploads.ini:/usr/local/etc/php/conf.d/zz-uploads.ini
         healthcheck:
             # expects /app/php/docker-healthcheck.sh to ping 127.0.0.1:9000
             test: [ "CMD-SHELL", "/app/php/docker-healthcheck.sh" ]

@@ -59,12 +59,15 @@ final class CommissionHomeForm extends AbstractType
                     'rows' => 7,
                 ],
             ])
-            ->add('files', FileType::class, CommissionFields::files());
+            ->add('files', FileType::class, CommissionFields::files())
+            ->add(CommissionFields::HONEYPOT, TextType::class, CommissionFields::honeypot());
+        CommissionFields::reportFailedUploads($builder->get('files'));
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
+            'upload_max_size_message' => CommissionFields::tooLargeMessage(...),
             'constraints' => [
                 new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
                     if (! \is_array($data) || ($data['contactMethod'] ?? null) !== self::CONTACT_PHONE || trim((string) ($data['phone'] ?? '')) !== '') {

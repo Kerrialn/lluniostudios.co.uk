@@ -12,6 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -76,6 +77,15 @@ final class CommissionProjectForm extends AbstractType
                     'rows' => 3,
                 ],
             ])
-            ->add('files', FileType::class, CommissionFields::files());
+            ->add('files', FileType::class, CommissionFields::files())
+            ->add(CommissionFields::HONEYPOT, TextType::class, CommissionFields::honeypot());
+        CommissionFields::reportFailedUploads($builder->get('files'));
+    }
+
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults([
+            'upload_max_size_message' => CommissionFields::tooLargeMessage(...),
+        ]);
     }
 }

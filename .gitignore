@@ -28,6 +28,7 @@ phpstan.neon
 !/docker/php
 /docker/php/*
 !/docker/php/zz-opcache-dev.ini
+!/docker/php/zz-uploads.ini
 
 /public/uploads/*
 

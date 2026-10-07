@@ -4,7 +4,7 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 9.1 committed; 9.2 in progress).
+Last updated: 7 October 2026 (Step 9.2 committed; 9.3 in progress).
 
 ---
 
@@ -29,6 +29,7 @@ Last updated: 7 October 2026 (Step 9.1 committed; 9.2 in progress).
 ### How the work is done (standing rules)
 
 - Small steps: build one step (or sub-step), stop, say what to check, and **commit only when asked**.
+- **Never move or discard uncommitted work without asking first**: no `git stash`, `git reset`, `git checkout` / `git restore` of files, `git clean`, or any other command that sets aside, overwrites or deletes uncommitted changes. Ask before each use, even to compare against the last commit (use `git diff` or `git show` instead). Decided 7 October 2026.
 - **Match the prototype exactly**, comparing against it (screenshots and measured positions), not working from memory. Report any intended differences.
 - **Real product photography only**: never generated, mocked up or substituted, and never another size's photos. Anything without a real photo shows "Image Coming Soon" (`templates/partials/_image_coming_soon.html.twig`). No filler or stretched edges across photos. Resizing and stripping metadata (including GPS) for the web is fine; the photo list and how to replace photos are in `CLAUDE.md` (Pending content).
 - **British English** everywhere, including flash messages and emails (Basket, colour, aluminium, enquiry, Postcode, "7 October 2026", £).
@@ -53,7 +54,7 @@ Last updated: 7 October 2026 (Step 9.1 committed; 9.2 in progress).
 | 7 | Configurator (`/lighting-designs`), 7.1–7.6 | Done | `574bf32`, `45c4635`, `6770e92`, `93a019f`, `27b1ae3`, `b024fde` |
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
 | — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
-| 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 email 03, notification and browser check) | In progress (9.1 done; 9.2 next) | — |
+| 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 email 03, notification and browser check) | In progress (9.1, 9.2 done; 9.3 next) | `73bdb27` (9.1) |
 | 10 | Checkout reshape (Stripe, gift, guest) | Not started | — |
 | 10b | Quotes in admin | Not started | — |
 | 11 | Order journey emails 01, 03–06 | Not started | — |
@@ -157,7 +158,16 @@ Two forms (Home: name, email, phone, preferred contact, idea, files; Project: co
   - Intended differences from the prototype: on phones the title is scaled to fit (the prototype's lines run off the screen); "*" added to the Home form's "Preferred contact method" and "Tell us about your idea" and to the Project form's "Project Type" (now required); Project Type starts on "Please choose" instead of High-End Residential; the file box text states the upload rules ("Choose photos or files — PDF, DWG, JPG, PNG or HEIC, up to 50MB each, 100MB in total" on Home instead of "Choose a photo"; ZIP replaced by the decided types on Project).
   - The forms use Symfony's plain form layout, so the site theme's default field classes don't apply.
   - Browser check `commissions.mjs` (desktop and phone).
-- **9.2:** saving the enquiry, private uploads (server checks; the local server's upload limit raised to 50MB a file / 100MB a request), the spam trap and repeat-send limit, admin "Commissions" list and file downloads.
+- **9.2 (done; final full browser run deferred, see below):** saving enquiries, private files, spam protection and admin.
+  - `CommissionEnquiry` (number `LC-YYYYMMDD-XXXXXX`, type Home/Project, status New/Contacted/Closed, the form's details) and `CommissionEnquiryFile` (the customer's file name, size, stored name). Migration `Version20261007150000` (two new tables; undo with `doctrine:migrations:migrate prev`, which drops both tables and every saved enquiry).
+  - Files: `CommissionFileStorage` keeps them in `var/commission-uploads/` (outside `public/`, random names, folder only readable by the server). Downloaded only from admin (`/admin/commission-file/{id}`, admin sign-in required), always as a download under the customer's own file name. Deleting an enquiry in admin deletes its files (`CommissionEnquiryFileRemover`). **The live server must keep this folder between deploys and back it up** (Step 12).
+  - The server repeats the page's file checks (type by extension, 50MB a file, 100MB in total) in the same words (`CommissionFields::uploadProblem`), and shows the same "more than 100MB" message when more than the server takes at once (110MB) is sent.
+  - Spam: a hidden "website" field (an enquiry with it filled is accepted on screen but not saved) and at most 5 complete enquiries an hour from one connection (`config/packages/rate_limiter.php`, new package `symfony/rate-limiter`), after which: "You've sent several enquiries in a short time. Please try again in an hour, or email us at info@lluniostudios.co.uk."
+  - Local PHP limits (`docker/php/zz-uploads.ini`, mounted in `docker-compose.yml`): 50MB a file, 110MB a request, 20 files. Locally the debug toolbar is switched off for an oversize send (it would read the whole request into memory); the live site has no toolbar.
+  - Admin "Commissions" (`CommissionEnquiryCrudController`): newest first with number, received (UK time), status badge, type, name, company, email and file count; filters by status and type; an enquiry's page shows every detail and its files as download links; only the status can be changed.
+  - After a complete enquiry the page still returns to the form; the "Commission submitted" page and emails come in 9.3.
+  - Browser check `commissions-saving.mjs`; `clean-up.mjs` also removes test enquiries and their files.
+  - Committed without a final clean full browser run, at your request (7 October 2026), because the machine was busy ingesting video (EditAssist). The last full run passed 16 of 17 (the one failure: Chrome didn't start; that check passed on its own); the run before had two pages not finish loading in time (both passed on their own). The full run is to be repeated when the machine is free, before 9.3 is committed.
 - **9.3:** "Commission submitted" page, email 03, studio notification, browser check.
 
 ### Step 10: Checkout reshape (not started; highest risk: payments)
@@ -180,7 +190,7 @@ Two forms (Home: name, email, phone, preferred contact, idea, files; Project: co
 Restyle email 01; new order stages In production / Dispatched / Delivered with a tracking-number field and admin buttons sending emails 04–06 (question 16). "Dorset Studio" for every "Bournemouth" in the design's templates. Email images are hosted on the site (`public/images/email/`).
 
 ### Step 12: Launch checks
-Live server upload limit matched to commissions (50MB a file, 100MB an enquiry); British English copy pass; photo audit (replace with the finely edited photos, see `CLAUDE.md`); real packed-box sizes and weights; Apple Pay domain registered in Stripe; Stripe live keys; update `CLAUDE.md` (its Authentication section describes passwords, but sign-in uses emailed codes).
+Live server upload limits matched to commissions (as `docker/php/zz-uploads.ini`: 50MB a file, 110MB a request) and the commission files folder (`var/commission-uploads/`) kept between deploys and backed up; British English copy pass; photo audit (replace with the finely edited photos, see `CLAUDE.md`); real packed-box sizes and weights; Apple Pay domain registered in Stripe; Stripe live keys; update `CLAUDE.md` (its Authentication section describes passwords, but sign-in uses emailed codes).
 
 ### Later, when the DPD account exists
 Enter the DPD API credentials, confirm the character limits and pricing, check `DpdProvider` against the real API, switch `SHIPPING_MODE=live`.

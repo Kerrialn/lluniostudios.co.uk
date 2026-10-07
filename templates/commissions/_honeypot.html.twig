@@ -1,0 +1,6 @@
+{# The spam trap (CommissionFields::HONEYPOT): off screen and hidden from
+   screen readers, so only bots fill it in. #}
+<div class="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden="true">
+    <label for="{{ child.vars.id }}">Website</label>
+    {{ form_widget(child) }}
+</div>

@@ -2,10 +2,10 @@
 // photos, the title visible on load, the reveal), the For Your Home / For
 // Your Project tabs, both forms' required fields and messages, the phone
 // becoming required when Phone is chosen, the file chooser's checks, and the
-// hand pointer and hover feedback. Takes a size: 1440 900 (default) or 390 844.
+// hand pointer and hover feedback. (Saving: commissions-saving.mjs.) Takes a size: 1440 900 (default) or 390 844.
 import { execSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
-import { open, sleep, checker, out, BASE_URL } from './lib.mjs';
+import { open, sleep, checker, out, BASE_URL, PROJECT_DIR } from './lib.mjs';
 
 const [W, H] = [Number(process.argv[2] || 1440), Number(process.argv[3] || 900)];
 const { check, summary } = checker();
@@ -131,10 +131,11 @@ try {
         }
     }
 
-    // Step 9.1 only: a complete enquiry is checked, then nothing is saved yet (9.2).
+    // A complete enquiry goes through (saving is checked in commissions-saving.mjs).
+    execSync('docker compose exec -T php php bin/console cache:pool:clear cache.rate_limiter 2>/dev/null', { cwd: PROJECT_DIR });
     await go(BASE_URL + '/bespoke-commissions?for=home');
     await ev(`(() => { const f = document.querySelector('[data-client=home] form'); f.querySelector('[name="commission_home[name]"]').value = 'Ada Test'; f.querySelector('[name="commission_home[email]"]').value = 'ada.test@example.test'; f.querySelector('[value=email]').click(); f.querySelector('textarea').value = 'A lamp for the hall.'; })()`);
     await submit('home');
-    check('a complete Home enquiry is accepted (not saved until 9.2)', (await ev('location.pathname + location.search')) === '/bespoke-commissions?for=home' && (await state()).errors.length === 0);
+    check('a complete Home enquiry is accepted', (await ev('location.pathname + location.search')) === '/bespoke-commissions?for=home' && (await state()).errors.length === 0);
     summary();
 } finally { b.close(); }

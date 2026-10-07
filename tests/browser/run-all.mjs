@@ -25,6 +25,7 @@ const CHECKS = [
     ['old-shop-redirects.mjs'],
     ['commissions.mjs', '1440', '900'],
     ['commissions.mjs', '390', '844'],
+    ['commissions-saving.mjs'],
 ];
 
 const args = process.argv.slice(2);

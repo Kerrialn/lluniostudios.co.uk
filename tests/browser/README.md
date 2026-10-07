@@ -34,9 +34,11 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 | `configurator-custom-notes.mjs` | The line under a Custom choice, and the purchase route note under the review's button. |
 | `configurator-edit.mjs` | "Edit configuration" from the basket: loaded design, updates in place, per-lamp lines, Reserve leaves the line unchanged; links to the configurator. |
 | `configurator-hover-and-headings.mjs` | Which option headings show, the hand pointer and hover feedback. |
+| `commissions-saving.mjs` | Bespoke Commissions enquiries saved with their files kept privately; the server's own checks with the page's bypassed (file type, 50MB a file, 100MB in total, over 110MB at once, the phone rule); the spam trap; the limit of 5 an hour; admin: the Commissions list, an enquiry's page, file downloads (admin only), deleting an enquiry deleting its files. Signs in to admin as `lluniostudios@gmail.com` (code from Mailpit) and clears the enquiry limit before and after. |
 | `reserve.mjs` | Reserve Your Design end to end: what it carries, the form and its messages, the saved request, the emptied basket, email 02 and the studio notification in Mailpit. |
 | `old-shop-redirects.mjs` | `/products` and `/collections` (and anything under them) permanently redirect to Lighting Designs, and no page links to them; the basket's purchase route and 2-lamp limit (Step 6), with the basket filled through the configurator. |
 | `commissions.mjs` | Bespoke Commissions: the nav and homepage links, the hero (eight photos, title visible on load, reveal), the For Your Home / For Your Project tabs, each form's fields and required-field messages, the phone becoming required when Phone is chosen, the file chooser's checks (type, 50MB a file, 100MB in total), hover feedback. |
+| `commissions-saving.mjs` | Bespoke Commissions enquiries saved with their files kept privately; the server's own checks with the page's bypassed (file type, 50MB a file, 100MB in total, over 110MB at once, the phone rule); the spam trap; the limit of 5 an hour; admin: the Commissions list, an enquiry's page, file downloads (admin only), deleting an enquiry deleting its files. Signs in to admin as `lluniostudios@gmail.com` (code from Mailpit) and clears the enquiry limit before and after. |
 
 ### Comparing with the prototype
 
@@ -67,13 +69,13 @@ Chrome profiles are kept in the system temp folder (`llunio-chrome-profile-*`), 
 
 ## Test data they leave
 
-The checks create real data on the local site: anonymous baskets, "Ada Test" requests (`ada.test@example.test`), and emails in Mailpit. Remove them with `--clean` on `run-all`, or afterwards with:
+The checks create real data on the local site: anonymous baskets, "Ada Test" requests and commission enquiries (`ada.test@example.test`, with the enquiries' files in `var/commission-uploads/`), and emails in Mailpit. Remove them with `--clean` on `run-all`, or afterwards with:
 
 ```bash
 node tests/browser/clean-up.mjs "2026-10-07 08:00"    # everything since this time (UTC)
 ```
 
-This removes baskets without an account created since that time (including any basket of your own made then), requests from `@example.test` addresses, and test emails, studio notifications for those requests and sign-in codes sent since then. Accounts, orders and other requests are never touched.
+This removes baskets without an account created since that time (including any basket of your own made then), requests and commission enquiries (and their stored files) from `@example.test` addresses, and test emails, studio notifications for those requests and sign-in codes sent since then. Accounts, orders and other requests are never touched.
 
 ## Writing new checks
 
