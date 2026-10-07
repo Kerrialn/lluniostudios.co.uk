@@ -87,20 +87,4 @@ class CartController extends AbstractController
 
         return $this->redirectToRoute('cart');
     }
-
-    /**
-     * PLACEHOLDER until Step 8 builds the Request form: "Reserve Your Design"
-     * lands here. The real form will send the whole basket as one request and
-     * then empty the basket.
-     */
-    #[Route(path: '/basket/request', name: 'basket_request', methods: ['GET'])]
-    public function request(): Response
-    {
-        $cart = $this->cartResolver->getCart();
-
-        return $this->render('cart/request_placeholder.html.twig', [
-            'cart' => $cart,
-            'lampCount' => $this->basketRules->lampCount($cart),
-        ]);
-    }
 }

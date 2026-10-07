@@ -1,0 +1,18 @@
+{# A request's lamps on its admin page: each design with its size, quantity, price and options (per lamp when customised individually). #}
+{% for item in entity.instance.items %}
+    {% set direct = item.product and item.product.directOrder %}
+    <div class="mb-3">
+        <strong>{{ item.productTitle }}</strong>
+        · {{ item.quantity }} {{ item.quantity == 1 ? 'lamp' : 'lamps' }}
+        · {{ direct ? '' : 'Starting at ' }}{{ (item.unitPrice / 100)|format_currency('GBP', {fraction_digit: 0}) }}{{ item.quantity > 1 ? ' each' : '' }}
+        {% if item.quantity > 1 %}· {{ item.customisedIndividually ? 'Customise Individually' : 'Customise All' }}{% endif %}
+        {% for group in item.lampConfigurations %}
+            <div class="mt-1">
+                {% if group.label %}<em>{{ group.label }}:</em> {% endif %}
+                {% for option in group.options %}{{ option.option }}: {{ option.value }}{{ loop.last ? '' : ' · ' }}{% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    —
+{% endfor %}

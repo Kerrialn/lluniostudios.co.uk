@@ -99,7 +99,7 @@
 
                     {% if checkoutBlockers is not empty %}
                         {# Over the lamp limit, a Request size or a Custom choice: the whole order goes by request. #}
-                        {{ include('partials/_purchase_route.html.twig', { reserve: true, note: routeNote, href: path('basket_request') }) }}
+                        {{ include('partials/_purchase_route.html.twig', { reserve: true, note: routeNote, href: path('basket_request', {basket: 1}) }) }}
                     {% else %}
                         {# Both lead to checkout for now; the separate Express Payment page comes with Step 10. #}
                         <a href="{{ path('checkout') }}" class="border border-ll-ink py-[15px] text-center text-[13px] transition-opacity hover:opacity-70">Express Payment (Apple Pay / Google Pay)</a>

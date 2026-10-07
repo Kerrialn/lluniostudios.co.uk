@@ -15,6 +15,7 @@ use App\Repository\CartRepository;
 use App\Service\BasketRules;
 use App\Service\CartHelper;
 use App\Service\CartResolver;
+use App\Service\DesignRequestLamps;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,6 +42,7 @@ final class ConfiguratorController extends AbstractController
         private readonly CartRepository $cartRepository,
         private readonly CartHelper $cartHelper,
         private readonly BasketRules $basketRules,
+        private readonly DesignRequestLamps $designRequestLamps,
     ) {
     }
 
@@ -83,11 +85,12 @@ final class ConfiguratorController extends AbstractController
     }
 
     /**
-     * "Cast Your Lamp": add the design to the basket as one line (per-lamp
-     * options when customised individually). The basket rules are checked
-     * again here: a design that must be reserved (a Request size, a Custom
-     * value, or more than the checkout lamp limit in the whole basket) goes
-     * to the request route instead and nothing is added.
+     * The review's button. "Cast Your Lamp": add the design to the basket as
+     * one line (per-lamp options when customised individually). The basket
+     * rules decide here: a design that must be reserved (a Request size, a
+     * Custom value, or more than the checkout lamp limit in the whole basket)
+     * goes to the "Reserve Your Design" form instead, carrying this lamp, and
+     * nothing is added.
      */
     #[Route(path: '/lighting-designs/add', name: 'lighting_designs_add', methods: ['POST'])]
     public function add(Request $request): Response
@@ -115,8 +118,11 @@ final class ConfiguratorController extends AbstractController
         $editing = $this->editableLine((string) $request->request->get('edit', ''));
         $refusal = $this->basketRules->refusalForAdd($cart, $configuration->product, $configuration->quantity, $configuration->values(), $editing);
         if (null !== $refusal) {
-            // "Reserve Your Design" (a placeholder until Step 8). A line being
-            // edited stays as it was.
+            // "Reserve Your Design": the request form, carrying this lamp (in
+            // place of the line being edited, which stays as it was until the
+            // request is sent) and the rest of the basket.
+            $this->designRequestLamps->holdPending($data, $editing?->getId()?->toRfc4122());
+
             return $this->redirectToRoute('basket_request');
         }
 

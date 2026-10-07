@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{#
+    "Reserve Your Design" (Site v4 prototype's Reserve page; the "Reserve Your
+    Casting Slot" variant is dropped). The customer's details on the left; on
+    the right every lamp in the request (the basket plus the lamp being
+    configured), each with its full configuration. No payment is taken.
+#}
+{% block title %}Reserve Your Design | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
+{% block body %}
+    {% set fields = [
+        { name: 'fullName', label: 'Full Name *', hint: '' },
+        { name: 'email', label: 'Email Address *', hint: '(For sending the invoice and build schedule)' },
+        { name: 'phone', label: 'Phone Number *', hint: '(Required by carriers for heavy-goods delivery scheduling)' },
+        { name: 'deliveryAddress', label: 'Delivery Address & Postcode *', hint: '(Required to calculate exact delivery costs)' },
+        { name: 'accessNotes', label: 'Site Access & Delivery Notes', hint: "(e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')" },
+        { name: 'customDetails', label: 'Custom Details', hint: "(Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)" },
+    ] %}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-10 text-[15px] leading-[1.5]">
+        <div class="flex flex-col gap-3.5 max-w-[640px]">
+            <a href="{{ path('lighting_designs') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>
+            <h1 class="m-0 font-light uppercase tracking-[0.03em] text-[clamp(30px,3.8vw,52px)] leading-[1.06]">Reserve Your Design</h1>
+            <p class="m-0 text-ll-mute [text-wrap:pretty]">No payment is taken today. Reserving holds your place in our studio casting schedule while we calculate delivery options and confirm exact lead times.</p>
+        </div>
+
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(32px,5vw,72px)] items-start">
+            {{ form_start(form, { attr: { class: 'flex flex-col gap-6', novalidate: 'novalidate' } }) }}
+                {% for field in fields|filter(f => form[f.name] is defined) %}
+                    {% set child = form[field.name] %}
+                    {% set isArea = field.name in ['deliveryAddress', 'accessNotes', 'customDetails'] %}
+                    <div class="flex flex-col gap-2">
+                        <label for="{{ child.vars.id }}" class="text-[14px]">{{ field.label }}{% if field.hint %} <span class="text-ll-mute text-[13px]">{{ field.hint }}</span>{% endif %}</label>
+                        {% if isArea %}
+                            {{ form_widget(child, { attr: { class: 'w-full bg-transparent border border-ll-line p-2.5 text-[15px] leading-[1.5] outline-none resize-y focus:border-ll-ink' } }) }}
+                        {% else %}
+                            {{ form_widget(child, { attr: { class: 'w-full bg-transparent border-0 border-b border-ll-line py-2 text-[15px] leading-[1.5] outline-none focus:border-ll-ink' } }) }}
+                        {% endif %}
+                        {% for error in child.vars.errors %}
+                            <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center font-medium text-[12px] uppercase tracking-[0.16em]">Reserve Your Design</button>
+                <div class="text-[13px] text-ll-mute">{{ constant('App\\Service\\BasketRules::SUB_RESERVE') }}</div>
+            {{ form_end(form) }}
+
+            <aside class="flex flex-col gap-3.5 p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
+                {% if photo %}
+                    <img src="{{ asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') }}" alt="Lumen Forma" class="w-full aspect-[4/3] object-cover" style="object-position: {{ photo.position }}">
+                {% else %}
+                    <div class="relative w-full aspect-[4/3]">{{ include('partials/_image_coming_soon.html.twig', { title: items|length == 1 ? items[0].sizeName : '' }) }}</div>
+                {% endif %}
+                <div class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Your configuration</div>
+                {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-[13px]' %}
+                {% for item in items %}
+                    <div class="flex flex-col {{ loop.first ? '' : 'mt-4' }}">
+                        <div class="{{ row }}"><span class="text-ll-mute">Edition</span><span class="text-right">{{ item.sizeName }}</span></div>
+                        {% if item.customisedIndividually %}
+                            {% for group in item.lampConfigurations %}
+                                {% set lamp = loop.index %}
+                                {% set bulb = item.value('Bulb Style', lamp) ~ (item.value('Bulb Count', lamp) ? ' / ' ~ item.value('Bulb Count', lamp) : '') %}
+                                <div class="{{ row }}"><span class="text-ll-mute">{{ group.label }}</span><span class="text-right">{{ [item.value('The Pigment', lamp), item.value('Cable Colour', lamp), item.value('Footing Material', lamp), bulb]|join(' · ') }}</span></div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="{{ row }}"><span class="text-ll-mute">The Pigment</span><span class="text-right">{{ item.value('The Pigment') }}</span></div>
+                            <div class="{{ row }}"><span class="text-ll-mute">Cable Colour</span><span class="text-right">{{ item.value('Cable Colour') }}</span></div>
+                            <div class="{{ row }}"><span class="text-ll-mute">Footing Material</span><span class="text-right">{{ item.value('Footing Material') }}</span></div>
+                            {% if item.value('Bulb Count') %}
+                                <div class="{{ row }}"><span class="text-ll-mute">Bulb Style / Count</span><span class="text-right">{{ item.value('Bulb Style') }} / {{ item.value('Bulb Count') }}</span></div>
+                            {% else %}
+                                <div class="{{ row }}"><span class="text-ll-mute">Bulb Style</span><span class="text-right">{{ item.value('Bulb Style') }}</span></div>
+                            {% endif %}
+                        {% endif %}
+                        <div class="{{ row }}"><span class="text-ll-mute">Quantity</span><span class="text-right">{{ item.quantity }}</span></div>
+                        {% if item.quantity >= 2 %}
+                            <div class="{{ row }}"><span class="text-ll-mute">Configuration</span><span class="text-right">{{ item.customisedIndividually ? 'Customise Individually' : 'Customise All' }}</span></div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </aside>
+        </div>
+    </div>
+{% endblock %}

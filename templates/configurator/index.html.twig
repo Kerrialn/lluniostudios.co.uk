@@ -32,7 +32,6 @@
     {% set configuratorValues = {
         stages: stages, stageKeys: stageKeys, sizes: sizes, groups: groups, size: defaultSize,
         maxLamps: maxLamps, basketLamps: basketLamps, maxCheckout: constant('App\\Service\\BasketRules::MAX_CHECKOUT_LAMPS'),
-        requestUrl: path('basket_request'),
         notes: {
             direct: constant('App\\Service\\BasketRules::ROUTE_NOTE_DIRECT'),
             quantity: constant('App\\Service\\BasketRules::ROUTE_NOTES')[constant('App\\Service\\BasketRules::LIMIT_MESSAGE')],

@@ -15,6 +15,7 @@ use App\Repository\ProductRepository;
 use App\Service\BasketRules;
 use App\Service\CartHelper;
 use App\Service\CartResolver;
+use App\Service\DesignRequestLamps;
 use Nette\Utils\Strings;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,6 +31,7 @@ class ProductController extends AbstractController
         private readonly CartHelper $cartHelper,
         private readonly CartResolver $cartResolver,
         private readonly BasketRules $basketRules,
+        private readonly DesignRequestLamps $designRequestLamps,
     )
     {
     }
@@ -96,8 +98,18 @@ class ProductController extends AbstractController
 
             $refusal = $this->basketRules->refusalForAdd($cart, $product, $quantity, array_column($choices, 1), $editing);
             if ($refusal !== null) {
-                // "Reserve Your Design": the whole order goes to the request route
-                // (a placeholder until Step 8). Nothing is added to the basket.
+                // "Reserve Your Design": the request form, carrying this lamp and
+                // the rest of the basket. Nothing is added to the basket.
+                $this->designRequestLamps->holdPending([
+                    'size' => (string) $product->getSlug(),
+                    'quantity' => $quantity,
+                    'mode' => 'all',
+                    'lamps' => [array_combine(
+                        array_map(static fn (array $choice): string => $choice[0]->getName(), $choices),
+                        array_map(static fn (array $choice): string => $choice[1]->getValue(), $choices),
+                    )],
+                ], $editing?->getId()?->toRfc4122());
+
                 return $this->redirectToRoute('basket_request');
             }
 

@@ -54,7 +54,7 @@ export default class extends Controller {
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         maxLamps: { type: Number, default: 10 }, basketLamps: Number, maxCheckout: { type: Number, default: 2 },
-        requestUrl: String, notes: Object, edit: { type: Object, default: {} },
+        notes: Object, edit: { type: Object, default: {} },
         interval: { type: Number, default: 5000 },
     };
 
@@ -424,13 +424,10 @@ export default class extends Controller {
         this.goTo(Number(stage), lamp === undefined ? undefined : Number(lamp));
     }
 
-    // The button: add to the basket, or go to the request route.
-    cast(event) {
-        if (this.reserveReasons().length > 0) {
-            event.preventDefault();
-            window.location.assign(this.requestUrlValue);
-            return;
-        }
+    // The button sends the design either way: the server adds it to the basket
+    // ("Cast Your Lamp") or opens "Reserve Your Design" with it (the same rules
+    // as the button's label).
+    cast() {
         this.configurationTarget.value = JSON.stringify({
             size: this.sizeValue,
             quantity: this.quantity,

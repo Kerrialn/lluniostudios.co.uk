@@ -1,0 +1,40 @@
+{#
+    To the studio: a new "Reserve Your Design" request, with everything the
+    customer sent and a link to it in admin. Replying answers the customer.
+#}
+{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
+{% set keyStyle = 'padding:8px 12px 8px 0;border-bottom:1px solid #3a342b;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
+{% set valueStyle = 'padding:8px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:14px;line-height:20px;color:#ece3d3;' %}
+<!DOCTYPE html>
+<html lang="en-GB">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>New request {{ designRequest.requestNumber }}</title></head>
+<body style="margin:0;padding:0;background:#15120e;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#15120e" style="background:#15120e;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;">
+<tr><td>
+<p style="margin:0 0 10px 0;{{ f }}font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">New request · {{ designRequest.createdAt|date('j F Y, H:i', 'Europe/London') }}</p>
+<h1 style="margin:0 0 24px 0;{{ f }}font-weight:300;font-size:28px;line-height:32px;text-transform:uppercase;letter-spacing:0.03em;color:#ece3d3;">{{ designRequest.requestNumber }}</h1>
+<p style="margin:0 0 24px 0;{{ f }}font-size:15px;line-height:24px;color:#ece3d3;">{{ designRequest.fullName }} has sent a Reserve Your Design request for {{ designRequest.lampCount }} {{ designRequest.lampCount == 1 ? 'lamp' : 'lamps' }}. No payment has been taken. Reply to this email to answer them, or <a href="{{ url('admin_design_request_detail', {entityId: designRequest.id}) }}" style="color:#ece3d3;">open the request in admin</a>.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for key, value in {
+        'Name': designRequest.fullName,
+        'Email': designRequest.email,
+        'Phone': designRequest.phone,
+        'Delivery address': designRequest.deliveryAddress,
+        'Site access & delivery notes': designRequest.accessNotes ?: '—',
+    } %}
+        <tr><td width="35%" style="{{ keyStyle }}">{{ key }}</td><td style="{{ valueStyle }}">{{ value|nl2br }}</td></tr>
+    {% endfor %}
+    {% if designRequest.customDetails is not null %}
+        <tr><td width="35%" style="{{ keyStyle }}">Custom details</td><td style="{{ valueStyle }}">{{ (designRequest.customDetails ?: '—')|nl2br }}</td></tr>
+    {% endif %}
+</table>
+<div style="height:32px;line-height:32px;font-size:1px;">&nbsp;</div>
+{{ include('email/request/_lamps.html.twig') }}
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>
