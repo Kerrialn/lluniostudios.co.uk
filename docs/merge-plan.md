@@ -4,7 +4,7 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (old shop pages redirected and removed).
+Last updated: 7 October 2026 (Step 9.1 committed; 9.2 in progress).
 
 ---
 
@@ -52,8 +52,8 @@ Last updated: 7 October 2026 (old shop pages redirected and removed).
 | 6 | Basket: one line per add, per-lamp configurations, 2-lamp limit | Done | `30ae978` |
 | 7 | Configurator (`/lighting-designs`), 7.1–7.6 | Done | `574bf32`, `45c4635`, `6770e92`, `93a019f`, `27b1ae3`, `b024fde` |
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
-| — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | (this commit) |
-| 9 | Bespoke Commissions | Not started | — |
+| — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
+| 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 email 03, notification and browser check) | In progress (9.1 done; 9.2 next) | — |
 | 10 | Checkout reshape (Stripe, gift, guest) | Not started | — |
 | 10b | Quotes in admin | Not started | — |
 | 11 | Order journey emails 01, 03–06 | Not started | — |
@@ -89,6 +89,14 @@ Last updated: 7 October 2026 (old shop pages redirected and removed).
 | Email 02 opening | One sentence per combination of reasons (see Step 8) | Wording approved 7 October 2026. |
 | Hover feedback | Hand pointer on every button; muted items brighten to cream, cream items dim slightly, cream filled buttons dim a touch | Site-wide convention (`app.css`, `.ll-cta`). |
 | Banners | No "Added to your basket" / "Your basket has been updated" | The nav basket count shows the change. Error messages stay. |
+| Commission uploads | **Both forms (Home and Project): several files, up to 50MB each and 100MB in total per enquiry; PDF, DWG, JPG, PNG and HEIC** | Decided 7 October 2026 (answers question 15). The Home form is not limited to one photo. The local server's upload limit is raised to match; the live server must match too (Step 12). |
+| Commission files | **Private; downloaded from the enquiry in admin** | Never in a public folder. The studio notification lists the file names with a link to the enquiry; files are not attached. |
+| Commissions hero photos | **The prototype's eight** (APC_0055, APC_0116, APC_0112, APC_0058-1, APC_0117, APC_0057, APC_0054, APC_0109) | Resized, metadata (including GPS) removed; listed in `CLAUDE.md` (Pending content) for replacement by the edited versions. |
+| Commissions intro text | **No fade-in**: "Your bespoke design / in our signature brutalist style, / custom-built for you." is visible on load in its staggered line positions | Decided 7 October 2026; the prototype matches (its three lines are always fully visible). |
+| Commission required fields | Home: name, email, preferred contact, idea; phone too when Phone is chosen. Project: company, contact name, email, project type, location & schedule; the rest optional, uploads included | Decided 7 October 2026. **Project Type starts empty ("Please choose") and is required**, so nothing is pre-selected (the prototype starts on High-End Residential). |
+| Email 03 contact line | Home: "by email" or "by phone", as chosen; Project: "by email" | Decided 7 October 2026. |
+| Browser check output | **`var/browser-checks/` in the project** (ignored by git) | Decided 7 October 2026: screenshots and saved emails stay inside the project, not the system temp folder (`OUT_DIR` in `tests/browser/lib.mjs`). |
+| Commission details | Reference `LC-YYYYMMDD-XXXXXX` (like requests' `LR-…`); admin statuses New / Contacted / Closed; a hidden spam-trap field and a limit on repeat sends | Defaults accepted 7 October 2026. |
 
 ---
 
@@ -138,8 +146,19 @@ One line per Add to Basket (no merging), per-lamp configurations (`cart_item_opt
 - Browser check `old-shop-redirects.mjs` replaces `product-page-and-basket.mjs`. The purchase-route notes it checked on the product page are covered by `configurator-add-to-basket.mjs`; its basket checks (2-lamp limit, over-limit basket, checkout bounce) are kept, filling the basket through the configurator.
 - To undo: revert the commit (nothing in the database changes).
 
-### Step 9: Bespoke Commissions (not started)
-Two forms (Home: name, email, phone, preferred contact, idea, optional photo; Trade: company, contact, email, phone, project type, location & schedule, project, integration, document upload), an enquiry record and admin list, "Commission submitted" page (prototype message), email 03 (design template), notification to `STUDIO_NOTIFICATION_EMAIL`. Upload limits: question 15.
+### Step 9: Bespoke Commissions (in progress)
+Two forms (Home: name, email, phone, preferred contact, idea, files; Project: company, contact, email, phone, project type, location & schedule, project, integration, files), an enquiry record and admin list, "Commission submitted" page (prototype message), email 03 (design template), notification to `STUDIO_NOTIFICATION_EMAIL`. Decisions are in the table above (uploads, files, hero photos, intro text, required fields, email 03 line).
+- **9.1 (done):** `/bespoke-commissions` (`CommissionController`, `templates/commissions/`, `commission_controller.js`; forms `CommissionHomeForm`, `CommissionProjectForm`, shared `CommissionFields`).
+  - Hero: the eight photos cross-fading every 5 seconds (`slideshow`), the title visible on load in its staggered positions, "Scroll to begin", reveal on first interaction (`hero-reveal`). Matched to the prototype by measurement (`tests/browser/compare/commissions.mjs`).
+  - Tabs For Your Home / For Your Project; no form until one is chosen, then it fades in. `?for=home` / `?for=project` opens on that form; after a refused send the page reopens on the same form with the messages and what was typed.
+  - Required fields as decided, with a message for each; choosing Phone turns the phone's "(optional)" into "*". A complete enquiry is accepted but **not yet saved or emailed** (9.2, 9.3).
+  - File boxes take several files; the page lists them and refuses other types, files over 50MB and more than 100MB in total (the server checks come in 9.2).
+  - Nav "Bespoke Commissions" and the homepage's "Commission Your vision" now link to the page.
+  - Intended differences from the prototype: on phones the title is scaled to fit (the prototype's lines run off the screen); "*" added to the Home form's "Preferred contact method" and "Tell us about your idea" and to the Project form's "Project Type" (now required); Project Type starts on "Please choose" instead of High-End Residential; the file box text states the upload rules ("Choose photos or files — PDF, DWG, JPG, PNG or HEIC, up to 50MB each, 100MB in total" on Home instead of "Choose a photo"; ZIP replaced by the decided types on Project).
+  - The forms use Symfony's plain form layout, so the site theme's default field classes don't apply.
+  - Browser check `commissions.mjs` (desktop and phone).
+- **9.2:** saving the enquiry, private uploads (server checks; the local server's upload limit raised to 50MB a file / 100MB a request), the spam trap and repeat-send limit, admin "Commissions" list and file downloads.
+- **9.3:** "Commission submitted" page, email 03, studio notification, browser check.
 
 ### Step 10: Checkout reshape (not started; highest risk: payments)
 - One Card Payment page: contact, delivery address (DPD character limits: name, company, address lines, town and county 35; postcode 8; notes 50; phone 15, to confirm with DPD), gift fields, billing address ("same as delivery"), Stripe card box, summary, "Pay £X".
@@ -161,7 +180,7 @@ Two forms (Home: name, email, phone, preferred contact, idea, optional photo; Tr
 Restyle email 01; new order stages In production / Dispatched / Delivered with a tracking-number field and admin buttons sending emails 04–06 (question 16). "Dorset Studio" for every "Bournemouth" in the design's templates. Email images are hosted on the site (`public/images/email/`).
 
 ### Step 12: Launch checks
-British English copy pass; photo audit (replace with the finely edited photos, see `CLAUDE.md`); real packed-box sizes and weights; Apple Pay domain registered in Stripe; Stripe live keys; update `CLAUDE.md` (its Authentication section describes passwords, but sign-in uses emailed codes).
+Live server upload limit matched to commissions (50MB a file, 100MB an enquiry); British English copy pass; photo audit (replace with the finely edited photos, see `CLAUDE.md`); real packed-box sizes and weights; Apple Pay domain registered in Stripe; Stripe live keys; update `CLAUDE.md` (its Authentication section describes passwords, but sign-in uses emailed codes).
 
 ### Later, when the DPD account exists
 Enter the DPD API credentials, confirm the character limits and pricing, check `DpdProvider` against the real API, switch `SHIPPING_MODE=live`.
@@ -193,7 +212,6 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 26. **Packed sizes and weights** for Atelier, Estate and Monument (delivery prices in Step 10b).
 
 **Commissions and emails**
-15. **Commission uploads:** 25MB, PDF/DWG/ZIP (plus photos for Home)?
 16. **Order stages for emails 04–06:** marked by hand in admin, or Dispatched/Delivered from DPD tracking once live?
 17. **Cancellations:** online before production, or by email only?
 18. **Care instructions** for email 06, and a studio phone number for the email footers.
@@ -203,4 +221,4 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 23. **Origin story and T&Cs:** final as written? Checked for consumer-law wording?
 24. **Go-live:** a launch date or gift-season deadline that should change the order of steps?
 
-Answered (for reference): Lumen Forma is the only product line at launch (part of 20); remove the old shop code; studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.
+Answered (for reference): commission uploads (15); Lumen Forma is the only product line at launch (part of 20); remove the old shop code; studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.

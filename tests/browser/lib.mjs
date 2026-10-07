@@ -14,8 +14,8 @@ export const BASE_URL = (process.env.BASE_URL || 'https://localhost').replace(/\
 export const MAILPIT_URL = (process.env.MAILPIT_URL || 'http://localhost:52374').replace(/\/$/, '');
 /** The project (for database commands through docker compose). */
 export const PROJECT_DIR = process.env.PROJECT_DIR || resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-/** Where screenshots and saved emails go. */
-export const OUT_DIR = process.env.OUT_DIR || join(tmpdir(), 'llunio-browser-checks');
+/** Where screenshots and saved emails go: var/browser-checks in the project (ignored by git). */
+export const OUT_DIR = process.env.OUT_DIR || join(PROJECT_DIR, 'var', 'browser-checks');
 /** Google Chrome. */
 export const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 /**

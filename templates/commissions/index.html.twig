@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{#
+    Bespoke Commissions (Site v4 prototype). A full-screen hero of photos
+    cross-fading behind the title until the first interaction, then it
+    shrinks and the "For Your Home" / "For Your Project" tabs fade in.
+    Choosing a tab shows its form (commission_controller.js).
+#}
+{% block title %}Bespoke Commissions | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
+{# Plain widgets: the page styles every field itself (the site theme's
+   default classes would fight the prototype's styling). #}
+{% form_theme homeForm 'form_div_layout.html.twig' %}
+{% form_theme projectForm 'form_div_layout.html.twig' %}
+
+{% block body %}
+    {#
+        Hero photos: the prototype's eight (atmospheric close-ups, not
+        commission examples), in its order and with its crops. Files are in
+        public/images/commissions/ as hero-NN-2000.jpg and -1000.jpg (longest
+        edge, metadata removed); see CLAUDE.md (Pending content). All eight
+        are dark behind the title (prototype test: average brightness under
+        150), so the title stays cream; recheck if a photo is replaced.
+    #}
+    {% set heroPhotos = [
+        { file: 'hero-01', position: '40% 40%' },
+        { file: 'hero-02', position: '40% 50%' },
+        { file: 'hero-03', position: '50% 50%' },
+        { file: 'hero-04', position: '50% 60%' },
+        { file: 'hero-05', position: '60% 50%' },
+        { file: 'hero-06', position: '40% 60%' },
+        { file: 'hero-07', position: '50% 50%' },
+        { file: 'hero-08', position: '50% 50%' },
+    ] %}
+    {% set uploadText = 'PDF, DWG, JPG, PNG or HEIC, up to 50MB each, 100MB in total' %}
+
+    <div {{ stimulus_controller('hero-reveal', { open: openRevealed }) }}>
+    <section class="ll-reveal-hero relative overflow-hidden bg-[#1c1813]" {{ stimulus_controller('slideshow') }}>
+        {% for photo in heroPhotos %}
+            <div class="absolute inset-0 transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}" data-slideshow-target="slide">
+                <img src="{{ asset('images/commissions/' ~ photo.file ~ '-1000.jpg') }}"
+                     srcset="{{ asset('images/commissions/' ~ photo.file ~ '-1000.jpg') }} 1000w, {{ asset('images/commissions/' ~ photo.file ~ '-2000.jpg') }} 2000w"
+                     sizes="100vw" alt="" class="w-full h-full object-cover select-none" style="object-position: {{ photo.position }}"
+                     draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
+            </div>
+        {% endfor %}
+
+        {# Visible on load (no fade-in), in the prototype's staggered positions. #}
+        <div class="absolute inset-x-0 top-[18%] min-[900px]:top-[22%] flex justify-center min-[900px]:justify-end px-[clamp(20px,5vw,88px)] text-ll-ink pointer-events-none [text-shadow:0_1px_18px_rgba(0,0,0,.45)]">
+            <h1 class="w-max max-w-full flex flex-col items-start text-left font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
+                {# Scales down on narrow phones so every line fits (the prototype's
+                   run off the screen there): the widest line is ~19.2em. #}
+                <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/19.5))] pl-[1.4em] min-[900px]:pl-[4em]">Your bespoke design</span>
+                <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/19.5))]">in our signature brutalist style,</span>
+                <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/19.5))] pl-[2.8em] min-[900px]:pl-[7em]">custom‑built for you.</span>
+            </h1>
+        </div>
+        <div class="ll-reveal-cue absolute right-[clamp(20px,4vw,56px)] bottom-[clamp(20px,3vw,32px)] ll-label text-ll-ink pointer-events-none [text-shadow:0_1px_18px_rgba(0,0,0,.45)]" aria-hidden="true">Scroll to begin</div>
+    </section>
+
+    <section class="ll-reveal-body max-w-[760px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(40px,6vw,88px)] flex flex-col gap-8 text-[15px] leading-[1.5]"
+             {{ stimulus_controller('commission', {
+                 client: client,
+                 maxFileBytes: constant('App\\Form\\Form\\CommissionFields::MAX_FILE_BYTES'),
+                 maxTotalBytes: constant('App\\Form\\Form\\CommissionFields::MAX_TOTAL_BYTES'),
+                 extensions: constant('App\\Form\\Form\\CommissionFields::FILE_EXTENSIONS'),
+             }) }}>
+        <div class="grid grid-cols-2 border border-ll-ink" role="group" aria-label="Who the commission is for">
+            {% for key, label in { home: 'For Your Home', project: 'For Your Project' } %}
+                <button type="button" class="px-3 py-4 text-center text-[12px] leading-[1.5] uppercase tracking-[0.14em] transition-opacity hover:opacity-70 aria-pressed:bg-ll-ink aria-pressed:text-ll-bg aria-pressed:hover:opacity-85"
+                        aria-pressed="{{ client == key ? 'true' : 'false' }}" data-client="{{ key }}"
+                        data-commission-target="tab" data-action="commission#choose">{{ label }}</button>
+            {% endfor %}
+        </div>
+
+        <div class="flex flex-col gap-8 transition-opacity duration-[600ms]" data-commission-target="panel" data-client="home" {{ client == 'home' ? '' : 'hidden' }}>
+            {{ form_start(homeForm, { attr: { class: 'flex flex-col gap-8', novalidate: 'novalidate' } }) }}
+                <div class="flex flex-col gap-6">
+                    {{ include('commissions/_field.html.twig', { child: homeForm.name, label: 'Name *' }) }}
+                    {{ include('commissions/_field.html.twig', { child: homeForm.email, label: 'Email *' }) }}
+                    {{ include('commissions/_field.html.twig', { child: homeForm.phone, label: 'Phone', phone: true, phoneRequired: homeForm.contactMethod.vars.value == 'phone' }) }}
+                    {{ include('commissions/_field.html.twig', { child: homeForm.contactMethod, label: 'Preferred contact method *', kind: 'choice' }) }}
+                    {{ include('commissions/_field.html.twig', { child: homeForm.idea, label: 'Tell us about your idea *', kind: 'area', help: "Where it might live, roughly how big, anything that's inspired you. Don't worry if it's not fully formed, we'll talk it through together." }) }}
+                    {{ include('commissions/_field.html.twig', { child: homeForm.files, label: 'Share a photo of the space or anything that inspired you', hint: '(optional)', kind: 'files', drop: 'Choose photos or files — ' ~ uploadText }) }}
+                </div>
+                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Request Your Custom Design</button>
+            {{ form_end(homeForm) }}
+        </div>
+
+        <div class="flex flex-col gap-8 transition-opacity duration-[600ms]" data-commission-target="panel" data-client="project" {{ client == 'project' ? '' : 'hidden' }}>
+            {{ form_start(projectForm, { attr: { class: 'flex flex-col gap-8', novalidate: 'novalidate' } }) }}
+                <div class="flex flex-col gap-6">
+                    {{ include('commissions/_field.html.twig', { child: projectForm.company, label: 'Company *' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.contactName, label: 'Contact Name *' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.email, label: 'Email *' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.phone, label: 'Phone', hint: '(optional)' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.projectType, label: 'Project Type *', kind: 'select' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.location, label: 'Project Location & Installation Schedule *' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.project, label: 'The Project', hint: '(optional)', kind: 'area', help: 'Tell us about the project: the space, the brief, the overall vision and where the lighting fits in.' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.integration, label: 'Integration Requirements', kind: 'area' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.files, label: 'Documentation Upload', kind: 'files', drop: 'Attach architectural elevation drawings, CAD files, or spatial mood boards — ' ~ uploadText }) }}
+                </div>
+                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Request Custom Collaboration</button>
+            {{ form_end(projectForm) }}
+        </div>
+    </section>
+    </div>
+    <noscript><style>.ll-reveal-body { opacity: 1; pointer-events: auto; } [data-commission-target="panel"] { display: flex !important; }</style></noscript>
+{% endblock %}

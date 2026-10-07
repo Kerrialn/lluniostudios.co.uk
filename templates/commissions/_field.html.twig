@@ -1,0 +1,59 @@
+{#
+    One Bespoke Commissions field, styled as the Site v4 prototype's form:
+    label (14px) with an optional muted hint, a boxed control, optional help
+    text underneath, then any error.
+
+    Options:
+      child   the form field
+      label   the label text
+      hint    muted text after the label, e.g. "(optional)"
+      kind    'input' (default), 'area', 'select', 'choice' or 'files'
+      help    muted text under the control
+      drop    the text inside the file box (kind 'files')
+      phone   true for the phone field (its hint switches to * when the
+              customer would like a call; commission_controller.js)
+      phoneRequired  the phone is required to start with (Phone was chosen)
+#}
+{% set kind = kind|default('input') %}
+{% set hint = hint|default('') %}
+{% set box = 'w-full bg-transparent text-ll-ink border border-ll-mute rounded-none outline-none text-[15px] focus:border-ll-ink' %}
+<div class="flex flex-col gap-2" {% if kind == 'files' %}data-commission-target="fileField"{% endif %}>
+    {% if kind == 'choice' %}
+        <span id="{{ child.vars.id }}_label" class="text-[14px]">{{ label }} <span class="text-ll-mute text-[13px]"></span></span>
+        <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="{{ child.vars.id }}_label">
+            {% for option in child %}
+                <label class="h-12 flex items-center justify-center border border-ll-mute text-[14px] cursor-pointer transition-opacity hover:opacity-70 has-[:checked]:bg-ll-ink has-[:checked]:text-ll-bg has-[:checked]:border-ll-ink has-[:checked]:hover:opacity-85 has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ll-ink">
+                    {{ form_widget(option, { attr: { class: 'sr-only', 'data-action': 'commission#contact' } }) }}{{ option.vars.label }}
+                </label>
+            {% endfor %}
+        </div>
+    {% elseif kind == 'files' %}
+        <span class="text-[14px]">{{ label }} <span class="text-ll-mute text-[13px]">{{ hint }}</span></span>
+        {{ form_widget(child, { attr: { class: 'peer sr-only', 'data-action': 'commission#files', 'data-commission-target': 'fileInput' } }) }}
+        <label for="{{ child.vars.id }}" class="block border border-ll-mute px-4 py-7 text-center text-[13px] leading-[1.5] text-ll-mute cursor-pointer transition-colors hover:text-ll-ink peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink">{{ drop }}</label>
+        <ul class="flex flex-col gap-1 text-[13px] leading-[1.5] text-ll-mute empty:hidden" data-commission-target="fileList" aria-live="polite"></ul>
+        <span class="text-[12px] text-ll-ink" role="alert" hidden data-commission-target="fileError"></span>
+    {% else %}
+        <label for="{{ child.vars.id }}" class="text-[14px]">{{ label }}
+            {%- if phone|default(false) -%}
+                {{ ' ' }}<span class="text-ll-mute text-[13px]" data-commission-target="phoneOptional" {{ phoneRequired|default(false) ? 'hidden' }}>(optional)</span><span data-commission-target="phoneRequired" {{ phoneRequired|default(false) ? '' : 'hidden' }}>*</span>
+            {%- else -%}
+                {# Always present, as in the prototype (it sets the label's height). #}
+                {{ ' ' }}<span class="text-ll-mute text-[13px]">{{ hint }}</span>
+            {%- endif -%}
+        </label>
+        {% if kind == 'area' %}
+            {{ form_widget(child, { attr: { class: box ~ ' px-3.5 py-3 leading-[1.5] resize-y' } }) }}
+        {% elseif kind == 'select' %}
+            {{ form_widget(child, { attr: { class: box ~ ' h-12 px-3.5 leading-[normal] [&>option]:text-[#111]' } }) }}
+        {% else %}
+            {{ form_widget(child, { attr: { class: box ~ ' h-12 px-3.5 leading-[1.5]' } }) }}
+        {% endif %}
+    {% endif %}
+    {% if help|default('') %}
+        <span class="text-[13px] leading-[1.5] text-ll-mute">{{ help }}</span>
+    {% endif %}
+    {% for error in child.vars.errors %}
+        <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+    {% endfor %}
+</div>

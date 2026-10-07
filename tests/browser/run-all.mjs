@@ -23,6 +23,8 @@ const CHECKS = [
     ['configurator-hover-and-headings.mjs'],
     ['reserve.mjs'],
     ['old-shop-redirects.mjs'],
+    ['commissions.mjs', '1440', '900'],
+    ['commissions.mjs', '390', '844'],
 ];
 
 const args = process.argv.slice(2);
