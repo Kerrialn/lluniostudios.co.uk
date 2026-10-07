@@ -19,7 +19,7 @@ const state = () => ev(`({ url: location.pathname + location.search, revealed: d
   rows: [...document.querySelectorAll('[data-configurator-target=review] button')].map(r => r.children[0].textContent + '=' + r.children[1].textContent),
   cta: document.querySelector('[data-configurator-target=cta]').textContent, tabs: document.querySelector('[data-configurator-target=units]').hidden ? null : [...document.querySelectorAll('.ll-cfg-unit')].map(t => t.textContent).join(',') })`);
 const basket = () => ev(`({ url: location.pathname, text: document.querySelector('main').innerText, edits: [...document.querySelectorAll('a')].filter(a => a.textContent.trim() === 'Edit configuration').map(a => a.getAttribute('href')) })`);
-const lineCount = (t) => (t.match(/Lumen Forma (Studio|Gallery|Atelier|Estate|Monument)/gi) || []).length;
+const lineCount = (t) => (t.match(/Size\s+(Studio|Gallery|Atelier|Estate|Monument)\b/gi) || []).length;
 
 // Add a Gallery lamp
 await go(BASE_URL + '/lighting-designs'); await reveal();
@@ -40,7 +40,7 @@ await jump(0); await pick('size', 'lumen-forma-studio'); await more(); await jum
 s = await state();
 check('2 lamps replacing the 1 in the basket: still Cast Your Lamp', s.cta === 'Cast Your Lamp', s.cta);
 await cast(); k = await basket();
-check('saving updates the same line (still one line)', k.url === '/basket' && lineCount(k.text) === 1 && /Lumen Forma Studio/i.test(k.text) && /Black/.test(k.text) && !/White/.test(k.text), k.text.slice(0, 200).replace(/\n/g, ' | '));
+check('saving updates the same line (still one line)', k.url === '/basket' && lineCount(k.text) === 1 && /Size\s+Studio/i.test(k.text) && /Black/.test(k.text) && !/White/.test(k.text), k.text.slice(0, 200).replace(/\n/g, ' | '));
 check('no "Your basket has been updated" banner', !/Your basket has been updated/.test(await ev('document.body.innerText')) && (await ev(`document.querySelectorAll('[data-controller=toast]').length`)) === 0);
 check('the nav basket count shows the 2 lamps', (await ev(`/Basket \\(2\\)/i.test(document.querySelector('#navbar').innerText) || !!document.querySelector('#navbar a[aria-label="Basket, 2 items"]')`)), await ev(`document.querySelector('#navbar').innerText.replace(/\n/g, ' ')`));
 check('the edit link is unchanged (same line)', k.edits[0] === editUrl.replace(BASE_URL + '', ''));
@@ -70,7 +70,7 @@ check('editing into Atelier: Reserve Your Design', s.cta === 'Reserve Your Desig
 await cast();
 check('goes to the request route', (await ev('location.pathname')) === '/reserve');
 await go(BASE_URL + '/basket'); k = await basket();
-check('the basket line is unchanged', lineCount(k.text) === 1 && /Lumen Forma Studio/i.test(k.text) && /Orange/i.test(k.text));
+check('the basket line is unchanged', lineCount(k.text) === 1 && /Size\s+Studio/i.test(k.text) && /Orange/i.test(k.text));
 
 // A line that isn't in this basket
 await go(BASE_URL + '/lighting-designs?edit=00000000-0000-0000-0000-000000000000', 2500); s = await state();

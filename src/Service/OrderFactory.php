@@ -20,7 +20,7 @@ final readonly class OrderFactory
      */
     public function createFromCart(
         Cart $cart,
-        User $user,
+        ?User $user,
         string $email,
         ShippingQuote $shippingQuote,
         ?Address $shippingAddress,

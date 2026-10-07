@@ -28,6 +28,8 @@ const CHECKS = [
     ['commissions-saving.mjs'],
     ['basket-gift.mjs', '1440', '900'],
     ['basket-gift.mjs', '390', '844'],
+    ['checkout-page.mjs', '1440', '900'],
+    ['checkout-page.mjs', '390', '844'],
 ];
 
 const args = process.argv.slice(2);

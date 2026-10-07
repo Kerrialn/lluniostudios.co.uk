@@ -62,6 +62,27 @@ class Order
     #[ORM\JoinColumn(name: 'shipping_address_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
     private ?Address $shippingAddress = null;
 
+    /**
+     * Billing address when it differs from the delivery address (Card
+     * Payment page, Step 10.2); null means "same as delivery".
+     */
+    #[ORM\ManyToOne(targetEntity: Address::class, cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'billing_address_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?Address $billingAddress = null;
+
+    /**
+     * The customer's phone "for delivery updates" (for a gift, the
+     * recipient's mobile is on the delivery address instead).
+     */
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $contactPhone = null;
+
+    /**
+     * "Delivery instructions (optional)", passed to DPD (50 characters).
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $deliveryNotes = null;
+
     #[ORM\Column(length: 128, nullable: true)]
     private ?string $revolutOrderId = null;
 
@@ -217,6 +238,36 @@ class Order
     public function setShippingServiceName(?string $shippingServiceName): void
     {
         $this->shippingServiceName = $shippingServiceName;
+    }
+
+    public function getBillingAddress(): ?Address
+    {
+        return $this->billingAddress;
+    }
+
+    public function setBillingAddress(?Address $billingAddress): void
+    {
+        $this->billingAddress = $billingAddress;
+    }
+
+    public function getContactPhone(): ?string
+    {
+        return $this->contactPhone;
+    }
+
+    public function setContactPhone(?string $contactPhone): void
+    {
+        $this->contactPhone = $contactPhone;
+    }
+
+    public function getDeliveryNotes(): ?string
+    {
+        return $this->deliveryNotes;
+    }
+
+    public function setDeliveryNotes(?string $deliveryNotes): void
+    {
+        $this->deliveryNotes = $deliveryNotes;
     }
 
     public function getShippingAddress(): ?Address

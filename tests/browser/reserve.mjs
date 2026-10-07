@@ -112,7 +112,7 @@ const edit = await ev(`[...document.querySelectorAll('a')].find(a => a.textConte
 await go(BASE_URL + '' + edit, 2500); await jump(0); await pick('size', 'lumen-forma-monument'); await jump(4); await pick('Bulb Count', 'Triple Array'); await jump(5); await press(); p = await page();
 check('editing a line into Monument: the request shows the edited lamp in place of the line', JSON.stringify(p.rows.filter(r => r.startsWith('Edition') || r.startsWith('Quantity'))) === JSON.stringify(['Edition=Monument', 'Quantity=3']), JSON.stringify(p.rows));
 await go(BASE_URL + '/basket');
-check('the basket line is unchanged until the request is sent', /Lumen Forma Studio/i.test(await ev(`document.querySelector('main').innerText`)));
+check('the basket line is unchanged until the request is sent', /Size\s+Studio/i.test(await ev(`document.querySelector('main').innerText`)));
 
 await go(BASE_URL + '/reserve/received');
 check('/reserve/received without a request just sent goes to Lighting Designs', (await ev('location.pathname')) === '/lighting-designs');

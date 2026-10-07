@@ -43,7 +43,7 @@ await ev(`[...document.querySelectorAll('[data-configurator-target=review] butto
 check('a review row opens its stage (Cable Colour -> 03)', r.num === '03');
 await jump(5); await submit();
 let k = await basket();
-check('Cast Your Lamp adds it and opens the basket', k.url === '/basket' && /Lumen Forma Gallery/i.test(k.text) && /Slate Grey/i.test(k.text) && /Crown Gold LED/i.test(k.text), k.url);
+check('Cast Your Lamp adds it and opens the basket', k.url === '/basket' && /Size\s+Gallery/i.test(k.text) && /Slate Grey/i.test(k.text) && /Crown Gold LED/i.test(k.text), k.url);
 check('no "Added to your basket" banner', !/Added to your basket/.test(await ev('document.body.innerText')) && (await ev(`document.querySelectorAll('[data-controller=toast]').length`)) === 0);
 check('the nav basket count shows it', /Basket \(1\)/i.test(await ev(`document.querySelector('#navbar').innerText`)), await ev(`document.querySelector('#navbar').innerText.replace(/\\n/g, ' ')`));
 
@@ -55,7 +55,7 @@ check('review button "Reserve Your Design" with the reserve line', r.cta === 'Re
 await submit(); k = await basket();
 check('Reserve goes to the request route; nothing added', k.url === '/reserve', k.url);
 await b.send('Page.navigate', { url: BASE_URL + '/basket' }); await sleep(1200); k = await basket();
-check('basket still holds just the one lamp', (k.text.match(/Lumen Forma Gallery/gi) || []).length === 1);
+check('basket still holds just the one lamp', (k.text.match(/Size\s+Gallery/gi) || []).length === 1);
 
 // 3. Customise Individually, fresh basket
 await fresh(); await open_(); await more(); await ev(`document.querySelector('.ll-cfg-mode[data-mode=individual]').click()`);
@@ -103,6 +103,6 @@ check('server: no CSRF token is refused', k.url === '/lighting-designs' && /try 
 await b.send('Page.navigate', { url: BASE_URL + '/basket' }); await sleep(1200); k = await basket();
 check('none of those reached the basket', !/Lumen Forma/i.test(k.text));
 await open_(); k = await force({ size: 'lumen-forma-studio', quantity: 2, mode: 'all', lamps: [lamp] });
-check('server: a valid design sent directly is added', k.url === '/basket' && /Lumen Forma Studio/i.test(k.text));
+check('server: a valid design sent directly is added', k.url === '/basket' && /Size\s+Studio/i.test(k.text));
 console.log(ok ? 'ALL PASSED' : 'SOME CHECKS FAILED');
 b.close();

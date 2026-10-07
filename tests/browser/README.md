@@ -21,7 +21,7 @@ node tests/browser/run-all.mjs reserve configurator-edit    # just these
 node tests/browser/reserve.mjs            # one check on its own, with every PASS/FAIL line
 ```
 
-A full run takes about 15 minutes. A few checks take a size: `configurator-photos.mjs`, `configurator-custom-notes.mjs`, `configurator-edit.mjs`, `commissions.mjs` and `basket-gift.mjs` accept `1440 900` (desktop, the default) or `390 844` (phone); `run-all` runs both.
+A full run takes about 15 minutes. A few checks take a size: `configurator-photos.mjs`, `configurator-custom-notes.mjs`, `configurator-edit.mjs`, `commissions.mjs`, `basket-gift.mjs` and `checkout-page.mjs` accept `1440 900` (desktop, the default) or `390 844` (phone); `run-all` runs both.
 
 | Check | What it covers |
 |---|---|
@@ -36,11 +36,13 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 | `configurator-hover-and-headings.mjs` | Which option headings show, the hand pointer and hover feedback. |
 | `commissions-saving.mjs` | Bespoke Commissions enquiries saved with their files kept privately; "Commission submitted" with each form's message and the reference; email 03 (both forms) and the studio notification in Mailpit; the server's own checks with the page's bypassed (file type, 50MB a file, 100MB in total, over 110MB at once, the phone rule); the spam trap; the limit of 5 an hour; admin: the Commissions list, an enquiry's page, file downloads (admin only), deleting an enquiry deleting its files. Signs in to admin as `lluniostudios@gmail.com` (code from Mailpit) and clears the enquiry limit before and after. |
 | `basket-gift.mjs` | The basket's "This is a gift": the date and its note, the earliest date allowed, both messages, the choice saved on the basket and kept, unticking clearing it; a single "Proceed to Payment"; no gift box when the basket goes by request; hover feedback. |
+| `checkout-page.mjs` | The Card Payment page: no sign-in; DPD character limits; the delivery price following the postcode; outside the UK mainland, "Reserve Your Design" with its note and the details carried to the request form (once); the required-fields message and outlines, and field messages; the billing address; a gift's recipient fields and "Gift · Arrive by"; the saved order's details; the payment page open only to the visitor who started it; a gift date that has become too soon. Each run starts a test-mode payment in Stripe. |
 | `reserve.mjs` | Reserve Your Design end to end: what it carries, the form and its messages, the saved request, the emptied basket, email 02 and the studio notification in Mailpit. |
 | `old-shop-redirects.mjs` | `/products` and `/collections` (and anything under them) permanently redirect to Lighting Designs, and no page links to them; the basket's purchase route and 2-lamp limit (Step 6), with the basket filled through the configurator. |
 | `commissions.mjs` | Bespoke Commissions: the nav and homepage links, the hero (eight photos, title visible on load, reveal), the For Your Home / For Your Project tabs, each form's fields and required-field messages, the phone becoming required when Phone is chosen, the file chooser's checks (type, 50MB a file, 100MB in total), hover feedback. |
 | `commissions-saving.mjs` | Bespoke Commissions enquiries saved with their files kept privately; "Commission submitted" with each form's message and the reference; email 03 (both forms) and the studio notification in Mailpit; the server's own checks with the page's bypassed (file type, 50MB a file, 100MB in total, over 110MB at once, the phone rule); the spam trap; the limit of 5 an hour; admin: the Commissions list, an enquiry's page, file downloads (admin only), deleting an enquiry deleting its files. Signs in to admin as `lluniostudios@gmail.com` (code from Mailpit) and clears the enquiry limit before and after. |
 | `basket-gift.mjs` | The basket's "This is a gift": the date and its note, the earliest date allowed, both messages, the choice saved on the basket and kept, unticking clearing it; a single "Proceed to Payment"; no gift box when the basket goes by request; hover feedback. |
+| `checkout-page.mjs` | The Card Payment page: no sign-in; DPD character limits; the delivery price following the postcode; outside the UK mainland, "Reserve Your Design" with its note and the details carried to the request form (once); the required-fields message and outlines, and field messages; the billing address; a gift's recipient fields and "Gift · Arrive by"; the saved order's details; the payment page open only to the visitor who started it; a gift date that has become too soon. Each run starts a test-mode payment in Stripe. |
 
 ### Comparing with the prototype
 
@@ -51,6 +53,7 @@ PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/stages.mjs 14
 PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/review.mjs 390 844 two
 PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/commissions.mjs 1440 900
 PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/basket-gift.mjs 390 844
+PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/card-payment.mjs 1440 900
 ```
 
 They print only the differences (often expected ones, such as "Gallery" where the prototype says "Gallery (S)").
@@ -72,13 +75,13 @@ Chrome profiles are kept in the system temp folder (`llunio-chrome-profile-*`), 
 
 ## Test data they leave
 
-The checks create real data on the local site: anonymous baskets, "Ada Test" requests and commission enquiries (`ada.test@example.test`, with the enquiries' files in `var/commission-uploads/`), and emails in Mailpit. Remove them with `--clean` on `run-all`, or afterwards with:
+The checks create real data on the local site: anonymous baskets, "Ada Test" requests, commission enquiries and orders (`ada.test@example.test`, with the enquiries' files in `var/commission-uploads/`), and emails in Mailpit. Remove them with `--clean` on `run-all`, or afterwards with:
 
 ```bash
 node tests/browser/clean-up.mjs "2026-10-07 08:00"    # everything since this time (UTC)
 ```
 
-This removes baskets without an account created since that time (including any basket of your own made then), requests and commission enquiries (and their stored files) from `@example.test` addresses, and test emails, studio notifications for those requests and sign-in codes sent since then. Accounts, orders and other requests are never touched.
+This removes baskets without an account created since that time (including any basket of your own made then), requests, commission enquiries (and their stored files) and orders (and their addresses) from `@example.test` addresses, and test emails, studio notifications for those requests and sign-in codes sent since then. Accounts, other orders and other requests are never touched.
 
 ## Writing new checks
 

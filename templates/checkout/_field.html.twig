@@ -1,0 +1,22 @@
+{#
+    One Card Payment field, as the Site v4 prototype: label (14px) above a
+    48px box. An empty required field is outlined in cream (the page shows
+    one "Please complete the required fields to continue." message); any
+    other problem (e.g. a postcode that isn't a full UK postcode) is shown
+    under the field.
+
+    Options:
+      child  the form field
+      label  the label, with " *" for required fields
+      wide   true to span the whole row
+      attr   extra attributes for the input
+#}
+{% set errors = child.vars.errors|filter(e => e.message != constant('App\\Form\\Form\\CardPaymentForm::REQUIRED_MESSAGE')) %}
+{% set missing = child.vars.errors|length > errors|length %}
+<label class="flex flex-col gap-2 {{ wide|default(false) ? 'col-[1/-1]' : '' }}" for="{{ child.vars.id }}">
+    <span class="text-[14px]">{{ label }}</span>
+    {{ form_widget(child, { attr: (attr|default({}))|merge({ class: 'w-full h-12 px-3.5 bg-transparent text-ll-ink border ' ~ (missing or errors is not empty ? 'border-ll-ink' : 'border-ll-mute') ~ ' rounded-none outline-none text-[15px] leading-[1.5] focus:border-ll-ink' }) }) }}
+    {% for error in errors %}
+        <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+    {% endfor %}
+</label>

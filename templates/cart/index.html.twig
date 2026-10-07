@@ -16,8 +16,8 @@
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
 {% block body %}
-    {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-sm' %}
-    {% set rowKey = 'll-label text-[11px] text-ll-mute' %}
+    {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-sm leading-[1.5]' %}
+    {% set rowKey = 'text-[11px] leading-[1.5] uppercase tracking-[0.14em] text-ll-mute' %}
     {% set textLink = 'self-start text-xs text-ll-mute ll-link hover:text-ll-ink' %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
         <div class="flex justify-between items-baseline gap-4 flex-wrap">
@@ -50,7 +50,8 @@
 
                             <div class="flex flex-col gap-[18px] min-w-0">
                                 <div class="flex justify-between items-baseline gap-4 flex-wrap">
-                                    <h2 class="ll-heading text-[clamp(17px,1.4vw,20px)]">{{ product.title }}</h2>
+                                    {# As the prototype: the collection as the title, the size in its own row. #}
+                                    <h2 class="ll-heading text-[clamp(17px,1.4vw,20px)]" style="line-height: 1.5">{{ constant('App\\Catalogue\\LumenFormaCatalogue::COLLECTION_NAME') }}</h2>
                                     <span class="text-[15px]">
                                         {{ item.lineTotalInGbp|format_currency('GBP', {fraction_digit: 0}) }}
                                         {% if item.quantity > 1 %}<span class="block text-right text-xs text-ll-mute">{{ item.unitPriceInGbp|format_currency('GBP', {fraction_digit: 0}) }} each</span>{% endif %}
@@ -58,6 +59,7 @@
                                 </div>
 
                                 <div class="flex flex-col">
+                                    <div class="{{ row }}"><span class="{{ rowKey }}">Size</span><span class="text-right">{{ sizeNames[loop.index0] }}</span></div>
                                     <div class="{{ row }}"><span class="{{ rowKey }}">Quantity</span><span class="text-right">{{ item.quantity }}</span></div>
                                     {% if item.quantity >= 2 %}
                                         <div class="{{ row }}"><span class="{{ rowKey }}">Configuration</span><span class="text-right">{{ item.customisedIndividually ? 'Customise Individually' : 'Customise All' }}</span></div>

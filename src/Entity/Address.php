@@ -27,6 +27,12 @@ class Address
     #[Assert\NotBlank]
     private ?string $recipientName = null;
 
+    /**
+     * "Company name (optional)" (Card Payment page).
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $company = null;
+
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     private ?string $line1 = null;
@@ -82,6 +88,16 @@ class Address
     public function setRecipientName(?string $recipientName): void
     {
         $this->recipientName = $recipientName;
+    }
+
+    public function getCompany(): ?string
+    {
+        return $this->company;
+    }
+
+    public function setCompany(?string $company): void
+    {
+        $this->company = $company;
     }
 
     public function getLine1(): ?string

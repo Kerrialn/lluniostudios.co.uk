@@ -30,6 +30,12 @@ final class ReserveController extends AbstractController
 {
     private const RECEIVED_KEY = 'reserve_received';
 
+    /**
+     * Details typed on the Card Payment page before it found the postcode is
+     * outside the UK mainland (CheckoutController), filled in here once.
+     */
+    public const PREFILL_KEY = 'reserve_prefill';
+
     public function __construct(
         private readonly CartResolver $cartResolver,
         private readonly CartRepository $cartRepository,
@@ -60,7 +66,8 @@ final class ReserveController extends AbstractController
         }
 
         $customChoices = DesignRequestLamps::hasCustomChoice($items);
-        $form = $this->createForm(ReserveForm::class, null, [
+        $prefill = $request->isMethod('GET') ? $request->getSession()->remove(self::PREFILL_KEY) : null;
+        $form = $this->createForm(ReserveForm::class, \is_array($prefill) ? array_map(static fn (mixed $value): ?string => \is_string($value) && $value !== '' ? $value : null, $prefill) : null, [
             'custom_choices' => $customChoices,
         ]);
         $form->handleRequest($request);

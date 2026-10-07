@@ -2,53 +2,59 @@
 
 namespace App\Controller\Controller;
 
+use App\Catalogue\GiftDate;
+use App\Catalogue\LumenFormaConfigurator;
 use App\Entity\Address;
+use App\Entity\Cart;
+use App\Entity\Order;
 use App\Entity\User;
 use App\Enum\OrderStatus;
-use App\Enum\ShippingMethod;
-use App\Form\Form\AddressForm;
+use App\Form\Form\BasketProceedForm;
+use App\Form\Form\CardPaymentForm;
 use App\Payment\RevolutMerchantClient;
 use App\Payment\StripePaymentClient;
-use App\Repository\AddressRepository;
 use App\Repository\OrderRepository;
-use App\Repository\UserRepository;
 use App\Service\BasketRules;
 use App\Service\CartResolver;
-use App\Service\LoginCodeService;
 use App\Service\OrderFactory;
 use App\Service\ShippingCalculator;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Shipping\DeliveryArea;
+use App\Shipping\ShippingQuote;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Throwable;
 
+/**
+ * Checkout (design merge, Step 10). The Card Payment page (10.2) collects
+ * contact, delivery and billing details on one page, never asking anyone to
+ * sign in, and shows the DPD price for the postcode. Postcodes outside the UK
+ * mainland go through "Reserve Your Design" instead, with the basket and the
+ * address carried over. Until 10.3 adds the card box to that page, "Pay"
+ * saves the order and continues to the separate payment page.
+ */
 class CheckoutController extends AbstractController
 {
-    use TargetPathTrait;
-
-    private const SESSION_ADDRESS_ID = 'checkout_address_id';
-
-    private const SESSION_EMAIL = 'checkout_email';
+    /**
+     * Order numbers started in this visitor's session (they may view and pay
+     * these without signing in).
+     */
+    private const SESSION_ORDERS = 'checkout_orders';
 
     public function __construct(
         private readonly CartResolver $cartResolver,
         private readonly BasketRules $basketRules,
-        private readonly AddressRepository $addressRepository,
         private readonly OrderRepository $orderRepository,
-        private readonly UserRepository $userRepository,
         private readonly ShippingCalculator $shippingCalculator,
         private readonly OrderFactory $orderFactory,
+        private readonly GiftDate $giftDate,
         private readonly RevolutMerchantClient $revolutClient,
         private readonly StripePaymentClient $stripeClient,
-        private readonly LoginCodeService $loginCodeService,
-        private readonly Security $security,
-        private readonly EntityManagerInterface $entityManager,
         private readonly LoggerInterface $logger,
         #[Autowire('%env(REVOLUT_PUBLIC_KEY)%')]
         private readonly string $revolutPublicKey,
@@ -64,159 +70,301 @@ class CheckoutController extends AbstractController
         return strtolower($this->paymentProvider) !== 'revolut';
     }
 
-    #[Route(path: '/checkout', name: 'checkout')]
-    public function address(Request $request): Response
+    /**
+     * The Card Payment page.
+     */
+    #[Route(path: '/checkout', name: 'checkout', methods: ['GET', 'POST'])]
+    public function checkout(Request $request): Response
     {
         $cart = $this->cartResolver->getCart();
-        if ($cart->isEmpty()) {
+        if ($cart->isEmpty() || ! $this->basketRules->canCheckout($cart)) {
+            // Safety net: 3+ lamps, Request sizes or Custom options never reach payment.
             return $this->redirectToRoute('cart');
         }
 
-        // Safety net: 3+ lamps, Request sizes or Custom options never reach payment.
-        if (! $this->basketRules->canCheckout($cart)) {
+        if ($cart->isGift() && $cart->getGiftArriveBy() < $this->giftDate->earliest()->startOfDay()) {
+            // The chosen date has become too soon since it was picked.
+            $this->addFlash('error', BasketProceedForm::TOO_EARLY);
+
             return $this->redirectToRoute('cart');
         }
 
-        $currentUser = $this->currentUser();
-
-        $address = new Address();
-        $form = $this->createForm(AddressForm::class, $address, [
-            'with_email' => ! $currentUser instanceof User,
-            'email' => $currentUser?->getEmail(),
+        $user = $this->getUser();
+        $form = $this->createForm(CardPaymentForm::class, [
+            'email' => $user instanceof User ? $user->getEmail() : null,
+            'billingSame' => true,
+        ], [
+            'gift' => $cart->isGift(),
         ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $email = $currentUser instanceof User
-                ? $currentUser->getEmail()
-                : strtolower(trim((string) $form->get('email')->getData()));
-
-            if (! $currentUser instanceof User) {
-                $existing = $this->userRepository->findOneBy([
-                    'email' => $email,
-                ]);
-
-                // Existing account -> verify identity with an emailed code before
-                // continuing, so nobody can check out into someone else's account.
-                if ($existing instanceof User) {
-                    try {
-                        $this->loginCodeService->request($existing);
-                    } catch (Throwable $throwable) {
-                        // Mail transport down (e.g. banned SMTP account). Don't 500 —
-                        // keep them on the address step to retry.
-                        $this->logger->error('Checkout login code send failed: ' . $throwable->getMessage());
-                        $this->addFlash('error', 'We couldn\'t email your sign-in code right now. Please try again in a moment.');
-
-                        return $this->render('checkout/address.html.twig', [
-                            'cart' => $cart,
-                            'form' => $form,
-                        ]);
-                    }
-
-                    $request->getSession()->set(SecurityController::SESSION_PENDING_EMAIL, $email);
-                    $this->saveTargetPath($request->getSession(), 'main', $this->generateUrl('checkout'));
-                    $this->addFlash('message', 'You already have an account. Enter the 6-digit code we just emailed to continue.');
-
-                    return $this->redirectToRoute('app_login');
-                }
-
-                // New email -> create a passwordless account and sign them in.
-                $currentUser = new User($email);
-                $this->applyName($currentUser, (string) $address->getRecipientName());
-                $this->entityManager->persist($currentUser);
-
-                $this->cartResolver->attachToUser($currentUser);
-                $this->security->login($currentUser);
+        if ($form->isSubmitted()) {
+            /** @var array<string, mixed> $data */
+            $data = $form->getData();
+            $postcode = DeliveryArea::normalise((string) ($data['postcode'] ?? ''));
+            if ($postcode !== null && ! DeliveryArea::isMainland($postcode)) {
+                return $this->reserveInstead($request, $data, $cart);
             }
 
-            $address->setOwner($currentUser);
-            $this->addressRepository->save($address, true);
-
-            $request->getSession()->set(self::SESSION_ADDRESS_ID, (string) $address->getId());
-            $request->getSession()->set(self::SESSION_EMAIL, $email);
-
-            return $this->redirectToRoute('checkout_shipping');
+            if ($form->isValid() && $postcode !== null) {
+                return $this->placeOrder($request, $cart, $data, $postcode);
+            }
         }
 
-        return $this->render('checkout/address.html.twig', [
-            'cart' => $cart,
+        return $this->render('checkout/index.html.twig', [
             'form' => $form,
+            'cart' => $cart,
+            'summary' => $this->summary($cart),
+            'gift' => $cart->isGift(),
+            'giftArriveBy' => $cart->getGiftArriveBy(),
+            'delivery' => $this->deliveryFor($cart, (string) $form->get('postcode')->getData()),
+            'requiredMissing' => $this->requiredMissing($form),
+        ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+    }
+
+    /**
+     * The delivery line, total and button for a postcode, as the customer
+     * types it on the Card Payment page.
+     */
+    #[Route(path: '/checkout/delivery', name: 'checkout_delivery', methods: ['GET'])]
+    public function delivery(Request $request): JsonResponse
+    {
+        $cart = $this->cartResolver->peekCart();
+        if (! $cart instanceof Cart || $cart->isEmpty()) {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse($this->deliveryFor($cart, (string) $request->query->get('postcode', '')));
+    }
+
+    /**
+     * What the summary and button show for this postcode: "Calculated from
+     * postcode" until it is a full UK postcode, then the DPD price (UK
+     * mainland) or "Reserve Your Design" (elsewhere).
+     *
+     * @return array{state: string, delivery: string, total: string, button: string}
+     */
+    private function deliveryFor(Cart $cart, string $postcode): array
+    {
+        $subtotal = $cart->getTotal();
+        $normalised = DeliveryArea::normalise($postcode);
+        if ($normalised !== null && ! DeliveryArea::isMainland($normalised)) {
+            return [
+                'state' => 'outside',
+                'delivery' => 'Quoted individually',
+                'total' => self::money($subtotal),
+                'button' => 'Reserve Your Design',
+            ];
+        }
+
+        $quote = $normalised === null ? null : $this->quote($cart, $normalised);
+        $total = $subtotal + ($quote->priceInPence ?? 0);
+
+        return [
+            'state' => $quote instanceof ShippingQuote ? 'mainland' : 'unknown',
+            'delivery' => $quote instanceof ShippingQuote ? self::money($quote->priceInPence) : 'Calculated from postcode',
+            'total' => self::money($total),
+            'button' => 'Pay ' . self::money($total),
+        ];
+    }
+
+    private function quote(Cart $cart, string $postcode): ?ShippingQuote
+    {
+        $destination = new Address();
+        $destination->setPostcode($postcode);
+        $destination->setCountry('GB');
+
+        return $this->shippingCalculator->quotesForCart($cart, $destination)[0] ?? null;
+    }
+
+    /**
+     * Save the order with every detail, then continue to payment.
+     *
+     * @param array<string, mixed> $data
+     */
+    private function placeOrder(Request $request, Cart $cart, array $data, string $postcode): Response
+    {
+        $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
+        $quote = $this->quote($cart, $postcode);
+        if (! $quote instanceof ShippingQuote) {
+            $this->addFlash('error', 'We couldn\'t work out delivery for this order. Please try again, or contact us.');
+
+            return $this->redirectToRoute('checkout');
+        }
+
+        $user = $this->getUser();
+        $delivery = new Address();
+        $delivery->setRecipientName($value('name'));
+        $delivery->setCompany($value('company'));
+        $delivery->setLine1($value('line1'));
+        $delivery->setLine2($value('line2'));
+        $delivery->setCity($value('town'));
+        $delivery->setCounty($value('county'));
+        $delivery->setPostcode($postcode);
+        $delivery->setCountry('GB');
+        // DPD texts the delivery's phone: the recipient's for a gift.
+        $delivery->setPhone($cart->isGift() ? $value('recipientMobile') : $value('phone'));
+        $delivery->setOwner($user instanceof User ? $user : null);
+
+        $order = $this->orderFactory->createFromCart($cart, $user instanceof User ? $user : null, strtolower((string) $value('email')), $quote, $delivery);
+        $order->setContactPhone($value('phone'));
+        $order->setDeliveryNotes($value('notes'));
+        if (! ($data['billingSame'] ?? true)) {
+            $billing = new Address();
+            $billing->setRecipientName($value('billingName'));
+            $billing->setLine1($value('billingLine1'));
+            $billing->setLine2($value('billingLine2'));
+            $billing->setCity($value('billingTown'));
+            $billing->setCounty($value('billingCounty'));
+            $billing->setPostcode(DeliveryArea::normalise((string) $value('billingPostcode')) ?? $value('billingPostcode'));
+            $billing->setCountry('GB');
+            $order->setBillingAddress($billing);
+        }
+
+        $this->orderRepository->save($order, true);
+
+        if ($this->usesStripe()) {
+            $this->startStripePayment($request, $order);
+        } else {
+            $this->startRevolutPayment($request, $order);
+        }
+
+        $order->setStatus(OrderStatus::AWAITING_PAYMENT);
+        $this->orderRepository->save($order, true);
+        $request->getSession()->set(self::SESSION_ORDERS, array_values(array_unique([...$this->sessionOrders($request), $order->getOrderNumber()])));
+
+        return $this->redirectToRoute('checkout_pay', [
+            'orderNumber' => $order->getOrderNumber(),
         ]);
     }
 
-    #[Route(path: '/checkout/shipping', name: 'checkout_shipping')]
-    public function shipping(Request $request): Response
+    /**
+     * A postcode outside the UK mainland: the basket goes to "Reserve Your
+     * Design" (no payment), with the details typed so far filled in there.
+     *
+     * @param array<string, mixed> $data
+     */
+    private function reserveInstead(Request $request, array $data, Cart $cart): Response
     {
-        $user = $this->currentUser();
-        if (! $user instanceof User) {
-            return $this->redirectToRoute('checkout');
-        }
+        $value = static fn (string $key): string => trim((string) ($data[$key] ?? ''));
+        $address = array_filter([
+            $value('company'),
+            $value('line1'),
+            $value('line2'),
+            $value('town'),
+            $value('county'),
+            DeliveryArea::normalise($value('postcode')) ?? $value('postcode'),
+        ], static fn (string $line): bool => $line !== '');
+        $notes = array_filter([
+            $cart->isGift() && $cart->getGiftArriveBy() !== null ? 'Gift · Arrive by ' . $cart->getGiftArriveBy()->format('j F Y') . ($value('recipientMobile') !== '' ? ' · Recipient\'s mobile ' . $value('recipientMobile') : '') : '',
+            $value('notes'),
+        ], static fn (string $line): bool => $line !== '');
 
-        $cart = $this->cartResolver->getCart();
-        if ($cart->isEmpty()) {
-            return $this->redirectToRoute('cart');
-        }
-
-        // Safety net: 3+ lamps, Request sizes or Custom options never reach payment.
-        if (! $this->basketRules->canCheckout($cart)) {
-            return $this->redirectToRoute('cart');
-        }
-
-        $address = $this->sessionAddress($request);
-        if (! $address instanceof Address) {
-            return $this->redirectToRoute('checkout');
-        }
-
-        $quotes = $this->shippingCalculator->quotesForCart($cart, $address);
-        $email = (string) $request->getSession()->get(self::SESSION_EMAIL, $user->getEmail());
-
-        if ($request->isMethod('POST')) {
-            $quoteId = (string) $request->request->get('shipping_quote', '');
-            $quote = $this->shippingCalculator->findQuote($cart, $address, $quoteId);
-
-            if (! $quote instanceof \App\Shipping\ShippingQuote) {
-                $this->addFlash('error', 'Please choose a shipping option.');
-
-                return $this->render('checkout/shipping.html.twig', [
-                    'cart' => $cart,
-                    'address' => $address,
-                    'quotes' => $quotes,
-                ]);
-            }
-
-            $shippingAddress = $quote->method === ShippingMethod::PICKUP ? null : $address;
-            $order = $this->orderFactory->createFromCart($cart, $user, $email, $quote, $shippingAddress);
-            $this->orderRepository->save($order, true);
-
-            // Start the payment with the active provider. Skipped gracefully until
-            // keys are configured, so the flow stays demoable.
-            if ($this->usesStripe()) {
-                $this->startStripePayment($request, $order);
-            } else {
-                $this->startRevolutPayment($request, $order);
-            }
-
-            $order->setStatus(OrderStatus::AWAITING_PAYMENT);
-            $this->orderRepository->save($order, true);
-
-            return $this->redirectToRoute('checkout_pay', [
-                'orderNumber' => $order->getOrderNumber(),
-            ]);
-        }
-
-        return $this->render('checkout/shipping.html.twig', [
-            'cart' => $cart,
-            'address' => $address,
-            'quotes' => $quotes,
+        $request->getSession()->set(ReserveController::PREFILL_KEY, [
+            'fullName' => $value('name'),
+            'email' => $value('email'),
+            'phone' => $value('phone'),
+            'deliveryAddress' => implode("\n", $address),
+            'accessNotes' => implode("\n", $notes),
         ]);
+
+        return $this->redirectToRoute('basket_request', [
+            'basket' => 1,
+        ]);
+    }
+
+    /**
+     * The order summary (Site v4 prototype): per line "Lumen Forma", its
+     * price, size, quantity, configuration, then each lamp's choices.
+     *
+     * @return list<array{price: string, head: list<array{string, string}>, lamps: list<array{label: ?string, rows: list<array{string, string}>}>}>
+     */
+    private function summary(Cart $cart): array
+    {
+        $lines = [];
+        foreach ($cart->getCartItems() as $item) {
+            $product = $item->getProduct();
+            if ($product === null) {
+                continue;
+            }
+
+            $head = [['Size', LumenFormaConfigurator::sizeName($product)], ['Quantity', (string) $item->getQuantity()]];
+            if ($item->getQuantity() >= 2) {
+                $head[] = ['Configuration', $item->isCustomisedIndividually() ? 'Customise Individually' : 'Customise All'];
+            }
+
+            $lines[] = [
+                'price' => self::money((int) $item->getUnitPrice() * (int) $item->getQuantity()),
+                'head' => $head,
+                'lamps' => array_map(static fn (array $group): array => [
+                    'label' => $group['label'],
+                    'rows' => array_map(static fn ($option): array => [$option->getProductOption()->getName(), (string) $option->getProductOptionValue()->getValue()], $group['options']),
+                ], $item->getLampConfigurations()),
+            ];
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Whether any field is empty that must be filled (the prototype's one
+     * message, "Please complete the required fields to continue.").
+     *
+     * @param FormInterface<mixed> $form
+     */
+    private function requiredMissing(FormInterface $form): bool
+    {
+        foreach ($form->getErrors(true) as $error) {
+            if ($error->getMessage() === CardPaymentForm::REQUIRED_MESSAGE) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * "£799", or "£12.95" when there are pence.
+     */
+    public static function money(int $pence): string
+    {
+        return '£' . number_format($pence / 100, $pence % 100 === 0 ? 0 : 2);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function sessionOrders(Request $request): array
+    {
+        $orders = $request->getSession()->get(self::SESSION_ORDERS, []);
+
+        return \is_array($orders) ? array_values(array_filter($orders, 'is_string')) : [];
+    }
+
+    /**
+     * The order, if this visitor may see it: started in this session, or
+     * belonging to the signed-in account.
+     */
+    private function visibleOrder(Request $request, string $orderNumber): ?Order
+    {
+        $order = $this->orderRepository->findByOrderNumber($orderNumber);
+        if (! $order instanceof Order) {
+            return null;
+        }
+
+        $user = $this->getUser();
+        if (\in_array($orderNumber, $this->sessionOrders($request), true) || ($user instanceof User && $order->getUser() === $user)) {
+            return $order;
+        }
+
+        return null;
     }
 
     #[Route(path: '/checkout/pay/{orderNumber}', name: 'checkout_pay')]
     public function pay(Request $request, string $orderNumber): Response
     {
-        $user = $this->currentUser();
-        $order = $this->orderRepository->findByOrderNumber($orderNumber);
-        if (! $order instanceof \App\Entity\Order || ! $user instanceof User || $order->getUser() !== $user) {
+        $order = $this->visibleOrder($request, $orderNumber);
+        if (! $order instanceof Order) {
             throw $this->createNotFoundException();
         }
 
@@ -251,11 +399,10 @@ class CheckoutController extends AbstractController
     }
 
     #[Route(path: '/checkout/complete/{orderNumber}', name: 'checkout_complete')]
-    public function complete(string $orderNumber): Response
+    public function complete(Request $request, string $orderNumber): Response
     {
-        $user = $this->currentUser();
-        $order = $this->orderRepository->findByOrderNumber($orderNumber);
-        if (! $order instanceof \App\Entity\Order || ! $user instanceof User || $order->getUser() !== $user) {
+        $order = $this->visibleOrder($request, $orderNumber);
+        if (! $order instanceof Order) {
             throw $this->createNotFoundException();
         }
 
@@ -264,36 +411,7 @@ class CheckoutController extends AbstractController
         ]);
     }
 
-    private function currentUser(): ?User
-    {
-        $user = $this->getUser();
-
-        return $user instanceof User ? $user : null;
-    }
-
-    private function applyName(User $user, string $recipientName): void
-    {
-        $recipientName = trim($recipientName);
-        if ($recipientName === '') {
-            return;
-        }
-
-        $parts = preg_split('/\s+/', $recipientName) ?: [];
-        $user->setFirstName(array_shift($parts) ?: null);
-        $user->setLastName($parts !== [] ? implode(' ', $parts) : null);
-    }
-
-    private function sessionAddress(Request $request): ?Address
-    {
-        $addressId = $request->getSession()->get(self::SESSION_ADDRESS_ID);
-        if (! is_string($addressId) || $addressId === '') {
-            return null;
-        }
-
-        return $this->addressRepository->find($addressId);
-    }
-
-    private function startStripePayment(Request $request, \App\Entity\Order $order): void
+    private function startStripePayment(Request $request, Order $order): void
     {
         if (! $this->stripeClient->isConfigured()) {
             return;
@@ -314,7 +432,7 @@ class CheckoutController extends AbstractController
         }
     }
 
-    private function startRevolutPayment(Request $request, \App\Entity\Order $order): void
+    private function startRevolutPayment(Request $request, Order $order): void
     {
         if (! $this->revolutClient->isConfigured()) {
             return;
