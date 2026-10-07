@@ -121,7 +121,7 @@ try {
     await cardsComplete();
     s = await pay(20000);
     check('after the basket changed, the earlier unpaid order is cancelled and a new one is paid', /^\/checkout\/complete\//.test(s.path) && count(`select count(*) from orders where email = '${EMAIL}' and status = 'cancelled'`) === 1 && /awaiting_payment|cancelled|LL|\w/.test(pending), JSON.stringify(s));
-    // A gift: the recipient's mobile is DPD's delivery phone; the customer's phone is kept for updates.
+    // A gift: the same details as any order; DPD's delivery phone is the customer's mobile.
     await add();
     await go(BASE_URL + '/basket');
     const arrive = await ev(`document.querySelector('main aside input[type=date]').min`);
@@ -129,12 +129,12 @@ try {
     await ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
     await ev(`[...document.querySelectorAll('main aside button')].find(e => e.textContent.trim() === 'Proceed to Payment').click()`); await sleep(2000);
     await openCheckout();
-    await fill({ ...details, billingSame: true, name: 'Grace Recipient', recipientMobile: '07700 900456' });
+    await fill({ ...details, billingSame: true, name: 'Grace Friend' });
     await card('cardNumber', '4242424242424242'); await card('cardExpiry', '1234'); await card('cardCvc', '123');
     await cardsComplete();
     s = await pay(20000);
     const giftOrder = s.path.split('/').pop();
-    check("a gift pays; the recipient's mobile is the delivery phone, the customer's kept for updates", /^\/checkout\/complete\//.test(s.path) && sql(`select o.contact_phone, s.phone, s.recipient_name from orders o join address s on s.id = o.shipping_address_id where o.order_number = '${giftOrder}'`).replace(/\s+/g, ' ').includes('07700 900123 07700 900456 Grace Recipient'), JSON.stringify(s));
+    check("a gift pays; the delivery phone is the customer's own mobile", /^\/checkout\/complete\//.test(s.path) && sql(`select o.contact_phone, s.phone, s.recipient_name from orders o join address s on s.id = o.shipping_address_id where o.order_number = '${giftOrder}'`).replace(/\s+/g, ' ').includes('07700 900123 07700 900123 Grace Friend'), JSON.stringify(s));
     check('all three paid orders belong to the one account for that email', count(`select count(distinct user_id) from orders where email = '${EMAIL}' and status = 'paid'`) === 1 && count(`select count(*) from orders where email = '${EMAIL}' and status = 'paid'`) === 3 && count(`select count(*) from users where email = '${EMAIL}'`) === 1);
     summary();
 } finally { b.close(); }

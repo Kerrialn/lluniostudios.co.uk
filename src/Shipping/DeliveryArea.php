@@ -66,17 +66,40 @@ final class DeliveryArea
     }
 
     /**
+     * The first half of a postcode ("BH21" from "BH21 3EG" or "bh21 3"), as
+     * Apple Pay and Google Pay share before the customer pays; null if it
+     * doesn't start like a UK postcode.
+     */
+    public static function outward(string $postcode): ?string
+    {
+        $postcode = strtoupper(trim($postcode));
+        if (! preg_match('/^([A-Z]{1,2}\d[A-Z\d]?)(?:\s+\d?[A-Z]{0,2}|\d[A-Z]{2})?$/', $postcode, $m)) {
+            return null;
+        }
+
+        return $m[1];
+    }
+
+    /**
      * Whether checkout delivers to this postcode (false for anything that
      * isn't a full UK postcode).
      */
     public static function isMainland(string $postcode): bool
     {
         $normalised = self::normalise($postcode);
-        if ($normalised === null) {
+
+        return $normalised !== null && self::isMainlandOutward((string) self::outward($normalised));
+    }
+
+    /**
+     * The same, from the first half of a postcode only (e.g. "BT1").
+     */
+    public static function isMainlandOutward(string $outward): bool
+    {
+        if (! preg_match('/^([A-Z]{1,2})(\d+)/', strtoupper($outward), $m)) {
             return false;
         }
 
-        preg_match('/^([A-Z]{1,2})(\d+)/', $normalised, $m);
         [$area, $district] = [$m[1], (int) $m[2]];
         if (\in_array($area, self::OUTSIDE_AREAS, true)) {
             return false;

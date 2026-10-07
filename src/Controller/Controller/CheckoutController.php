@@ -113,8 +113,6 @@ class CheckoutController extends AbstractController
         $form = $this->createForm(CardPaymentForm::class, [
             'email' => $user instanceof User ? $user->getEmail() : null,
             'billingSame' => true,
-        ], [
-            'gift' => $cart->isGift(),
         ]);
         $form->handleRequest($request);
 
@@ -167,7 +165,80 @@ class CheckoutController extends AbstractController
             'requiredMissing' => $this->requiredMissing($form),
             'formErrors' => array_map(static fn ($error): string => $error->getMessage(), iterator_to_array($form->getErrors())),
             'stripeKey' => $this->usesStripe() && $this->stripeClient->isConfigured() ? $this->stripeClient->getPublishableKey() : '',
+            'subtotalPence' => $cart->getTotal(),
         ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+    }
+
+    /**
+     * Apple Pay / Google Pay (10.4): the wallet's details once the customer
+     * has approved, checked like the card form's. Outside the UK mainland the
+     * basket goes to Reserve Your Design instead (no payment); otherwise the
+     * order is saved as for a card, and the page confirms the payment with
+     * the wallet.
+     */
+    #[Route(path: '/checkout/express', name: 'checkout_express', methods: ['POST'])]
+    public function express(Request $request): JsonResponse
+    {
+        // Only this site's own page may send here.
+        if (! \in_array($request->headers->get('Sec-Fetch-Site'), [null, 'same-origin'], true)) {
+            return new JsonResponse(null, Response::HTTP_FORBIDDEN);
+        }
+
+        $cart = $this->cartResolver->getCart();
+        if ($cart->isEmpty() || ! $this->basketRules->canCheckout($cart)) {
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Please pay by card using the form below.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        /** @var array<string, mixed> $wallet */
+        $wallet = json_decode($request->getContent(), true) ?: [];
+        $text = static fn (mixed $value): string => \is_scalar($value) ? trim((string) $value) : '';
+        $shipping = \is_array($wallet['shipping'] ?? null) ? $wallet['shipping'] : [];
+        $billing = \is_array($wallet['billing'] ?? null) ? $wallet['billing'] : [];
+        $data = [
+            'email' => $text($wallet['email'] ?? ''),
+            'phone' => $text($wallet['phone'] ?? ''),
+            'name' => $text($shipping['name'] ?? ''),
+            'line1' => $text($shipping['line1'] ?? ''),
+            'line2' => $text($shipping['line2'] ?? ''),
+            'town' => $text($shipping['city'] ?? ''),
+            'county' => $text($shipping['state'] ?? ''),
+            'postcode' => $text($shipping['postal_code'] ?? ''),
+            'cardName' => $text($billing['name'] ?? '') ?: $text($shipping['name'] ?? ''),
+            // The wallet's billing address, unless it is the delivery address (or not given).
+            'billingSame' => \in_array($text($billing['postal_code'] ?? ''), ['', $text($shipping['postal_code'] ?? '')], true),
+            'billingName' => $text($billing['name'] ?? ''),
+            'billingLine1' => $text($billing['line1'] ?? ''),
+            'billingLine2' => $text($billing['line2'] ?? ''),
+            'billingTown' => $text($billing['city'] ?? ''),
+            'billingCounty' => $text($billing['state'] ?? ''),
+            'billingPostcode' => $text($billing['postal_code'] ?? ''),
+        ];
+
+        $postcode = DeliveryArea::normalise((string) $data['postcode']);
+        if ($postcode !== null && ! DeliveryArea::isMainland($postcode)) {
+            return new JsonResponse([
+                'status' => 'redirect',
+                'url' => $this->reserveInstead($request, $data, $cart)->getTargetUrl(),
+            ]);
+        }
+
+        $form = $this->createForm(CardPaymentForm::class, null, [
+            'csrf_protection' => false,
+        ]);
+        $form->submit(array_map(static fn (mixed $value): mixed => \is_bool($value) ? ($value ? '1' : null) : $value, $data));
+        if (! $form->isValid() || $postcode === null) {
+            // E.g. an address line longer than the courier allows: the card form explains.
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'We couldn\'t use the details from your wallet. Please pay by card using the form below.',
+                'errors' => $this->fieldErrors($form),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return $this->startCardPayment($request, $cart, $data, $postcode);
     }
 
     /**
@@ -182,7 +253,7 @@ class CheckoutController extends AbstractController
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse($this->deliveryFor($cart, (string) $request->query->get('postcode', '')));
+        return new JsonResponse($this->deliveryFor($cart, (string) $request->query->get('postcode', ''), $request->query->getBoolean('partial')));
     }
 
     /**
@@ -190,22 +261,26 @@ class CheckoutController extends AbstractController
      * postcode" until it is a full UK postcode, then the DPD price (UK
      * mainland) or "Reserve Your Design" (elsewhere).
      *
-     * @return array{state: string, delivery: string, total: string, button: string}
+     * @return array{state: string, delivery: string, total: string, button: string, subtotalPence: int, deliveryPence: ?int}
      */
-    private function deliveryFor(Cart $cart, string $postcode): array
+    private function deliveryFor(Cart $cart, string $postcode, bool $partial = false): array
     {
         $subtotal = $cart->getTotal();
-        $normalised = DeliveryArea::normalise($postcode);
-        if ($normalised !== null && ! DeliveryArea::isMainland($normalised)) {
+        // Apple Pay and Google Pay share only the first half of the postcode until the customer pays.
+        $place = $partial ? DeliveryArea::outward($postcode) : DeliveryArea::normalise($postcode);
+        $mainland = $place !== null && ($partial ? DeliveryArea::isMainlandOutward($place) : DeliveryArea::isMainland($place));
+        if ($place !== null && ! $mainland) {
             return [
                 'state' => 'outside',
                 'delivery' => 'Quoted individually',
                 'total' => self::money($subtotal),
                 'button' => 'Reserve Your Design',
+                'subtotalPence' => $subtotal,
+                'deliveryPence' => null,
             ];
         }
 
-        $quote = $normalised === null ? null : $this->quote($cart, $normalised);
+        $quote = $place === null ? null : $this->quote($cart, $place);
         $total = $subtotal + ($quote->priceInPence ?? 0);
 
         return [
@@ -213,6 +288,8 @@ class CheckoutController extends AbstractController
             'delivery' => $quote instanceof ShippingQuote ? self::money($quote->priceInPence) : 'Calculated from postcode',
             'total' => self::money($total),
             'button' => 'Pay ' . self::money($total),
+            'subtotalPence' => $subtotal,
+            'deliveryPence' => $quote?->priceInPence,
         ];
     }
 
@@ -239,8 +316,7 @@ class CheckoutController extends AbstractController
 
         $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $email = strtolower((string) $value('email'));
-        // The customer's own name: on the card for a gift (the delivery name is the recipient's).
-        $account = $this->orderAccounts->accountFor($email, $cart->isGift() ? $value('cardName') : $value('name'));
+        $account = $this->orderAccounts->accountFor($email, $value('name'));
 
         $order = $this->orderFactory->createFromCart($cart, $account, $email, $quote, $this->deliveryAddress($cart, $data, $postcode, $account));
         $this->applyDetails($order, $data);
@@ -266,8 +342,8 @@ class CheckoutController extends AbstractController
         $delivery->setCounty($value('county'));
         $delivery->setPostcode($postcode);
         $delivery->setCountry('GB');
-        // DPD texts the delivery's phone: the recipient's for a gift.
-        $delivery->setPhone($cart->isGift() ? $value('recipientMobile') : $value('phone'));
+        // DPD's delivery phone is the customer's own mobile (gifts too).
+        $delivery->setPhone($value('phone'));
         $delivery->setOwner($owner);
 
         return $delivery;
@@ -337,7 +413,7 @@ class CheckoutController extends AbstractController
                 // Same basket: keep the order and payment, with the latest details.
                 $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
                 $email = strtolower((string) $value('email'));
-                $account = $this->orderAccounts->accountFor($email, $cart->isGift() ? $value('cardName') : $value('name'));
+                $account = $this->orderAccounts->accountFor($email, $value('name'));
                 $order->setUser($account);
                 $order->setEmail($email);
                 $order->setShippingAddress($this->deliveryAddress($cart, $data, $postcode, $account));
@@ -476,7 +552,7 @@ class CheckoutController extends AbstractController
             DeliveryArea::normalise($value('postcode')) ?? $value('postcode'),
         ], static fn (string $line): bool => $line !== '');
         $notes = array_filter([
-            $cart->isGift() && $cart->getGiftArriveBy() !== null ? 'Gift · Arrive by ' . $cart->getGiftArriveBy()->format('j F Y') . ($value('recipientMobile') !== '' ? ' · Recipient\'s mobile ' . $value('recipientMobile') : '') : '',
+            $cart->isGift() && $cart->getGiftArriveBy() !== null ? 'Gift · Arrive by ' . $cart->getGiftArriveBy()->format('j F Y') : '',
             $value('notes'),
         ], static fn (string $line): bool => $line !== '');
 

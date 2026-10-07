@@ -52,6 +52,26 @@ final class DeliveryAreaTest extends TestCase
         self::assertSame($mainland, DeliveryArea::isMainland($postcode));
     }
 
+    /**
+     * @return iterable<string, array{string, ?string, bool}>
+     */
+    public static function partials(): iterable
+    {
+        yield 'full postcode' => ['BH21 3EG', 'BH21', true];
+        yield 'as a wallet shares it' => ['BT1 1', 'BT1', false];
+        yield 'district only' => ['IV1', 'IV1', false];
+        yield 'letter in the district' => ['EC1A 1', 'EC1A', true];
+        yield 'Scilly district' => ['TR21', 'TR21', false];
+        yield 'not a postcode' => ['London', null, false];
+    }
+
+    #[DataProvider('partials')]
+    public function testOutward(string $postcode, ?string $outward, bool $mainland): void
+    {
+        self::assertSame($outward, DeliveryArea::outward($postcode));
+        self::assertSame($mainland, $outward !== null && DeliveryArea::isMainlandOutward($outward));
+    }
+
     public function testNormalise(): void
     {
         self::assertSame('BH21 3EG', DeliveryArea::normalise(' bh21   3eg '));

@@ -14,6 +14,12 @@ import { loadStripe } from '@stripe/stripe-js';
  *   server saves the order and starts a payment, and the card is confirmed
  *   here (with Stripe's 3D Secure pop-up if the bank asks). On success, the
  *   completion page.
+ * - Apple Pay / Google Pay (Stripe's Express Checkout buttons, shown only when
+ *   the device offers one): the wallet asks for the name, email, phone and a
+ *   UK delivery address; the DPD price is added once an address is chosen
+ *   (outside the UK mainland the wallet refuses it and the page explains).
+ *   Once approved, the wallet's details go through the same checks as the
+ *   form (/checkout/express) and the payment is confirmed with the wallet.
  */
 const INK = '#ece3d3';
 const MUTE = '#a89b86';
@@ -21,9 +27,9 @@ const REQUIRED = 'Please complete the required fields to continue.';
 const CARD_BOXES = ['cardNumber', 'cardExpiry', 'cardCvc'];
 
 export default class extends Controller {
-    static targets = ['postcode', 'delivery', 'total', 'button', 'outsideNote', 'secure', 'message',
+    static targets = ['postcode', 'delivery', 'total', 'button', 'outsideNote', 'secure', 'message', 'express', 'expressArea', 'expressMessage',
         'cardNumber', 'cardExpiry', 'cardCvc', 'cardNumberError', 'cardExpiryError', 'cardCvcError'];
-    static values = { deliveryUrl: String, stripeKey: String };
+    static values = { deliveryUrl: String, stripeKey: String, expressUrl: String, subtotal: Number };
 
     async connect() {
         this.state = this.outsideNoteTarget.hidden ? 'mainland' : 'outside';
@@ -61,12 +67,121 @@ export default class extends Controller {
                 this.setCardError(name, event.error ? event.error.message : '');
             });
         }
+
+        if (this.hasExpressTarget) this.mountWallets();
+    }
+
+    // ---- Apple Pay / Google Pay -----------------------------------------------
+
+    mountWallets() {
+        this.wallet = this.stripe.elements({
+            mode: 'payment', amount: this.subtotalValue, currency: 'gbp', paymentMethodTypes: ['card'], locale: 'en-GB',
+        });
+        const express = this.wallet.create('expressCheckout', {
+            buttonType: { applePay: 'buy', googlePay: 'buy' },
+            buttonTheme: { applePay: 'white', googlePay: 'white' },
+            buttonHeight: 48,
+            paymentMethods: { applePay: 'auto', googlePay: 'auto', link: 'never', paypal: 'never', amazonPay: 'never', klarna: 'never' },
+        });
+        this.expressElement = express;
+        express.on('ready', ({ availablePaymentMethods }) => {
+            this.expressAreaTarget.hidden = !availablePaymentMethods || !Object.values(availablePaymentMethods).some(Boolean);
+        });
+        express.on('click', (event) => {
+            this.walletOutside = false;
+            this.showWalletMessage('');
+            this.wallet.update({ amount: this.subtotalValue });
+            event.resolve({
+                emailRequired: true,
+                phoneNumberRequired: true,
+                billingAddressRequired: true,
+                shippingAddressRequired: true,
+                allowedShippingCountries: ['GB'],
+                shippingRates: [{ id: 'dpd', displayName: 'DPD Next Day Delivery', amount: 0 }],
+            });
+        });
+        express.on('shippingaddresschange', async (event) => {
+            try {
+                const response = await fetch(`${this.deliveryUrlValue}?partial=1&postcode=${encodeURIComponent(event.address?.postal_code || '')}`, { headers: { Accept: 'application/json' } });
+                const data = await response.json();
+                if (data.state !== 'mainland') {
+                    this.walletOutside = data.state === 'outside';
+                    event.reject();
+                    return;
+                }
+                this.wallet.update({ amount: data.subtotalPence + data.deliveryPence });
+                event.resolve({ shippingRates: [{ id: 'dpd', displayName: 'DPD Next Day Delivery', amount: data.deliveryPence }] });
+            } catch {
+                event.reject();
+            }
+        });
+        express.on('cancel', () => {
+            // An address outside the UK mainland: say why, as the form would.
+            if (this.walletOutside) this.showWalletMessage(this.outsideNoteTarget.textContent.trim());
+        });
+        express.on('confirm', (event) => this.payWithWallet(event));
+        express.mount(this.expressTarget);
+    }
+
+    async payWithWallet(event) {
+        const { error: submitError } = await this.wallet.submit();
+        if (submitError) {
+            event.paymentFailed({ reason: 'fail' });
+            this.showWalletMessage(submitError.message);
+            return;
+        }
+        try {
+            const shipping = event.shippingAddress || {};
+            const billing = event.billingDetails || {};
+            const response = await fetch(this.expressUrlValue, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                body: JSON.stringify({
+                    email: billing.email,
+                    phone: billing.phone,
+                    shipping: { name: shipping.name, ...(shipping.address || {}) },
+                    billing: { name: billing.name, ...(billing.address || {}) },
+                }),
+            });
+            const data = await response.json().catch(() => ({ status: 'error' }));
+            if (data.status === 'redirect') {
+                event.paymentFailed({ reason: 'invalid_shipping_address' });
+                window.location.href = data.url;
+                return;
+            }
+            if (data.status !== 'confirm') {
+                event.paymentFailed({ reason: 'fail' });
+                this.showWalletMessage(data.message || 'Please pay by card using the form below.');
+                return;
+            }
+            const result = await this.stripe.confirmPayment({
+                elements: this.wallet,
+                clientSecret: data.clientSecret,
+                confirmParams: { return_url: data.completeUrl },
+                redirect: 'if_required',
+            });
+            if (result.error) {
+                this.showWalletMessage(result.error.message || 'The payment did not go through. Please try again, or pay by card below.');
+                return;
+            }
+            window.location.href = data.completeUrl;
+        } catch {
+            event.paymentFailed({ reason: 'fail' });
+            this.showWalletMessage("We couldn't reach the payment service. Please check your connection and try again.");
+        }
+    }
+
+    showWalletMessage(text) {
+        if (!this.hasExpressMessageTarget) return;
+        this.expressMessageTarget.textContent = text;
+        this.expressMessageTarget.hidden = !text;
     }
 
     disconnect() {
         clearTimeout(this.timer);
         this.request?.abort();
         Object.values(this.cards || {}).forEach((card) => card.destroy());
+        this.expressElement?.destroy();
     }
 
     // ---- Delivery for the postcode ------------------------------------------

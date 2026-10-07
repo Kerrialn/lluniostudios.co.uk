@@ -23,17 +23,22 @@
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
         <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Card Payment</h1>
 
-        {{ form_start(form, { attr: { class: 'flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start', novalidate: 'novalidate', 'data-controller': 'checkout', 'data-checkout-delivery-url-value': path('checkout_delivery'), 'data-checkout-stripe-key-value': stripeKey, 'data-action': 'submit->checkout#pay' } }) }}
+        {{ form_start(form, { attr: { class: 'flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start', novalidate: 'novalidate', 'data-controller': 'checkout', 'data-checkout-delivery-url-value': path('checkout_delivery'), 'data-checkout-stripe-key-value': stripeKey, 'data-checkout-express-url-value': path('checkout_express'), 'data-checkout-subtotal-value': subtotalPence, 'data-action': 'submit->checkout#pay' } }) }}
             <div class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-6">
+                {# Apple Pay / Google Pay (10.4): shown only when the visitor's device offers one. #}
+                <div class="flex flex-col gap-3" data-checkout-target="expressArea" hidden>
+                    <div data-checkout-target="express"></div>
+                    <div class="text-xs text-ll-ink" role="alert" data-checkout-target="expressMessage" hidden></div>
+                </div>
                 <div class="{{ section }}">Contact</div>
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *' }) }}
-                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order updates) *' }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order and delivery updates) *' }) }}
                 </div>
 
                 <div class="{{ section }}">Delivery address</div>
                 <div class="{{ grid }}">
-                    {{ include('checkout/_field.html.twig', { child: form.name, label: gift ? "Recipient's full name *" : 'Full name *', wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.name, label: 'Full name *', wide: true }) }}
                     {{ include('checkout/_field.html.twig', { child: form.company, label: 'Company name (optional)', wide: true }) }}
                     {{ include('checkout/_field.html.twig', { child: form.line1, label: 'Address line 1 *', wide: true }) }}
                     {{ include('checkout/_field.html.twig', { child: form.line2, label: 'Address line 2', wide: true }) }}
@@ -44,9 +49,6 @@
                 <div class="flex flex-col gap-2"><span class="text-[14px]">Country</span><div class="border border-ll-line h-12 flex items-center px-3.5 text-[15px] text-ll-mute">United Kingdom</div></div>
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.notes, label: 'Delivery instructions (optional)', wide: true }) }}
-                    {% if form.recipientMobile is defined %}
-                        {{ include('checkout/_field.html.twig', { child: form.recipientMobile, label: "Recipient's mobile (for delivery) *" }) }}
-                    {% endif %}
                 </div>
 
                 <div class="{{ section }}">Billing address</div>

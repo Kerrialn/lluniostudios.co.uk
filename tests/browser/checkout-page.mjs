@@ -2,7 +2,7 @@
 // the delivery price following the postcode; outside the UK mainland,
 // "Reserve Your Design" with its note and the details carried to the request
 // form; the required-fields message and outlines; the billing address; a
-// gift's recipient fields and "Gift · Arrive by"; a gift date that has become
+// gift asking for the same details plus "Gift · Arrive by"; a gift date that has become
 // too soon. (Paying, and the saved order's details: checkout-pay.mjs.)
 // Takes a size: 1440 900 (default) or 390 844.
 import { open, sleep, checker, sql, BASE_URL } from './lib.mjs';
@@ -89,7 +89,7 @@ try {
     const labels = await ev(`[...document.querySelectorAll('main form label > span:first-child')].filter(s => s.getBoundingClientRect().height > 0).map(s => s.textContent.trim())`);
     a = await aside();
     const nice = new Date(arrive + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-    check("a gift asks for the recipient's full name and mobile", labels.includes("Recipient's full name *") && labels.includes("Recipient's mobile (for delivery) *") && labels.includes('Your Mobile (for order updates) *') && !labels.includes('Full name *'), JSON.stringify(labels));
+    check('a gift asks for the same details as any order (no recipient fields)', labels.includes('Full name *') && labels.includes('Your Mobile (for order and delivery updates) *') && !labels.some((l) => /recipient/i.test(l)), JSON.stringify(labels));
     check(`the summary shows "Gift · Arrive by ${nice}"`, a.gift === `Arrive by ${nice}`, a.gift);
     sql(`update cart set gift_arrive_by = current_date where id = (select cart_id from cart_item order by created_at desc limit 1)`);
     await go(BASE_URL + '/checkout');

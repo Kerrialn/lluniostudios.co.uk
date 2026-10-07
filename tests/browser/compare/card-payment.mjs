@@ -2,7 +2,7 @@
 // heading, section labels, every field's label and box, Country, the billing
 // tick, and the summary (rows, totals, button, secure line, Terms).
 // The card number, expiry and security code are Stripe's boxes on ours
-// (compared as boxes). Expected differences: "Your Mobile (for order updates)"
+// (compared as boxes). Expected differences: "Your Mobile (for order and delivery updates)"
 // for "Phone (for delivery updates)" (decided, so its row shows as missing on
 // each side); "DPD Next Day Delivery" for
 // "UK Express Delivery (DPD)", sizes without abbreviations,

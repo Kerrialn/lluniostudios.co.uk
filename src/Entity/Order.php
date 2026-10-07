@@ -71,8 +71,8 @@ class Order
     private ?Address $billingAddress = null;
 
     /**
-     * The customer's phone "for delivery updates" (for a gift, the
-     * recipient's mobile is on the delivery address instead).
+     * The customer's mobile ("Your Mobile (for order and delivery updates)"), also DPD's
+     * delivery phone on the delivery address (gifts too).
      */
     #[ORM\Column(length: 32, nullable: true)]
     private ?string $contactPhone = null;

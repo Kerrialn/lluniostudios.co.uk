@@ -18,9 +18,9 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 /**
  * The Card Payment page (Site v4 prototype, Step 10.2): contact, delivery
  * address, billing address. Field lengths are DPD's label limits (to confirm
- * with DPD). For a gift the delivery name is the recipient's and their
- * mobile is asked for. The billing address is asked for only when "Same as
- * delivery address" is unticked.
+ * with DPD); a gift asks for the same details (decided 7 October 2026). The
+ * billing address is asked for only when "Same as delivery address" is
+ * unticked.
  */
 final class CardPaymentForm extends AbstractType
 {
@@ -102,16 +102,6 @@ final class CardPaymentForm extends AbstractType
             ->add('postcode', TextType::class, $postcode('shipping postal-code'))
             ->add('notes', TextType::class, $text(self::MAX['notes'], 'off', false));
 
-        if ($options['gift']) {
-            $builder->add('recipientMobile', TelType::class, array_replace($phone('off'), [
-                'attr' => [
-                    'maxlength' => self::MAX['phone'],
-                    'autocomplete' => 'off',
-                    'inputmode' => 'tel',
-                ],
-            ]));
-        }
-
         // Card details: the name here; number, expiry and security code are
         // Stripe's own secure boxes (never sent to this site).
         $builder->add('cardName', TextType::class, $text(100, 'cc-name'));
@@ -141,7 +131,6 @@ final class CardPaymentForm extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'gift' => false,
             'constraints' => [
                 new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
                     if (! \is_array($data) || ($data['billingSame'] ?? true)) {
@@ -156,6 +145,5 @@ final class CardPaymentForm extends AbstractType
                 }),
             ],
         ]);
-        $resolver->setAllowedTypes('gift', 'bool');
     }
 }
