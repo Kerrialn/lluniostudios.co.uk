@@ -1,0 +1,59 @@
+{#
+    To the studio: a new Bespoke Commissions enquiry, with everything the
+    customer sent, the names of any files (not attached; they are downloaded
+    from the enquiry in admin) and a link to it. Replying answers the customer.
+#}
+{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
+{% set keyStyle = 'padding:8px 12px 8px 0;border-bottom:1px solid #3a342b;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
+{% set valueStyle = 'padding:8px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:14px;line-height:20px;color:#ece3d3;' %}
+{% set adminUrl = url('admin_commission_enquiry_detail', {entityId: enquiry.id}) %}
+{% if enquiry.client.value == 'home' %}
+    {% set rows = {
+        'Name': enquiry.name,
+        'Email': enquiry.email,
+        'Phone': enquiry.phone ?: '—',
+        'Preferred contact method': enquiry.contactMethodLabel,
+        'Their idea': enquiry.idea,
+    } %}
+{% else %}
+    {% set rows = {
+        'Company': enquiry.company,
+        'Contact name': enquiry.name,
+        'Email': enquiry.email,
+        'Phone': enquiry.phone ?: '—',
+        'Project type': enquiry.projectType,
+        'Location & installation schedule': enquiry.location,
+        'The project': enquiry.project ?: '—',
+        'Integration requirements': enquiry.integration ?: '—',
+    } %}
+{% endif %}
+<!DOCTYPE html>
+<html lang="en-GB">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>New commission enquiry {{ enquiry.enquiryNumber }}</title></head>
+<body style="margin:0;padding:0;background:#15120e;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#15120e" style="background:#15120e;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;">
+<tr><td>
+<p style="margin:0 0 10px 0;{{ f }}font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">New commission enquiry · {{ enquiry.client.label }} · {{ enquiry.createdAt|date('j F Y, H:i', 'Europe/London') }}</p>
+<h1 style="margin:0 0 24px 0;{{ f }}font-weight:300;font-size:28px;line-height:32px;text-transform:uppercase;letter-spacing:0.03em;color:#ece3d3;">{{ enquiry.enquiryNumber }}</h1>
+<p style="margin:0 0 24px 0;{{ f }}font-size:15px;line-height:24px;color:#ece3d3;">{{ enquiry.company ? enquiry.name ~ ' of ' ~ enquiry.company : enquiry.name }} has sent a Bespoke Commissions enquiry. Reply to this email to answer them, or <a href="{{ adminUrl }}" style="color:#ece3d3;">open the enquiry in admin</a>.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for key, value in rows %}
+        <tr><td width="35%" style="{{ keyStyle }}">{{ key }}</td><td style="{{ valueStyle }}">{{ value|nl2br }}</td></tr>
+    {% endfor %}
+    <tr><td width="35%" style="{{ keyStyle }}">Files</td><td style="{{ valueStyle }}">
+        {% for file in enquiry.files %}
+            {{ file.originalName }} ({{ file.size >= 1048576 ? (file.size / 1048576)|number_format(1) ~ 'MB' : max(1, (file.size / 1024)|round) ~ 'KB' }}){% if not loop.last %}<br>{% endif %}
+        {% else %}
+            None
+        {% endfor %}
+        {% if enquiry.files|length > 0 %}<br><a href="{{ adminUrl }}" style="color:#ece3d3;">Download from the enquiry in admin</a>{% endif %}
+    </td></tr>
+</table>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

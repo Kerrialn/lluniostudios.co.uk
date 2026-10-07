@@ -14,7 +14,7 @@
 {% set basketCount = cart_item_count() %}
 {% set items = [
     { label: 'Lighting Designs', route: 'lighting_designs', active: currentRoute in ['lighting_designs', 'basket_request', 'reserve_received'] },
-    { label: 'Bespoke Commissions', route: 'commissions', active: currentRoute == 'commissions' },
+    { label: 'Bespoke Commissions', route: 'commissions', active: currentRoute in ['commissions', 'commissions_received'] },
     { label: 'The Workshop', route: 'workshop', active: currentRoute == 'workshop' },
     { label: basketCount > 0 ? 'Basket (' ~ basketCount ~ ')' : 'Basket', route: 'cart', active: currentRoute starts with 'cart' },
 ] %}

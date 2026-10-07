@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 9.2 committed; 9.3 in progress).
+Last updated: 7 October 2026 (Step 9 done; the full browser run for 9.2 and 9.3 is due before Step 10 starts).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Nothing has been pushed yet. Never push to `main` or merge anything unless asked. To push: `git push -u origin symfony-7.4-upgrade design-foundation`.
-- **Next step:** Step 9 (Bespoke Commissions). See "Steps" below.
+- **Next step:** first the deferred full browser run for 9.2 and 9.3 (`node tests/browser/run-all.mjs --clean`, when the machine is free), then Step 10 (checkout reshape). See "Steps" below.
 - **The prototype:** `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip`. Inside it:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Unzip and open it in Chrome. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (02 is built; see Step 8).
@@ -54,7 +54,7 @@ Last updated: 7 October 2026 (Step 9.2 committed; 9.3 in progress).
 | 7 | Configurator (`/lighting-designs`), 7.1–7.6 | Done | `574bf32`, `45c4635`, `6770e92`, `93a019f`, `27b1ae3`, `b024fde` |
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
 | — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
-| 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 email 03, notification and browser check) | In progress (9.1, 9.2 done; 9.3 next) | `73bdb27` (9.1) |
+| 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (full browser run for 9.2 and 9.3 deferred; due before Step 10) | `73bdb27` (9.1), `74ce773` (9.2) |
 | 10 | Checkout reshape (Stripe, gift, guest) | Not started | — |
 | 10b | Quotes in admin | Not started | — |
 | 11 | Order journey emails 01, 03–06 | Not started | — |
@@ -96,6 +96,7 @@ Last updated: 7 October 2026 (Step 9.2 committed; 9.3 in progress).
 | Commissions intro text | **No fade-in**: "Your bespoke design / in our signature brutalist style, / custom-built for you." is visible on load in its staggered line positions | Decided 7 October 2026; the prototype matches (its three lines are always fully visible). |
 | Commission required fields | Home: name, email, preferred contact, idea; phone too when Phone is chosen. Project: company, contact name, email, project type, location & schedule; the rest optional, uploads included | Decided 7 October 2026. **Project Type starts empty ("Please choose") and is required**, so nothing is pre-selected (the prototype starts on High-End Residential). |
 | Email 03 contact line | Home: "by email" or "by phone", as chosen; Project: "by email" | Decided 7 October 2026. |
+| Thank-you pages | **"Reservation received" and "Commission submitted" laid out like the site's other text pages** (Contact, Terms): heading ("Reservation Received" / "Commission Submitted"), then the prototype's message under a rule in 15px muted text, then "Confirmation has been sent to the email address provided." (wording decided 7 October 2026) **No reference numbers on these pages** (they are in the confirmation emails). | Decided 7 October 2026; shared template `templates/partials/_received.html.twig`. Differs from the prototype's centred message screen. |
 | Browser check output | **`var/browser-checks/` in the project** (ignored by git) | Decided 7 October 2026: screenshots and saved emails stay inside the project, not the system temp folder (`OUT_DIR` in `tests/browser/lib.mjs`). |
 | Commission details | Reference `LC-YYYYMMDD-XXXXXX` (like requests' `LR-…`); admin statuses New / Contacted / Closed; a hidden spam-trap field and a limit on repeat sends | Defaults accepted 7 October 2026. |
 
@@ -125,7 +126,7 @@ One line per Add to Basket (no merging), per-lamp configurations (`cart_item_opt
 ### Step 8: Reserve Your Design (done, `44b4408`)
 - `/reserve` (`ReserveController`, `templates/reserve/`): the prototype's Reserve page. Carries every basket lamp plus the lamp being configured (held in the session by `DesignRequestLamps` when the configurator or the old product page sends someone to Reserve; an edited line is replaced, not duplicated). The basket's own link (`/reserve?basket=1`) sends just the basket.
 - Fields as the prototype; "Custom Details" (one box) appears when any lamp has any Custom choice.
-- On sending: a `DesignRequest` (status New; lamps snapshotted as `DesignRequestItem`, like order lines) is saved with no payment, the basket is emptied, "Reservation received" is shown (with the request number), email 02 goes to the customer and a notification to `STUDIO_NOTIFICATION_EMAIL` (reply goes to the customer).
+- On sending: a `DesignRequest` (status New; lamps snapshotted as `DesignRequestItem`, like order lines) is saved with no payment, the basket is emptied, "Reservation received" is shown (restyled in 9.3 like the site's text pages, with "Confirmation has been sent to the email address provided." and no request number), email 02 goes to the customer and a notification to `STUDIO_NOTIFICATION_EMAIL` (reply goes to the customer).
 - Email 02 (`templates/email/request/received.html.twig`): the design's template with "The Pigment" and "Dorset Studio". Its opening sentence (`RequestReceivedCopy`) depends on why the design was reserved:
   1. Custom option only: "Your design includes a custom option, so we'll be in touch to develop it with you and confirm the details before anything is cast."
   2. More than two lamps only: "Your order contains more than two lamps, so we'll be in touch to confirm lead time according to our casting schedule."
@@ -147,7 +148,7 @@ One line per Add to Basket (no merging), per-lamp configurations (`cart_item_opt
 - Browser check `old-shop-redirects.mjs` replaces `product-page-and-basket.mjs`. The purchase-route notes it checked on the product page are covered by `configurator-add-to-basket.mjs`; its basket checks (2-lamp limit, over-limit basket, checkout bounce) are kept, filling the basket through the configurator.
 - To undo: revert the commit (nothing in the database changes).
 
-### Step 9: Bespoke Commissions (in progress)
+### Step 9: Bespoke Commissions (done; full browser run for 9.2 and 9.3 pending)
 Two forms (Home: name, email, phone, preferred contact, idea, files; Project: company, contact, email, phone, project type, location & schedule, project, integration, files), an enquiry record and admin list, "Commission submitted" page (prototype message), email 03 (design template), notification to `STUDIO_NOTIFICATION_EMAIL`. Decisions are in the table above (uploads, files, hero photos, intro text, required fields, email 03 line).
 - **9.1 (done):** `/bespoke-commissions` (`CommissionController`, `templates/commissions/`, `commission_controller.js`; forms `CommissionHomeForm`, `CommissionProjectForm`, shared `CommissionFields`).
   - Hero: the eight photos cross-fading every 5 seconds (`slideshow`), the title visible on load in its staggered positions, "Scroll to begin", reveal on first interaction (`hero-reveal`). Matched to the prototype by measurement (`tests/browser/compare/commissions.mjs`).
@@ -168,7 +169,11 @@ Two forms (Home: name, email, phone, preferred contact, idea, files; Project: co
   - After a complete enquiry the page still returns to the form; the "Commission submitted" page and emails come in 9.3.
   - Browser check `commissions-saving.mjs`; `clean-up.mjs` also removes test enquiries and their files.
   - Committed without a final clean full browser run, at your request (7 October 2026), because the machine was busy ingesting video (EditAssist). The last full run passed 16 of 17 (the one failure: Chrome didn't start; that check passed on its own); the run before had two pages not finish loading in time (both passed on their own). The full run is to be repeated when the machine is free, before 9.3 is committed.
-- **9.3:** "Commission submitted" page, email 03, studio notification, browser check.
+- **9.3 (done; final full browser run deferred, see below):** finishing an enquiry.
+  - "Commission submitted" (`/bespoke-commissions/received`): heading "Commission Submitted", the prototype's message for the form used (Home: "Your vision is in our hands. …"; Project: "We are reviewing the architectural scope and structural parameters …") and "Confirmation has been sent to the email address provided.", laid out like the Contact page; no reference number. "Reservation received" restyled the same way (heading "Reservation Received", same confirmation line, request number removed). Both use `templates/partials/_received.html.twig`. A spam-trapped enquiry sees the same page (nothing saved or sent).
+  - Email 03 (`templates/email/commission/received.html.twig`, subject "Your commission enquiry" as the design's title): "Dear <name>", "We'll be in touch by phone/email …" as decided, the enquiry reference, the commission type ("For Your Home" / "For Your Project"), "Dorset Studio"; no studio phone line until question 18 is answered.
+  - Studio notification to `STUDIO_NOTIFICATION_EMAIL` ("New commission enquiry LC-… from <name or company>"): every detail, the file names and sizes (not attached) and a link to the enquiry in admin; replies go to the customer. A mail problem is logged and never stops the enquiry being saved.
+  - Unit test `tests/Form/CommissionFieldsTest.php` (the upload rules). Browser checks extended (`commissions-saving.mjs`: the page and its layout against Contact, email 03 for both forms, the notification; `reserve.mjs`: the restyled page, request number now read from the database; `commissions.mjs`; `clean-up.mjs` removes the test notifications). At your request (7 October 2026, machine busy ingesting video), only the unit tests, phpstan, code style and the relevant browser checks (`commissions-saving.mjs`, `reserve.mjs`, both passing) were run while building; 9.3 was committed without the full browser run at your request (7 October 2026: the machine was busy ingesting video and couldn't be paused). **The full browser run for 9.2 and 9.3 must be done before Step 10 starts.** Under load, `reserve.mjs` can fail at its first page ("Reserve Your Design opens the request form") because it waits a fixed time; it passes when re-run.
 
 ### Step 10: Checkout reshape (not started; highest risk: payments)
 - One Card Payment page: contact, delivery address (DPD character limits: name, company, address lines, town and county 35; postcode 8; notes 50; phone 15, to confirm with DPD), gift fields, billing address ("same as delivery"), Stripe card box, summary, "Pay £X".

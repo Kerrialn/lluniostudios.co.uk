@@ -1,0 +1,17 @@
+{#
+    "Thank you" pages after a form is sent ("Reservation received",
+    "Commission submitted"), laid out like the site's other text pages
+    (Contact, Terms & Conditions): heading, then the message under a rule.
+    The reference number is in the confirmation email, not here.
+
+    Options:
+      heading  the page heading
+      message  the prototype's message for this page
+#}
+<div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
+    <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">{{ heading }}</h1>
+    <div class="flex flex-col gap-3 border-t border-ll-line pt-4 text-[15px] leading-relaxed text-ll-mute">
+        <p>{{ message }}</p>
+        <p>Confirmation has been sent to the email address provided.</p>
+    </div>
+</div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\CommissionEnquiry;
 use App\Entity\DesignRequest;
 use App\Entity\NewsletterSubscriber;
 use App\Entity\Order;
@@ -65,6 +66,42 @@ final readonly class EmailService
             ],
         );
         $email->replyTo(new Address($designRequest->getEmail(), $designRequest->getFullName()));
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * Email 03 (Site v4 design): the customer's "Your idea has arrived".
+     */
+    public function sendCommissionReceivedEmail(CommissionEnquiry $enquiry): void
+    {
+        $this->send(
+            subject: 'Your commission enquiry',
+            template: '/email/commission/received.html.twig',
+            email: $enquiry->getEmail(),
+            name: $enquiry->getName(),
+            context: [
+                'enquiry' => $enquiry,
+            ],
+        );
+    }
+
+    /**
+     * Tells the studio a commission enquiry has arrived, listing any files
+     * (not attached; downloaded from admin). Replies go to the customer.
+     */
+    public function sendCommissionNotificationEmail(CommissionEnquiry $enquiry): void
+    {
+        $email = $this->compose(
+            subject: 'New commission enquiry ' . $enquiry->getEnquiryNumber() . ' from ' . ($enquiry->getCompany() ?? $enquiry->getName()),
+            template: '/email/commission/notification.html.twig',
+            email: $this->studioNotificationEmail,
+            name: 'Llunio Studios',
+            context: [
+                'enquiry' => $enquiry,
+            ],
+        );
+        $email->replyTo(new Address($enquiry->getEmail(), $enquiry->getName()));
 
         $this->mailer->send($email);
     }

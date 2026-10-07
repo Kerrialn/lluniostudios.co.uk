@@ -53,8 +53,8 @@ check('what was typed is kept', (await ev(`document.querySelector('[name="reserv
 // Send it
 await setField('email', 'ada.test@example.test'); await setField('deliveryAddress', '1 High Street\nWimborne\nBH21 1AA'); await setField('accessNotes', 'Two flights of stairs.'); await setField('customDetails', 'Warm grey, close to RAL 7044.');
 await submit(); p = await page();
-check('sending it shows "Reservation received"', p.path === '/reserve/received' && /Your design request has been received/.test(p.text) && /Request LR-\d{8}-[0-9A-F]{6}/.test(p.text), p.text.slice(0, 120));
-const number = (p.text.match(/LR-\d{8}-[0-9A-F]{6}/) || [])[0];
+check('sending it shows "Reservation received": heading, the message, the confirmation line, no request number', p.path === '/reserve/received' && /^Reservation Received/i.test(p.text) && /Your design request has been received/.test(p.text) && /Confirmation has been sent to the email address provided\./.test(p.text) && !/LR-\d/.test(p.text), p.text.slice(0, 160));
+const number = (sql(`select request_number from design_request where email = 'ada.test@example.test' order by created_at desc limit 1`).match(/LR-\d{8}-[0-9A-F]{6}/) || [])[0];
 check('one request saved', requests() === before + 1);
 const row = sql(`select status, full_name, email, phone, access_notes, custom_details, (select count(*) from design_request_item i where i.design_request_id = r.id) as items, (select sum(quantity) from design_request_item i where i.design_request_id = r.id) as lamps from design_request r where request_number = '${number}'`);
 check('saved as New with the details and both lamps', /\bnew\b/.test(row) && /Ada Test/.test(row) && /ada\.test@example\.test/.test(row) && /07700 900123/.test(row) && /Two flights of stairs\./.test(row) && /RAL 7044/.test(row) && /\b2\s+2\s*$/m.test(row.trim().split('\n').slice(-2, -1)[0] || ''), row.replace(/\s+/g, ' ').slice(0, 300));

@@ -136,6 +136,6 @@ try {
     await go(BASE_URL + '/bespoke-commissions?for=home');
     await ev(`(() => { const f = document.querySelector('[data-client=home] form'); f.querySelector('[name="commission_home[name]"]').value = 'Ada Test'; f.querySelector('[name="commission_home[email]"]').value = 'ada.test@example.test'; f.querySelector('[value=email]').click(); f.querySelector('textarea').value = 'A lamp for the hall.'; })()`);
     await submit('home');
-    check('a complete Home enquiry is accepted', (await ev('location.pathname + location.search')) === '/bespoke-commissions?for=home' && (await state()).errors.length === 0);
+    check('a complete Home enquiry is accepted', (await ev('location.pathname')) === '/bespoke-commissions/received');
     summary();
 } finally { b.close(); }

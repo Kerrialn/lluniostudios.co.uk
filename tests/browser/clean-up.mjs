@@ -4,7 +4,7 @@
 // - requests and Bespoke Commissions enquiries from the test customer (any
 //   address @example.test), with the enquiries' stored files;
 // - Mailpit emails to @example.test, the studio notifications for those
-//   requests, and sign-in codes, sent since the given time.
+//   requests and enquiries, and sign-in codes, sent since the given time.
 //   node tests/browser/clean-up.mjs "2026-10-07 08:00"   (UTC, as stored)
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,6 +26,7 @@ export async function cleanUp(since) {
     const ids = [
         ...(await search('to:example.test')).filter(after),
         ...(await search('subject:"New request LR-"')).filter((m) => after(m) && /Ada Test/.test(m.Subject)),
+        ...(await search('subject:"New commission enquiry LC-"')).filter((m) => after(m) && /Ada Test|Test Architects Ltd/.test(m.Subject)),
         ...(await search('subject:"sign-in code"')).filter(after),
     ].map((m) => m.ID);
     if (ids.length) {

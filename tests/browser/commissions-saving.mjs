@@ -1,11 +1,13 @@
-// Bespoke Commissions (Step 9.2): enquiries are saved with their files kept
-// privately; the server's own checks (file type, 50MB a file, 100MB in
+// Bespoke Commissions (Steps 9.2 and 9.3): enquiries are saved with their
+// files kept privately, end on "Commission submitted" (each form's message
+// and the enquiry reference), and send email 03 to the customer and a
+// notification to the studio; the server's own checks (file type, 50MB a file, 100MB in
 // total, the phone rule) with the page's checks bypassed; the spam trap; the
 // limit of 5 enquiries an hour; and admin: the Commissions list, an
 // enquiry's details, file downloads, and deleting an enquiry deleting its
 // files. Signs in to admin with the local admin account (code from Mailpit).
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, PROJECT_DIR } from './lib.mjs';
 
@@ -18,6 +20,9 @@ const b = await open(1440, 900, 'commissions-saving', { mobile: false });
 const { send, ev } = b;
 const dir = out('commission-saving-files'); mkdirSync(dir, { recursive: true });
 const make = (name, mb) => { execSync(`rm -f "${dir}/${name}" && truncate -s ${mb}M "${dir}/${name}"`); return `${dir}/${name}`; };
+const mailpit = async (query) => (await (await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent(query)}`)).json()).messages || [];
+const mailBody = async (id) => (await fetch(`${MAILPIT_URL}/api/v1/message/${id}`)).json();
+const received = () => ev(`({ path: location.pathname, text: document.querySelector('main').innerText.trim(), nav: [...document.querySelectorAll('#navbar a')].find(a => /Bespoke Commissions/i.test(a.textContent))?.getAttribute('aria-current') })`);
 const count = (where) => Number(sql(`select count(*) from commission_enquiry where ${where}`).match(/\d+/g).pop());
 try {
     resetLimit();
@@ -45,6 +50,27 @@ try {
     let row = sql(`select enquiry_number, client, status, name, phone, contact_method, idea, company from commission_enquiry where email = 'ada.test@example.test' order by created_at desc limit 1`);
     check('with its details: LC- number, Home, New, name, phone, Phone chosen, idea', /LC-\d{8}-[0-9A-F]{6}/.test(row) && /\bhome\b/.test(row) && /\bnew\b/.test(row) && /07700 900123/.test(row) && /\bphone\b/.test(row) && /stairwell/.test(row), row);
     const homeNumber = row.match(/LC-\d{8}-[0-9A-F]{6}/)?.[0];
+    let page = await received();
+    check('"Commission submitted": heading, the Home message, the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.replace(/\s+/g, ' ') === "COMMISSION SUBMITTED Your vision is in our hands. We are reviewing your space's requirements and will contact you within two working days to begin shaping your design. Confirmation has been sent to the email address provided." && page.nav === 'page', JSON.stringify(page));
+
+    // Emails for the Home enquiry.
+    await sleep(800);
+    let toCustomer = (await mailpit(`to:ada.test@example.test subject:"Your commission enquiry"`)).find((m) => new Date(m.Created) > new Date(Date.now() - 120000));
+    let toStudio = (await mailpit(`to:lluniostudios@gmail.com subject:"${homeNumber}"`))[0];
+    check('email 03 sent to the customer, "Your commission enquiry"', !!toCustomer);
+    if (toCustomer) {
+        const m = await mailBody(toCustomer.ID);
+        check('email 03: "Dear Ada Test", "by phone" (as chosen), the reference, "For Your Home"', m.HTML.includes('Dear Ada Test, thank you for telling us about your idea.') && m.HTML.includes('in touch by phone to talk it through together') && m.HTML.includes(homeNumber) && m.HTML.includes('For Your Home'));
+        check('email 03: Dorset Studio, never Bournemouth; images hosted on the site', /Dorset Studio/.test(m.HTML) && !/Bournemouth/.test(m.HTML) && m.HTML.includes(BASE_URL + '/images/email/header-montage.jpg'));
+        writeFileSync(out('email-03-home.html'), m.HTML);
+    }
+    check('notification sent to lluniostudios@gmail.com', toStudio?.Subject === `New commission enquiry ${homeNumber} from Ada Test`, toStudio?.Subject);
+    if (toStudio) {
+        const m = await mailBody(toStudio.ID);
+        check('notification: replies go to the customer', (m.ReplyTo || []).some((r) => r.Address === 'ada.test@example.test'));
+        check('notification: every detail, the file names (not attached) and a link to the enquiry in admin', /07700 900123/.test(m.HTML) && /stairwell/.test(m.HTML) && /Hall photo\.jpg \(2\.0MB\)/.test(m.HTML) && /sketch\.pdf \(1\.0MB\)/.test(m.HTML) && (m.Attachments || []).length === 0 && /\/admin\/commission-enquiry\//.test(m.HTML));
+        writeFileSync(out('email-commission-notification.html'), m.HTML);
+    }
     let files = sql(`select f.original_name, f.size, f.stored_name from commission_enquiry_file f join commission_enquiry e on e.id = f.enquiry_id where e.enquiry_number = '${homeNumber}' order by position`);
     const stored = [...files.matchAll(/([0-9a-f]{32}\.(?:jpg|pdf))/g)].map((m) => m[1]);
     check('both files recorded, with the customer\'s names and sizes', /Hall photo\.jpg\s+2097152/.test(files) && /sketch\.pdf\s+1048576/.test(files) && stored.length === 2, files);
@@ -60,6 +86,22 @@ try {
     row = sql(`select client, name, company, project_type, location, project, integration, phone from commission_enquiry where email = 'ada.test@example.test' order by created_at desc limit 1`);
     check('a Project enquiry is saved with its details (a 30MB file accepted)', /\bproject\b/.test(row) && /Test Architects Ltd/.test(row) && /Hospitality/.test(row) && /Bath, installing spring 2027/.test(row) && /DALI dimming/.test(row), row);
     check('its file is recorded', /Lobby elevations\.dwg\s+31457280/.test(sql(`select f.original_name, f.size from commission_enquiry_file f join commission_enquiry e on e.id = f.enquiry_id order by e.created_at desc limit 1`)));
+    const projectNumber = sql(`select enquiry_number from commission_enquiry where client = 'project' order by created_at desc limit 1`).match(/LC-\d{8}-[0-9A-F]{6}/)?.[0];
+    page = await received();
+    check('"Commission submitted": the Project message and the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.includes('We are reviewing the architectural scope and structural parameters and will contact you within two working days to begin shaping your design.') && page.text.endsWith('Confirmation has been sent to the email address provided.') && !/LC-\d/.test(page.text), JSON.stringify(page));
+    const layout = await ev(`(() => { const h = document.querySelector('main h1'); const p = document.querySelector('main p'); const c = h.parentElement; const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(c).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(p).fontSize, pColour: getComputedStyle(p).color, rule: getComputedStyle(p.parentElement).borderTopStyle }; })()`);
+    await go(BASE_URL + '/contact');
+    const contact = await ev(`(() => { const h = document.querySelector('main h1'); const a = document.querySelector('main address'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(a).fontSize, pColour: getComputedStyle(a).color, rule: getComputedStyle(a).borderTopStyle }; })()`);
+    check('laid out like the Contact page (column, heading, text size and colour, rule)', JSON.stringify(layout) === JSON.stringify(contact), JSON.stringify({ layout, contact }));
+    await sleep(800);
+    toCustomer = (await mailpit(`to:ada.test@example.test subject:"Your commission enquiry"`)).find((m) => new Date(m.Created) > new Date(Date.now() - 60000));
+    if (toCustomer) {
+        const m = await mailBody(toCustomer.ID);
+        check('email 03 for a Project: "by email", the reference, "For Your Project"', m.HTML.includes('in touch by email to talk it through together') && m.HTML.includes(projectNumber) && m.HTML.includes('For Your Project'));
+        writeFileSync(out('email-03-project.html'), m.HTML);
+    } else check('email 03 for a Project sent', false);
+    toStudio = (await mailpit(`to:lluniostudios@gmail.com subject:"${projectNumber}"`))[0];
+    check('notification for a Project names the company', toStudio?.Subject === `New commission enquiry ${projectNumber} from Test Architects Ltd`, toStudio?.Subject);
 
     // The server's own checks (the page's checks bypassed).
     const saved = count('true');
@@ -86,7 +128,9 @@ try {
     await go(BASE_URL + '/bespoke-commissions?for=home');
     await fill('home', { ...home, website: 'http://spam.example' });
     await submit('home');
-    check('an enquiry with the hidden field filled is not saved', count('true') === saved && (await errors()).length === 0);
+    page = await received();
+    check('an enquiry with the hidden field filled is thanked but not saved', count('true') === saved && page.path === '/bespoke-commissions/received', JSON.stringify(page));
+    await go(BASE_URL + '/bespoke-commissions?for=home');
     check('the hidden field is off screen and hidden from screen readers', await ev(`(() => { const i = document.querySelector('[name="commission_home[website]"]'); const w = i.closest('[aria-hidden=true]'); return !!w && i.getBoundingClientRect().right < 0 && i.tabIndex === -1; })()`));
 
     // At most 5 enquiries an hour (2 sent above).

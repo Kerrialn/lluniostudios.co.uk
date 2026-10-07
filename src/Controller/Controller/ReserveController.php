@@ -130,8 +130,6 @@ final class ReserveController extends AbstractController
             return $this->redirectToRoute('lighting_designs');
         }
 
-        return $this->render('reserve/received.html.twig', [
-            'requestNumber' => $requestNumber,
-        ]);
+        return $this->render('reserve/received.html.twig');
     }
 }
