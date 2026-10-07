@@ -4,7 +4,7 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 10.2 committed; 10.3 in progress).
+Last updated: 7 October 2026 (Step 10.3 committed; 10.4 in progress).
 
 ---
 
@@ -55,7 +55,7 @@ Last updated: 7 October 2026 (Step 10.2 committed; 10.3 in progress).
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
 | — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
 | 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (deferred full browser run for 9.2 and 9.3 done 7 October 2026: 17 of 17 passed) | `73bdb27` (9.1), `74ce773` (9.2), `2a3e0f9` (9.3) |
-| 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | In progress (10.1, 10.2 done; 10.3 next) | `c1bdd31` (10.1) |
+| 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | In progress (10.1–10.3 done; 10.4 next) | `c1bdd31` (10.1), `8b54643` (10.2) |
 | 10b | Quotes in admin | Not started | — |
 | 11 | Order journey emails 01, 03–06 | Not started | — |
 | 12 | Launch checks | Not started | — |
@@ -193,12 +193,19 @@ Decisions of 7 October 2026 are in the table above (Accounts and sign-in, "View 
   - Built: `/checkout` (`CheckoutController::checkout`, `CardPaymentForm`, `templates/checkout/index.html.twig`, `checkout_controller.js`) replaces the old address and delivery steps (removed: `AddressForm`, `checkout/address`, `checkout/shipping`, `checkout/_summary`). Matched to the prototype by measurement (`tests/browser/compare/card-payment.mjs`): identical on desktop apart from the "Card details" section (10.3) and the decided wording ("DPD Next Day Delivery"; sizes without abbreviations).
   - The delivery line, total and button follow the postcode as it is typed (`/checkout/delivery`): "Calculated from postcode", then the DPD price and "Pay £X". Required fields left empty are outlined in cream with the prototype's one message; other problems (bad email, phone or postcode) say so under the field.
   - Outside the UK mainland (`DeliveryArea`, unit-tested; the Highlands and Islands districts follow DPD's usual list, to confirm with DPD): "Quoted individually", "Reserve Your Design" and the note "This address is outside the UK mainland, delivery will be quoted for individually. Reserve now to secure your casting slot." (wording decided 7 October 2026). Sending goes to Reserve Your Design with the basket and the details filled in (address lines, notes; for a gift, "Gift · Arrive by …" and the recipient's mobile in the notes).
-  - A gift: "Recipient's full name *", "Recipient's mobile *" (used as the delivery phone for DPD; the customer's phone is kept for updates) and "Gift · Arrive by [date]" in the summary. A gift date that has become too soon sends the customer back to the basket.
+  - A gift: "Recipient's full name *", "Recipient's mobile (for delivery) *" (used as the delivery phone for DPD; the customer's "Your Mobile (for order updates) *" is kept for updates; both labels decided 7 October 2026 to make the difference obvious) and "Gift · Arrive by [date]" in the summary. A gift date that has become too soon sends the customer back to the basket.
   - Until 10.3: "Pay" saves the order (status awaiting payment, with the contact phone, delivery instructions, company and any billing address) and continues to the existing separate payment page (old styling), which is now open to the visitor who started the order without signing in. Orders are not yet linked to an account (10.3).
   - Migration `Version20261007190000` (address company; order billing address, contact phone, delivery notes; undo with `doctrine:migrations:migrate prev`, which drops those details from any orders placed since).
   - Browser check `checkout-page.mjs` (desktop and phone); `clean-up.mjs` also removes test orders.
   - Basket brought in line with the prototype (decided 7 October 2026): each line's title is "Lumen Forma" with a separate "Size" row (e.g. Size: Gallery), as on the Card Payment summary (it showed "Lumen Forma Gallery" with no Size row since Step 6). Browser checks that read the basket now look for the Size row.
-- **10.3 Paying by card (Stripe test mode):** Stripe's secure card box in "Card details", the order created and paid, every order linked automatically to the account for its email (created quietly if new; no sign-in asked).
+- **10.3 Paying by card (Stripe test mode) (done):** Stripe's secure card box in "Card details", the order created and paid, every order linked automatically to the account for its email (created quietly if new; no sign-in asked).
+  - "Card details" as the prototype: "Name on card" (our field) and Stripe's own boxes for the card number, expiry and security code, styled like the page's fields with the prototype's placeholders (Stripe's "Link" saved-card button switched off). Card details go straight to Stripe. Stripe's messages in British English.
+  - "Pay" sends the form to the server first (JSON). Anything missing (card included) is outlined with the page's one message and nothing is saved. Once complete: the order is saved (linked to the account for its email via `OrderAccounts`, created quietly if new), a card-only Stripe payment is created for it, and the page confirms it with the card (Stripe's 3D Secure pop-up if the bank asks). A declined card shows Stripe's message; retrying reuses the same order while the basket, gift date and postcode are unchanged, otherwise the earlier unpaid order is cancelled (and its Stripe payment).
+  - The completion page asks Stripe whether the payment went through (works without the webhook, e.g. locally; the webhook still confirms too), marks the order paid (the existing confirmation email goes out), empties the basket and clears the gift. Still the old completion page until 10.5.
+  - The old separate payment page is now used only by Revolut (switched off; kept); its Stripe part and `stripe_checkout_controller.js` are removed. Without JavaScript the page says "Please turn on JavaScript in your browser to pay by card."
+  - No database changes. To undo: revert the commit.
+  - Labels: "Your Mobile (for order updates) *" for the customer's phone and, for a gift, "Recipient's mobile (for delivery) *" (decided 7 October 2026).
+  - Browser check `checkout-pay.mjs` (desktop and phone; Stripe test cards, typed into Stripe's frames); `checkout-page.mjs` now covers the page and its messages only; `clean-up.mjs` also removes test accounts (`@example.test`).
 - **10.4 Apple Pay and Google Pay:** Stripe's wallet buttons at the top of the Card Payment page; the wallet's address goes through the same UK mainland rule (outside it: the request route instead of payment).
 - **10.5 Confirmation and gift details:** "Order & Slot Confirmed" laid out like the other thank-you pages ("Added to Studio Casting Schedule", "Gift · Arrive by [date]" if a gift, "Confirmation has been sent to the email address provided."); gift details saved on the order and shown in admin (in emails from Step 11).
 - **10.6 Sign-in and order history:** the sign-in email gets a one-click "Sign in" button with the 6-digit code underneath as a backup; `/account` (order history) restyled to match the design; a small "Your orders" link on the Contact page instead of the footer's "Sign in".

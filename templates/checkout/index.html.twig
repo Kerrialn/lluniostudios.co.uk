@@ -5,8 +5,10 @@
     billing address and the order summary on one page, with no sign-in.
     The DPD price follows the postcode as it is typed (checkout_controller.js
     asks /checkout/delivery); outside the UK mainland the button becomes
-    "Reserve Your Design" with a note. "Card details" (Stripe's card box)
-    comes with Step 10.3.
+    "Reserve Your Design" with a note. "Card details": the name is our own
+    field; the card number, expiry and security code are Stripe's secure
+    boxes, styled like the other fields (checkout_controller.js mounts them
+    and pays on the page).
 #}
 {% form_theme form 'form_div_layout.html.twig' %}
 {% block title %}Card Payment | Llunio Studios{% endblock %}
@@ -21,12 +23,12 @@
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
         <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Card Payment</h1>
 
-        {{ form_start(form, { attr: { class: 'flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start', novalidate: 'novalidate', 'data-controller': 'checkout', 'data-checkout-delivery-url-value': path('checkout_delivery') } }) }}
+        {{ form_start(form, { attr: { class: 'flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start', novalidate: 'novalidate', 'data-controller': 'checkout', 'data-checkout-delivery-url-value': path('checkout_delivery'), 'data-checkout-stripe-key-value': stripeKey, 'data-action': 'submit->checkout#pay' } }) }}
             <div class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-6">
                 <div class="{{ section }}">Contact</div>
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *' }) }}
-                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Phone (for delivery updates) *' }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order updates) *' }) }}
                 </div>
 
                 <div class="{{ section }}">Delivery address</div>
@@ -43,7 +45,7 @@
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.notes, label: 'Delivery instructions (optional)', wide: true }) }}
                     {% if form.recipientMobile is defined %}
-                        {{ include('checkout/_field.html.twig', { child: form.recipientMobile, label: "Recipient's mobile *" }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.recipientMobile, label: "Recipient's mobile (for delivery) *" }) }}
                     {% endif %}
                 </div>
 
@@ -63,6 +65,23 @@
                         {{ include('checkout/_field.html.twig', { child: form.billingCounty, label: 'County' }) }}
                         {{ include('checkout/_field.html.twig', { child: form.billingPostcode, label: 'Postcode *' }) }}
                     </div>
+                </div>
+
+                <div class="{{ section }}">Card details</div>
+                <div class="{{ grid }}">
+                    {{ include('checkout/_field.html.twig', { child: form.cardName, label: 'Name on card *', wide: true }) }}
+                    {% set cardBox = 'll-card-box w-full h-12 px-3.5 flex items-center border border-ll-mute text-[15px] leading-[1.5]' %}
+                    {% for box in [
+                        { target: 'cardNumber', label: 'Card number *', wide: true },
+                        { target: 'cardExpiry', label: 'Expiry (MM / YY) *', wide: false },
+                        { target: 'cardCvc', label: 'Security code (CVC) *', wide: false },
+                    ] %}
+                        <div class="flex flex-col gap-2 {{ box.wide ? 'col-[1/-1]' : '' }}">
+                            <span class="text-[14px]" id="{{ box.target }}-label">{{ box.label }}</span>
+                            <div class="{{ cardBox }}" data-checkout-target="{{ box.target }}" role="group" aria-labelledby="{{ box.target }}-label"></div>
+                            <span class="text-[12px] text-ll-ink" role="alert" hidden data-checkout-target="{{ box.target }}Error"></span>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -93,9 +112,8 @@
                     {% endif %}
                     <div class="flex justify-between gap-3 text-[15px] py-3 border-t border-ll-ink border-b border-b-ll-line"><span>Total</span><span class="text-right" data-checkout-target="total">{{ delivery.total }}</span></div>
                 </div>
-                {% if requiredMissing %}
-                    <div class="text-xs text-ll-ink" role="alert">{{ constant('App\\Form\\Form\\CardPaymentForm::REQUIRED_MESSAGE') }}</div>
-                {% endif %}
+                {# The prototype's one message for missing details, or a payment problem (e.g. a declined card). #}
+                <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" {{ requiredMissing or formErrors is not empty ? '' : 'hidden' }}>{{ requiredMissing ? constant('App\\Form\\Form\\CardPaymentForm::REQUIRED_MESSAGE') : formErrors|first }}</div>
                 <div class="text-xs text-ll-mute leading-[1.5]" data-checkout-target="outsideNote" {{ delivery.state == 'outside' ? '' : 'hidden' }}>{{ constant('App\\Shipping\\DeliveryArea::OUTSIDE_NOTE') }}</div>
                 <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">{{ delivery.button }}</button>
                 <div class="text-xs text-ll-mute text-center leading-[1.5]" data-checkout-target="secure" {{ delivery.state == 'outside' ? 'hidden' : '' }}>Payment is processed securely by our payment provider. Your card details are never stored by Llunio.</div>

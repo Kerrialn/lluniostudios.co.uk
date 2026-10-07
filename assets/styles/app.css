@@ -549,3 +549,11 @@
 
 /* Lock page scroll while the full-screen mobile menu is open. */
 html.ll-menu-open { overflow: hidden; }
+
+/* Card Payment: Stripe's card boxes (card number, expiry, security code)
+   look like the page's other fields: cream outline when focused, missing or
+   wrong (checkout_controller.js). The box itself holds Stripe's frame. */
+.ll-card-box { transition: border-color .15s; }
+.ll-card-box > * { width: 100%; }
+.ll-card-box.StripeElement--focus,
+.ll-card-box.is-wrong { border-color: var(--color-ll-ink); }

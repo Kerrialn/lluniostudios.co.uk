@@ -50,22 +50,27 @@ final readonly class StripePaymentClient
     /**
      * Create a PaymentIntent. Amount is in minor units (pence for GBP).
      *
-     * We deliberately omit `payment_method_types` so Stripe uses dynamic payment
-     * methods — card, Apple Pay and Google Pay are enabled/ranked from the
-     * Dashboard with no code changes.
+     * By default Stripe's dynamic payment methods are used (enabled and ranked
+     * from the Dashboard). $cardOnly limits it to cards, as on the Card
+     * Payment page (Apple Pay and Google Pay pay by card too).
      */
-    public function createPaymentIntent(int $amountMinor, string $currency, string $merchantOrderRef, ?string $email = null): StripePaymentIntentResult
+    public function createPaymentIntent(int $amountMinor, string $currency, string $merchantOrderRef, ?string $email = null, bool $cardOnly = false): StripePaymentIntentResult
     {
         $payload = [
             'amount' => $amountMinor,
             'currency' => strtolower($currency),
-            'automatic_payment_methods' => [
-                'enabled' => true,
-            ],
             'metadata' => [
                 'order_number' => $merchantOrderRef,
             ],
         ];
+        // Card only for the Card Payment page (Apple Pay and Google Pay are cards too).
+        if ($cardOnly) {
+            $payload['payment_method_types'] = ['card'];
+        } else {
+            $payload['automatic_payment_methods'] = [
+                'enabled' => true,
+            ];
+        }
 
         if ($email !== null && $email !== '') {
             $payload['receipt_email'] = $email;
@@ -78,6 +83,33 @@ final readonly class StripePaymentClient
             clientSecret: (string) $intent->client_secret,
             status: (string) $intent->status,
         );
+    }
+
+    /**
+     * Where a PaymentIntent stands now (e.g. "succeeded", "processing",
+     * "requires_payment_method"), asked of Stripe directly.
+     */
+    public function retrievePaymentIntent(string $id): StripePaymentIntentResult
+    {
+        $intent = $this->client()->paymentIntents->retrieve($id);
+
+        return new StripePaymentIntentResult(
+            id: (string) $intent->id,
+            clientSecret: (string) $intent->client_secret,
+            status: (string) $intent->status,
+        );
+    }
+
+    /**
+     * Cancel a PaymentIntent that will no longer be used (e.g. the basket
+     * changed before paying). Already-finished intents are left alone.
+     */
+    public function cancelPaymentIntent(string $id): void
+    {
+        $intent = $this->client()->paymentIntents->retrieve($id);
+        if (\in_array((string) $intent->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
+            $this->client()->paymentIntents->cancel($id);
+        }
     }
 
     /**

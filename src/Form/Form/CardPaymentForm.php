@@ -112,6 +112,10 @@ final class CardPaymentForm extends AbstractType
             ]));
         }
 
+        // Card details: the name here; number, expiry and security code are
+        // Stripe's own secure boxes (never sent to this site).
+        $builder->add('cardName', TextType::class, $text(100, 'cc-name'));
+
         // The billing fields are checked only when "Same as delivery address" is unticked.
         $builder
             ->add('billingSame', CheckboxType::class, [

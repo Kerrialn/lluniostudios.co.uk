@@ -1,8 +1,11 @@
 // Prototype vs ours: the Card Payment page (one Gallery lamp, not a gift):
 // heading, section labels, every field's label and box, Country, the billing
 // tick, and the summary (rows, totals, button, secure line, Terms).
-// Expected differences: no "Card details" section yet (Stripe's card box
-// comes in 10.3); "DPD Next Day Delivery" for "UK Express Delivery (DPD)",
+// The card number, expiry and security code are Stripe's boxes on ours
+// (compared as boxes). Expected differences: "Your Mobile (for order updates)"
+// for "Phone (for delivery updates)" (decided, so its row shows as missing on
+// each side); "DPD Next Day Delivery" for
+// "UK Express Delivery (DPD)", sizes without abbreviations,
 // "Calculated from postcode" until one is typed (as the prototype's logic).
 //   PROTOTYPE_DIR=... node tests/browser/compare/card-payment.mjs 1440 900
 import { writeFileSync } from 'node:fs';
@@ -12,10 +15,11 @@ const b = await open(W, H, 'cmpcard' + W, { mobile: W < 900 });
 const probe = `(() => { const r = (e) => { if (!e) return null; const q = e.getBoundingClientRect(); const cs = getComputedStyle(e); return [Math.round(q.left), Math.round(q.top + scrollY), Math.round(q.width), Math.round(q.height), cs.fontSize, cs.lineHeight, cs.color, cs.borderTopColor]; };
   const own = (t, root = document) => [...root.querySelectorAll('h1, div, span, label, a, button')].find(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim() === t));
   const o = { h1: r(document.querySelector('h1')) };
-  for (const t of ['Contact', 'Delivery address', 'Billing address', 'Order summary', 'Subtotal', 'Total', 'Payment is processed securely by our payment provider. Your card details are never stored by Llunio.', 'Terms & Conditions']) o[t.slice(0, 18)] = r(own(t));
+  for (const t of ['Contact', 'Delivery address', 'Billing address', 'Card details', 'Order summary', 'Subtotal', 'Total', 'Payment is processed securely by our payment provider. Your card details are never stored by Llunio.', 'Terms & Conditions']) o[t.slice(0, 18)] = r(own(t));
   const country = own('Country'); o.country = r(country); o.countryBox = r(own('United Kingdom'));
   o.billTick = r(own('Same as delivery address'));
-  [...document.querySelectorAll('input:not([type=hidden]):not([type=checkbox])')].filter(i => i.getBoundingClientRect().width > 0 && !/card|cvc|expir|security/i.test((i.closest('label')?.textContent || ''))).forEach((i) => { const l = i.closest('label'); const name = (l?.querySelector('span')?.textContent || '').trim(); o['label: ' + name] = r(l?.querySelector('span')); o['field: ' + name] = r(i); });
+  [...document.querySelectorAll('input:not([type=hidden]):not([type=checkbox])')].filter(i => i.getBoundingClientRect().width > 0 && !i.closest('.ll-card-box')).forEach((i) => { const l = i.closest('label'); const name = (l?.querySelector('span')?.textContent || '').trim(); o['label: ' + name] = r(l?.querySelector('span')); o['field: ' + name] = r(i); });
+  document.querySelectorAll('.ll-card-box').forEach((box) => { const name = box.previousElementSibling.textContent.trim(); o['label: ' + name] = r(box.previousElementSibling); o['field: ' + name] = r(box); });
   const pay = [...document.querySelectorAll('div, button')].filter(e => /^Pay £/.test(e.textContent.trim()) && e.children.length === 0)[0]; o.pay = r(pay);
   return o; })()`;
 const shot = async (name) => { const h = await b.ev(`(document.querySelectorAll('[id^=sfwdt]').forEach(e => e.remove()), document.documentElement.scrollHeight)`); writeFileSync(out(`card-payment-${name}-${W}.png`), Buffer.from((await b.send('Page.captureScreenshot', { clip: { x: 0, y: 0, width: W, height: h, scale: 1 }, captureBeyondViewport: true })).result.data, 'base64')); };

@@ -16,18 +16,24 @@ use App\Payment\StripePaymentClient;
 use App\Repository\OrderRepository;
 use App\Service\BasketRules;
 use App\Service\CartResolver;
+use App\Service\OrderAccounts;
 use App\Service\OrderFactory;
+use App\Service\OrderProcessor;
 use App\Service\ShippingCalculator;
 use App\Shipping\DeliveryArea;
 use App\Shipping\ShippingQuote;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Throwable;
 
 /**
@@ -35,8 +41,11 @@ use Throwable;
  * contact, delivery and billing details on one page, never asking anyone to
  * sign in, and shows the DPD price for the postcode. Postcodes outside the UK
  * mainland go through "Reserve Your Design" instead, with the basket and the
- * address carried over. Until 10.3 adds the card box to that page, "Pay"
- * saves the order and continues to the separate payment page.
+ * address carried over. Paying (10.3): the page sends the form here first
+ * (JSON); once it is complete the order is saved (linked to the account for
+ * its email, created quietly if new), a Stripe payment is created for it and
+ * the page confirms it with the card typed into Stripe's own boxes. A retry
+ * after a declined card reuses the same order while the basket is unchanged.
  */
 class CheckoutController extends AbstractController
 {
@@ -46,12 +55,23 @@ class CheckoutController extends AbstractController
      */
     private const SESSION_ORDERS = 'checkout_orders';
 
+    /**
+     * The order being paid for: [order number, basket signature], so a retry
+     * (e.g. after a declined card) reuses it while the basket is unchanged.
+     */
+    private const SESSION_PENDING = 'checkout_pending';
+
+    public const NO_SCRIPT_MESSAGE = 'Please turn on JavaScript in your browser to pay by card.';
+
     public function __construct(
         private readonly CartResolver $cartResolver,
         private readonly BasketRules $basketRules,
         private readonly OrderRepository $orderRepository,
         private readonly ShippingCalculator $shippingCalculator,
         private readonly OrderFactory $orderFactory,
+        private readonly OrderAccounts $orderAccounts,
+        private readonly OrderProcessor $orderProcessor,
+        private readonly EntityManagerInterface $entityManager,
         private readonly GiftDate $giftDate,
         private readonly RevolutMerchantClient $revolutClient,
         private readonly StripePaymentClient $stripeClient,
@@ -98,16 +118,42 @@ class CheckoutController extends AbstractController
         ]);
         $form->handleRequest($request);
 
+        $asJson = str_contains((string) $request->headers->get('Accept'), 'application/json');
         if ($form->isSubmitted()) {
             /** @var array<string, mixed> $data */
             $data = $form->getData();
             $postcode = DeliveryArea::normalise((string) ($data['postcode'] ?? ''));
             if ($postcode !== null && ! DeliveryArea::isMainland($postcode)) {
-                return $this->reserveInstead($request, $data, $cart);
+                $response = $this->reserveInstead($request, $data, $cart);
+
+                return $asJson ? new JsonResponse([
+                    'status' => 'redirect',
+                    'url' => $response->getTargetUrl(),
+                ]) : $response;
             }
 
-            if ($form->isValid() && $postcode !== null) {
-                return $this->placeOrder($request, $cart, $data, $postcode);
+            $valid = $form->isValid() && $postcode !== null;
+            if ($asJson) {
+                // The page's "Pay": complete details and card first, then the payment.
+                $cardReady = $request->request->getBoolean('card_ready');
+                if (! $valid || ! $cardReady) {
+                    return new JsonResponse([
+                        'status' => 'invalid',
+                        'errors' => $this->fieldErrors($form),
+                        'requiredMissing' => $this->requiredMissing($form) || ! $cardReady,
+                    ], Response::HTTP_UNPROCESSABLE_ENTITY);
+                }
+
+                return $this->startCardPayment($request, $cart, $data, (string) $postcode);
+            }
+
+            if ($valid) {
+                if (! $this->usesStripe()) {
+                    return $this->payWithRevolut($request, $this->createOrder($request, $cart, $data, (string) $postcode));
+                }
+
+                // Paying by card needs the page's script (Stripe's card boxes).
+                $form->addError(new FormError(self::NO_SCRIPT_MESSAGE));
             }
         }
 
@@ -119,6 +165,8 @@ class CheckoutController extends AbstractController
             'giftArriveBy' => $cart->getGiftArriveBy(),
             'delivery' => $this->deliveryFor($cart, (string) $form->get('postcode')->getData()),
             'requiredMissing' => $this->requiredMissing($form),
+            'formErrors' => array_map(static fn ($error): string => $error->getMessage(), iterator_to_array($form->getErrors())),
+            'stripeKey' => $this->usesStripe() && $this->stripeClient->isConfigured() ? $this->stripeClient->getPublishableKey() : '',
         ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
@@ -178,21 +226,37 @@ class CheckoutController extends AbstractController
     }
 
     /**
-     * Save the order with every detail, then continue to payment.
+     * Save the order with every detail, linked to the account for its email.
      *
      * @param array<string, mixed> $data
      */
-    private function placeOrder(Request $request, Cart $cart, array $data, string $postcode): Response
+    private function createOrder(Request $request, Cart $cart, array $data, string $postcode): Order
     {
-        $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $quote = $this->quote($cart, $postcode);
         if (! $quote instanceof ShippingQuote) {
-            $this->addFlash('error', 'We couldn\'t work out delivery for this order. Please try again, or contact us.');
-
-            return $this->redirectToRoute('checkout');
+            throw new \RuntimeException('No delivery quote for ' . $postcode);
         }
 
-        $user = $this->getUser();
+        $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
+        $email = strtolower((string) $value('email'));
+        // The customer's own name: on the card for a gift (the delivery name is the recipient's).
+        $account = $this->orderAccounts->accountFor($email, $cart->isGift() ? $value('cardName') : $value('name'));
+
+        $order = $this->orderFactory->createFromCart($cart, $account, $email, $quote, $this->deliveryAddress($cart, $data, $postcode, $account));
+        $this->applyDetails($order, $data);
+        $order->setStatus(OrderStatus::AWAITING_PAYMENT);
+        $this->orderRepository->save($order, true);
+        $request->getSession()->set(self::SESSION_ORDERS, array_values(array_unique([...$this->sessionOrders($request), $order->getOrderNumber()])));
+
+        return $order;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function deliveryAddress(Cart $cart, array $data, string $postcode, User $owner): Address
+    {
+        $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $delivery = new Address();
         $delivery->setRecipientName($value('name'));
         $delivery->setCompany($value('company'));
@@ -204,11 +268,22 @@ class CheckoutController extends AbstractController
         $delivery->setCountry('GB');
         // DPD texts the delivery's phone: the recipient's for a gift.
         $delivery->setPhone($cart->isGift() ? $value('recipientMobile') : $value('phone'));
-        $delivery->setOwner($user instanceof User ? $user : null);
+        $delivery->setOwner($owner);
 
-        $order = $this->orderFactory->createFromCart($cart, $user instanceof User ? $user : null, strtolower((string) $value('email')), $quote, $delivery);
+        return $delivery;
+    }
+
+    /**
+     * The contact phone, delivery instructions and billing address.
+     *
+     * @param array<string, mixed> $data
+     */
+    private function applyDetails(Order $order, array $data): void
+    {
+        $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $order->setContactPhone($value('phone'));
         $order->setDeliveryNotes($value('notes'));
+        $billing = null;
         if (! ($data['billingSame'] ?? true)) {
             $billing = new Address();
             $billing->setRecipientName($value('billingName'));
@@ -218,24 +293,169 @@ class CheckoutController extends AbstractController
             $billing->setCounty($value('billingCounty'));
             $billing->setPostcode(DeliveryArea::normalise((string) $value('billingPostcode')) ?? $value('billingPostcode'));
             $billing->setCountry('GB');
-            $order->setBillingAddress($billing);
         }
 
-        $this->orderRepository->save($order, true);
+        $order->setBillingAddress($billing);
+    }
 
-        if ($this->usesStripe()) {
-            $this->startStripePayment($request, $order);
+    /**
+     * The order and Stripe payment for the page to confirm with the card: the
+     * one from a previous attempt while the basket is unchanged, otherwise a
+     * new one (the previous one is cancelled).
+     *
+     * @param array<string, mixed> $data
+     */
+    private function startCardPayment(Request $request, Cart $cart, array $data, string $postcode): JsonResponse
+    {
+        $signature = $this->basketSignature($cart, $postcode);
+        $pending = $request->getSession()->get(self::SESSION_PENDING);
+        $order = \is_array($pending) ? $this->visibleOrder($request, (string) ($pending[0] ?? '')) : null;
+        $intent = null;
+
+        if ($order instanceof Order && $order->getStripePaymentIntentId() !== null) {
+            try {
+                $intent = $this->stripeClient->retrievePaymentIntent($order->getStripePaymentIntentId());
+            } catch (Throwable $throwable) {
+                $this->logger->error('Stripe payment lookup failed: ' . $throwable->getMessage());
+            }
+
+            if ($intent?->status === 'succeeded') {
+                // Paid already (e.g. a second tab): finish it.
+                $this->orderProcessor->markPaid($order);
+
+                return new JsonResponse([
+                    'status' => 'redirect',
+                    'url' => $this->generateUrl('checkout_complete', [
+                        'orderNumber' => $order->getOrderNumber(),
+                    ]),
+                ]);
+            }
+
+            $reusable = $order->getStatus() === OrderStatus::AWAITING_PAYMENT && ($pending[1] ?? null) === $signature
+                && \in_array($intent?->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true);
+            if ($reusable) {
+                // Same basket: keep the order and payment, with the latest details.
+                $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
+                $email = strtolower((string) $value('email'));
+                $account = $this->orderAccounts->accountFor($email, $cart->isGift() ? $value('cardName') : $value('name'));
+                $order->setUser($account);
+                $order->setEmail($email);
+                $order->setShippingAddress($this->deliveryAddress($cart, $data, $postcode, $account));
+                $this->applyDetails($order, $data);
+                $this->orderRepository->save($order, true);
+            } else {
+                if ($order->getStatus() === OrderStatus::AWAITING_PAYMENT) {
+                    $this->cancelPayment($order);
+                }
+
+                $order = null;
+                $intent = null;
+            }
         } else {
-            $this->startRevolutPayment($request, $order);
+            $order = null;
         }
 
-        $order->setStatus(OrderStatus::AWAITING_PAYMENT);
+        // A reused order always has its payment; otherwise start both.
+        if (! $order instanceof Order) {
+            try {
+                $order = $this->createOrder($request, $cart, $data, $postcode);
+                $intent = $this->stripeClient->createPaymentIntent($order->getTotal(), $order->getCurrency(), $order->getOrderNumber(), $order->getEmail(), cardOnly: true);
+                $order->setStripePaymentIntentId($intent->id);
+                $this->orderRepository->save($order, true);
+            } catch (Throwable $throwable) {
+                $this->logger->error('Starting a card payment failed: ' . $throwable->getMessage());
+
+                return new JsonResponse([
+                    'status' => 'error',
+                    'message' => 'We couldn\'t start the payment. Please try again in a moment.',
+                ], Response::HTTP_SERVICE_UNAVAILABLE);
+            }
+        }
+
+        $request->getSession()->set(self::SESSION_PENDING, [$order->getOrderNumber(), $signature]);
+        $billing = $order->getBillingAddress() ?? $order->getShippingAddress();
+
+        return new JsonResponse([
+            'status' => 'confirm',
+            'clientSecret' => $intent->clientSecret,
+            'completeUrl' => $this->generateUrl('checkout_complete', [
+                'orderNumber' => $order->getOrderNumber(),
+            ], UrlGeneratorInterface::ABSOLUTE_URL),
+            'billingDetails' => [
+                'name' => trim((string) ($data['cardName'] ?? '')),
+                'email' => $order->getEmail(),
+                'phone' => $order->getContactPhone(),
+                'address' => [
+                    'line1' => $billing?->getLine1(),
+                    'line2' => $billing?->getLine2(),
+                    'city' => $billing?->getCity(),
+                    'state' => $billing?->getCounty(),
+                    'postal_code' => $billing?->getPostcode(),
+                    'country' => 'GB',
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Cancel an unpaid order the customer has moved on from (and its payment).
+     */
+    private function cancelPayment(Order $order): void
+    {
+        try {
+            if ($order->getStripePaymentIntentId() !== null) {
+                $this->stripeClient->cancelPaymentIntent($order->getStripePaymentIntentId());
+            }
+        } catch (Throwable $throwable) {
+            $this->logger->warning('Cancelling a Stripe payment failed: ' . $throwable->getMessage());
+        }
+
+        $order->setStatus(OrderStatus::CANCELLED);
         $this->orderRepository->save($order, true);
-        $request->getSession()->set(self::SESSION_ORDERS, array_values(array_unique([...$this->sessionOrders($request), $order->getOrderNumber()])));
+    }
+
+    /**
+     * What the order is for: each basket line, the gift date and the
+     * delivery postcode (a change means a new order and payment).
+     */
+    private function basketSignature(Cart $cart, string $postcode): string
+    {
+        $lines = array_map(static fn ($item): string => implode(':', [(string) $item->getId(), $item->getQuantity(), $item->getUnitPrice(), (string) $item->getHash()]), $cart->getCartItems()->toArray());
+        sort($lines);
+
+        return hash('sha256', implode('|', $lines) . '|' . ($cart->getGiftArriveBy()?->format('Y-m-d') ?? '') . '|' . $postcode);
+    }
+
+    /**
+     * Revolut (switched off; kept): its own payment page, as before.
+     */
+    private function payWithRevolut(Request $request, Order $order): Response
+    {
+        $this->startRevolutPayment($request, $order);
+        $this->orderRepository->save($order, true);
 
         return $this->redirectToRoute('checkout_pay', [
             'orderNumber' => $order->getOrderNumber(),
         ]);
+    }
+
+    /**
+     * Each field's first problem, by field name, for the page to show.
+     *
+     * @param FormInterface<mixed> $form
+     *
+     * @return array<string, string>
+     */
+    private function fieldErrors(FormInterface $form): array
+    {
+        $errors = [];
+        foreach ($form->all() as $name => $child) {
+            foreach ($child->getErrors() as $error) {
+                $errors[$name] ??= $error->getMessage();
+            }
+        }
+
+        return $errors;
     }
 
     /**
@@ -244,7 +464,7 @@ class CheckoutController extends AbstractController
      *
      * @param array<string, mixed> $data
      */
-    private function reserveInstead(Request $request, array $data, Cart $cart): Response
+    private function reserveInstead(Request $request, array $data, Cart $cart): RedirectResponse
     {
         $value = static fn (string $key): string => trim((string) ($data[$key] ?? ''));
         $address = array_filter([
@@ -374,19 +594,14 @@ class CheckoutController extends AbstractController
             ]);
         }
 
+        if ($this->usesStripe()) {
+            // Cards are paid on the Card Payment page itself (10.3).
+            return $this->redirectToRoute('checkout');
+        }
+
         $completeUrl = $this->generateUrl('checkout_complete', [
             'orderNumber' => $orderNumber,
         ]);
-
-        if ($this->usesStripe()) {
-            return $this->render('checkout/pay.html.twig', [
-                'order' => $order,
-                'provider' => 'stripe',
-                'stripeClientSecret' => $request->getSession()->get($this->stripeSecretSessionKey($orderNumber)),
-                'stripePublishableKey' => $this->stripeClient->getPublishableKey(),
-                'completeUrl' => $completeUrl,
-            ]);
-        }
 
         return $this->render('checkout/pay.html.twig', [
             'order' => $order,
@@ -398,6 +613,11 @@ class CheckoutController extends AbstractController
         ]);
     }
 
+    /**
+     * After paying. Stripe is asked directly whether the payment went through
+     * (its webhook says the same later; marking paid twice is harmless), and
+     * once paid the basket is emptied.
+     */
     #[Route(path: '/checkout/complete/{orderNumber}', name: 'checkout_complete')]
     public function complete(Request $request, string $orderNumber): Response
     {
@@ -406,30 +626,34 @@ class CheckoutController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        if (! $order->isPaid() && $order->getStripePaymentIntentId() !== null) {
+            try {
+                $intent = $this->stripeClient->retrievePaymentIntent($order->getStripePaymentIntentId());
+                if ($intent->status === 'succeeded') {
+                    $this->orderProcessor->markPaid($order);
+                }
+            } catch (Throwable $throwable) {
+                $this->logger->error('Stripe payment lookup failed: ' . $throwable->getMessage());
+            }
+        }
+
+        if ($order->isPaid()) {
+            $cart = $this->cartResolver->peekCart();
+            if ($cart instanceof Cart && ! $cart->isEmpty()) {
+                foreach ($cart->getCartItems()->toArray() as $line) {
+                    $cart->removeCartItem($line);
+                }
+
+                $cart->setGiftArriveBy(null);
+                $this->entityManager->flush();
+            }
+
+            $request->getSession()->remove(self::SESSION_PENDING);
+        }
+
         return $this->render('checkout/complete.html.twig', [
             'order' => $order,
         ]);
-    }
-
-    private function startStripePayment(Request $request, Order $order): void
-    {
-        if (! $this->stripeClient->isConfigured()) {
-            return;
-        }
-
-        try {
-            $intent = $this->stripeClient->createPaymentIntent(
-                $order->getTotal(),
-                $order->getCurrency(),
-                $order->getOrderNumber(),
-                $order->getEmail(),
-            );
-            $order->setStripePaymentIntentId($intent->id);
-            $request->getSession()->set($this->stripeSecretSessionKey($order->getOrderNumber()), $intent->clientSecret);
-        } catch (Throwable $throwable) {
-            $this->logger->error('Stripe payment intent creation failed: ' . $throwable->getMessage());
-            $this->addFlash('error', 'Could not start payment. Please try again.');
-        }
     }
 
     private function startRevolutPayment(Request $request, Order $order): void
@@ -456,10 +680,5 @@ class CheckoutController extends AbstractController
     private function tokenSessionKey(string $orderNumber): string
     {
         return 'revolut_token_' . $orderNumber;
-    }
-
-    private function stripeSecretSessionKey(string $orderNumber): string
-    {
-        return 'stripe_client_secret_' . $orderNumber;
     }
 }
