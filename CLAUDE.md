@@ -1,10 +1,14 @@
 # CLAUDE.md - Llunio Studios
 
-High-end lamp e-commerce platform built with Symfony 7.3.
+High-end lamp e-commerce platform built with Symfony 7.4.
+
+## Design merge (in progress): read `docs/merge-plan.md` first
+
+The site is being reshaped to the Claude Design prototype "Llunio Site v4 Unified". `docs/merge-plan.md` has everything needed to continue: where the prototype is, the working rules (small steps, commit only when asked, match the prototype, real photos only, British English, "Dorset Studio"), every decision, each step's status and commits, the open questions, and the local setup (database commands run in the PHP container, Mailpit at http://localhost:52374, admin sign-in by emailed code). Work happens on branch `design-foundation`; never push to `main` or merge unless asked.
 
 ## Tech Stack
 
-- **PHP 8.2+** / Symfony 7.3
+- **PHP 8.2+** / Symfony 7.4
 - **PostgreSQL 16** with PostGIS
 - **Doctrine ORM 3.3** (attribute-based mapping)
 - **EasyAdmin 4** for admin panel
@@ -77,6 +81,8 @@ Product (Entity)
 - **Cart dedup**: SHA256 hash of product+options prevents duplicates
 
 ## Authentication
+
+Note: this section is out of date. Sign-in uses emailed 6-digit codes (`LoginCode`, `LoginCodeService`), not passwords; it is to be rewritten in merge Step 12 (accounts and guest checkout are open questions 6 and 7 in `docs/merge-plan.md`).
 
 Simple email/password (no fingerprinting or guest Identity).
 
