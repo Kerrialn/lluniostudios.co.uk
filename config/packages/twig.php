@@ -13,7 +13,6 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ],
         'form_themes' => [
             'form/theme/tailwind_layout.html.twig',
-            'form/type/integer_type.html.twig',
             'form/type/pin_code.html.twig',
         ],
     ]);

@@ -43,7 +43,7 @@ src/
 ├── Entity/              # Doctrine entities (UUID-based)
 ├── Repository/          # Query repositories
 ├── Controller/
-│   ├── Controller/      # Frontend (ProductController, CartController)
+│   ├── Controller/      # Frontend (ConfiguratorController, CartController, ReserveController)
 │   └── Admin/           # EasyAdmin CRUD controllers
 ├── Security/            # Authenticators (Email, Fingerprint)
 ├── Service/             # Business logic (CartHelper, FingerPrintService)
@@ -62,7 +62,7 @@ Product (Entity)
 
 - Options are per-product (not global) - each lamp can have different configurable attributes
 - CartItemOption stores the selected option values when added to cart
-- CartItemForm dynamically builds form fields from product's options
+- Lamps are configured in the Lumen Forma configurator (`/lighting-designs`); the old product pages and `CartItemForm` are retired (`/products` and `/collections` redirect there)
 
 ## Key Entities
 

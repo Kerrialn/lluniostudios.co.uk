@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 8 committed; browser checks saved in `tests/browser/`).
+Last updated: 7 October 2026 (old shop pages redirected and removed).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Nothing has been pushed yet. Never push to `main` or merge anything unless asked. To push: `git push -u origin symfony-7.4-upgrade design-foundation`.
-- **Next step:** Step 9 (Bespoke Commissions), or the `/products` and `/collections` redirects (decided, not built). See "Steps" below.
+- **Next step:** Step 9 (Bespoke Commissions). See "Steps" below.
 - **The prototype:** `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip`. Inside it:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Unzip and open it in Chrome. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (02 is built; see Step 8).
@@ -24,7 +24,7 @@ Last updated: 7 October 2026 (Step 8 committed; browser checks saved in `tests/b
   - Admin sign-in is by emailed 6-digit code; the local admin is `lluniostudios@gmail.com` (the code arrives in Mailpit). Promote others with `php bin/console app:user:promote <email>`.
   - The Lumen Forma sizes are created by `php bin/console app:lumen-forma:setup` (only what is missing). They are deliberately **unpublished**: the configurator doesn't need publishing; the old product pages do, and those pages are being retired.
 - **Checks after every step:** `composer test`, `composer phpstan`, `composer check-cs` (`composer fix-cs` to fix), `php bin/console lint:twig templates`, `npm run build`. Then click through at desktop (1440) and phone (390) widths against the matching prototype screen.
-  - **Browser checks:** `node tests/browser/run-all.mjs` runs the end-to-end checks for Steps 6–8 against the local site in headless Chrome (about 15 minutes; `--clean` removes the test baskets, requests and emails afterwards). `tests/browser/compare/` measures our pages against the prototype (set `PROTOTYPE_DIR` to the unzipped brief). See `tests/browser/README.md`; add a check there for each new step.
+  - **Browser checks:** `node tests/browser/run-all.mjs` runs the end-to-end checks for Steps 6–8 and the old shop redirects against the local site in headless Chrome (about 15 minutes; `--clean` removes the test baskets, requests and emails afterwards). `tests/browser/compare/` measures our pages against the prototype (set `PROTOTYPE_DIR` to the unzipped brief). See `tests/browser/README.md`; add a check there for each new step.
 
 ### How the work is done (standing rules)
 
@@ -52,7 +52,7 @@ Last updated: 7 October 2026 (Step 8 committed; browser checks saved in `tests/b
 | 6 | Basket: one line per add, per-lamp configurations, 2-lamp limit | Done | `30ae978` |
 | 7 | Configurator (`/lighting-designs`), 7.1–7.6 | Done | `574bf32`, `45c4635`, `6770e92`, `93a019f`, `27b1ae3`, `b024fde` |
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
-| — | `/products`, `/collections` redirect to Lighting Designs | Decided, not built | — |
+| — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | (this commit) |
 | 9 | Bespoke Commissions | Not started | — |
 | 10 | Checkout reshape (Stripe, gift, guest) | Not started | — |
 | 10b | Quotes in admin | Not started | — |
@@ -78,12 +78,13 @@ Last updated: 7 October 2026 (Step 8 committed; browser checks saved in `tests/b
 | Checkout limit | **At most 2 lamps in the whole basket**, Studio/Gallery only, no Custom values | Everything else is "Reserve Your Design". Enforced on the server (`BasketRules`) as well as the page. |
 | Configurator quantity | 1–10 lamps per configuration | `LumenFormaCatalogue::MAX_LAMPS_PER_CONFIGURATION`. |
 | Starting choices | Gallery pre-selected; **every option starts empty and is required** | Moving past a stage without a choice returns to it with "Please choose a … to continue." (for every lamp when customised individually). |
-| Purchase route notes | Request size: "Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually." Custom: "… Custom options are developed with you and quoted individually." Both: "… Custom options are developed with you, and delivery quoted individually." Then, if it applies, "Quantities of three or more proceed through the Reserve request process, not direct checkout." | `BasketRules::routeNote()` (mirrored in `purchase_route_controller.js` and `configurator_controller.js`). Shown on The Scale and under the review's button; a short line under any Custom choice. |
+| Purchase route notes | Request size: "Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually." Custom: "… Custom options are developed with you and quoted individually." Both: "… Custom options are developed with you, and delivery quoted individually." Then, if it applies, "Quantities of three or more proceed through the Reserve request process, not direct checkout." | `BasketRules::routeNote()` (mirrored in `configurator_controller.js`). Shown on The Scale and under the review's button; a short line under any Custom choice. |
 | Homepage | "Test 2" hero with an amber/black colour switch | Done in Step 3. Portrait photo pair for phones is pending content. |
 | Lamp sizes (placeholders) | Studio 15×15×40cm 15kg; Gallery 22×22×60cm 20kg; Atelier 30×30×90cm; Estate 38×38×140cm; Monument 45×45×200cm | Lamp sizes, not packed boxes; heavier weights so mock delivery isn't understated. Replace with measured packed boxes. |
 | Notifications | **lluniostudios@gmail.com** | Request (and later commission) notifications; setting `STUDIO_NOTIFICATION_EMAIL` in `.env`. |
 | Reserve page | **One page, "Reserve Your Design"** | The design's "Reserve Your Casting Slot" variant is dropped. |
-| Old shop pages | **`/products` and `/collections` redirect to Lighting Designs** | Permanent redirects to `/lighting-designs`; old product pages retired. Not built yet. |
+| Old shop pages | **`/products` and `/collections` redirect to Lighting Designs** | Every address under them (any product or collection, even unknown ones) is a permanent (301) redirect to `/lighting-designs`. Lumen Forma is the only product line at launch and the site isn't live yet (7 October 2026), so nothing else needs its own page. |
+| Old shop code | **Removed** (7 October 2026) | The old product and collection pages, their form and their scripts are deleted. The Products and Collections sections in admin and the database are kept as they are. |
 | Request follow-up | **Quotes in admin (Step 10b)** | Nothing is sent without pressing "Send quote". |
 | Email 02 opening | One sentence per combination of reasons (see Step 8) | Wording approved 7 October 2026. |
 | Hover feedback | Hand pointer on every button; muted items brighten to cream, cream items dim slightly, cream filled buttons dim a touch | Site-wide convention (`app.css`, `.ll-cta`). |
@@ -130,8 +131,12 @@ One line per Add to Basket (no merging), per-lamp configurations (`cart_item_opt
 - Admin "Requests" (`DesignRequestCrudController`): newest first, status badge (New / Quoted / Paid) and filter, full details and lamps; only the status can be changed (by hand until Step 10b). Times in UK time.
 - Migration `Version20261007120000` (two new tables; undo with `doctrine:migrations:migrate prev`).
 
-### Next: `/products` and `/collections` redirects (decided, not built)
-Permanent redirects to `/lighting-designs`. The old product page (`ProductController::show`, `templates/products/`) and `CartItemForm` can then be retired; the nav's "Lighting Designs" already covers them.
+### Old shop pages: redirects (done)
+- `OldShopController`: `/products`, `/collections` and every address under them answer with a permanent (301) redirect to `/lighting-designs` (query strings dropped; any method). `/productsx` and the like are not caught.
+- Removed: `ProductController` (product list and product page), `CollectionController`, `templates/products/`, `templates/collections/`, `CartItemForm`, `CartItemFormModel`, the quantity spinner used only by that form (`IntegerType`, `form/type/integer_type.html.twig`, `integer_spinner_controller.js`), `purchase_route_controller.js` and `product_gallery_controller.js`. The basket's "Edit configuration" now only links to the configurator (the product-page fallback is gone); the nav no longer lists the old routes.
+- Kept: the Products and Product Collections admin sections, the entities and the database (no migration).
+- Browser check `old-shop-redirects.mjs` replaces `product-page-and-basket.mjs`. The purchase-route notes it checked on the product page are covered by `configurator-add-to-basket.mjs`; its basket checks (2-lamp limit, over-limit basket, checkout bounce) are kept, filling the basket through the configurator.
+- To undo: revert the commit (nothing in the database changes).
 
 ### Step 9: Bespoke Commissions (not started)
 Two forms (Home: name, email, phone, preferred contact, idea, optional photo; Trade: company, contact, email, phone, project type, location & schedule, project, integration, document upload), an enquiry record and admin list, "Commission submitted" page (prototype message), email 03 (design template), notification to `STUDIO_NOTIFICATION_EMAIL`. Upload limits: question 15.
@@ -194,8 +199,8 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 18. **Care instructions** for email 06, and a studio phone number for the email footers.
 
 **Content and pages**
-20. The newsletter sign-up: keep, move or remove? Is Lumen Forma the only product line at launch?
+20. The newsletter sign-up: keep, move or remove? (Lumen Forma being the only product line at launch is answered.)
 23. **Origin story and T&Cs:** final as written? Checked for consumer-law wording?
 24. **Go-live:** a launch date or gift-season deadline that should change the order of steps?
 
-Answered (for reference): studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.
+Answered (for reference): Lumen Forma is the only product line at launch (part of 20); remove the old shop code; studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.

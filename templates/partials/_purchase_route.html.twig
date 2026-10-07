@@ -7,20 +7,18 @@
       reserve  true for the request route
       note     the "Purchase route" note
       href     render the button as a link to this URL; otherwise a submit button
-      live     add purchase-route controller targets (product page)
 #}
 {% set reserve = reserve|default(false) %}
-{% set live = live|default(false) %}
 {% set ctaClass = 'll-cta block w-full bg-[#ece3d3] text-[#15120e] p-[18px] text-center font-medium text-xs uppercase tracking-[0.16em]' %}
 <div class="flex flex-col gap-[18px] font-archivo">
-    <div class="flex flex-col gap-1.5 border-l py-0.5 pl-3.5 {{ reserve ? 'border-ll-ink' : 'border-ll-line' }}" {% if live %}data-purchase-route-target="route"{% endif %}>
+    <div class="flex flex-col gap-1.5 border-l py-0.5 pl-3.5 {{ reserve ? 'border-ll-ink' : 'border-ll-line' }}">
         <span class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Purchase route</span>
-        <span class="text-xs leading-[1.45] text-ll-mute" {% if live %}data-purchase-route-target="note"{% endif %}>{{ note }}</span>
+        <span class="text-xs leading-[1.45] text-ll-mute">{{ note }}</span>
     </div>
     {% if href|default(false) %}
-        <a href="{{ href }}" class="{{ ctaClass }}" {% if live %}data-purchase-route-target="cta"{% endif %}>{{ reserve ? 'Reserve Your Design' : 'Cast Your Lamp' }}</a>
+        <a href="{{ href }}" class="{{ ctaClass }}">{{ reserve ? 'Reserve Your Design' : 'Cast Your Lamp' }}</a>
     {% else %}
-        <button type="submit" class="{{ ctaClass }}" {% if live %}data-purchase-route-target="cta"{% endif %}>{{ reserve ? 'Reserve Your Design' : 'Cast Your Lamp' }}</button>
+        <button type="submit" class="{{ ctaClass }}">{{ reserve ? 'Reserve Your Design' : 'Cast Your Lamp' }}</button>
     {% endif %}
-    <div class="text-xs text-ll-mute" {% if live %}data-purchase-route-target="sub"{% endif %}>{{ reserve ? constant('App\\Service\\BasketRules::SUB_RESERVE') : constant('App\\Service\\BasketRules::SUB_DIRECT') }}</div>
+    <div class="text-xs text-ll-mute">{{ reserve ? constant('App\\Service\\BasketRules::SUB_RESERVE') : constant('App\\Service\\BasketRules::SUB_DIRECT') }}</div>
 </div>

@@ -1,6 +1,6 @@
 # Browser checks
 
-End-to-end checks for the design merge (`docs/merge-plan.md`, Steps 6–8), run against the **local** site in a headless Google Chrome. They click through the pages as a customer would and print `PASS` / `FAIL` for each check, then `ALL PASSED` or `SOME CHECKS FAILED`.
+End-to-end checks for the design merge (`docs/merge-plan.md`, Steps 6–8 and the old shop redirects), run against the **local** site in a headless Google Chrome. They click through the pages as a customer would and print `PASS` / `FAIL` for each check, then `ALL PASSED` or `SOME CHECKS FAILED`.
 
 They are not part of `composer test` (they need the running site, Chrome and Mailpit) and only ever touch your local site and database.
 
@@ -35,7 +35,7 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 | `configurator-edit.mjs` | "Edit configuration" from the basket: loaded design, updates in place, per-lamp lines, Reserve leaves the line unchanged; links to the configurator. |
 | `configurator-hover-and-headings.mjs` | Which option headings show, the hand pointer and hover feedback. |
 | `reserve.mjs` | Reserve Your Design end to end: what it carries, the form and its messages, the saved request, the emptied basket, email 02 and the studio notification in Mailpit. |
-| `product-page-and-basket.mjs` | The Step 6 product page and basket purchase route and 2-lamp limit. It publishes the Lumen Forma sizes for the run and unpublishes them afterwards. |
+| `old-shop-redirects.mjs` | `/products` and `/collections` (and anything under them) permanently redirect to Lighting Designs, and no page links to them; the basket's purchase route and 2-lamp limit (Step 6), with the basket filled through the configurator. |
 
 ### Comparing with the prototype
 

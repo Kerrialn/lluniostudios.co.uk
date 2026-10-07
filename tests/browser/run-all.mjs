@@ -22,7 +22,7 @@ const CHECKS = [
     ['configurator-edit.mjs', '390', '844'],
     ['configurator-hover-and-headings.mjs'],
     ['reserve.mjs'],
-    ['product-page-and-basket.mjs'],
+    ['old-shop-redirects.mjs'],
 ];
 
 const args = process.argv.slice(2);

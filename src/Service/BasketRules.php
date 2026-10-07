@@ -105,8 +105,7 @@ final class BasketRules
      * refusalForAdd()); the direct-order note when there are none. A Request
      * size and a Custom choice have one note each, or a single combined note
      * when both apply; the 3-or-more-lamps note follows after.
-     * purchase_route_controller.js and configurator_controller.js build the
-     * same note in the page.
+     * configurator_controller.js builds the same note in the page.
      *
      * @param list<string> $reasons
      */

@@ -74,12 +74,9 @@
                                 {% endfor %}
 
                                 <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                                    {# Lumen Forma lines open in the configurator (per-lamp lines too);
-                                       other products on their product page. #}
+                                    {# Lumen Forma lines open in the configurator (per-lamp lines too). #}
                                     {% if product.slug in configuratorSlugs %}
                                         <a href="{{ path('lighting_designs', {edit: item.id}) }}" class="{{ textLink }}">Edit configuration</a>
-                                    {% elseif not item.customisedIndividually %}
-                                        <a href="{{ path('show_product', {slug: product.slug, edit: item.id}) }}" class="{{ textLink }}">Edit configuration</a>
                                     {% endif %}
                                     <form action="{{ path('cart_remove_item', {id: item.id}) }}" method="post" class="flex">
                                         <button type="submit" class="{{ textLink }}">Remove</button>
