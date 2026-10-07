@@ -83,6 +83,17 @@ class Order
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $deliveryNotes = null;
 
+    /**
+     * "This is a gift" and its arrive-by date, from the basket (Step 10.5).
+     */
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
+    private bool $gift = false;
+
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $giftArriveBy = null;
+
     #[ORM\Column(length: 128, nullable: true)]
     private ?string $revolutOrderId = null;
 
@@ -238,6 +249,49 @@ class Order
     public function setShippingServiceName(?string $shippingServiceName): void
     {
         $this->shippingServiceName = $shippingServiceName;
+    }
+
+    public function isGift(): bool
+    {
+        return $this->gift;
+    }
+
+    public function getGiftArriveBy(): ?\DateTimeImmutable
+    {
+        return $this->giftArriveBy;
+    }
+
+    /**
+     * A gift arriving by this date, or not a gift (null).
+     */
+    public function setGiftArriveBy(?\DateTimeImmutable $arriveBy): void
+    {
+        $this->gift = $arriveBy instanceof \DateTimeImmutable;
+        $this->giftArriveBy = $arriveBy;
+    }
+
+    /**
+     * "Arrive by 23 October 2026" for a gift, or null.
+     */
+    public function getGiftLine(): ?string
+    {
+        return $this->giftArriveBy instanceof \DateTimeImmutable ? 'Arrive by ' . $this->giftArriveBy->format('j F Y') : null;
+    }
+
+    /**
+     * For admin: "Arrive by [date]" for a gift, otherwise "No".
+     */
+    public function getGiftLabel(): string
+    {
+        return $this->getGiftLine() ?? 'No';
+    }
+
+    /**
+     * For admin: the billing address, or "Same as delivery address".
+     */
+    public function getBillingAddressLabel(): string
+    {
+        return $this->billingAddress instanceof Address ? (string) $this->billingAddress : 'Same as delivery address';
     }
 
     public function getBillingAddress(): ?Address

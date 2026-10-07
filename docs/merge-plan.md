@@ -4,7 +4,7 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 10.4 committed; 10.5 in progress).
+Last updated: 7 October 2026 (Step 10.5 committed; 10.6 in progress).
 
 ---
 
@@ -55,7 +55,7 @@ Last updated: 7 October 2026 (Step 10.4 committed; 10.5 in progress).
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
 | — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
 | 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (deferred full browser run for 9.2 and 9.3 done 7 October 2026: 17 of 17 passed) | `73bdb27` (9.1), `74ce773` (9.2), `2a3e0f9` (9.3) |
-| 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | In progress (10.1–10.4 done; 10.5 next) | `c1bdd31` (10.1), `8b54643` (10.2), `042aa0d` (10.3) |
+| 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | In progress (10.1–10.5 done; 10.6 next) | `c1bdd31` (10.1), `8b54643` (10.2), `042aa0d` (10.3), `570274d` (10.4) |
 | 10b | Quotes in admin | Not started | — |
 | 11 | Order journey emails 01, 03–06 | Not started | — |
 | 12 | Launch checks | Not started | — |
@@ -216,7 +216,11 @@ Decisions of 7 October 2026 are in the table above (Accounts and sign-in, "View 
   - Trying the real buttons locally: see "Testing Apple Pay and Google Pay" below. **Not tested by hand yet** (you don't use Google Pay): both wallets are to be tested by hand at launch, Apple Pay in Safari on your iPhone once the live domain is registered with Stripe (Step 12).
   - No database changes. To undo: revert the commit.
   - Browser check `checkout-wallet.mjs`.
-- **10.5 Confirmation and gift details:** "Order & Slot Confirmed" laid out like the other thank-you pages ("Added to Studio Casting Schedule", "Gift · Arrive by [date]" if a gift, "Confirmation has been sent to the email address provided."); gift details saved on the order and shown in admin (in emails from Step 11).
+- **10.5 Confirmation and gift details (done):** "Order & Slot Confirmed" laid out like the other thank-you pages ("Added to Studio Casting Schedule", "Gift · Arrive by [date]" if a gift, "Confirmation has been sent to the email address provided."); gift details saved on the order and shown in admin (in emails from Step 11).
+  - `templates/checkout/complete.html.twig` uses the shared thank-you layout (`partials/_received.html.twig`, which now takes extra lines). If the payment is still being confirmed when the page opens (rare for cards; the webhook finishes it), it says "Order Received" and "Thank you. We're just confirming your payment and will email you shortly." instead (wording decided 7 October 2026).
+  - Orders keep "This is a gift" and the arrive-by date from the basket (`Order::$gift`, `Order::$giftArriveBy`). Migration `Version20261007200000` (two columns on `orders`; undo with `doctrine:migrations:migrate prev`, which forgets which orders were gifts).
+  - Admin Orders: a "Gift" column ("Arrive by [date]" or "No"); an order's page also shows the customer's mobile, delivery instructions and billing address ("Same as delivery address" when not given), saved since 10.2 but not shown until now.
+  - Browser check `checkout-pay.mjs` extended (confirmation wording and layout, gift line, gift saved, admin).
 - **10.6 Sign-in and order history:** the sign-in email gets a one-click "Sign in" button with the 6-digit code underneath as a backup; `/account` (order history) restyled to match the design; a small "Your orders" link on the Contact page instead of the footer's "Sign in".
 - Tested end to end with Stripe test keys before anything goes live; each sub-step notes how to undo it. No size abbreviations anywhere.
 

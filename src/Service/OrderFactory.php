@@ -63,6 +63,7 @@ final readonly class OrderFactory
         $order->setShippingServiceName($shippingQuote->serviceName);
         $order->setShippingCost($shippingQuote->priceInPence);
         $order->setShippingAddress($shippingAddress);
+        $order->setGiftArriveBy($cart->isGift() ? $cart->getGiftArriveBy() : null);
         $order->recalculateTotal();
 
         return $order;

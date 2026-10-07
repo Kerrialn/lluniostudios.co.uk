@@ -16,6 +16,10 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
 /**
+ * Orders, newest first. The gift column shows "Arrive by [date]" for gifts
+ * (Step 10.5); an order's page also shows the customer's mobile, delivery
+ * instructions and billing address from the Card Payment page.
+ *
  * @extends AbstractCrudController<Order>
  */
 class OrderCrudController extends AbstractCrudController
@@ -49,6 +53,9 @@ class OrderCrudController extends AbstractCrudController
             MoneyField::new('subtotal')->setCurrency('GBP')->setStoredAsCents(true),
             MoneyField::new('shippingCost')->setCurrency('GBP')->setStoredAsCents(true),
             MoneyField::new('total')->setCurrency('GBP')->setStoredAsCents(true),
+            TextField::new('giftLabel', 'Gift')->hideOnForm(),
+            TextField::new('contactPhone', 'Mobile')->hideOnIndex()->setDisabled(),
+            TextField::new('deliveryNotes', 'Delivery instructions')->hideOnIndex()->setDisabled(),
             ChoiceField::new('shippingMethod')
                 ->setChoices(array_combine(
                     array_map(static fn (ShippingMethod $m) => $m->label(), ShippingMethod::cases()),
@@ -58,6 +65,7 @@ class OrderCrudController extends AbstractCrudController
             TextField::new('shippingCarrier')->hideOnIndex(),
             TextField::new('shippingServiceName')->hideOnIndex(),
             AssociationField::new('shippingAddress')->hideOnIndex(),
+            TextField::new('billingAddressLabel', 'Billing address')->onlyOnDetail(),
             TextField::new('revolutOrderId')->hideOnIndex()->setDisabled(),
             TextField::new('revolutState')->hideOnIndex()->setDisabled(),
             DateTimeField::new('paidAt')->hideOnIndex()->setDisabled(),

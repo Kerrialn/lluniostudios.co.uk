@@ -1,17 +1,25 @@
 {#
-    "Thank you" pages after a form is sent ("Reservation received",
-    "Commission submitted"), laid out like the site's other text pages
-    (Contact, Terms & Conditions): heading, then the message under a rule.
-    The reference number is in the confirmation email, not here.
+    "Thank you" pages after a form is sent or an order paid ("Reservation
+    received", "Commission submitted", "Order & Slot Confirmed"), laid out
+    like the site's other text pages (Contact, Terms & Conditions): heading,
+    then the message under a rule. Reference numbers are in the
+    confirmation emails, not here.
 
     Options:
-      heading  the page heading
-      message  the prototype's message for this page
+      heading       the page heading
+      message       the prototype's message for this page
+      lines         further lines under it (e.g. "Gift · Arrive by …")
+      confirmation  false to leave out "Confirmation has been sent…"
 #}
 <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
     <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">{{ heading }}</h1>
     <div class="flex flex-col gap-3 border-t border-ll-line pt-4 text-[15px] leading-relaxed text-ll-mute">
         <p>{{ message }}</p>
-        <p>Confirmation has been sent to the email address provided.</p>
+        {% for line in lines|default([]) %}
+            <p>{{ line }}</p>
+        {% endfor %}
+        {% if confirmation ?? true %}
+            <p>Confirmation has been sent to the email address provided.</p>
+        {% endif %}
     </div>
 </div>

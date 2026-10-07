@@ -5,8 +5,9 @@
 // linked to the account for its email (created quietly, no sign-in), the
 // basket is emptied and the confirmation email sent; a second order by the
 // same email joins the same account; the order's pages are open only to the
-// visitor who placed it. Typing goes into Stripe's frames as a customer's
-// would. Takes a size: 1440 900 (default) or 390 844.
+// visitor who placed it; "Order & Slot Confirmed" (with "Gift · Arrive by"
+// for a gift, which is saved on the order); admin's gift column and order
+// details. Typing goes into Stripe's frames as a customer's would. Takes a size: 1440 900 (default) or 390 844.
 import { open, sleep, checker, sql, BASE_URL, MAILPIT_URL } from './lib.mjs';
 
 const [W, H] = [Number(process.argv[2] || 1440), Number(process.argv[3] || 900)];
@@ -63,6 +64,10 @@ try {
     const details = { email: EMAIL, phone: '07700 900123', name: 'Ada Test', company: 'Test Ltd', line1: '1 High Street', line2: 'Flat 2', town: 'Wimborne', county: 'Dorset', postcode: 'BH21 1AA', notes: 'Side gate', cardName: 'ADA TEST', billingSame: false, billingName: 'Ada Billing', billingLine1: '9 Bank Road', billingTown: 'Poole', billingPostcode: 'bh15 1aa' };
     await send('Network.enable'); await send('Network.clearBrowserCookies');
 
+    // Orders left by an earlier run of this check (if not cleaned up) don't count.
+    const paidBefore = count(`select count(*) from orders where email = '${EMAIL}' and status = 'paid'`);
+    const waitingBefore = count(`select count(*) from orders where email = '${EMAIL}' and status = 'awaiting_payment'`);
+    const cancelledBefore = count(`select count(*) from orders where email = '${EMAIL}' and status = 'cancelled'`);
     await add();
     await openCheckout();
     check("Stripe's three card boxes are on the page", (await ev(`document.querySelectorAll('.ll-card-box iframe').length`)) === 3);
@@ -80,7 +85,7 @@ try {
     s = await pay();
     check("a declined card: Stripe's message, still on the page", s.path === '/checkout' && /declined/i.test(s.message), JSON.stringify(s));
     const first = sql(`select order_number from orders where email = '${EMAIL}' order by created_at desc limit 1`).match(/LL-[\w-]+|[A-Z]{2,}-\d[\w-]*/)?.[0];
-    check('the order waits for payment', count(`select count(*) from orders where email = '${EMAIL}' and status = 'awaiting_payment'`) === 1, first);
+    check('the order waits for payment', count(`select count(*) from orders where email = '${EMAIL}' and status = 'awaiting_payment'`) === waitingBefore + 1, first);
 
     // A good card: paid.
     await card('cardNumber', '4242424242424242');
@@ -89,7 +94,9 @@ try {
     check('a good card pays and goes to the completion page', /^\/checkout\/complete\//.test(s.path), JSON.stringify(s));
     const orderNumber = s.path.split('/').pop();
     check('the retry used the same order (one order, now paid)', count(`select count(*) from orders where email = '${EMAIL}'`) === before + 1 && count(`select count(*) from orders where order_number = '${orderNumber}' and status = 'paid' and paid_at is not null`) === 1, orderNumber);
-    check('the completion page says it is paid', /confirmed|thank you/i.test(await ev(`document.querySelector('main').innerText`)));
+    const done = (await ev(`document.querySelector('main').innerText`)).replace(/\s+/g, ' ').trim();
+    check('"Order & Slot Confirmed", "Added to Studio Casting Schedule" and the confirmation line (no gift line)', done === 'ORDER & SLOT CONFIRMED Added to Studio Casting Schedule Confirmation has been sent to the email address provided.', done);
+    check('laid out like the other thank-you pages', await ev(`(() => { const h = document.querySelector('main h1'); return getComputedStyle(h).fontSize === '28.8px' && Math.round(h.parentElement.getBoundingClientRect().width) === Math.min(1200, innerWidth) && getComputedStyle(document.querySelector('main p')).fontSize === '15px'; })()`) || W < 900);
     const row = sql(`select o.contact_phone, o.delivery_notes, o.shipping_cost, o.total, s.recipient_name, s.company, s.line1, s.line2, s.city, s.county, s.postcode, s.phone, bl.recipient_name as billing, bl.postcode as billing_postcode, u.email from orders o join address s on s.id = o.shipping_address_id left join address bl on bl.id = o.billing_address_id join users u on u.id = o.user_id where o.order_number = '${orderNumber}'`).replace(/\s+/g, ' ');
     check('saved with every detail (contact phone, notes, DPD price, company, delivery and billing addresses) and linked to the account for its email', row.includes(`07700 900123 Side gate 1295 81195 Ada Test Test Ltd 1 High Street Flat 2 Wimborne Dorset BH21 1AA 07700 900123 Ada Billing BH15 1AA ${EMAIL}`), row);
     check('the account was created quietly (nobody signed in)', count(`select count(*) from users where email = '${EMAIL}'`) === 1 && !/Sign out|Your orders/i.test(await ev(`document.querySelector('#navbar').innerText`)));
@@ -120,7 +127,7 @@ try {
     await card('cardNumber', '4242424242424242'); await card('cardExpiry', '1234'); await card('cardCvc', '123');
     await cardsComplete();
     s = await pay(20000);
-    check('after the basket changed, the earlier unpaid order is cancelled and a new one is paid', /^\/checkout\/complete\//.test(s.path) && count(`select count(*) from orders where email = '${EMAIL}' and status = 'cancelled'`) === 1 && /awaiting_payment|cancelled|LL|\w/.test(pending), JSON.stringify(s));
+    check('after the basket changed, the earlier unpaid order is cancelled and a new one is paid', /^\/checkout\/complete\//.test(s.path) && count(`select count(*) from orders where email = '${EMAIL}' and status = 'cancelled'`) === cancelledBefore + 1 && /awaiting_payment|cancelled|LL|\w/.test(pending), JSON.stringify(s));
     // A gift: the same details as any order; DPD's delivery phone is the customer's mobile.
     await add();
     await go(BASE_URL + '/basket');
@@ -134,7 +141,26 @@ try {
     await cardsComplete();
     s = await pay(20000);
     const giftOrder = s.path.split('/').pop();
+    const nice = new Date(arrive + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    check(`a gift's confirmation adds "Gift · Arrive by ${nice}"`, (await ev(`document.querySelector('main').innerText`)).includes(`Gift · Arrive by ${nice}`));
+    check('the gift and its date are saved on the order', sql(`select case when gift then 'gift-yes' else 'gift-no' end || ' ' || coalesce(to_char(gift_arrive_by, 'YYYY-MM-DD'), 'none') as g from orders where order_number = '${giftOrder}'`).includes(`gift-yes ${arrive}`));
     check("a gift pays; the delivery phone is the customer's own mobile", /^\/checkout\/complete\//.test(s.path) && sql(`select o.contact_phone, s.phone, s.recipient_name from orders o join address s on s.id = o.shipping_address_id where o.order_number = '${giftOrder}'`).replace(/\s+/g, ' ').includes('07700 900123 07700 900123 Grace Friend'), JSON.stringify(s));
-    check('all three paid orders belong to the one account for that email', count(`select count(distinct user_id) from orders where email = '${EMAIL}' and status = 'paid'`) === 1 && count(`select count(*) from orders where email = '${EMAIL}' and status = 'paid'`) === 3 && count(`select count(*) from users where email = '${EMAIL}'`) === 1);
+    check('all three paid orders belong to the one account for that email', count(`select count(distinct user_id) from orders where email = '${EMAIL}' and status = 'paid'`) === 1 && count(`select count(*) from orders where email = '${EMAIL}' and status = 'paid'`) === paidBefore + 3 && count(`select count(*) from users where email = '${EMAIL}'`) === 1);
+    // Admin: the gift column and an order's checkout details.
+    if (W >= 900) {
+        const ADMIN = 'lluniostudios@gmail.com';
+        await go(BASE_URL + '/login');
+        await ev(`(() => { const i = document.querySelector('input[name=email]'); i.value = ${JSON.stringify(ADMIN)}; i.form.requestSubmit(); })()`); await sleep(2500);
+        const codeMail = (await (await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent('to:' + ADMIN + ' subject:"sign-in code"')}`)).json()).messages?.[0];
+        const code = (codeMail ? (await (await fetch(`${MAILPIT_URL}/api/v1/message/${codeMail.ID}`)).json()).Text : '').match(/\b\d{6}\b/)?.[0];
+        await ev(`(() => { const h = document.querySelector('[data-pin-code-target=hidden]'); h.value = '${code}'; h.form.requestSubmit(); })()`); await sleep(3000);
+        await go(BASE_URL + '/admin/order', 3000);
+        const list = await ev(`({ heads: [...document.querySelectorAll('table thead th')].map(t => t.innerText.trim()), rows: [...document.querySelectorAll('table tbody tr')].map(r => r.innerText.replace(/\s+/g, ' ')) })`);
+        check(`orders list: a "Gift" column, "Arrive by ${nice}" for the gift order, "No" for the others`, list.heads.includes('Gift') && list.rows.some((r) => r.includes(giftOrder) && r.includes(`Arrive by ${nice}`)) && list.rows.some((r) => r.includes(orderNumber) && /\bNo\b/.test(r)), JSON.stringify(list).slice(0, 400));
+        const id = sql(`select id from orders where order_number = '${orderNumber}'`).match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)[0];
+        await go(`${BASE_URL}/admin/order/${id}`, 3000);
+        const page = (await ev(`document.querySelector('main, .content-wrapper, body').innerText`)).replace(/\s+/g, ' ');
+        check("an order's page shows the mobile, delivery instructions and billing address", /Mobile 07700 900123/.test(page) && /Delivery instructions Side gate/.test(page) && /Billing address Ada Billing/.test(page), page.slice(0, 300));
+    }
     summary();
 } finally { b.close(); }
