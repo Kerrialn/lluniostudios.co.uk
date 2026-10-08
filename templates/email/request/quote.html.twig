@@ -1,0 +1,92 @@
+{#
+    The quote (Step 10b.2), in the style of email 02 (Site v4 design; the
+    prototype has no quote email), without a heading: it opens "Dear {first name},"
+    (decided 8 October 2026), then each design with its configuration and
+    quoted price, extra lines, delivery and the total (no VAT: not
+    VAT-registered), what to pay now (all of it, or the deposit and the
+    balance to pay later), the estimated casting date, the studio's note, and
+    "Pay now" (the private quote page) with the date it is valid until.
+    Rendered from what is being sent (Quotes::view()).
+#}
+{% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
+{% import _self as m %}
+{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
+{% set label = 'margin:0 0 10px 0;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
+{% set ruleCell = 'border-top:1px solid #ece3d3;padding:12px 0 0 0;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;' %}
+<!DOCTYPE html>
+<html lang="en-GB" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<title>Your Lumen Forma quote, {{ designRequest.fullName }}</title>
+<style>
+@media only screen and (max-width:620px){.wrap{width:100% !important;}.px,.hpx{padding-left:24px !important;padding-right:24px !important;}.h1{font-size:32px !important;line-height:34px !important;}.lede{font-size:18px !important;line-height:27px !important;}}
+:root{color-scheme:light dark;supported-color-schemes:light dark;}
+</style>
+</head>
+<body style="margin:0;padding:0;background:#15120e;-webkit-text-size-adjust:100%;">
+<span style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">Your quote for Lumen Forma request {{ designRequest.requestNumber }} is ready. Valid until {{ validUntil|date('j F Y', 'Europe/London') }}.</span>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#15120e" style="background:#15120e;">
+<tr><td align="center" style="padding:0;">
+<table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#15120e;">
+<tr><td bgcolor="#15120e" style="background:#15120e;padding:0;"><img src="{{ absolute_url(asset('images/email/header-montage.jpg')) }}" width="600" alt="Llunio Studios — Llunio lamps" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;{{ f }}font-size:13px;line-height:20px;letter-spacing:0.22em;text-transform:uppercase;color:#ece3d3;"></td></tr>
+<tr><td class="px" style="padding:44px 40px 8px 40px;">
+<p class="lede" style="margin:0 0 16px 0;{{ f }}font-weight:300;font-size:20px;line-height:30px;mso-line-height-rule:exactly;color:#ece3d3;">Dear {{ designRequest.firstName }},</p>
+<p class="lede" style="margin:0 0 8px 0;{{ f }}font-weight:300;font-size:20px;line-height:30px;mso-line-height-rule:exactly;color:#ece3d3;">Thank you for your patience. Here is our quote for your Lumen Forma request {{ designRequest.requestNumber }}.</p>
+{% if quote.note %}<p style="margin:16px 0 16px 0;{{ f }}font-size:15px;line-height:24px;mso-line-height-rule:exactly;color:#ece3d3;">{{ quote.note|nl2br }}</p>{% endif %}
+<div style="height:40px;line-height:40px;font-size:1px;">&nbsp;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="{{ ruleCell }}color:#ece3d3;">01</td><td style="{{ ruleCell }}color:#a89b86;text-align:right;">Your configuration</td></tr></table>
+<div style="height:20px;line-height:20px;font-size:1px;">&nbsp;</div>
+{% set quoted = {} %}
+{% for lamp in quote.lamps|filter(l => l.item) %}{% set quoted = quoted|merge({ (lamp.item.id.toRfc4122): lamp.unitPrice }) %}{% endfor %}
+{{ include('email/request/_lamps.html.twig', { quoted: quoted }) }}
+<div style="height:40px;line-height:40px;font-size:1px;">&nbsp;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="{{ ruleCell }}color:#ece3d3;">02</td><td style="{{ ruleCell }}color:#a89b86;text-align:right;">Quote</td></tr></table>
+<div style="height:20px;line-height:20px;font-size:1px;">&nbsp;</div>
+{% set keyStyle = 'padding:10px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
+{% set valueStyle = 'padding:10px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:14px;line-height:20px;color:#ece3d3;text-align:right;' %}
+{% set strongKey = 'padding:14px 0 10px 0;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#ece3d3;' %}
+{% set strongValue = 'padding:14px 0 10px 0;' ~ f ~ 'font-size:18px;line-height:24px;color:#ece3d3;text-align:right;' %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for lamp in quote.lamps %}
+        <tr><td width="60%" style="{{ keyStyle }}">{{ lamp.label }}{% if lamp.quantity > 1 %} × {{ lamp.quantity }}{% endif %}</td><td style="{{ valueStyle }}">{{ m.money(lamp.total) }}</td></tr>
+    {% endfor %}
+    {% for extra in quote.extras %}
+        <tr><td width="60%" style="{{ keyStyle }}">{{ extra.label }}</td><td style="{{ valueStyle }}">{{ m.money(extra.total) }}</td></tr>
+    {% endfor %}
+    <tr><td width="60%" style="{{ keyStyle }}">Delivery · {{ quote.deliveryLabel }}</td><td style="{{ valueStyle }}">{{ m.money(quote.deliveryPrice) }}</td></tr>
+    <tr><td width="60%" style="{{ strongKey }}">Total</td><td style="{{ strongValue }}">{{ m.money(quote.total) }}</td></tr>
+    {% if quote.deposit %}
+        <tr><td width="60%" style="{{ keyStyle }}">Deposit to pay now ({{ quote.depositPercent }}%)</td><td style="{{ valueStyle }}">{{ m.money(quote.dueNow) }}</td></tr>
+        <tr><td width="60%" style="{{ keyStyle }}">Balance to pay later</td><td style="{{ valueStyle }}">{{ m.money(quote.balance) }}</td></tr>
+    {% endif %}
+</table>
+<div style="height:40px;line-height:40px;font-size:1px;">&nbsp;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="{{ ruleCell }}color:#ece3d3;">03</td><td style="{{ ruleCell }}color:#a89b86;text-align:right;">Casting</td></tr></table>
+<div style="height:20px;line-height:20px;font-size:1px;">&nbsp;</div>
+<p style="{{ label }}">Estimated casting date</p>
+<p style="margin:0 0 24px 0;{{ f }}font-weight:300;font-size:26px;line-height:30px;letter-spacing:0.03em;text-transform:uppercase;color:#ece3d3;">{{ quote.castingDate|date('j F Y') }}</p>
+<div style="height:16px;line-height:16px;font-size:1px;">&nbsp;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#ece3d3" style="background:#ece3d3;">
+<a href="{{ url('quote_show', { token: token }) }}" target="_blank" style="display:block;padding:18px 24px;{{ f }}font-weight:500;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:0.16em;color:#15120e;text-decoration:none;">Pay now · {{ m.money(quote.dueNow) }}</a>
+</td></tr></table>
+<p style="margin:16px 0 0 0;{{ f }}font-size:13px;line-height:20px;color:#a89b86;">This quote is valid until {{ validUntil|date('j F Y', 'Europe/London') }}. Reply to this email with any questions.</p>
+</td></tr>
+<tr><td style="padding:48px 0 0 0;"></td></tr>
+<tr><td class="px" style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="1" style="height:1px;line-height:1px;font-size:1px;background:#3a342b;">&nbsp;</td></tr></table></td></tr>
+<tr><td class="px" style="padding:28px 40px 40px 40px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td valign="top" style="{{ f }}font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">Llunio Studios<br>{{ studio_email }}<br>{{ constant('App\\Service\\EmailService::STUDIO_ADDRESS') }}</td>
+<td valign="top" align="right" width="90"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+<td style="padding:0 0 0 12px;"><a href="https://www.instagram.com/llunio_studios/" target="_blank" title="Llunio Studios on Instagram"><img src="{{ absolute_url(asset('images/email/icon-instagram.png')) }}" width="24" height="24" alt="Instagram" style="display:block;width:24px;height:24px;border:0;{{ f }}font-size:11px;color:#a89b86;"></a></td>
+<td style="padding:0 0 0 12px;"><a href="https://www.youtube.com/@LlunioStudios" target="_blank" title="Llunio Studios on YouTube"><img src="{{ absolute_url(asset('images/email/icon-youtube.png')) }}" width="24" height="24" alt="YouTube" style="display:block;width:24px;height:24px;border:0;{{ f }}font-size:11px;color:#a89b86;"></a></td>
+</tr></table></td></tr></table>
+<p style="margin:24px 0 0 0;{{ f }}font-size:12px;line-height:18px;color:#a89b86;">You're receiving this email about your order or enquiry with Llunio Studios. Hand cast in our Dorset Studio.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

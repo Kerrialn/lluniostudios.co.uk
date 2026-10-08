@@ -1,7 +1,7 @@
 // Shared helpers for the browser checks (see README.md): settings, a
 // headless Chrome driven over the DevTools protocol, and a database helper.
 import { spawn, spawnSync, execSync } from 'node:child_process';
-import { mkdirSync, existsSync } from 'node:fs';
+import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -15,6 +15,12 @@ export const MAILPIT_URL = (process.env.MAILPIT_URL || 'http://localhost:52374')
 /** The project (for database commands through docker compose). */
 export const PROJECT_DIR = process.env.PROJECT_DIR || resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 /** Where screenshots and saved emails go: var/browser-checks in the project (ignored by git). */
+// The studio's public email, as the site uses it (STUDIO_EMAIL in .env.local or .env).
+export const STUDIO_EMAIL = process.env.STUDIO_EMAIL || ['.env.local', '.env']
+    .map((file) => join(PROJECT_DIR, file))
+    .filter((file) => existsSync(file))
+    .map((file) => readFileSync(file, 'utf8').match(/^STUDIO_EMAIL=(.+)$/m)?.[1]?.trim())
+    .find(Boolean);
 export const OUT_DIR = process.env.OUT_DIR || join(PROJECT_DIR, 'var', 'browser-checks');
 /** Google Chrome. */
 export const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';

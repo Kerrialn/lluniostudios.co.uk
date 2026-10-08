@@ -21,7 +21,7 @@ use Symfony\Component\Uid\Uuid;
  */
 #[ORM\Entity(repositoryClass: DesignRequestRepository::class)]
 #[ORM\Table(name: 'design_request')]
-class DesignRequest
+class DesignRequest implements HasReferenceNumber
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
@@ -114,7 +114,22 @@ class DesignRequest
         $this->customDetails = $customDetails;
         $this->createdAt = new CarbonImmutable();
         $this->items = new ArrayCollection();
-        $this->requestNumber = 'LR-' . (new CarbonImmutable())->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        $this->requestNumber = ReferenceNumber::make('LR');
+    }
+
+    public static function referenceField(): string
+    {
+        return 'requestNumber';
+    }
+
+    public function getReferenceNumber(): string
+    {
+        return $this->requestNumber;
+    }
+
+    public function renumber(): void
+    {
+        $this->requestNumber = ReferenceNumber::make('LR');
     }
 
     public function getId(): ?Uuid
@@ -140,6 +155,14 @@ class DesignRequest
     public function getFullName(): string
     {
         return $this->fullName;
+    }
+
+    /**
+     * The first word of the full name, for "Dear Ada," (as the sign-in email).
+     */
+    public function getFirstName(): string
+    {
+        return explode(' ', trim($this->fullName))[0];
     }
 
     public function getEmail(): string

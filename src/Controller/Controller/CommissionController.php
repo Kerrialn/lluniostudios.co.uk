@@ -49,6 +49,9 @@ final class CommissionController extends AbstractController
         #[Autowire(service: 'limiter.commission_enquiry')]
         private readonly RateLimiterFactoryInterface $limiter,
         // The debug toolbar's profiler; only present locally.
+        // The studio's public email (STUDIO_EMAIL in .env).
+        #[Autowire('%env(STUDIO_EMAIL)%')]
+        private readonly string $studioEmail = '',
         #[Autowire(service: 'profiler')]
         private readonly ?Profiler $profiler = null,
     ) {
@@ -111,7 +114,7 @@ final class CommissionController extends AbstractController
                     return $this->redirectToRoute('commissions_received');
                 }
 
-                $form->addError(new FormError("You've sent several enquiries in a short time. Please try again in an hour, or email us at info@lluniostudios.co.uk."));
+                $form->addError(new FormError("You've sent several enquiries in a short time. Please try again in an hour, or email us at " . $this->studioEmail . '.'));
             }
         }
 

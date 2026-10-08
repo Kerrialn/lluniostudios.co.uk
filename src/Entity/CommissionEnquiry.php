@@ -22,7 +22,7 @@ use Symfony\Component\Uid\Uuid;
  */
 #[ORM\Entity(repositoryClass: CommissionEnquiryRepository::class)]
 #[ORM\Table(name: 'commission_enquiry')]
-class CommissionEnquiry
+class CommissionEnquiry implements HasReferenceNumber
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
@@ -107,7 +107,22 @@ class CommissionEnquiry
         $this->phone = $phone;
         $this->createdAt = new CarbonImmutable();
         $this->files = new ArrayCollection();
-        $this->enquiryNumber = 'LC-' . (new CarbonImmutable())->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        $this->enquiryNumber = ReferenceNumber::make('LC');
+    }
+
+    public static function referenceField(): string
+    {
+        return 'enquiryNumber';
+    }
+
+    public function getReferenceNumber(): string
+    {
+        return $this->enquiryNumber;
+    }
+
+    public function renumber(): void
+    {
+        $this->enquiryNumber = ReferenceNumber::make('LC');
     }
 
     public static function forHome(string $name, string $email, ?string $phone, string $contactMethod, string $idea): self

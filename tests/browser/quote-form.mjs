@@ -27,12 +27,12 @@ try {
     await force('lumen-forma-atelier', 2);
     const form = { fullName: 'Ada Quote', email: EMAIL, phone: '07700 900123', addressLine1: '1 High Street', town: 'Wimborne', county: 'Dorset', postcode: 'BH21 1AA', accessNotes: 'Narrow gate.' };
     await ev(`(() => { for (const [k, v] of Object.entries(${JSON.stringify(form)})) document.querySelector('[name="reserve_form[' + k + ']"]').value = v; document.querySelector('form[name=reserve_form]').requestSubmit(); })()`); await sleep(3000);
-    const number = sql(`select request_number from design_request where email = '${EMAIL}' order by created_at desc limit 1`).match(/LR-\d{8}-[0-9A-F]{6}/)?.[0];
+    const number = sql(`select request_number from design_request where email = '${EMAIL}' order by created_at desc limit 1`).match(/LR-\d{6}-\d{4}/)?.[0];
     check('a request is sent through Reserve Your Design', !!number, number);
     // A Monument (200cm, longer than DPD takes) on its own request, to see a pallet price.
     await force('lumen-forma-monument', 1);
     await ev(`(() => { for (const [k, v] of Object.entries(${JSON.stringify({ ...form, fullName: 'Ada Pallet' })})) document.querySelector('[name="reserve_form[' + k + ']"]').value = v; document.querySelector('form[name=reserve_form]').requestSubmit(); })()`); await sleep(3000);
-    const palletNumber = sql(`select request_number from design_request where email = '${EMAIL}' and full_name = 'Ada Pallet' order by created_at desc limit 1`).match(/LR-\d{8}-[0-9A-F]{6}/)?.[0];
+    const palletNumber = sql(`select request_number from design_request where email = '${EMAIL}' and full_name = 'Ada Pallet' order by created_at desc limit 1`).match(/LR-\d{6}-\d{4}/)?.[0];
 
     // Admin.
     const since = new Date();

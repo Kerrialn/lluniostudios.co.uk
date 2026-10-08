@@ -8,6 +8,7 @@ use App\Entity\CommissionEnquiry;
 use App\Entity\DesignRequest;
 use App\Entity\NewsletterSubscriber;
 use App\Entity\Order;
+use App\Entity\Quote;
 use App\Entity\User;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -19,19 +20,19 @@ final readonly class EmailService
 {
     private const SENDER_EMAIL_ADDRESS = 'notifications@lluniostudios.co.uk';
 
-    /**
-     * Shown in the footer of the branded emails.
-     */
-    public const STUDIO_EMAIL = 'info@lluniostudios.co.uk';
-
     public const STUDIO_ADDRESS = 'Hogsmeade, Higher Merley Ln, Wimborne BH21 3EG';
 
     public const SIGN_IN_SUBJECT = 'Sign in to Llunio Studios';
+
+    public const QUOTE_SUBJECT = 'Your Lumen Forma quote';
 
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(STUDIO_NOTIFICATION_EMAIL)%')]
         private string $studioNotificationEmail,
+        // The studio's public email (replies to customer emails): STUDIO_EMAIL in .env.
+        #[Autowire('%env(STUDIO_EMAIL)%')]
+        private string $studioEmail,
     )
     {
     }
@@ -51,6 +52,33 @@ final readonly class EmailService
                 'opening' => RequestReceivedCopy::opening($designRequest),
             ],
         );
+    }
+
+    /**
+     * The studio's quote for a request (Step 10b.2): the breakdown, what to
+     * pay now, the casting date and note, and "Pay now" (the private quote
+     * page). Replies go to the studio.
+     *
+     * @param array<string, mixed> $view as Quotes::view()
+     */
+    public function sendQuoteEmail(Quote $quote, array $view, string $token, \DateTimeImmutable $validUntil): void
+    {
+        $request = $quote->getDesignRequest();
+        $email = $this->compose(
+            subject: self::QUOTE_SUBJECT . ', ' . $request->getFullName(),
+            template: '/email/request/quote.html.twig',
+            email: $request->getEmail(),
+            name: $request->getFullName(),
+            context: [
+                'designRequest' => $request,
+                'quote' => $view,
+                'token' => $token,
+                'validUntil' => $validUntil,
+            ],
+        );
+        $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
+
+        $this->mailer->send($email);
     }
 
     /**
@@ -161,7 +189,7 @@ final readonly class EmailService
     }
 
     /**
-     * @param array<string|int|object> $context
+     * @param array<string, mixed> $context
      */
     private function compose(
         string $subject,
@@ -184,7 +212,7 @@ final readonly class EmailService
     }
 
     /**
-     * @param array<string|int|object> $context
+     * @param array<string, mixed> $context
      * @throws TransportExceptionInterface
      */
     private function send(

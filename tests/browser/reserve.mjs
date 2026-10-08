@@ -84,8 +84,10 @@ check('what was typed is kept', (await ev(`document.querySelector('[name="reserv
 await setField('email', 'ada.test@example.test'); await setField('postcode', 'bh21 1aa'); await setField('county', 'Dorset'); await setField('accessNotes', 'Two flights of stairs.'); await setField('customDetails', 'Warm grey, close to RAL 7044.');
 await submit(); p = await page();
 check('sending it shows "Reservation received": heading, the message, the confirmation line, no request number', p.path === '/reserve/received' && /^Reservation Received/i.test(p.text) && /Your design request has been received/.test(p.text) && /Confirmation has been sent to the email address provided\./.test(p.text) && !/LR-\d/.test(p.text), p.text.slice(0, 160));
-const number = (sql(`select request_number from design_request where email = 'ada.test@example.test' order by created_at desc limit 1`).match(/LR-\d{8}-[0-9A-F]{6}/) || [])[0];
+const number = (sql(`select request_number from design_request where email = 'ada.test@example.test' order by created_at desc limit 1`).match(/LR-\d{6}-\d{4}/) || [])[0];
 check('one request saved', requests() === before + 1);
+const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Europe/London' }).replace(/\//g, '');
+check(`its reference: LR, today's date as DDMMYY, then 4 digits (LR-${today}-…)`, new RegExp(`^LR-${today}-\\d{4}$`).test(number ?? ''), number);
 const address = sql(`select concat_ws('|', address_line1, coalesce(address_line2, '-'), town, county, postcode, country, coalesce(delivery_address, '-')) as a from design_request where request_number = '${number}'`);
 check('the address saved in its fields (postcode tidied, United Kingdom)', /1 High Street\|-\|Wimborne\|Dorset\|BH21 1AA\|GB\|-/.test(address), address.replace(/\s+/g, ' '));
 const row = sql(`select status, full_name, email, phone, access_notes, custom_details, (select count(*) from design_request_item i where i.design_request_id = r.id) as items, (select sum(quantity) from design_request_item i where i.design_request_id = r.id) as lamps from design_request r where request_number = '${number}'`);

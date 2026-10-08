@@ -26,6 +26,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -34,7 +35,8 @@ use Symfony\Component\HttpFoundation\Response;
  * Quoted, Paid). Requests come from the website only; the customer's details
  * and lamps are read-only here. The status can be changed by hand until the
  * quotes step (Step 10b) sets it. "Quote" opens the request's quote (10b.1:
- * prepared and saved as a draft; nothing is sent).
+ * prepared and saved as a draft; 10b.2: "Send quote" emails it and marks the
+ * request Quoted).
  *
  * @extends AbstractCrudController<DesignRequest>
  */
@@ -119,13 +121,15 @@ class DesignRequestCrudController extends AbstractCrudController
     /**
      * The request's quote: a draft until it is sent (10b.2). Prices start
      * from the request's sizes and the delivery estimate; saving keeps it.
+     * "Send quote" saves, then emails it (only when it has a casting date and
+     * a total); sent again after changes, it is valid for a new 14 days.
      *
      * @param AdminContext<DesignRequest> $context
      */
     #[AdminRoute(path: '/{entityId}/quote', name: 'quote', options: [
         'methods' => ['GET', 'POST'],
     ])]
-    public function quote(AdminContext $context, Request $request, Quotes $quotes, QuoteDelivery $delivery, AdminUrlGenerator $urls): Response
+    public function quote(AdminContext $context, Request $request, Quotes $quotes, QuoteDelivery $delivery, AdminUrlGenerator $urls, LoggerInterface $logger): Response
     {
         $designRequest = $context->getEntity()->getInstance();
         if (! $designRequest instanceof DesignRequest) {
@@ -139,7 +143,24 @@ class DesignRequestCrudController extends AbstractCrudController
             /** @var array{lamps: array<int, int>, extras: array<int, array{label: string, price: int}>, delivery: int, deliveryLabel: string, payment: QuotePayment, depositPercent: int, castingDate: ?\DateTimeImmutable, note: ?string} $data */
             $data = $form->getData();
             $quotes->save($quote, $data);
-            $this->addFlash('success', 'Quote saved as a draft. Nothing has been sent to the customer.');
+            if (! $request->request->has('send')) {
+                $this->addFlash('success', $quote->isSent()
+                    ? 'Quote saved. Not sent: the customer still sees the quote sent on ' . $this->ukDate($quote->getSentAt()) . '.'
+                    : 'Quote saved as a draft. Nothing has been sent to the customer.');
+            } elseif (($problem = $quotes->sendingProblem($quote)) !== null) {
+                $this->addFlash('danger', 'Quote saved but not sent. ' . $problem);
+            } else {
+                try {
+                    $quotes->send($quote);
+                    $this->addFlash('success', 'Quote sent to ' . $designRequest->getEmail() . '. It is valid until ' . $this->ukDate($quote->getExpiresAt()) . '.');
+                } catch (\Throwable $exception) {
+                    $logger->error('Sending a quote failed', [
+                        'request' => $designRequest->getRequestNumber(),
+                        'exception' => $exception,
+                    ]);
+                    $this->addFlash('danger', 'Quote saved but not sent: the email could not be sent. Please try again.');
+                }
+            }
 
             return $this->redirect($urls->setController(self::class)->setAction('quote')->setEntityId($designRequest->getId())->generateUrl());
         }
@@ -148,10 +169,18 @@ class DesignRequestCrudController extends AbstractCrudController
             'designRequest' => $designRequest,
             'quote' => $quote,
             'saved' => $quote->getId() !== null,
+            'customerUrl' => $quote->getToken() === null ? null : $this->generateUrl('quote_show', [
+                'token' => $quote->getToken(),
+            ]),
             'form' => $form,
             'estimate' => $delivery->estimate($designRequest),
             'backUrl' => $urls->setController(self::class)->setAction(Action::DETAIL)->setEntityId($designRequest->getId())->generateUrl(),
         ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+    }
+
+    private function ukDate(?\DateTimeImmutable $date): string
+    {
+        return $date?->setTimezone(new \DateTimeZone('Europe/London'))->format('j F Y') ?? '';
     }
 
     /**

@@ -16,7 +16,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: 'orders')]
 #[ORM\HasLifecycleCallbacks]
-class Order
+class Order implements HasReferenceNumber
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
@@ -127,7 +127,22 @@ class Order
 
     private function generateOrderNumber(): string
     {
-        return 'LS-' . (new CarbonImmutable())->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        return ReferenceNumber::make('LS');
+    }
+
+    public static function referenceField(): string
+    {
+        return 'orderNumber';
+    }
+
+    public function getReferenceNumber(): string
+    {
+        return $this->orderNumber;
+    }
+
+    public function renumber(): void
+    {
+        $this->orderNumber = ReferenceNumber::make('LS');
     }
 
     #[ORM\PreUpdate]

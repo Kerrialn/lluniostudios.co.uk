@@ -5,7 +5,7 @@
 // nothing revealed); "Your Orders" listing placed orders only; an order's
 // page; signing out. An order is placed first (paid with Stripe's test card,
 // as a wallet would).
-import { open, sleep, checker, sql, BASE_URL, MAILPIT_URL } from './lib.mjs';
+import { open, sleep, checker, sql, BASE_URL, MAILPIT_URL, STUDIO_EMAIL } from './lib.mjs';
 
 const { check, summary } = checker();
 const EMAIL = 'ada.signin@example.test';
@@ -48,6 +48,8 @@ try {
     check('the footer no longer has "Sign in"', !/sign in|your orders/i.test(await c.ev(`document.querySelector('footer').innerText`)));
     const link = await c.ev(`[...document.querySelectorAll('main a')].find(a => a.textContent.trim() === 'Your orders')?.getAttribute('href')`);
     check('the Contact page has a "Your orders" link', link === '/account/orders', link);
+    const contactEmail = await c.ev(`[...document.querySelectorAll('main a[href^="mailto:"]')].map(a => a.getAttribute('href') + ' ' + a.textContent.trim())`);
+    check(`the Contact page's email is the studio's (${STUDIO_EMAIL})`, JSON.stringify(contactEmail) === JSON.stringify([`mailto:${STUDIO_EMAIL} ${STUDIO_EMAIL}`]), JSON.stringify(contactEmail));
     await c.ev(`[...document.querySelectorAll('main a')].find(a => a.textContent.trim() === 'Your orders').click()`); await sleep(2200);
     const login = await c.ev(`({ path: location.pathname, h1: document.querySelector('main h1')?.innerText, text: document.querySelector('main').innerText, button: document.querySelector('main button[type=submit]')?.textContent.trim(), bg: getComputedStyle(document.querySelector('main')).backgroundColor })`);
     check('it asks to sign in first, on the restyled Sign In page', login.path === '/login' && login.h1 === 'SIGN IN' && /sign-in link, with a 6-digit code as a backup/.test(login.text) && login.button === 'Send sign-in email' && login.bg === 'rgb(21, 18, 14)', JSON.stringify(login).slice(0, 300));

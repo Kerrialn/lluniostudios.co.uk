@@ -210,7 +210,7 @@ final class DesignRequestLampsTest extends TestCase
             $request->addItem($item);
         }
 
-        self::assertMatchesRegularExpression('/^LR-\d{8}-[0-9A-F]{6}$/', $request->getRequestNumber());
+        self::assertMatchesRegularExpression('/^LR-\d{6}-\d{4}$/', $request->getRequestNumber());
         self::assertSame('new', $request->getStatus()->value);
         self::assertSame('New', $request->getStatus()->label());
         self::assertSame(2, $request->getLampCount());
@@ -224,6 +224,8 @@ final class DesignRequestLampsTest extends TestCase
         self::assertSame(['1 High Street', 'Douglas', 'IM1 1AA', 'Isle of Man'], $request->getAddressLines());
         self::assertSame("1 High Street\nDouglas\nIM1 1AA\nIsle of Man", $request->getDeliveryAddress());
         self::assertSame('IM1 1AA', $request->getPostcode());
+        self::assertSame('Ada', $request->getFirstName());
+        self::assertSame('Cher', (new DesignRequest('  Cher ', 'cher@example.test', '07700 900123'))->getFirstName());
         self::assertNull($request->getLegacyDeliveryAddress());
     }
 

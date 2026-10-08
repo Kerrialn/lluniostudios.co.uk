@@ -9,7 +9,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, PROJECT_DIR } from './lib.mjs';
+import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, PROJECT_DIR, STUDIO_EMAIL } from './lib.mjs';
 
 const ADMIN = 'lluniostudios@gmail.com';
 const STORE = join(PROJECT_DIR, 'var', 'commission-uploads');
@@ -48,8 +48,8 @@ try {
     await submit('home');
     check('a Home enquiry is saved', count("email like '%@example.test'") === before + 1);
     let row = sql(`select enquiry_number, client, status, name, phone, contact_method, idea, company from commission_enquiry where email = 'ada.test@example.test' order by created_at desc limit 1`);
-    check('with its details: LC- number, Home, New, name, phone, Phone chosen, idea', /LC-\d{8}-[0-9A-F]{6}/.test(row) && /\bhome\b/.test(row) && /\bnew\b/.test(row) && /07700 900123/.test(row) && /\bphone\b/.test(row) && /stairwell/.test(row), row);
-    const homeNumber = row.match(/LC-\d{8}-[0-9A-F]{6}/)?.[0];
+    check('with its details: LC- number, Home, New, name, phone, Phone chosen, idea', /LC-\d{6}-\d{4}/.test(row) && /\bhome\b/.test(row) && /\bnew\b/.test(row) && /07700 900123/.test(row) && /\bphone\b/.test(row) && /stairwell/.test(row), row);
+    const homeNumber = row.match(/LC-\d{6}-\d{4}/)?.[0];
     let page = await received();
     check('"Commission submitted": heading, the Home message, the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.replace(/\s+/g, ' ') === "COMMISSION SUBMITTED Your vision is in our hands. We are reviewing your space's requirements and will contact you within two working days to begin shaping your design. Confirmation has been sent to the email address provided." && page.nav === 'page', JSON.stringify(page));
 
@@ -86,7 +86,7 @@ try {
     row = sql(`select client, name, company, project_type, location, project, integration, phone from commission_enquiry where email = 'ada.test@example.test' order by created_at desc limit 1`);
     check('a Project enquiry is saved with its details (a 30MB file accepted)', /\bproject\b/.test(row) && /Test Architects Ltd/.test(row) && /Hospitality/.test(row) && /Bath, installing spring 2027/.test(row) && /DALI dimming/.test(row), row);
     check('its file is recorded', /Lobby elevations\.dwg\s+31457280/.test(sql(`select f.original_name, f.size from commission_enquiry_file f join commission_enquiry e on e.id = f.enquiry_id order by e.created_at desc limit 1`)));
-    const projectNumber = sql(`select enquiry_number from commission_enquiry where client = 'project' order by created_at desc limit 1`).match(/LC-\d{8}-[0-9A-F]{6}/)?.[0];
+    const projectNumber = sql(`select enquiry_number from commission_enquiry where client = 'project' order by created_at desc limit 1`).match(/LC-\d{6}-\d{4}/)?.[0];
     page = await received();
     check('"Commission submitted": the Project message and the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.includes('We are reviewing the architectural scope and structural parameters and will contact you within two working days to begin shaping your design.') && page.text.endsWith('Confirmation has been sent to the email address provided.') && !/LC-\d/.test(page.text), JSON.stringify(page));
     const layout = await ev(`(() => { const h = document.querySelector('main h1'); const p = document.querySelector('main p'); const c = h.parentElement; const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(c).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(p).fontSize, pColour: getComputedStyle(p).color, rule: getComputedStyle(p.parentElement).borderTopStyle }; })()`);
@@ -137,7 +137,7 @@ try {
     for (let i = 0; i < 3; i++) { await go(BASE_URL + '/bespoke-commissions?for=home'); await fill('home', home); await submit('home'); }
     check('5 enquiries in an hour are saved', count("email like '%@example.test'") === before + 5);
     await go(BASE_URL + '/bespoke-commissions?for=home'); await fill('home', home); await submit('home');
-    check('a 6th is refused with a message, and what was typed is kept', count("email like '%@example.test'") === before + 5 && JSON.stringify(await errors()) === JSON.stringify(["You've sent several enquiries in a short time. Please try again in an hour, or email us at info@lluniostudios.co.uk."]) && (await ev(`document.querySelector('[name="commission_home[name]"]').value`)) === 'Ada Test');
+    check('a 6th is refused with a message, and what was typed is kept', count("email like '%@example.test'") === before + 5 && JSON.stringify(await errors()) === JSON.stringify([`You've sent several enquiries in a short time. Please try again in an hour, or email us at ${STUDIO_EMAIL}.`]) && (await ev(`document.querySelector('[name="commission_home[name]"]').value`)) === 'Ada Test');
     resetLimit();
 
     // Admin.

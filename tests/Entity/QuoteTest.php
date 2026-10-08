@@ -48,4 +48,39 @@ final class QuoteTest extends TestCase
         self::assertSame(16666, $quote->getBalance());
         self::assertSame(Quote::DEFAULT_DEPOSIT_PERCENT, (new Quote(new DesignRequest('A', 'a@example.test', '1')))->getDepositPercent());
     }
+
+    public function testValidUntilTheEndOfTheFourteenthDayUkTime(): void
+    {
+        // Sent 8 October 2026, 23:30 UK time (22:30 UTC): valid until 22 October, 23:59:59 UK time.
+        $expiry = Quote::expiryFor(new \DateTimeImmutable('2026-10-08 22:30:00', new \DateTimeZone('UTC')));
+        self::assertSame('2026-10-22 23:59:59', $expiry->setTimezone(new \DateTimeZone('Europe/London'))->format('Y-m-d H:i:s'));
+        // Across the clocks going back (25 October): still the end of the UK day.
+        $expiry = Quote::expiryFor(new \DateTimeImmutable('2026-10-20 09:00:00', new \DateTimeZone('UTC')));
+        self::assertSame('2026-11-03 23:59:59', $expiry->setTimezone(new \DateTimeZone('Europe/London'))->format('Y-m-d H:i:s'));
+    }
+
+    public function testSendingKeepsWhatWasSentUntilSentAgain(): void
+    {
+        $quote = new Quote(new DesignRequest('Ada Test', 'ada@example.test', '07700 900123'));
+        $quote->addLine(QuoteLine::extra('Lamp', 100000));
+        $quote->setCastingDate(new \DateTimeImmutable('2026-11-16'));
+        self::assertFalse($quote->isSent());
+        self::assertFalse($quote->isChangedSinceSent());
+
+        $sentAt = new \DateTimeImmutable('2026-10-08 10:00:00', new \DateTimeZone('UTC'));
+        $quote->markSent('token-one-abcdefghijk', $sentAt);
+        self::assertTrue($quote->isSent());
+        self::assertFalse($quote->isChangedSinceSent());
+        self::assertFalse($quote->isExpired(new \DateTimeImmutable('2026-10-22 22:00:00', new \DateTimeZone('UTC'))));
+        self::assertTrue($quote->isExpired(new \DateTimeImmutable('2026-10-22 23:00:00', new \DateTimeZone('UTC'))));
+
+        $quote->setDelivery(6000, 'DPD Next Day Delivery', false);
+        self::assertTrue($quote->isChangedSinceSent());
+        self::assertSame(100000, $quote->getSent()['total'] ?? null);
+
+        $quote->markSent('token-two-abcdefghijk', $sentAt->modify('+1 day'));
+        self::assertFalse($quote->isChangedSinceSent());
+        self::assertSame(106000, $quote->getSent()['total'] ?? null);
+        self::assertSame('token-one-abcdefghijk', $quote->getToken(), 'the link stays the same when sent again');
+    }
 }

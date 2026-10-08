@@ -4,7 +4,9 @@
 {#
     A request's quote in admin (Step 10b.1). Prices start from the request
     (each size's price) and the carriers' delivery estimate; everything can
-    be changed. Saved as a draft: nothing is sent to the customer yet.
+    be changed. "Save draft" sends nothing; "Send quote" (10b.2) saves, then
+    emails the customer (the request becomes Quoted). Once sent, the
+    customer's page shows what was sent until it is sent again.
     The totals update as prices are typed (script at the end); the server
     works them out again when the quote is saved.
 #}
@@ -18,13 +20,20 @@
 {% endblock %}
 
 {% block main %}
-    <p class="text-muted">
-        {% if saved %}
+    <p class="text-muted" data-quote-state>
+        {% if quote.isSent %}
+            Sent {{ quote.sentAt|date('j F Y, H:i', 'Europe/London') }} to {{ designRequest.email }}.
+            {% if quote.expired %}<strong class="text-danger">Expired on {{ quote.expiresAt|date('j F Y', 'Europe/London') }}.</strong> Send it again for a new 14 days.{% else %}Valid until {{ quote.expiresAt|date('j F Y', 'Europe/London') }}.{% endif %}
+            <a href="{{ customerUrl }}" target="_blank" rel="noopener">Open the customer's quote page</a>
+        {% elseif saved %}
             Draft, last saved {{ quote.updatedAt|date('j F Y, H:i', 'Europe/London') }}. Nothing has been sent to the customer.
         {% else %}
             New draft, not saved yet. Prices are filled in from the request and the delivery estimate.
         {% endif %}
     </p>
+    {% if quote.changedSinceSent %}
+        <div class="alert alert-warning small" data-quote-changed>Changed since it was sent: the customer still sees the quote sent on {{ quote.sentAt|date('j F Y', 'Europe/London') }}. Send it again for them to see the changes (valid for a new 14 days).</div>
+    {% endif %}
 
     <div class="card mb-4">
         <div class="card-body">
@@ -137,8 +146,9 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Save draft</button>
-        <span class="small text-muted ms-2">Saving does not send anything to the customer.</span>
+        <button type="submit" class="btn btn-secondary">{{ quote.isSent ? 'Save' : 'Save draft' }}</button>
+        <button type="submit" name="send" value="1" class="btn btn-primary ms-2" data-quote-send data-confirm="{{ (quote.isSent ? 'Send this quote again to ' : 'Send this quote to ') ~ designRequest.email ~ '? It will be valid for 14 days.' }}">{{ quote.isSent ? 'Send again' : 'Send quote' }}</button>
+        <span class="small text-muted ms-2">Saving does not send anything. Sending needs the estimated casting date.</span>
     {{ form_end(form) }}
 
     <script>
@@ -186,6 +196,9 @@
                 if (!event.target.matches('[data-quote-remove]')) return;
                 event.target.closest('[data-quote-extra]').remove();
                 recalc();
+            });
+            form.querySelector('[data-quote-send]').addEventListener('click', (event) => {
+                if (!window.confirm(event.currentTarget.dataset.confirm)) event.preventDefault();
             });
             form.addEventListener('input', recalc);
             form.addEventListener('change', recalc);
