@@ -45,7 +45,12 @@ try {
     await ev(`document.querySelector('[data-configurator-target=back]').click()`); s = await state();
     check('Back: 05 / 06 The Light', s.num === '05 / 06' && s.title === 'The Light' && s.next === 'Your Lumen Forma');
 
+    // Every choice made: a reload opens on the review, the panel revealed (remembered choices).
     await send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1500);
-    check('reload starts unrevealed again (no memory)', (await ev(`document.querySelector('.ll-cfg-panel').getBoundingClientRect().width`)) === 0 && !(await ev(`document.querySelector('[data-controller~=configurator]').classList.contains('is-revealed')`)));
+    for (let i = 0; i < 20 && !(await ev(`document.querySelector('[data-controller~=configurator]').classList.contains('is-revealed')`)); i++) await sleep(250);
+    check('reload with a finished design: the panel revealed on 06', (await ev(`document.querySelector('[data-controller~=configurator]').classList.contains('is-revealed')`)) && (await ev(`document.querySelector('[data-configurator-target=stageNumber]').textContent`)) === '06 / 06');
+    await b.clearStorage();
+    await send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1500);
+    check('reload with nothing remembered starts unrevealed again', (await ev(`document.querySelector('.ll-cfg-panel').getBoundingClientRect().width`)) === 0 && !(await ev(`document.querySelector('[data-controller~=configurator]').classList.contains('is-revealed')`)));
     summary();
 } finally { b.close(); }

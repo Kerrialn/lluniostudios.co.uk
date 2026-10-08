@@ -36,6 +36,24 @@ final class ShippingProviderResolver
     }
 
     /**
+     * For quotes on requests (Step 10b): DPD and Palletways whatever the
+     * checkout settings, as requests include sizes too large for DPD.
+     *
+     * @return list<ShippingProviderInterface>
+     */
+    public function quoteProviders(): array
+    {
+        $live = $this->mode === 'live';
+
+        return [$live ? $this->dpd : $this->mockDpd, $live ? $this->palletways : $this->mockPalletways];
+    }
+
+    public function isLive(): bool
+    {
+        return $this->mode === 'live';
+    }
+
+    /**
      * @return list<ShippingProviderInterface>
      */
     public function providers(): array

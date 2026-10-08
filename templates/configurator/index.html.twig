@@ -5,8 +5,9 @@
     Sub-step 7.1: full-bleed photo with the Gallery photos cross-fading behind
     the title until the visitor scrolls, clicks, taps or presses a key; then
     the options panel (25% wide, min 300px; below the photo on phones) reveals
-    and the title and "Scroll to begin" fade. No memory between visits. The
-    panel frame moves between the six stages.
+    and the title and "Scroll to begin" fade. The reveal starts fresh on every visit;
+    the choices are remembered (configurator_controller.js), with "Start
+    again" to clear them. The panel frame moves between the six stages.
     Sub-step 7.2: the stages' size, option lists, specifications and quantity
     (data from LumenFormaConfigurator).
     Sub-step 7.3: the photo beside the panel per stage (size galleries, option
@@ -39,7 +40,6 @@
             custom: constant('App\\Service\\BasketRules::ROUTE_NOTES')[constant('App\\Service\\BasketRules::CUSTOM_OPTION_MESSAGE')],
             sizeAndCustom: constant('App\\Service\\BasketRules::ROUTE_NOTE_SIZE_AND_CUSTOM'),
             directSub: constant('App\\Service\\BasketRules::SUB_DIRECT'),
-            reserveSub: constant('App\\Service\\BasketRules::SUB_RESERVE'),
         },
     } %}
     {% if edit %}{% set configuratorValues = configuratorValues|merge({ edit: edit }) %}{% endif %}
@@ -154,7 +154,11 @@
                     </div>
 
                     <div class="flex flex-col gap-3.5">
-                        <span class="text-[11px] uppercase tracking-[0.2em] text-ll-mute" data-configurator-target="stageNumber">01 / {{ pad|format(stages|length) }}</span>
+                        <div class="flex justify-between items-baseline gap-4">
+                            <span class="text-[11px] uppercase tracking-[0.2em] text-ll-mute" data-configurator-target="stageNumber">01 / {{ pad|format(stages|length) }}</span>
+                            {# Clears the remembered choices (shown once something is chosen; not when editing a basket line). #}
+                            {% if not editing %}<a href="{{ path('lighting_designs') }}" class="text-[11px] text-ll-mute underline underline-offset-[3px] transition-colors hover:text-ll-ink" data-configurator-target="startAgain" data-action="configurator#startAgain" hidden>Start again</a>{% endif %}
+                        </div>
                         <h2 class="font-light text-[15px] leading-[1.02] uppercase tracking-[0.03em]" data-configurator-target="stageTitle">{{ stages|first }}</h2>
                     </div>
 

@@ -5,8 +5,9 @@ import { Controller } from '@hotwired/stimulus';
  * (scroll, wheel, click/tap, touch-move or key), as in the Site v4 prototype:
  * the hero shrinks, "Scroll to begin" fades and the content below fades in.
  * Interactions in the first 500ms after arriving are ignored (e.g. scroll
- * restoration). Nothing is remembered: every visit starts unrevealed, unless
- * the page asks to open revealed (open value, e.g. editing a basket line).
+ * restoration). Every visit starts unrevealed, unless the page asks to open
+ * revealed (open value, e.g. editing a basket line) or another controller
+ * calls reveal() (the configurator, for a returning visitor's finished design).
  * The visual states live in app.css (.ll-reveal-*).
  */
 const EVENTS = ['wheel', 'scroll', 'click', 'keydown', 'touchmove'];

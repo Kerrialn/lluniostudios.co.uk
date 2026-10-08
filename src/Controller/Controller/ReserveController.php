@@ -11,6 +11,7 @@ use App\Repository\CartRepository;
 use App\Service\CartResolver;
 use App\Service\DesignRequestLamps;
 use App\Service\EmailService;
+use App\Shipping\DeliveryArea;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -67,21 +68,36 @@ final class ReserveController extends AbstractController
 
         $customChoices = DesignRequestLamps::hasCustomChoice($items);
         $prefill = $request->isMethod('GET') ? $request->getSession()->remove(self::PREFILL_KEY) : null;
-        $form = $this->createForm(ReserveForm::class, \is_array($prefill) ? array_map(static fn (mixed $value): ?string => \is_string($value) && $value !== '' ? $value : null, $prefill) : null, [
+        $start = [
+            'country' => 'GB',
+        ];
+        if (\is_array($prefill)) {
+            $start = array_merge($start, array_filter(array_map(static fn (mixed $value): ?string => \is_string($value) && $value !== '' ? $value : null, $prefill), static fn (?string $value): bool => $value !== null));
+        }
+
+        $form = $this->createForm(ReserveForm::class, $start, [
             'custom_choices' => $customChoices,
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array{fullName: string, email: string, phone: string, deliveryAddress: string, accessNotes: ?string, customDetails?: ?string} $data */
+            /** @var array{fullName: string, email: string, phone: string, addressLine1: string, addressLine2: ?string, town: string, county: ?string, postcode: string, country: string, accessNotes: ?string, customDetails?: ?string} $data */
             $data = $form->getData();
             $designRequest = new DesignRequest(
                 fullName: trim($data['fullName']),
                 email: trim($data['email']),
                 phone: trim($data['phone']),
-                deliveryAddress: trim($data['deliveryAddress']),
                 accessNotes: null === $data['accessNotes'] ? null : trim($data['accessNotes']),
                 customDetails: $customChoices ? trim((string) ($data['customDetails'] ?? '')) : null,
+            );
+            $optional = static fn (?string $value): ?string => ($value = trim((string) $value)) === '' ? null : $value;
+            $designRequest->setAddress(
+                trim($data['addressLine1']),
+                $optional($data['addressLine2']),
+                trim($data['town']),
+                $optional($data['county']),
+                (string) DeliveryArea::normalise($data['postcode']),
+                $data['country'],
             );
             foreach ($items as $item) {
                 $designRequest->addItem($item);
@@ -98,6 +114,8 @@ final class ReserveController extends AbstractController
             }
 
             $this->entityManager->flush();
+            // What was typed is used, and the configurator's choices if its lamp was in the request.
+            $request->getSession()->set(ConfiguratorController::FORGET_CHOICES_KEY, $this->lamps->hasNewPending() ? ['reserve', 'configurator'] : ['reserve']);
             $this->lamps->forgetPending();
 
             // The request is saved either way; a mail problem is logged, not shown.

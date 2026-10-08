@@ -34,7 +34,7 @@ final class RequestReceivedCopyTest extends TestCase
     #[DataProvider('combinations')]
     public function testOpeningSentence(bool $custom, int $lamps, bool $larger, string $expected): void
     {
-        $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123', 'BH21 1AA');
+        $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123');
 
         // A direct-size line holding the lamps (and any Custom choice), plus a
         // larger-size line when needed; exactly $lamps lamps in total.
@@ -68,7 +68,7 @@ final class RequestReceivedCopyTest extends TestCase
 
     public function testACustomCableCountsAsACustomOption(): void
     {
-        $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123', 'BH21 1AA');
+        $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123');
         $request->addItem(new DesignRequestItem((new Product())->setTitle('Lumen Forma Studio')->setDirectOrder(true), 'Lumen Forma Studio', 'Studio', 39900, 1, false, [
             [
                 'option' => 'Cable Colour',

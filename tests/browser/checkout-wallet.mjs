@@ -67,8 +67,8 @@ try {
     r = await send_(wallet({ line1: '2 Harbour Road', city: 'Belfast', state: '', postal_code: 'BT1 1AA' }));
     check('a wallet address in Northern Ireland goes to Reserve Your Design', r.status === 'redirect' && /\/reserve/.test(r.url), JSON.stringify(r));
     await go(BASE_URL + r.url.replace(/^https?:\/\/[^/]+/, ''));
-    const reserve = await ev(`({ name: document.querySelector('[name="reserve_form[fullName]"]')?.value, address: document.querySelector('[name="reserve_form[deliveryAddress]"]')?.value, email: document.querySelector('[name="reserve_form[email]"]')?.value })`);
-    check('with the address carried over', reserve.name === 'Ada Wallet' && reserve.address === '2 Harbour Road\nBelfast\nBT1 1AA' && reserve.email === EMAIL, JSON.stringify(reserve));
+    const reserve = await ev(`({ name: document.querySelector('[name="reserve_form[fullName]"]')?.value, address: ['addressLine1', 'addressLine2', 'town', 'county', 'postcode', 'country'].map(n => document.querySelector('[name="reserve_form[' + n + ']"]')?.value), email: document.querySelector('[name="reserve_form[email]"]')?.value })`);
+    check('with the address carried over into its fields', reserve.name === 'Ada Wallet' && JSON.stringify(reserve.address) === JSON.stringify(['2 Harbour Road', '', 'Belfast', '', 'BT1 1AA', 'GB']) && reserve.email === EMAIL, JSON.stringify(reserve));
 
     // Gifts: wallets too.
     await go(BASE_URL + '/basket');

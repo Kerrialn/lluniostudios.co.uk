@@ -8,14 +8,19 @@
     Options:
       child  the form field
       label  the label, with " *" for required fields
+      hint   optional grey text after the label
+      area   true for a several-line box (a textarea)
       wide   true to span the whole row
       attr   extra attributes for the input
+
+    Typed text, placeholders and a dropdown's choices are in the page's
+    light colour on the dark background. Also used by Reserve Your Design.
 #}
 {% set errors = child.vars.errors|filter(e => e.message != constant('App\\Form\\Form\\CardPaymentForm::REQUIRED_MESSAGE')) %}
 {% set missing = child.vars.errors|length > errors|length %}
 <label class="flex flex-col gap-2 {{ wide|default(false) ? 'col-[1/-1]' : '' }}" for="{{ child.vars.id }}">
-    <span class="text-[14px]">{{ label }}</span>
-    {{ form_widget(child, { attr: (attr|default({}))|merge({ class: 'w-full h-12 px-3.5 bg-transparent text-ll-ink border ' ~ (missing or errors is not empty ? 'border-ll-ink' : 'border-ll-mute') ~ ' rounded-none outline-none text-[15px] leading-[1.5] focus:border-ll-ink' }) }) }}
+    <span class="text-[14px]">{{ label }}{% if hint|default('') %} <span class="text-ll-mute text-[13px]">{{ hint }}</span>{% endif %}</span>
+    {{ form_widget(child, { attr: (attr|default({}))|merge({ class: (area|default(false) ? 'min-h-24 py-3 resize-y' : 'h-12') ~ ' w-full px-3.5 bg-transparent text-ll-ink placeholder:text-ll-mute [color-scheme:dark] [&>option]:bg-ll-bg [&>option]:text-ll-ink border ' ~ (missing or errors is not empty ? 'border-ll-ink' : 'border-ll-mute') ~ ' rounded-none outline-none text-[15px] leading-[1.5] focus:border-ll-ink' }) }) }}
     {% for error in errors %}
         <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
     {% endfor %}

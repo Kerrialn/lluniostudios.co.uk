@@ -60,8 +60,9 @@ export function checker() {
  * A headless Chrome at W x H (emulating a mobile device, as the checks were
  * written and verified; pass { mobile: false } for a desktop browser). Each named profile
  * lives in the system temp folder, so cookies persist between runs of the
- * same check unless it clears them.
- * Returns { send, ev, size, shot, listeners, close }.
+ * same check unless it clears them; the site's local and session storage is
+ * cleared on opening.
+ * Returns { send, ev, size, shot, listeners, clearStorage, close }.
  */
 export async function open(W, H, name = 'default', { mobile = true } = {}) {
     const port = 9800 + Math.floor(Math.random() * 150);
@@ -97,10 +98,15 @@ export async function open(W, H, name = 'default', { mobile = true } = {}) {
     };
     const size = (w, h) => send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile });
     await size(W, H);
+    // Remembered choices (the configurator's, the Reserve form's) are kept in
+    // the browser's storage, which the profile keeps between runs: each check
+    // starts without them.
+    const clearStorage = () => send('Storage.clearDataForOrigin', { origin: new URL(BASE_URL).origin, storageTypes: 'local_storage,session_storage' });
+    await clearStorage();
     const shot = async (file, clip) => {
         const { writeFileSync } = await import('node:fs');
         const s = await send('Page.captureScreenshot', clip ? { clip: { ...clip, scale: 1 }, captureBeyondViewport: true } : {});
         writeFileSync(file, Buffer.from(s.result.data, 'base64'));
     };
-    return { send, ev, size, shot, listeners, close: () => { ws.close(); chrome.kill(); } };
+    return { send, ev, size, shot, listeners, clearStorage, close: () => { ws.close(); chrome.kill(); } };
 }

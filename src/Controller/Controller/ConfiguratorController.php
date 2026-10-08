@@ -36,6 +36,13 @@ final class ConfiguratorController extends AbstractController
      */
     public const STAGES = ['The Scale', 'The Pigment', 'The Cable', 'The Footing', 'The Light', 'Your Lumen Forma'];
 
+    /**
+     * Remembered choices the next page asks the browser to forget (rendered by
+     * base.html.twig, forget_choices_controller.js): "configurator" and/or
+     * "reserve" (see assets/saved_choices.js).
+     */
+    public const FORGET_CHOICES_KEY = 'forget_choices';
+
     public function __construct(
         private readonly LumenFormaConfigurator $configurator,
         private readonly CartResolver $cartResolver,
@@ -139,6 +146,11 @@ final class ConfiguratorController extends AbstractController
 
         // No message: the basket page and the count in the nav show the change.
         $this->cartRepository->save(cart: $cart, flush: true);
+
+        // A new lamp is in the basket: the configurator's remembered choices are used.
+        if (! $editing instanceof CartItem) {
+            $request->getSession()->set(self::FORGET_CHOICES_KEY, ['configurator']);
+        }
 
         return $this->redirectToRoute('cart');
     }

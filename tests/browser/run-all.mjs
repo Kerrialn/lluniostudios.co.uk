@@ -21,6 +21,7 @@ const CHECKS = [
     ['configurator-edit.mjs', '1440', '900'],
     ['configurator-edit.mjs', '390', '844'],
     ['configurator-hover-and-headings.mjs'],
+    ['configurator-remember.mjs'],
     ['reserve.mjs'],
     ['old-shop-redirects.mjs'],
     ['commissions.mjs', '1440', '900'],
@@ -36,6 +37,7 @@ const CHECKS = [
     ['account.mjs'],
     ['page-footers.mjs', '1440', '900'],
     ['page-footers.mjs', '390', '844'],
+    ['quote-form.mjs'],
 ];
 
 const args = process.argv.slice(2);

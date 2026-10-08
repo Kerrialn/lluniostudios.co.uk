@@ -5,48 +5,54 @@
     Casting Slot" variant is dropped). The customer's details on the left; on
     the right every lamp in the request (the basket plus the lamp being
     configured), each with its full configuration. No payment is taken.
+    Fields, sizes and spacing as the Card Payment page (its field partial),
+    with the address in separate fields and a country (8 October 2026).
 #}
 {% block title %}Reserve Your Design | Llunio Studios{% endblock %}
+{% form_theme form 'form_div_layout.html.twig' %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
 {% block body %}
-    {% set fields = [
-        { name: 'fullName', label: 'Full Name *', hint: '' },
-        { name: 'email', label: 'Email Address *', hint: '(For sending the invoice and build schedule)' },
-        { name: 'phone', label: 'Phone Number *', hint: '(Required by carriers for heavy-goods delivery scheduling)' },
-        { name: 'deliveryAddress', label: 'Delivery Address & Postcode *', hint: '(Required to calculate exact delivery costs)' },
-        { name: 'accessNotes', label: 'Site Access & Delivery Notes', hint: "(e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')" },
-        { name: 'customDetails', label: 'Custom Details', hint: "(Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)" },
-    ] %}
-    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-10 text-[15px] leading-[1.5]">
+    {% set section = 'text-[11px] uppercase tracking-[0.14em] text-ll-mute border-t border-ll-line pt-4' %}
+    {% set grid = 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-x-5 gap-y-4' %}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
         <div class="flex flex-col gap-3.5 max-w-[640px]">
             <a href="{{ path('lighting_designs') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>
-            <h1 class="m-0 font-light uppercase tracking-[0.03em] text-[clamp(30px,3.8vw,52px)] leading-[1.06]">Reserve Your Design</h1>
-            <p class="m-0 text-ll-mute [text-wrap:pretty]">No payment is taken today. Reserving holds your place in our studio casting schedule while we calculate delivery options and confirm exact lead times.</p>
+            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Reserve Your Design</h1>
+            <p class="m-0 text-[15px] leading-[1.5] text-ll-mute [text-wrap:pretty]">No payment is taken today. Reserving holds your place in our studio casting schedule while we calculate delivery options and confirm exact lead times.</p>
         </div>
 
-        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(32px,5vw,72px)] items-start">
-            {{ form_start(form, { attr: { class: 'flex flex-col gap-6', novalidate: 'novalidate' } }) }}
-                {% for field in fields|filter(f => form[f.name] is defined) %}
-                    {% set child = form[field.name] %}
-                    {% set isArea = field.name in ['deliveryAddress', 'accessNotes', 'customDetails'] %}
-                    <div class="flex flex-col gap-2">
-                        <label for="{{ child.vars.id }}" class="text-[14px]">{{ field.label }}{% if field.hint %} <span class="text-ll-mute text-[13px]">{{ field.hint }}</span>{% endif %}</label>
-                        {% if isArea %}
-                            {{ form_widget(child, { attr: { class: 'w-full bg-transparent border border-ll-line p-2.5 text-[15px] leading-[1.5] outline-none resize-y focus:border-ll-ink' } }) }}
-                        {% else %}
-                            {{ form_widget(child, { attr: { class: 'w-full bg-transparent border-0 border-b border-ll-line py-2 text-[15px] leading-[1.5] outline-none focus:border-ll-ink' } }) }}
-                        {% endif %}
-                        {% for error in child.vars.errors %}
-                            <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center font-medium text-[12px] uppercase tracking-[0.16em]">Reserve Your Design</button>
+        <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
+            {# What is typed is remembered if the visitor leaves and comes back (remember_form_controller.js), until sent. #}
+            {{ form_start(form, { attr: { class: 'flex-[1.5_1_460px] min-w-0 flex flex-col gap-6', novalidate: 'novalidate', 'data-controller': 'remember-form', 'data-remember-form-name-value': 'reserve', 'data-action': 'input->remember-form#save change->remember-form#save' } }) }}
+                <div class="{{ section }}">Contact</div>
+                <div class="{{ grid }}">
+                    {{ include('checkout/_field.html.twig', { child: form.fullName, label: 'Full Name *', wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email Address *', hint: '(For sending the invoice and build schedule)', wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Phone Number *', hint: '(Required by carriers for heavy-goods delivery scheduling)', wide: true }) }}
+                </div>
+
+                <div class="{{ section }}">Delivery address <span class="normal-case tracking-normal text-[13px]">(Required to calculate exact delivery costs)</span></div>
+                <div class="{{ grid }}">
+                    {{ include('checkout/_field.html.twig', { child: form.addressLine1, label: 'Address line 1 *', wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.addressLine2, label: 'Address line 2', wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.town, label: 'Town/City *' }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.county, label: 'County' }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.postcode, label: 'Postcode *' }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.country, label: 'Country *' }) }}
+                </div>
+                <div class="{{ grid }}">
+                    {{ include('checkout/_field.html.twig', { child: form.accessNotes, label: 'Site Access & Delivery Notes', hint: "(e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", area: true, wide: true }) }}
+                    {% if form.customDetails is defined %}
+                        {{ include('checkout/_field.html.twig', { child: form.customDetails, label: 'Custom Details', hint: "(Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)", area: true, wide: true }) }}
+                    {% endif %}
+                </div>
+                {{ form_errors(form) }}
+                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]">Reserve Your Design</button>
                 <div class="text-[13px] text-ll-mute">{{ constant('App\\Service\\BasketRules::SUB_RESERVE') }}</div>
             {{ form_end(form) }}
 
-            <aside class="flex flex-col gap-3.5 p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
+            <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-3.5 p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
                 {% if photo %}
                     <img src="{{ asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') }}" alt="Lumen Forma" class="w-full aspect-[4/3] object-cover" style="object-position: {{ photo.position }}">
                 {% else %}

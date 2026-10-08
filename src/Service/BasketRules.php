@@ -35,9 +35,10 @@ final class BasketRules
     public const ROUTE_NOTE_DIRECT = 'Direct order and checkout.';
 
     /**
-     * The prototype's line under the button.
+     * The prototype's line under the button ("Dorset Studio": decided
+     * 8 October 2026).
      */
-    public const SUB_DIRECT = 'Limited weekly batch capacity. Individually poured, cured, and hand-finished in our studio.';
+    public const SUB_DIRECT = 'Limited weekly batch capacity. Individually poured, cured, and hand-finished in our Dorset Studio.';
 
     public const SUB_RESERVE = 'Small-batch studio capacity. Reserving holds your build slot while we review your specifications and confirm exact lead times.';
 

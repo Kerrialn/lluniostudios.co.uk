@@ -10,7 +10,7 @@ const BOTH = 'Hand cast to order. Reserve now to secure your casting slot. Custo
 const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
 const note = () => ev(`document.querySelector('[data-configurator-target=routeNote]').textContent`);
 const fresh = async () => { await b.send('Network.enable'); await b.send('Network.clearBrowserCookies'); };
-const open_ = async () => { await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800); await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1300); };
+const open_ = async () => { await b.clearStorage(); await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800); await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1300); };
 const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"][data-value="${v}"]').click()`);
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 const tab = (i) => ev(`document.querySelectorAll('.ll-cfg-unit')[${i}].click()`);
@@ -51,7 +51,7 @@ check('the nav basket count shows it', /Basket \(1\)/i.test(await ev(`document.q
 await open_(); await more(); r = await route();
 check('with 1 lamp already in the basket, 2 more: Reserve, limit note', r.note === 'Quantities of three or more proceed through the Reserve request process, not direct checkout.', r.note);
 await fill(1); r = await route();
-check('review button "Reserve Your Design" with the reserve line', r.cta === 'Reserve Your Design' && r.sub.startsWith('Small-batch studio capacity'));
+check('review button "Reserve Your Design", with no line under it (the purchase route note says it)', r.cta === 'Reserve Your Design' && r.sub === '' && (await ev(`document.querySelector('[data-configurator-target=ctaSub]').hidden`)) === true);
 await submit(); k = await basket();
 check('Reserve goes to the request route; nothing added', k.url === '/reserve', k.url);
 await b.send('Page.navigate', { url: BASE_URL + '/basket' }); await sleep(1200); k = await basket();

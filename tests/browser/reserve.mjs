@@ -13,7 +13,7 @@ const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 const press = async () => { await ev(`document.querySelector('[data-configurator-target=cta]').click()`); await sleep(2200); };
 const fill = async (size, v) => { await go(BASE_URL + '/lighting-designs'); await reveal(); await pick('size', size); for (const [s, g] of [[1, 'The Pigment'], [2, 'Cable Colour'], [3, 'Footing Material'], [4, 'Bulb Style'], [4, 'Bulb Count']]) { if (v[g]) { await jump(s); await pick(g, v[g]); } } await jump(5); };
-const page = () => ev(`({ path: location.pathname, h1: document.querySelector('h1')?.textContent.trim(), text: document.querySelector('main').innerText, labels: [...document.querySelectorAll('form label')].map(l => l.textContent.replace(/\\s+/g, ' ').trim()), errors: [...document.querySelectorAll('form [role=alert]')].map(e => e.textContent.trim()), rows: [...document.querySelectorAll('aside .flex.justify-between')].map(r => r.children[0].textContent + '=' + r.children[1].textContent) })`);
+const page = () => ev(`({ path: location.pathname, h1: document.querySelector('h1')?.textContent.trim(), text: document.querySelector('main').innerText, labels: [...document.querySelectorAll('form label > span:first-child')].map(l => l.textContent.replace(/\\s+/g, ' ').trim()), errors: [...document.querySelectorAll('form [role=alert]')].map(e => e.textContent.trim()), rows: [...document.querySelectorAll('aside .flex.justify-between')].map(r => r.children[0].textContent + '=' + r.children[1].textContent) })`);
 const setField = (name, value) => ev(`(() => { const e = document.querySelector('[name="reserve_form[${name}]"]'); e.value = ${JSON.stringify(value)}; })()`);
 const submit = async () => { await ev(`document.querySelector('form[name=reserve_form]').requestSubmit()`); await sleep(2500); };
 const requests = () => Number(sql('select count(*) from design_request').match(/\d+/g).pop());
@@ -37,7 +37,35 @@ let p = await page();
 check('Reserve Your Design opens the request form', p.path === '/reserve' && p.h1 === 'Reserve Your Design' && !/Casting Slot/.test(p.text), p.path + ' ' + p.h1);
 check('it says no payment is taken', /No payment is taken today/.test(p.text));
 check('it carries the basket lamp and the lamp being configured, each in full', JSON.stringify(p.rows) === JSON.stringify(['Edition=Gallery', 'The Pigment=White', 'Cable Colour=Slate Grey', 'Footing Material=Brushed Copper', 'Bulb Style=Crown Gold LED', 'Quantity=1', 'Edition=Atelier', 'The Pigment=Custom', 'Cable Colour=Raw Jute', 'Footing Material=Polished Copper', 'Bulb Style / Count=Smoked Glass LED / Dual Array', 'Quantity=1']), JSON.stringify(p.rows));
-check('the prototype\'s fields, with Custom Details for a Custom choice', JSON.stringify(p.labels) === JSON.stringify(['Full Name *', 'Email Address * (For sending the invoice and build schedule)', 'Phone Number * (Required by carriers for heavy-goods delivery scheduling)', 'Delivery Address & Postcode * (Required to calculate exact delivery costs)', "Site Access & Delivery Notes (e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", "Custom Details (Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)"]), JSON.stringify(p.labels));
+check('the fields, the address in separate fields, with Custom Details for a Custom choice', JSON.stringify(p.labels) === JSON.stringify(['Full Name *', 'Email Address * (For sending the invoice and build schedule)', 'Phone Number * (Required by carriers for heavy-goods delivery scheduling)', 'Address line 1 *', 'Address line 2', 'Town/City *', 'County', 'Postcode *', 'Country *', "Site Access & Delivery Notes (e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", "Custom Details (Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)"]), JSON.stringify(p.labels));
+// As the Card Payment page: 14px labels above 48px boxes with a border; typed
+// text, placeholders and the dropdown's choices in the page's light colour.
+const look = await ev(`(() => {
+    const css = (e) => getComputedStyle(e);
+    const boxes = [...document.querySelectorAll('form[name=reserve_form] input:not([type=hidden]), form[name=reserve_form] select, form[name=reserve_form] textarea')];
+    const name = document.querySelector('[name="reserve_form[fullName]"]');
+    name.placeholder = 'x';
+    const placeholder = getComputedStyle(name, '::placeholder').color;
+    name.removeAttribute('placeholder');
+    const country = document.querySelector('[name="reserve_form[country]"]');
+    return {
+        colours: [...new Set(boxes.map(e => css(e).color))],
+        borders: [...new Set(boxes.map(e => css(e).borderTopStyle + ' ' + css(e).borderTopWidth + ' ' + css(e).borderLeftStyle))],
+        heights: [...new Set(boxes.filter(e => e.tagName !== 'TEXTAREA').map(e => css(e).height))],
+        fonts: [...new Set(boxes.map(e => css(e).fontSize))],
+        labels: [...new Set([...document.querySelectorAll('form[name=reserve_form] label > span:first-child')].map(e => css(e).fontSize))],
+        placeholder,
+        option: css(country.options[0]).color + ' on ' + css(country.options[0]).backgroundColor,
+        countries: [...country.options].map(o => o.value + '=' + o.textContent),
+        country: country.value,
+        max: ['addressLine1', 'addressLine2', 'town', 'county', 'postcode'].map(n => document.querySelector('[name="reserve_form[' + n + ']"]').maxLength),
+        h1: css(document.querySelector('h1')).fontSize + ' ' + css(document.querySelector('h1')).fontWeight,
+    };
+})()`);
+check('fields as the Card Payment page: boxed, 48px, 15px text, 14px labels; heading as Card Payment', JSON.stringify(look.borders) === JSON.stringify(['solid 1px solid']) && JSON.stringify(look.heights) === JSON.stringify(['48px']) && JSON.stringify(look.fonts) === JSON.stringify(['15px']) && JSON.stringify(look.labels) === JSON.stringify(['14px']) && look.h1 === '28.8px 300', JSON.stringify(look));
+check('typed text, placeholders and the dropdown in the light colour', JSON.stringify(look.colours) === JSON.stringify(['rgb(236, 227, 211)']) && look.placeholder !== 'rgb(0, 0, 0)' && look.option === 'rgb(236, 227, 211) on rgb(21, 18, 14)', JSON.stringify([look.colours, look.placeholder, look.option]));
+check('Country: United Kingdom by default, or the Isle of Man, Guernsey or Jersey', look.country === 'GB' && JSON.stringify(look.countries) === JSON.stringify(['GB=United Kingdom', 'IM=Isle of Man', 'GG=Guernsey', 'JE=Jersey']), JSON.stringify(look.countries));
+check('the same character limits as Card Payment (35, postcode 8)', JSON.stringify(look.max) === JSON.stringify([35, 35, 35, 35, 8]), JSON.stringify(look.max));
 check('mixed sizes: Image Coming Soon, never another size\'s photo', /Image Coming Soon/i.test(await ev(`document.querySelector('aside').innerText`)) && !(await ev(`!!document.querySelector('aside img')`)));
 check('the basket still holds its lamp until the request is sent', /Basket \(1\)/i.test(await ev(`document.querySelector('#navbar').innerText`)));
 await ev(`document.querySelectorAll('[id^=sfwdt]').forEach(e => e.remove())`);
@@ -45,17 +73,21 @@ let s = await b.send('Page.captureScreenshot', { captureBeyondViewport: true, cl
 
 // Validation
 await submit(); p = await page();
-check('sending it empty shows each required field\'s message and saves nothing', p.path === '/reserve' && ['Please enter your full name.', 'Please enter your email address.', 'Please enter your phone number.', 'Please enter your delivery address and postcode.'].every(m => p.errors.includes(m)) && requests() === before, JSON.stringify(p.errors));
-await setField('fullName', 'Ada Test'); await setField('email', 'not-an-email'); await setField('phone', '07700 900123'); await setField('deliveryAddress', '1 High Street, Wimborne'); await submit(); p = await page();
-check('a bad email and an address without a postcode are refused', p.errors.includes('Please enter a valid email address.') && p.errors.includes('Please include your postcode.'), JSON.stringify(p.errors));
+check('sending it empty shows each required field\'s message and saves nothing', p.path === '/reserve' && ['Please enter your full name.', 'Please enter your email address.', 'Please enter your phone number.', 'Please enter the first line of your address.', 'Please enter your town or city.', 'Please enter your postcode.'].every(m => p.errors.includes(m)) && requests() === before, JSON.stringify(p.errors));
+await setField('fullName', 'Ada Test'); await setField('email', 'not-an-email'); await setField('phone', '07700 900123'); await setField('addressLine1', '1 High Street'); await setField('town', 'Wimborne'); await setField('postcode', 'BH21'); await submit(); p = await page();
+check('a bad email and a half postcode are refused', p.errors.includes('Please enter a valid email address.') && p.errors.includes('Please enter a full postcode, e.g. BH21 3EG.'), JSON.stringify(p.errors));
+await setField('postcode', 'IM1 1AA'); await submit(); p = await page();
+check('a postcode that doesn\'t match the country is refused', p.errors.includes('That postcode is on the Isle of Man: please choose it as the country.'), JSON.stringify(p.errors));
 check('what was typed is kept', (await ev(`document.querySelector('[name="reserve_form[fullName]"]').value`)) === 'Ada Test');
 
 // Send it
-await setField('email', 'ada.test@example.test'); await setField('deliveryAddress', '1 High Street\nWimborne\nBH21 1AA'); await setField('accessNotes', 'Two flights of stairs.'); await setField('customDetails', 'Warm grey, close to RAL 7044.');
+await setField('email', 'ada.test@example.test'); await setField('postcode', 'bh21 1aa'); await setField('county', 'Dorset'); await setField('accessNotes', 'Two flights of stairs.'); await setField('customDetails', 'Warm grey, close to RAL 7044.');
 await submit(); p = await page();
 check('sending it shows "Reservation received": heading, the message, the confirmation line, no request number', p.path === '/reserve/received' && /^Reservation Received/i.test(p.text) && /Your design request has been received/.test(p.text) && /Confirmation has been sent to the email address provided\./.test(p.text) && !/LR-\d/.test(p.text), p.text.slice(0, 160));
 const number = (sql(`select request_number from design_request where email = 'ada.test@example.test' order by created_at desc limit 1`).match(/LR-\d{8}-[0-9A-F]{6}/) || [])[0];
 check('one request saved', requests() === before + 1);
+const address = sql(`select concat_ws('|', address_line1, coalesce(address_line2, '-'), town, county, postcode, country, coalesce(delivery_address, '-')) as a from design_request where request_number = '${number}'`);
+check('the address saved in its fields (postcode tidied, United Kingdom)', /1 High Street\|-\|Wimborne\|Dorset\|BH21 1AA\|GB\|-/.test(address), address.replace(/\s+/g, ' '));
 const row = sql(`select status, full_name, email, phone, access_notes, custom_details, (select count(*) from design_request_item i where i.design_request_id = r.id) as items, (select sum(quantity) from design_request_item i where i.design_request_id = r.id) as lamps from design_request r where request_number = '${number}'`);
 check('saved as New with the details and both lamps', /\bnew\b/.test(row) && /Ada Test/.test(row) && /ada\.test@example\.test/.test(row) && /07700 900123/.test(row) && /Two flights of stairs\./.test(row) && /RAL 7044/.test(row) && /\b2\s+2\s*$/m.test(row.trim().split('\n').slice(-2, -1)[0] || ''), row.replace(/\s+/g, ' ').slice(0, 300));
 const snap = sql(`select size_name, quantity, unit_price, customised_individually, options_snapshot from design_request_item i join design_request r on r.id = i.design_request_id where r.request_number = '${number}' order by position`);
@@ -82,7 +114,7 @@ if (toCustomer) {
 if (toStudio) {
     const m = await mailBody(toStudio.ID);
     check('notification: replies go to the customer', (m.ReplyTo || []).some(r => r.Address === 'ada.test@example.test'));
-    check('notification: every detail and a link to the request in admin', /07700 900123/.test(m.HTML) && /Two flights of stairs/.test(m.HTML) && /RAL 7044/.test(m.HTML) && /\/admin\/design-request\//.test(m.HTML));
+    check('notification: every detail and a link to the request in admin', /1 High Street<br \/>\s*Wimborne<br \/>\s*Dorset<br \/>\s*BH21 1AA<br \/>\s*United Kingdom/.test(m.HTML) && /07700 900123/.test(m.HTML) && /Two flights of stairs/.test(m.HTML) && /RAL 7044/.test(m.HTML) && /\/admin\/design-request\//.test(m.HTML));
     writeFileSync(out('email-notification.html'), m.HTML);
 }
 

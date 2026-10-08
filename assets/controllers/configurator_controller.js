@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
 
 /*
  * Lumen Forma configurator (Site v4 prototype), sub-step 7.1.
@@ -39,6 +40,18 @@ import { Controller } from '@hotwired/stimulus';
  *    being edited). The server checks again.
  *  - Editing a basket line (7.6, edit value): starts from that line's size,
  *    quantity, choices (per lamp when customised individually) on the review.
+ *  - Remembered choices (8 October 2026): size, quantity, every option,
+ *    Customise All / Individually and each lamp's choices are kept in the
+ *    browser (saved_choices.js) when the visitor leaves and comes back, and
+ *    forgotten once the lamp is added to the basket or reserved. The hero
+ *    reveal and the stage still start fresh on every visit, except that a
+ *    finished design (every choice made, for every lamp) skips the hero and
+ *    opens revealed on the review, one click from the button (on phones,
+ *    scrolled down to it). "Start again"
+ *    (shown once something is chosen) forgets everything, including what
+ *    was typed on Reserve Your Design. Not while editing a basket line.
+ *    On the review, the line under "Reserve Your Design" is not shown (the
+ *    purchase route note says it); "Cast Your Lamp" keeps its line.
  */
 const SLIDE = 'transform .7s cubic-bezier(.2,.7,.2,1)';
 const SWIPE_MIN = 50;
@@ -50,7 +63,7 @@ export default class extends Controller {
     static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
         'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity',
         'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle', 'modes', 'mode', 'units',
-        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'customNote'];
+        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'customNote', 'startAgain'];
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         maxLamps: { type: Number, default: 10 }, basketLamps: Number, maxCheckout: { type: Number, default: 2 },
@@ -68,7 +81,9 @@ export default class extends Controller {
         this.mode = 'all';
         this.lampChoices = [];
         this.unit = 0;
+        this.startSize = this.sizeValue;
         if (this.editValue?.id) this.loadDesign(this.editValue);
+        else if (this.restore() && this.isFinished()) this.openOnReview();
         this.photoIndex = 0;
         this.slot = null;
         this.dragX = 0;
@@ -89,6 +104,7 @@ export default class extends Controller {
     disconnect() {
         clearInterval(this.timer);
         clearTimeout(this.snapTimer);
+        clearTimeout(this.scrollTimer);
         window.removeEventListener('keydown', this.onKey);
         this.wide.removeEventListener('change', this.onMedia);
         this.sideways.removeEventListener('change', this.onMedia);
@@ -288,6 +304,81 @@ export default class extends Controller {
         this.renderUnits();
         this.renderRoute();
         this.renderReview();
+        this.remember();
+    }
+
+    // Remembered choices --------------------------------------------------
+
+    // True when a remembered design was found.
+    restore() {
+        const saved = readChoices('configurator');
+        if (!saved || saved.version !== 1) return false;
+        if (this.sizesValue.some((s) => s.slug === saved.size)) this.sizeValue = saved.size;
+        // Only choices that still exist for the size (the catalogue may have changed).
+        const valid = (lamp) => Object.fromEntries(Object.entries(lamp && typeof lamp === 'object' ? lamp : {})
+            .filter(([name, value]) => this.groupsValue.some((group) => group.name === name && this.available(group)
+                && group.values.some((v) => v.value === value))));
+        this.quantity = Math.max(MIN_LAMPS, Math.min(this.maxLampsValue, Number(saved.quantity) || MIN_LAMPS));
+        this.mode = saved.mode === 'individual' ? 'individual' : 'all';
+        this.choices = valid(saved.choices);
+        this.lampChoices = (Array.isArray(saved.lamps) ? saved.lamps : []).slice(0, this.maxLampsValue).map(valid);
+        return true;
+    }
+
+    // Every choice the size needs, made for every lamp.
+    isFinished() {
+        const groups = this.groupsValue.filter((group) => this.available(group));
+        return this.lampConfigurations().every((lamp) => groups.every((group) => lamp[group.name]));
+    }
+
+    // A returning visitor with a finished design: the panel already revealed,
+    // on the review (as when editing a basket line). Once the hero's own
+    // controller (on this element) has connected.
+    // On phones the panel is below the photo: once the photo has shrunk
+    // (1.1s, app.css), the page scrolls down to the panel.
+    openOnReview() {
+        this.step = this.stageKeysValue.indexOf('review');
+        requestAnimationFrame(() => {
+            this.application.getControllerForElementAndIdentifier(this.element, 'hero-reveal')?.reveal();
+            if (this.wide.matches) return;
+            this.scrollTimer = setTimeout(() => {
+                const panel = this.element.querySelector('.ll-cfg-panel');
+                if (panel) window.scrollTo({ top: panel.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+            }, 1150);
+        });
+    }
+
+    hasChoices() {
+        return this.sizeValue !== this.startSize || this.quantity > MIN_LAMPS || Object.keys(this.choices).length > 0
+            || this.lampChoices.some((lamp) => lamp && Object.keys(lamp).length > 0);
+    }
+
+    remember() {
+        if (this.editValue?.id) return;
+        if (this.hasChoices()) {
+            saveChoices('configurator', {
+                version: 1, size: this.sizeValue, quantity: this.quantity, mode: this.mode, choices: this.choices, lamps: this.lampChoices,
+            });
+        } else {
+            forgetChoices('configurator');
+        }
+        if (this.hasStartAgainTarget) this.startAgainTarget.hidden = !this.hasChoices();
+    }
+
+    // "Start again": every choice cleared, back to the first stage.
+    startAgain(event) {
+        event.preventDefault();
+        forgetChoices('configurator', 'reserve');
+        this.sizeValue = this.startSize;
+        this.quantity = MIN_LAMPS;
+        this.mode = 'all';
+        this.choices = {};
+        this.lampChoices = [];
+        this.unit = 0;
+        this.warned.clear();
+        this.slot = null;
+        this.photoIndex = 0;
+        this.goTo(0);
     }
 
     // Lamp tabs: only when customising individually, on the option stages.
@@ -380,7 +471,9 @@ export default class extends Controller {
         this.routeNoteTargets.forEach((el) => { el.textContent = reserve ? reasons.join(' ') : this.notesValue.direct; });
         if (this.hasCtaTarget) {
             this.ctaTarget.textContent = reserve ? 'Reserve Your Design' : 'Cast Your Lamp';
-            this.ctaSubTarget.textContent = reserve ? this.notesValue.reserveSub : this.notesValue.directSub;
+            // "Reserve Your Design" has no line under it here: the purchase route note says it.
+            this.ctaSubTarget.textContent = reserve ? '' : this.notesValue.directSub;
+            this.ctaSubTarget.hidden = reserve;
         }
     }
 

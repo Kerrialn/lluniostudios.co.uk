@@ -1,0 +1,194 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+{% form_theme form 'bootstrap_5_layout.html.twig' %}
+
+{#
+    A request's quote in admin (Step 10b.1). Prices start from the request
+    (each size's price) and the carriers' delivery estimate; everything can
+    be changed. Saved as a draft: nothing is sent to the customer yet.
+    The totals update as prices are typed (script at the end); the server
+    works them out again when the quote is saved.
+#}
+{% macro money(pence) %}{{ (pence / 100)|format_currency('GBP') }}{% endmacro %}
+{% import _self as m %}
+
+{% block content_title %}Quote for request {{ designRequest.requestNumber }}{% endblock %}
+
+{% block page_actions %}
+    <a class="btn btn-secondary" href="{{ backUrl }}">Back to the request</a>
+{% endblock %}
+
+{% block main %}
+    <p class="text-muted">
+        {% if saved %}
+            Draft, last saved {{ quote.updatedAt|date('j F Y, H:i', 'Europe/London') }}. Nothing has been sent to the customer.
+        {% else %}
+            New draft, not saved yet. Prices are filled in from the request and the delivery estimate.
+        {% endif %}
+    </p>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted">Request</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>{{ designRequest.fullName }}</strong><br>
+                    {{ designRequest.email }} · {{ designRequest.phone }}
+                    {% if designRequest.addressLine1 %}
+                        <dl class="row small mb-0 mt-2" data-quote-address>
+                            <dt class="col-4 fw-normal text-muted">Address line 1</dt><dd class="col-8 mb-0">{{ designRequest.addressLine1 }}</dd>
+                            <dt class="col-4 fw-normal text-muted">Address line 2</dt><dd class="col-8 mb-0">{{ designRequest.addressLine2 ?: '—' }}</dd>
+                            <dt class="col-4 fw-normal text-muted">Town/City</dt><dd class="col-8 mb-0">{{ designRequest.town }}</dd>
+                            <dt class="col-4 fw-normal text-muted">County</dt><dd class="col-8 mb-0">{{ designRequest.county ?: '—' }}</dd>
+                            <dt class="col-4 fw-normal text-muted">Postcode</dt><dd class="col-8 mb-0">{{ designRequest.postcode }}</dd>
+                            <dt class="col-4 fw-normal text-muted">Country</dt><dd class="col-8 mb-0">{{ designRequest.countryName }}</dd>
+                        </dl>
+                    {% else %}
+                        <br><span style="white-space: pre-line">{{ designRequest.deliveryAddress }}</span>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    {% if designRequest.accessNotes %}<p class="mb-1"><em>Site access and delivery notes:</em> {{ designRequest.accessNotes }}</p>{% endif %}
+                    {% if designRequest.customDetails %}<p class="mb-1"><em>Custom details:</em> {{ designRequest.customDetails }}</p>{% endif %}
+                    <p class="mb-0 text-muted">Received {{ designRequest.createdAt|date('j F Y, H:i', 'Europe/London') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ form_start(form, { attr: { novalidate: 'novalidate', id: 'quote-form' } }) }}
+        {{ form_errors(form) }}
+
+        <h2 class="h5">Lamps</h2>
+        <table class="table align-middle">
+            <thead><tr><th>Design</th><th class="text-end">Lamps</th><th style="width: 14rem">Price for each lamp</th><th class="text-end">Line total</th></tr></thead>
+            <tbody>
+                {% for line in quote.lampLines %}
+                    {% set item = line.requestItem %}
+                    <tr data-quote-line data-quantity="{{ line.quantity }}">
+                        <td>
+                            <strong>{{ line.label }}</strong>
+                            {% if item %}
+                                {% for group in item.lampConfigurations %}
+                                    <div class="small text-muted">{% if group.label %}<em>{{ group.label }}:</em> {% endif %}{% for option in group.options %}{{ option.value }}{{ loop.last ? '' : ' · ' }}{% endfor %}</div>
+                                {% endfor %}
+                                {% if item.product and not item.product.directOrder %}<div class="small text-muted">Size price shown on the site: from {{ m.money(item.unitPrice) }}</div>{% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="text-end">{{ line.quantity }}</td>
+                        <td>{{ form_widget(form.lamps[loop.index0], { attr: { 'data-quote-price': '' } }) }}{{ form_errors(form.lamps[loop.index0]) }}</td>
+                        <td class="text-end" data-quote-line-total>{{ m.money(line.total) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2 class="h5 mt-4">Extra lines</h2>
+        <p class="small text-muted">For example "Custom pigment development". Each is charged once.</p>
+        <div id="quote-extras" data-prototype="{{ form_widget(form.extras.vars.prototype)|e('html_attr') }}" data-index="{{ form.extras|length }}">
+            {% for extra in form.extras %}
+                <div class="row g-2 mb-2 align-items-start" data-quote-extra>
+                    <div class="col-md-7">{{ form_widget(extra.label, { attr: { placeholder: 'Description' } }) }}{{ form_errors(extra.label) }}</div>
+                    <div class="col-md-3">{{ form_widget(extra.price, { attr: { 'data-quote-price': '' } }) }}{{ form_errors(extra.price) }}</div>
+                    <div class="col-md-2"><button type="button" class="btn btn-link text-danger" data-quote-remove>Remove</button></div>
+                </div>
+            {% endfor %}
+        </div>
+        {% do form.extras.setRendered %}
+        <button type="button" class="btn btn-secondary btn-sm" id="quote-add-extra">Add a line</button>
+
+        <h2 class="h5 mt-4">Delivery</h2>
+        <div class="alert {{ estimate.notes is empty ? 'alert-secondary' : 'alert-warning' }} small">
+            {% if estimate.price is not null %}
+                Estimate: <strong>{{ m.money(estimate.price) }}</strong> · {{ estimate.label }}{% if estimate.estimated %} (mock carrier price until the DPD and Palletways accounts exist){% endif %}.
+            {% else %}
+                No estimate.
+            {% endif %}
+            {% for note in estimate.notes %}<br>{{ note }}{% endfor %}
+        </div>
+        <div class="row g-3">
+            <div class="col-md-4">{{ form_row(form.delivery, { label: 'Delivery price', attr: { 'data-quote-price': '', 'data-quote-delivery': '' } }) }}</div>
+            <div class="col-md-8">{{ form_row(form.deliveryLabel, { label: 'Delivery description (shown to the customer)' }) }}</div>
+        </div>
+        {% if quote.deliveryEstimated %}<p class="small text-muted">This is the estimate. Change the price or description to set your own.</p>{% endif %}
+
+        <h2 class="h5 mt-4">Payment</h2>
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">{{ form_row(form.payment, { label: 'The customer pays' }) }}</div>
+            <div class="col-md-3">{{ form_row(form.depositPercent, { label: 'Deposit (%)', attr: { 'data-quote-deposit': '', min: 1, max: 99 } }) }}</div>
+        </div>
+
+        <h2 class="h5 mt-4">Casting and note</h2>
+        <div class="row g-3">
+            <div class="col-md-4">{{ form_row(form.castingDate, { label: 'Estimated casting date' }) }}</div>
+            <div class="col-md-8">{{ form_row(form.note, { label: 'Personal note to the customer' }) }}</div>
+        </div>
+
+        <div class="card mt-4 mb-4" style="max-width: 28rem">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-muted">Totals (no VAT)</h2>
+                <table class="table table-sm mb-0">
+                    <tr><td>Lamps</td><td class="text-end" data-quote-total="lamps">{{ m.money(quote.lampsTotal) }}</td></tr>
+                    <tr><td>Extra lines</td><td class="text-end" data-quote-total="extras">{{ m.money(quote.extrasTotal) }}</td></tr>
+                    <tr><td>Delivery</td><td class="text-end" data-quote-total="delivery">{{ m.money(quote.deliveryPrice) }}</td></tr>
+                    <tr class="fw-bold"><td>Total</td><td class="text-end" data-quote-total="total">{{ m.money(quote.total) }}</td></tr>
+                    <tr><td data-quote-due-label>{{ quote.payment.value == 'deposit' ? 'Deposit due now (' ~ quote.depositPercent ~ '%)' : 'Due now' }}</td><td class="text-end" data-quote-total="due">{{ m.money(quote.dueNow) }}</td></tr>
+                    <tr><td>Balance later</td><td class="text-end" data-quote-total="balance">{{ m.money(quote.balance) }}</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save draft</button>
+        <span class="small text-muted ms-2">Saving does not send anything to the customer.</span>
+    {{ form_end(form) }}
+
+    <script>
+        (() => {
+            const form = document.getElementById('quote-form');
+            const extras = document.getElementById('quote-extras');
+            const pounds = (input) => { const value = parseFloat(String(input?.value ?? '').replace(/[^0-9.]/g, '')); return Number.isFinite(value) ? Math.round(value * 100) : 0; };
+            const money = (pence) => '£' + (pence / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const recalc = () => {
+                let lamps = 0;
+                form.querySelectorAll('[data-quote-line]').forEach((row) => {
+                    const total = pounds(row.querySelector('[data-quote-price]')) * Number(row.dataset.quantity);
+                    row.querySelector('[data-quote-line-total]').textContent = money(total);
+                    lamps += total;
+                });
+                let extraTotal = 0;
+                extras.querySelectorAll('[data-quote-extra] [data-quote-price]').forEach((input) => { extraTotal += pounds(input); });
+                const delivery = pounds(form.querySelector('[data-quote-delivery]'));
+                const total = lamps + extraTotal + delivery;
+                const deposit = form.querySelector('input[name$="[payment]"][value="deposit"]')?.checked;
+                const percent = Number(form.querySelector('[data-quote-deposit]').value) || 0;
+                const due = deposit ? Math.round(total * percent / 100) : total;
+                const set = (key, value) => { form.querySelector(`[data-quote-total="${key}"]`).textContent = money(value); };
+                set('lamps', lamps); set('extras', extraTotal); set('delivery', delivery); set('total', total); set('due', due); set('balance', total - due);
+                form.querySelector('[data-quote-due-label]').textContent = deposit ? `Deposit due now (${percent}%)` : 'Due now';
+            };
+            document.getElementById('quote-add-extra').addEventListener('click', () => {
+                const index = Number(extras.dataset.index);
+                extras.dataset.index = String(index + 1);
+                const fields = document.createElement('div');
+                fields.innerHTML = extras.dataset.prototype.replace(/__name__/g, String(index));
+                const [label, price] = fields.querySelectorAll('input');
+                label.placeholder = 'Description';
+                price.setAttribute('data-quote-price', '');
+                const row = document.createElement('div');
+                row.className = 'row g-2 mb-2 align-items-start';
+                row.setAttribute('data-quote-extra', '');
+                row.innerHTML = '<div class="col-md-7"></div><div class="col-md-3"></div><div class="col-md-2"><button type="button" class="btn btn-link text-danger" data-quote-remove>Remove</button></div>';
+                row.children[0].append(label.closest('.mb-3') ?? label);
+                row.children[1].append(price.closest('.input-group') ?? price);
+                extras.append(row);
+                label.focus();
+            });
+            extras.addEventListener('click', (event) => {
+                if (!event.target.matches('[data-quote-remove]')) return;
+                event.target.closest('[data-quote-extra]').remove();
+                recalc();
+            });
+            form.addEventListener('input', recalc);
+            form.addEventListener('change', recalc);
+        })();
+    </script>
+{% endblock %}

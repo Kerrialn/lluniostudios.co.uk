@@ -199,7 +199,7 @@ final class DesignRequestLampsTest extends TestCase
 
     public function testRequestNumberAndLampCount(): void
     {
-        $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123', "1 High Street\nBH21 1AA");
+        $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123');
         $this->lamps->holdPending([
             'size' => 'lumen-forma-gallery',
             'quantity' => 2,
@@ -216,12 +216,38 @@ final class DesignRequestLampsTest extends TestCase
         self::assertSame(2, $request->getLampCount());
     }
 
-    public function testPostcodeIsFoundAnywhereInTheAddress(): void
+    public function testTheAddressInSeparateFields(): void
     {
-        foreach (["1 High Street\nWimborne\nBH21 1AA", 'Flat 2, 10 Downing St, London SW1A 2AA', 'ec1a1bb'] as $address) {
-            self::assertMatchesRegularExpression(ReserveForm::POSTCODE_PATTERN, $address);
+        $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123');
+        $request->setAddress('1 High Street', null, 'Douglas', null, 'IM1 1AA', 'IM');
+
+        self::assertSame(['1 High Street', 'Douglas', 'IM1 1AA', 'Isle of Man'], $request->getAddressLines());
+        self::assertSame("1 High Street\nDouglas\nIM1 1AA\nIsle of Man", $request->getDeliveryAddress());
+        self::assertSame('IM1 1AA', $request->getPostcode());
+        self::assertNull($request->getLegacyDeliveryAddress());
+    }
+
+    public function testAnOlderRequestsPostcodeIsFoundAnywhereInItsAddress(): void
+    {
+        foreach ([
+            "1 High Street\nWimborne\nbh21 1aa" => 'BH21 1AA',
+            'Flat 2, 10 Downing St, London SW1A 2AA' => 'SW1A 2AA',
+            '1 High Street, Wimborne' => null,
+        ] as $address => $postcode) {
+            $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123');
+            (new \ReflectionProperty(DesignRequest::class, 'deliveryAddress'))->setValue($request, $address);
+            self::assertSame($postcode, $request->getPostcode(), $address);
+            self::assertSame($address, $request->getDeliveryAddress());
         }
-        self::assertDoesNotMatchRegularExpression(ReserveForm::POSTCODE_PATTERN, '1 High Street, Wimborne');
+    }
+
+    public function testTheCountryAPostcodeBelongsTo(): void
+    {
+        self::assertSame('GB', ReserveForm::countryForPostcode('BT1 1AA'));
+        self::assertSame('GB', ReserveForm::countryForPostcode('BH21 1AA'));
+        self::assertSame('IM', ReserveForm::countryForPostcode('im1 1aa'));
+        self::assertSame('GG', ReserveForm::countryForPostcode('GY1 1AA'));
+        self::assertSame('JE', ReserveForm::countryForPostcode('JE2 3AB'));
     }
 
     /**

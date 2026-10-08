@@ -44,8 +44,33 @@ class DesignRequest
     #[ORM\Column(length: 32)]
     private string $phone;
 
-    #[ORM\Column(type: Types::TEXT)]
-    private string $deliveryAddress;
+    /**
+     * The address as one block of text: requests received before the address
+     * was split into fields (8 October 2026). Null for newer requests.
+     */
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $deliveryAddress = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $addressLine1 = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $addressLine2 = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $town = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $county = null;
+
+    #[ORM\Column(length: 16, nullable: true)]
+    private ?string $postcode = null;
+
+    /**
+     * GB, IM (Isle of Man), GG (Guernsey) or JE (Jersey).
+     */
+    #[ORM\Column(length: 2, nullable: true)]
+    private ?string $country = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $accessNotes = null;
@@ -65,12 +90,26 @@ class DesignRequest
     ])]
     private Collection $items;
 
-    public function __construct(string $fullName, string $email, string $phone, string $deliveryAddress, ?string $accessNotes = null, ?string $customDetails = null)
+    /**
+     * Where a request can be delivered, as on the Reserve page.
+     */
+    /**
+     * A UK postcode anywhere in an older request's address (e.g. "BH21 3EG").
+     */
+    public const POSTCODE_PATTERN = '/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i';
+
+    public const COUNTRIES = [
+        'GB' => 'United Kingdom',
+        'IM' => 'Isle of Man',
+        'GG' => 'Guernsey',
+        'JE' => 'Jersey',
+    ];
+
+    public function __construct(string $fullName, string $email, string $phone, ?string $accessNotes = null, ?string $customDetails = null)
     {
         $this->fullName = $fullName;
         $this->email = $email;
         $this->phone = $phone;
-        $this->deliveryAddress = $deliveryAddress;
         $this->accessNotes = $accessNotes;
         $this->customDetails = $customDetails;
         $this->createdAt = new CarbonImmutable();
@@ -113,9 +152,91 @@ class DesignRequest
         return $this->phone;
     }
 
+    public function setAddress(string $line1, ?string $line2, string $town, ?string $county, string $postcode, string $country): void
+    {
+        $this->addressLine1 = $line1;
+        $this->addressLine2 = $line2;
+        $this->town = $town;
+        $this->county = $county;
+        $this->postcode = $postcode;
+        $this->country = $country;
+    }
+
+    /**
+     * The address, one line each (from the fields, or the older single box).
+     *
+     * @return list<string>
+     */
+    public function getAddressLines(): array
+    {
+        if ($this->addressLine1 === null) {
+            return array_values(array_filter(array_map('trim', explode("\n", (string) $this->deliveryAddress)), static fn (string $line): bool => $line !== ''));
+        }
+
+        return array_values(array_filter([
+            $this->addressLine1,
+            $this->addressLine2,
+            $this->town,
+            $this->county,
+            $this->postcode,
+            self::COUNTRIES[$this->country ?? 'GB'] ?? $this->country,
+        ], static fn (?string $line): bool => $line !== null && $line !== ''));
+    }
+
+    /**
+     * The whole address as text (emails, admin search, older requests).
+     */
     public function getDeliveryAddress(): string
     {
+        return implode("\n", $this->getAddressLines());
+    }
+
+    public function getLegacyDeliveryAddress(): ?string
+    {
         return $this->deliveryAddress;
+    }
+
+    public function getAddressLine1(): ?string
+    {
+        return $this->addressLine1;
+    }
+
+    public function getAddressLine2(): ?string
+    {
+        return $this->addressLine2;
+    }
+
+    public function getTown(): ?string
+    {
+        return $this->town;
+    }
+
+    public function getCounty(): ?string
+    {
+        return $this->county;
+    }
+
+    /**
+     * The postcode field, or for an older request the postcode found in its
+     * address text.
+     */
+    public function getPostcode(): ?string
+    {
+        if ($this->postcode !== null) {
+            return $this->postcode;
+        }
+
+        return preg_match(self::POSTCODE_PATTERN, (string) $this->deliveryAddress, $m) ? strtoupper($m[0]) : null;
+    }
+
+    public function getCountry(): ?string
+    {
+        return $this->country;
+    }
+
+    public function getCountryName(): ?string
+    {
+        return $this->country === null ? null : (self::COUNTRIES[$this->country] ?? $this->country);
     }
 
     public function getAccessNotes(): ?string

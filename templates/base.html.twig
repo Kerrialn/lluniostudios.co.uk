@@ -29,6 +29,10 @@
 {# Pages not yet restyled keep the original light content area. Restyled pages
    override `main_class` with the dark design, e.g. 'bg-ll-bg text-ll-ink font-archivo'. #}
 <main class="min-h-[70vh] flex-1 {% block main_class %}bg-white text-gray-900{% endblock %}" id="main">
+    {# Remembered choices that have been used (a lamp added, a reservation
+       sent): the browser forgets them (forget_choices_controller.js). #}
+    {% set forgetChoices = app.request.hasPreviousSession ? app.session.remove('forget_choices') : null %}
+    {% if forgetChoices is iterable and forgetChoices is not empty %}<div hidden {{ stimulus_controller('forget-choices', { names: forgetChoices }) }}></div>{% endif %}
     {% block body %}{% endblock %}
 </main>
 

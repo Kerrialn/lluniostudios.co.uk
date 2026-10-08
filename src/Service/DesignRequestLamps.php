@@ -44,6 +44,18 @@ final readonly class DesignRequestLamps
         ]);
     }
 
+    /**
+     * Whether the request carries a new lamp from the configurator (not an
+     * edit of a basket line): its remembered choices are then forgotten once
+     * the request is sent.
+     */
+    public function hasNewPending(): bool
+    {
+        $pending = $this->requestStack->getSession()->get(self::SESSION_KEY);
+
+        return \is_array($pending) && ($pending['replaces'] ?? null) === null;
+    }
+
     public function forgetPending(): void
     {
         $this->requestStack->getSession()->remove(self::SESSION_KEY);

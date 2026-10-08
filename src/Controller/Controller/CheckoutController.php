@@ -11,6 +11,7 @@ use App\Entity\User;
 use App\Enum\OrderStatus;
 use App\Form\Form\BasketProceedForm;
 use App\Form\Form\CardPaymentForm;
+use App\Form\Form\ReserveForm;
 use App\Payment\RevolutMerchantClient;
 use App\Payment\StripePaymentClient;
 use App\Repository\OrderRepository;
@@ -543,15 +544,10 @@ class CheckoutController extends AbstractController
     private function reserveInstead(Request $request, array $data, Cart $cart): RedirectResponse
     {
         $value = static fn (string $key): string => trim((string) ($data[$key] ?? ''));
-        $address = array_filter([
-            $value('company'),
-            $value('line1'),
-            $value('line2'),
-            $value('town'),
-            $value('county'),
-            DeliveryArea::normalise($value('postcode')) ?? $value('postcode'),
-        ], static fn (string $line): bool => $line !== '');
+        $postcode = DeliveryArea::normalise($value('postcode')) ?? $value('postcode');
+        // Reserve has no company field: it goes in the notes, with a gift's date.
         $notes = array_filter([
+            $value('company') !== '' ? 'Company: ' . $value('company') : '',
             $cart->isGift() && $cart->getGiftArriveBy() !== null ? 'Gift · Arrive by ' . $cart->getGiftArriveBy()->format('j F Y') : '',
             $value('notes'),
         ], static fn (string $line): bool => $line !== '');
@@ -560,7 +556,12 @@ class CheckoutController extends AbstractController
             'fullName' => $value('name'),
             'email' => $value('email'),
             'phone' => $value('phone'),
-            'deliveryAddress' => implode("\n", $address),
+            'addressLine1' => $value('line1'),
+            'addressLine2' => $value('line2'),
+            'town' => $value('town'),
+            'county' => $value('county'),
+            'postcode' => $postcode,
+            'country' => ReserveForm::countryForPostcode($postcode),
             'accessNotes' => implode("\n", $notes),
         ]);
 

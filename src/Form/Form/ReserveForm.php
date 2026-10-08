@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Form\Form;
 
+use App\Entity\DesignRequest;
+use App\Shipping\DeliveryArea;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -12,18 +15,17 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
  * "Reserve Your Design" (Site v4 prototype): the customer's details. "Custom
- * Details" is asked for only when a lamp has any Custom choice.
+ * Details" is asked for only when a lamp has any Custom choice. The address
+ * is in separate fields with DPD's limits, as on the Card Payment page, plus
+ * a country (United Kingdom, Isle of Man, Guernsey or Jersey; decided
+ * 8 October 2026) that must match the postcode.
  */
 final class ReserveForm extends AbstractType
 {
-    /**
-     * UK postcode anywhere in the address (e.g. "BH21 3EG").
-     */
-    public const POSTCODE_PATTERN = '/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i';
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -59,15 +61,31 @@ final class ReserveForm extends AbstractType
                     'maxlength' => 20,
                 ],
             ])
-            ->add('deliveryAddress', TextareaType::class, [
+            ->add('addressLine1', TextType::class, self::text(CardPaymentForm::MAX['line'], 'shipping address-line1', 'Please enter the first line of your address.'))
+            ->add('addressLine2', TextType::class, self::text(CardPaymentForm::MAX['line'], 'shipping address-line2'))
+            ->add('town', TextType::class, self::text(CardPaymentForm::MAX['town'], 'shipping address-level2', 'Please enter your town or city.'))
+            ->add('county', TextType::class, self::text(CardPaymentForm::MAX['county'], 'shipping address-level1'))
+            ->add('postcode', TextType::class, [
                 'constraints' => [
-                    new Assert\NotBlank(message: 'Please enter your delivery address and postcode.'),
-                    new Assert\Regex(pattern: self::POSTCODE_PATTERN, message: 'Please include your postcode.'),
-                    new Assert\Length(max: 1000),
+                    new Assert\NotBlank(message: 'Please enter your postcode.'),
+                    new Assert\Callback(static function (mixed $value, ExecutionContextInterface $context): void {
+                        if (\is_string($value) && trim($value) !== '' && DeliveryArea::normalise($value) === null) {
+                            $context->addViolation('Please enter a full postcode, e.g. BH21 3EG.');
+                        }
+                    }),
                 ],
                 'attr' => [
-                    'autocomplete' => 'street-address',
-                    'rows' => 3,
+                    'maxlength' => CardPaymentForm::MAX['postcode'],
+                    'autocomplete' => 'shipping postal-code',
+                    'autocapitalize' => 'characters',
+                ],
+            ])
+            ->add('country', ChoiceType::class, [
+                'choices' => array_flip(DesignRequest::COUNTRIES),
+                'placeholder' => false,
+                'constraints' => [new Assert\Choice(choices: array_keys(DesignRequest::COUNTRIES))],
+                'attr' => [
+                    'autocomplete' => 'shipping country',
                 ],
             ])
             ->add('accessNotes', TextareaType::class, [
@@ -89,10 +107,62 @@ final class ReserveForm extends AbstractType
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private static function text(int $max, string $autocomplete, ?string $required = null): array
+    {
+        return [
+            'required' => $required !== null,
+            'constraints' => array_merge($required !== null ? [new Assert\NotBlank(message: $required)] : [], [
+                new Assert\Length(max: $max, maxMessage: 'Please use {{ limit }} characters or fewer.'),
+            ]),
+            'attr' => [
+                'maxlength' => $max,
+                'autocomplete' => $autocomplete,
+            ],
+        ];
+    }
+
+    /**
+     * The country a postcode belongs to: Isle of Man (IM), Guernsey (GY),
+     * Jersey (JE), otherwise the United Kingdom.
+     */
+    public static function countryForPostcode(string $postcode): string
+    {
+        return match (substr(strtoupper(trim($postcode)), 0, 2)) {
+            'IM' => 'IM',
+            'GY' => 'GG',
+            'JE' => 'JE',
+            default => 'GB',
+        };
+    }
+
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'custom_choices' => false,
+            'constraints' => [
+                new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
+                    $postcode = \is_array($data) ? DeliveryArea::normalise((string) ($data['postcode'] ?? '')) : null;
+                    if ($postcode === null || ! isset(DesignRequest::COUNTRIES[(string) ($data['country'] ?? '')])) {
+                        return;
+                    }
+
+                    $belongsTo = self::countryForPostcode($postcode);
+                    if ($belongsTo !== $data['country']) {
+                        $where = [
+                            'GB' => 'in the United Kingdom',
+                            'IM' => 'on the Isle of Man',
+                            'GG' => 'in Guernsey',
+                            'JE' => 'in Jersey',
+                        ][$belongsTo];
+                        $context->buildViolation(\sprintf('That postcode is %s: please choose it as the country.', $where))
+                            ->atPath('[country]')
+                            ->addViolation();
+                    }
+                }),
+            ],
         ]);
         $resolver->setAllowedTypes('custom_choices', 'bool');
     }
