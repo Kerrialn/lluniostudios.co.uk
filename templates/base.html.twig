@@ -15,7 +15,7 @@
 </head>
 <body class="min-h-full flex flex-col bg-ll-bg text-ll-ink antialiased font-sans"
       {{ stimulus_controller('symfony/ux-swup/swup', {
-          containers: ['#main', '#navbar', '#flashes'],
+          containers: ['#main', '#navbar', '#flashes', '#footer'],
           theme: 'slide',
           cache: true,
           animateHistoryBrowsing: true,
@@ -32,6 +32,9 @@
     {% block body %}{% endblock %}
 </main>
 
-{% block footer %}{{ include('partials/_footer.html.twig') }}{% endblock %}
+{# Swapped by Swup like #main: pages differ (the homepage pins its icons over
+   the photo; Lighting Designs has none), so the footer must change with the
+   page however it is reached. Always present, even when a page has no footer. #}
+<div id="footer">{% block footer %}{{ include('partials/_footer.html.twig') }}{% endblock %}</div>
 </body>
 </html>

@@ -21,7 +21,7 @@ node tests/browser/run-all.mjs reserve configurator-edit    # just these
 node tests/browser/reserve.mjs            # one check on its own, with every PASS/FAIL line
 ```
 
-A full run takes about 15 minutes. A few checks take a size: `configurator-photos.mjs`, `configurator-custom-notes.mjs`, `configurator-edit.mjs`, `commissions.mjs`, `basket-gift.mjs`, `checkout-page.mjs` and `checkout-pay.mjs` accept `1440 900` (desktop, the default) or `390 844` (phone); `run-all` runs both.
+A full run takes about 15 minutes. A few checks take a size: `configurator-photos.mjs`, `configurator-custom-notes.mjs`, `configurator-edit.mjs`, `commissions.mjs`, `basket-gift.mjs`, `checkout-page.mjs`, `checkout-pay.mjs` and `page-footers.mjs` accept `1440 900` (desktop, the default) or `390 844` (phone); `run-all` runs both.
 
 | Check | What it covers |
 |---|---|
@@ -47,6 +47,7 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 | `checkout-page.mjs` | The Card Payment page: no sign-in; DPD character limits; the delivery price following the postcode; outside the UK mainland, "Reserve Your Design" with its note and the details carried to the request form (once); the required-fields message and outlines, and field messages; the billing address; a gift's recipient fields and "Gift · Arrive by"; a gift date that has become too soon. |
 | `checkout-pay.mjs` | Paying by card on the Card Payment page in Stripe test mode, typing into Stripe's own card boxes: a missing card refused with the page's message; a declined card (4000 0000 0000 0002) showing Stripe's message, and the retry reusing the same order; a good card (4242 4242 4242 4242) paying, the order saved with every detail and linked to the account for its email (created quietly), the basket emptied, the confirmation email sent; "Order & Slot Confirmed" (and "Gift · Arrive by" for a gift, saved on the order); the order's pages open only to the visitor who placed it; a changed basket cancelling the earlier unpaid order; a gift's delivery phone being the customer's mobile; admin's "Gift" column and an order's mobile, delivery instructions and billing address (desktop run; signs in as `lluniostudios@gmail.com`). Needs internet access to Stripe; each run leaves test payments in the Stripe test account. |
 | `checkout-wallet.mjs` | Apple Pay / Google Pay: the buttons hidden when the device has no wallet (as in headless Chrome) and for gifts; what the wallet sheet is told for a partial postcode (DPD price, or refused outside the UK mainland); the server's side of an approved wallet payment, paid with Stripe's test wallet card; outside the mainland, Reserve Your Design with the address; gifts and over-long addresses refused with "pay by card". Pressing a real wallet button is checked by hand (see the merge plan, 10.4). |
+| `page-footers.mjs` | Each page's footer however it is reached: the homepage's pinned icons, none on Lighting Designs, the normal footer elsewhere. Direct visits, then a route through every page to every other page (Swup transitions), with the back and forward buttons. |
 
 ### Comparing with the prototype
 

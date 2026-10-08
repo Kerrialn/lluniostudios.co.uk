@@ -33,6 +33,8 @@ const CHECKS = [
     ['checkout-pay.mjs', '1440', '900'],
     ['checkout-pay.mjs', '390', '844'],
     ['checkout-wallet.mjs'],
+    ['page-footers.mjs', '1440', '900'],
+    ['page-footers.mjs', '390', '844'],
 ];
 
 const args = process.argv.slice(2);

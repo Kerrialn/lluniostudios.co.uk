@@ -224,6 +224,12 @@ Decisions of 7 October 2026 are in the table above (Accounts and sign-in, "View 
 - **10.6 Sign-in and order history:** the sign-in email gets a one-click "Sign in" button with the 6-digit code underneath as a backup; `/account` (order history) restyled to match the design; a small "Your orders" link on the Contact page instead of the footer's "Sign in".
 - Tested end to end with Stripe test keys before anything goes live; each sub-step notes how to undo it. No size abbreviations anywhere.
 
+### Fixed: the wrong footer after moving between pages (found 8 October 2026)
+- **Symptoms:** the homepage sometimes showed a black footer band at the bottom instead of its icons pinned over the photo; Lighting Designs sometimes showed the footer icons (it has none); the other pages could lose their footer.
+- **Cause:** Swup page transitions swapped only `#main`, `#navbar` and `#flashes`. The footer sat outside them, so it stayed as the first page loaded left it: arriving on the homepage from another page kept that page's normal footer (the black band), arriving on Lighting Designs kept the footer, and arriving on any other page from Lighting Designs left none. A direct visit (or reload) was always right, which is why it seemed intermittent.
+- **Fix:** the footer is in its own container (`<div id="footer">` in `templates/base.html.twig`, present on every page even when empty) and Swup swaps it with the page (`containers` in the same file). Back and forward use the same swap.
+- **Check:** `tests/browser/page-footers.mjs` (desktop and phone): direct visits, then every page to every other page and back and forward. With the old setting it fails 60 times.
+
 ### Testing Apple Pay and Google Pay
 In Stripe test mode no wallet card is ever charged; Stripe swaps in a test card.
 - **Google Pay:** Chrome (desktop, or Android) signed into a Google account with a card saved in Google Pay (pay.google.com). Open https://localhost/checkout with a lamp in the basket; "Buy with Google Pay" appears above Contact. Google Pay is on by default in Stripe (Dashboard, test mode: Settings → Payment methods).
