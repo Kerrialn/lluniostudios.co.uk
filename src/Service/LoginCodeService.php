@@ -10,9 +10,12 @@ use App\Repository\LoginCodeRepository;
 use Carbon\CarbonImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Security\Http\LoginLink\LoginLinkHandlerInterface;
 
 /**
- * Issues and verifies one-time 6-digit email codes for passwordless login.
+ * Issues and verifies one-time 6-digit email codes for passwordless login,
+ * sent with a one-click sign-in link (Symfony's login links, see
+ * config/packages/security.php).
  *
  * Codes are stored hashed (HMAC-SHA256 with the app secret), expire after a few
  * minutes, allow a limited number of attempts and are single-use. Only the most
@@ -30,6 +33,7 @@ final readonly class LoginCodeService
         private LoginCodeRepository $loginCodeRepository,
         private EmailService $emailService,
         private EntityManagerInterface $entityManager,
+        private LoginLinkHandlerInterface $loginLinkHandler,
         #[Autowire('%kernel.secret%')]
         private string $appSecret,
     ) {
@@ -60,7 +64,7 @@ final readonly class LoginCodeService
         $this->entityManager->persist($loginCode);
         $this->entityManager->flush();
 
-        $this->emailService->sendLoginCodeEmail($user, $code);
+        $this->emailService->sendLoginCodeEmail($user, $code, $this->loginLinkHandler->createLoginLink($user)->getUrl());
     }
 
     /**

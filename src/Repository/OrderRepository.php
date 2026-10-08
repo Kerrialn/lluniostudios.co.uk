@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Order;
 use App\Entity\User;
+use App\Enum\OrderStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -53,6 +54,22 @@ class OrderRepository extends ServiceEntityRepository
     {
         return $this->findOneBy([
             'orderNumber' => $orderNumber,
+        ]);
+    }
+
+    /**
+     * The customer's placed orders, newest first (paid or later; unfinished
+     * checkout attempts are left out).
+     *
+     * @return list<Order>
+     */
+    public function findPlacedByUser(User $user): array
+    {
+        return $this->findBy([
+            'user' => $user,
+            'status' => [OrderStatus::PAID, OrderStatus::FULFILLED],
+        ], [
+            'createdAt' => 'DESC',
         ]);
     }
 

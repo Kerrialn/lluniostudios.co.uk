@@ -1,30 +1,36 @@
 {% extends 'base.html.twig' %}
-{% block title %}My orders — Llunio Studios{% endblock %}
+
+{# The customer's order history (Step 10.6), styled like the site's other pages. #}
+{% block title %}Your Orders | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
 {% block body %}
-    <div class="mx-auto max-w-3xl px-4 pt-28 pb-16">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="boldonse-regular text-3xl text-gray-900">My orders</h1>
-            <a href="{{ path('app_logout') }}" class="text-sm text-gray-900 underline">Sign out</a>
+    {% set textLink = 'text-[13px] text-ll-mute underline transition-colors hover:text-ll-ink' %}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
+        <div class="flex justify-between items-baseline gap-4 flex-wrap">
+            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Orders</h1>
+            <a href="{{ path('app_logout') }}" class="{{ textLink }}">Sign out</a>
         </div>
 
         {% if orders is empty %}
-            <p class="text-gray-500">You haven't placed any orders yet.</p>
-            <a href="{{ path('lighting_designs') }}" class="inline-block mt-4 text-sm text-gray-900 underline">Browse products</a>
+            <div class="flex flex-col items-start gap-5 border-t border-ll-line pt-4 text-[15px] leading-relaxed">
+                <p class="text-ll-mute">You haven't placed any orders yet.</p>
+                <a href="{{ path('lighting_designs') }}" class="border border-ll-ink px-[22px] py-3.5 ll-label transition-opacity hover:opacity-70">Explore our lighting designs</a>
+            </div>
         {% else %}
-            <div class="space-y-4">
+            <div class="flex flex-col border-t border-ll-line">
                 {% for order in orders %}
+                    {% set lamps = order.items|reduce((n, item) => n + item.quantity, 0) %}
                     <a href="{{ path('account_order_show', { orderNumber: order.orderNumber }) }}"
-                       class="block rounded-xl border border-gray-100 p-5 hover:border-gray-300 transition-colors">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="font-medium text-gray-900">{{ order.orderNumber }}</p>
-                                <p class="text-sm text-gray-500">{{ order.createdAt|date('j M Y') }} · {{ order.items|length }} item{{ order.items|length == 1 ? '' : 's' }}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-semibold text-gray-900">{{ order.totalInGbp|format_currency('GBP') }}</p>
-                                <span class="inline-block mt-1 rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">{{ order.status.label }}</span>
-                            </div>
-                        </div>
+                       class="flex flex-wrap justify-between items-baseline gap-x-6 gap-y-1 py-5 border-b border-ll-line transition-opacity hover:opacity-70">
+                        <span class="flex flex-col gap-1">
+                            <span class="text-[15px]">{{ order.orderNumber }}</span>
+                            <span class="text-[13px] text-ll-mute">{{ order.createdAt|date('j F Y', 'Europe/London') }} · {{ lamps }} {{ lamps == 1 ? 'lamp' : 'lamps' }}{% if order.giftLine %} · Gift{% endif %}</span>
+                        </span>
+                        <span class="flex flex-col items-end gap-1">
+                            <span class="text-[15px]">{{ order.totalInGbp|format_currency('GBP', {fraction_digit: order.total % 100 == 0 ? 0 : 2}) }}</span>
+                            <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.status.label }}</span>
+                        </span>
                     </a>
                 {% endfor %}
             </div>

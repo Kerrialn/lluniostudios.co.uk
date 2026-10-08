@@ -32,7 +32,7 @@ export async function cleanUp(since) {
         ...(await search('to:example.test')).filter(after),
         ...(await search('subject:"New request LR-"')).filter((m) => after(m) && /Ada Test/.test(m.Subject)),
         ...(await search('subject:"New commission enquiry LC-"')).filter((m) => after(m) && /Ada Test|Test Architects Ltd/.test(m.Subject)),
-        ...(await search('subject:"sign-in code"')).filter(after),
+        ...(await search('subject:"Sign in to Llunio Studios"')).filter(after),
     ].map((m) => m.ID);
     if (ids.length) {
         await fetch(`${MAILPIT_URL}/api/v1/messages`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ IDs: ids }) });

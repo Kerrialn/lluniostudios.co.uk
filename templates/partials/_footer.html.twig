@@ -1,7 +1,7 @@
 {#
     Site footer (design: Site v4 Unified): a row of icon links in normal page
-    flow at the end of the content. The studio address, trading name and
-    T&Cs live on the Contact page, not here.
+    flow at the end of the content. The studio address, trading name, T&Cs
+    and "Your orders" live on the Contact page, not here.
 
     Options:
       pinned  true on the homepage: just the icons, pinned bottom-left over
@@ -24,12 +24,5 @@
             </a>
         </div>
 
-        {% if not pinned %}
-            {# PLACEHOLDER: not in the design. Kept so existing customers can reach
-               their orders until the accounts question is decided. #}
-            <a href="{{ path(app.user ? 'account_orders' : 'app_login') }}" class="ll-label text-ll-mute hover:text-ll-ink px-[11px]">
-                {{ app.user ? 'Your orders' : 'Sign in' }}
-            </a>
-        {% endif %}
     </div>
 </footer>

@@ -26,6 +26,8 @@ final readonly class EmailService
 
     public const STUDIO_ADDRESS = 'Hogsmeade, Higher Merley Ln, Wimborne BH21 3EG';
 
+    public const SIGN_IN_SUBJECT = 'Sign in to Llunio Studios';
+
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(STUDIO_NOTIFICATION_EMAIL)%')]
@@ -122,16 +124,21 @@ final readonly class EmailService
         );
     }
 
-    public function sendLoginCodeEmail(User $user, string $code): void
+    /**
+     * The sign-in email (Step 10.6): a one-click "Sign in" button, with the
+     * 6-digit code underneath as a backup.
+     */
+    public function sendLoginCodeEmail(User $user, string $code, string $link): void
     {
         $this->send(
-            subject: 'Your Llunio Studios sign-in code',
+            subject: self::SIGN_IN_SUBJECT,
             template: '/email/security/login_code.html.twig',
             email: $user->getEmail(),
             name: $user->getFullName() ?? $user->getEmail(),
             context: [
                 'code' => $code,
-                'name' => $user->getFullName(),
+                'link' => $link,
+                'name' => $user->getFirstName(),
             ],
         );
     }

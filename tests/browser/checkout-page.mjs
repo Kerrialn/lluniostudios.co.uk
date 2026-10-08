@@ -22,7 +22,17 @@ try {
     };
     const field = (name) => `document.querySelector('[name="card_payment_form[${name}]"]')`;
     const fill = (values) => ev(`(() => { for (const [k, v] of Object.entries(${JSON.stringify(values)})) { const e = document.querySelector('[name="card_payment_form[' + k + ']"]'); if (e.type === 'checkbox') e.checked = v; else e.value = v; } })()`);
-    const type = async (name, value) => { await ev(`(() => { const e = ${field(name)}; e.focus(); e.value = ${JSON.stringify(value)}; e.dispatchEvent(new Event('input', { bubbles: true })); })()`); await sleep(1200); };
+    // Type into a field; for the postcode, wait until the summary has the server's answer
+    // for this postcode (it asks after a short pause, so a slow reply can lag behind).
+    const type = async (name, value) => {
+        const before = name === 'postcode' ? await ev(`fetch('/checkout/delivery?postcode=' + encodeURIComponent(${JSON.stringify(value)}), { headers: { Accept: 'application/json' } }).then(r => r.json()).then(d => d.delivery + '|' + d.button)`) : null;
+        await ev(`(() => { const e = ${field(name)}; e.focus(); e.value = ${JSON.stringify(value)}; e.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+        await sleep(600);
+        for (let i = 0; before && i < 20; i++) {
+            if ((await ev(`document.querySelector('[data-checkout-target=delivery]').textContent.trim() + '|' + document.querySelector('[data-checkout-target=button]').textContent.trim()`)) === before) break;
+            await sleep(300);
+        }
+    };
     const aside = () => ev(`(() => { const a = document.querySelector('main aside'); const t = (s) => a.querySelector('[data-checkout-target=' + s + ']'); return { delivery: t('delivery').textContent.trim(), total: t('total').textContent.trim(), button: t('button').textContent.trim(), note: t('outsideNote').hidden ? '' : t('outsideNote').textContent.trim(), secure: !t('secure').hidden, gift: [...a.querySelectorAll('span')].find(s => s.textContent.trim() === 'Gift')?.nextElementSibling?.textContent.trim() ?? '', error: [...a.querySelectorAll('[role=alert]')].map(e => e.textContent.trim()).join(' | ') }; })()`);
     const submit = async () => { await ev(`document.querySelector('main form').requestSubmit()`); await sleep(2800); };
     const good = { email: 'ada.test@example.test', phone: '07700 900123', name: 'Ada Test', company: 'Test Ltd', line1: '1 High Street', line2: 'Flat 2', town: 'Wimborne', county: 'Dorset', postcode: 'bh21 1aa', notes: 'Leave with neighbour at 3' };

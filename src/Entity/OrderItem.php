@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Catalogue\LumenFormaCatalogue;
 use App\Repository\OrderItemRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -131,6 +132,14 @@ class OrderItem
         ksort($groups);
 
         return array_values($groups);
+    }
+
+    /**
+     * "Gallery" from "Lumen Forma Gallery".
+     */
+    public function getSizeName(): string
+    {
+        return (string) preg_replace('/^' . preg_quote(LumenFormaCatalogue::COLLECTION_NAME, '/') . '\s+/', '', $this->productTitle);
     }
 
     public function getLineTotal(): int

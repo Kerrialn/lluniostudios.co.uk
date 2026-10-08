@@ -1,41 +1,61 @@
 {% extends 'base.html.twig' %}
-{% block title %}Order {{ order.orderNumber }} — Llunio Studios{% endblock %}
+
+{# One order in the customer's history (Step 10.6): the lamps as on the Card Payment summary, totals, gift and delivery. #}
+{% block title %}Order {{ order.orderNumber }} | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
 {% block body %}
-    <div class="mx-auto max-w-xl px-4 pt-28 pb-16">
-        <a href="{{ path('account_orders') }}" class="text-sm text-gray-500 underline">← Back to orders</a>
-
-        <div class="flex items-center justify-between mt-4 mb-6">
-            <h1 class="boldonse-regular text-2xl text-gray-900">{{ order.orderNumber }}</h1>
-            <span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">{{ order.status.label }}</span>
+    {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-sm leading-[1.5]' %}
+    {% set rowKey = 'text-[11px] uppercase tracking-[0.14em] text-ll-mute' %}
+    {% set total = 'flex justify-between gap-3 text-[13px] py-2.5 border-t border-ll-line' %}
+    {% import _self as m %}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
+        <a href="{{ path('account_orders') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Your Orders</a>
+        <div class="flex justify-between items-baseline gap-4 flex-wrap">
+            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Order {{ order.orderNumber }}</h1>
+            <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.status.label }} · {{ order.createdAt|date('j F Y', 'Europe/London') }}</span>
         </div>
-        <p class="text-sm text-gray-500 mb-6">Placed {{ order.createdAt|date('j M Y') }}</p>
 
-        <div class="rounded-xl border border-gray-100 p-6 bg-gray-50">
-            {% for item in order.items %}
-                <div class="flex justify-between text-sm py-1">
-                    <span class="text-gray-900">{{ item.quantity }} × {{ item.productTitle }}</span>
-                    <span class="text-gray-900">{{ item.lineTotalInGbp|format_currency('GBP') }}</span>
+        <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
+            <div class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-6">
+                {% for item in order.items %}
+                    <div class="flex flex-col border-t border-ll-line pt-3">
+                        <div class="flex justify-between gap-4 pb-2 text-[15px]"><span>{{ constant('App\\Catalogue\\LumenFormaCatalogue::COLLECTION_NAME') }}</span><span>{{ m.money(item.lineTotal) }}</span></div>
+                        <div class="{{ row }}"><span class="{{ rowKey }}">Size</span><span class="text-right">{{ item.sizeName }}</span></div>
+                        <div class="{{ row }}"><span class="{{ rowKey }}">Quantity</span><span class="text-right">{{ item.quantity }}</span></div>
+                        {% for group in item.lampConfigurations %}
+                            <div class="flex flex-col">
+                                {% if group.label %}<div class="text-[13px] pt-1.5 pb-2 border-b border-ll-ink">{{ group.label }}</div>{% endif %}
+                                {% for option in group.options %}
+                                    <div class="{{ row }}"><span class="{{ rowKey }}">{{ option.option }}</span><span class="text-right">{{ option.value }}</span></div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-[18px] p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
+                <div class="flex flex-col">
+                    <div class="{{ total }}"><span>Subtotal</span><span class="text-right">{{ m.money(order.subtotal) }}</span></div>
+                    <div class="{{ total }}"><span>DPD Next Day Delivery</span><span class="text-right">{{ m.money(order.shippingCost) }}</span></div>
+                    {% if order.giftLine %}
+                        <div class="{{ total }}"><span>Gift</span><span class="text-right">{{ order.giftLine }}</span></div>
+                    {% endif %}
+                    <div class="flex justify-between gap-3 text-[15px] py-3 border-t border-ll-ink border-b border-b-ll-line"><span>Total</span><span class="text-right">{{ m.money(order.total) }}</span></div>
                 </div>
-            {% endfor %}
-            <div class="flex justify-between text-sm border-t border-gray-200 mt-2 pt-2">
-                <span class="text-gray-500">Subtotal</span>
-                <span class="text-gray-900">{{ order.subtotalInGbp|format_currency('GBP') }}</span>
-            </div>
-            <div class="flex justify-between text-sm mt-1">
-                <span class="text-gray-500">Shipping{% if order.shippingServiceName %} ({{ order.shippingServiceName }}){% endif %}</span>
-                <span class="text-gray-900">{{ order.shippingCost == 0 ? 'Free' : order.shippingCostInGbp|format_currency('GBP') }}</span>
-            </div>
-            <div class="flex justify-between border-t border-gray-200 mt-2 pt-2">
-                <span class="font-semibold text-gray-900">Total</span>
-                <span class="font-semibold text-gray-900">{{ order.totalInGbp|format_currency('GBP') }}</span>
-            </div>
+                {% if order.shippingAddress %}
+                    {% set a = order.shippingAddress %}
+                    <div class="flex flex-col gap-1.5 text-[13px] leading-[1.5]">
+                        <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Delivery address</span>
+                        <span>{{ [a.recipientName, a.company, a.line1, a.line2, a.city, a.county, a.postcode]|filter(v => v)|join(', ') }}</span>
+                    </div>
+                {% endif %}
+                <p class="text-xs text-ll-mute leading-[1.5]">Hand-cast to order in our Dorset Studio. Dispatched within {{ lead_time.label }}, then DPD Next Day Delivery.</p>
+            </aside>
         </div>
-
-        {% if order.shippingAddress %}
-            <div class="mt-6">
-                <h2 class="text-sm font-medium text-gray-900 mb-1">Shipping to</h2>
-                <p class="text-sm text-gray-600">{{ order.shippingAddress.recipientName }}<br>{{ order.shippingAddress.singleLine }}</p>
-            </div>
-        {% endif %}
     </div>
 {% endblock %}
+
+{# "£799", or "£12.95" when there are pence. #}
+{% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}

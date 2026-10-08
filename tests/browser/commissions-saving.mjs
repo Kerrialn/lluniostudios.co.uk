@@ -143,7 +143,7 @@ try {
     // Admin.
     await go(BASE_URL + '/login');
     await ev(`(() => { const i = document.querySelector('input[name=email]'); i.value = ${JSON.stringify(ADMIN)}; i.form.requestSubmit(); })()`); await sleep(2500);
-    const mail = (await (await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent('to:' + ADMIN + ' subject:"sign-in code"')}`)).json()).messages?.[0];
+    const mail = (await (await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent('to:' + ADMIN + ' subject:"Sign in to Llunio Studios"')}`)).json()).messages?.[0];
     const text = mail ? (await (await fetch(`${MAILPIT_URL}/api/v1/message/${mail.ID}`)).json()).Text : '';
     const code = text.match(/\b\d{6}\b/)?.[0];
     await ev(`(() => { document.querySelector('[data-pin-code-target=hidden]').value = '${code}'; document.querySelector('[data-pin-code-target=hidden]').form.requestSubmit(); })()`); await sleep(3000);

@@ -9,6 +9,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * The customer's order history (Step 10.6), reached by signing in (the
+ * "Your orders" link on the Contact page, or the sign-in email's button).
+ */
 #[Route(path: '/account')]
 #[IsGranted('ROLE_USER')]
 class AccountController extends AbstractController
@@ -25,7 +29,7 @@ class AccountController extends AbstractController
         $user = $this->getUser();
 
         return $this->render('account/orders.html.twig', [
-            'orders' => $this->orderRepository->findByUser($user),
+            'orders' => $this->orderRepository->findPlacedByUser($user),
         ]);
     }
 
@@ -36,7 +40,7 @@ class AccountController extends AbstractController
         $user = $this->getUser();
         $order = $this->orderRepository->findByOrderNumber($orderNumber);
 
-        if (! $order instanceof \App\Entity\Order || $order->getUser() !== $user) {
+        if (! $order instanceof \App\Entity\Order || $order->getUser() !== $user || ! \in_array($order, $this->orderRepository->findPlacedByUser($user), true)) {
             throw $this->createNotFoundException();
         }
 

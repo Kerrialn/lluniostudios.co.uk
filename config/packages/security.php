@@ -28,6 +28,17 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'custom_authenticators' => [
                     EmailCodeAuthenticator::class,
                 ],
+                // The sign-in email's one-click "Sign in" button (Step 10.6):
+                // a signed link, valid for 10 minutes. It may be opened more
+                // than once in that time, because some email services open
+                // links to check them before the customer clicks; it stops
+                // working if the account's email changes.
+                'login_link' => [
+                    'check_route' => 'login_check',
+                    'signature_properties' => ['id', 'email'],
+                    'lifetime' => 600,
+                    'default_target_path' => 'account_orders',
+                ],
                 'logout' => [
                     'path' => 'app_logout',
                     'target' => 'landing',

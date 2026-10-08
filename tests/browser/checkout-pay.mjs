@@ -151,7 +151,7 @@ try {
         const ADMIN = 'lluniostudios@gmail.com';
         await go(BASE_URL + '/login');
         await ev(`(() => { const i = document.querySelector('input[name=email]'); i.value = ${JSON.stringify(ADMIN)}; i.form.requestSubmit(); })()`); await sleep(2500);
-        const codeMail = (await (await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent('to:' + ADMIN + ' subject:"sign-in code"')}`)).json()).messages?.[0];
+        const codeMail = (await (await fetch(`${MAILPIT_URL}/api/v1/search?query=${encodeURIComponent('to:' + ADMIN + ' subject:"Sign in to Llunio Studios"')}`)).json()).messages?.[0];
         const code = (codeMail ? (await (await fetch(`${MAILPIT_URL}/api/v1/message/${codeMail.ID}`)).json()).Text : '').match(/\b\d{6}\b/)?.[0];
         await ev(`(() => { const h = document.querySelector('[data-pin-code-target=hidden]'); h.value = '${code}'; h.form.requestSubmit(); })()`); await sleep(3000);
         await go(BASE_URL + '/admin/order', 3000);

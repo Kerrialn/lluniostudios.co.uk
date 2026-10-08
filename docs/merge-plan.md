@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 7 October 2026 (Step 10.5 committed; 10.6 in progress).
+Last updated: 8 October 2026 (Step 10 done; footer fix committed; Step 10b next).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Nothing has been pushed yet. Never push to `main` or merge anything unless asked. To push: `git push -u origin symfony-7.4-upgrade design-foundation`.
-- **Next step:** Step 10 (checkout reshape), starting with 10.1. See "Steps" below.
+- **Next step:** Step 10b (quotes for requests). See "Steps" below.
 - **The prototype:** `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip`. Inside it:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Unzip and open it in Chrome. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (02 is built; see Step 8).
@@ -55,7 +55,7 @@ Last updated: 7 October 2026 (Step 10.5 committed; 10.6 in progress).
 | 8 | Reserve Your Design (requests, email 02, admin) | Done | `44b4408` |
 | — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
 | 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (deferred full browser run for 9.2 and 9.3 done 7 October 2026: 17 of 17 passed) | `73bdb27` (9.1), `74ce773` (9.2), `2a3e0f9` (9.3) |
-| 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | In progress (10.1–10.5 done; 10.6 next) | `c1bdd31` (10.1), `8b54643` (10.2), `042aa0d` (10.3), `570274d` (10.4) |
+| 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | Done (10.1–10.6; Apple Pay and Google Pay still to be tested by hand at launch) | `c1bdd31` (10.1), `8b54643` (10.2), `042aa0d` (10.3), `570274d` (10.4), `10d5537` (10.5) |
 | 10b | Quotes in admin | Not started | — |
 | 11 | Order journey emails 01, 03–06 | Not started | — |
 | 12 | Launch checks | Not started | — |
@@ -182,7 +182,7 @@ Two forms (Home: name, email, phone, preferred contact, idea, files; Project: co
   - Studio notification to `STUDIO_NOTIFICATION_EMAIL` ("New commission enquiry LC-… from <name or company>"): every detail, the file names and sizes (not attached) and a link to the enquiry in admin; replies go to the customer. A mail problem is logged and never stops the enquiry being saved.
   - Unit test `tests/Form/CommissionFieldsTest.php` (the upload rules). Browser checks extended (`commissions-saving.mjs`: the page and its layout against Contact, email 03 for both forms, the notification; `reserve.mjs`: the restyled page, request number now read from the database; `commissions.mjs`; `clean-up.mjs` removes the test notifications). At your request (7 October 2026, machine busy ingesting video), only the unit tests, phpstan, code style and the relevant browser checks (`commissions-saving.mjs`, `reserve.mjs`, both passing) were run while building; 9.3 was committed without the full browser run at your request (7 October 2026: the machine was busy ingesting video and couldn't be paused). The deferred full browser run for 9.2 and 9.3 was done on 7 October 2026 once the machine was free: 17 of 17 passed. Under load, `reserve.mjs` can fail at its first page ("Reserve Your Design opens the request form") because it waits a fixed time; it passes when re-run.
 
-### Step 10: Checkout reshape (in progress; highest risk: payments)
+### Step 10: Checkout reshape (done)
 Decisions of 7 October 2026 are in the table above (Accounts and sign-in, "View your order", Delivery area, Express Payment, Gift date, Order confirmation page). The deferred full browser run for 9.2 and 9.3 passed (17 of 17) before 10.1 started.
 - **10.1 Basket (done):** the "This is a gift" tick box with "When does it need to arrive by?" (earliest: today + 14 calendar days, then 2 working days for DPD; "Please choose a date…" messages as the prototype), and a single "Proceed to Payment" button (no Express Payment button). Delivery wording as in Decisions.
   - "Proceed to Payment" is now a small form (`BasketProceedForm`, handled by `CartController::index`): the server checks the date and saves the choice on the basket (`Cart::$gift`, `Cart::$giftArriveBy`), then goes on to checkout. Unticking clears it. Works without JavaScript (the date shows once the box is ticked, by CSS). Shown only when the basket can check out.
@@ -221,7 +221,14 @@ Decisions of 7 October 2026 are in the table above (Accounts and sign-in, "View 
   - Orders keep "This is a gift" and the arrive-by date from the basket (`Order::$gift`, `Order::$giftArriveBy`). Migration `Version20261007200000` (two columns on `orders`; undo with `doctrine:migrations:migrate prev`, which forgets which orders were gifts).
   - Admin Orders: a "Gift" column ("Arrive by [date]" or "No"); an order's page also shows the customer's mobile, delivery instructions and billing address ("Same as delivery address" when not given), saved since 10.2 but not shown until now.
   - Browser check `checkout-pay.mjs` extended (confirmation wording and layout, gift line, gift saved, admin).
-- **10.6 Sign-in and order history:** the sign-in email gets a one-click "Sign in" button with the 6-digit code underneath as a backup; `/account` (order history) restyled to match the design; a small "Your orders" link on the Contact page instead of the footer's "Sign in".
+- **10.6 Sign-in and order history (done):** the sign-in email gets a one-click "Sign in" button with the 6-digit code underneath as a backup; `/account` (order history) restyled to match the design; a small "Your orders" link on the Contact page instead of the footer's "Sign in".
+  - Sign-in email ("Sign in to Llunio Studios", `templates/email/security/login_code.html.twig`) in the style of emails 02 and 03: "Dear [first name], press the button below to sign in and see your orders.", the "Sign in" button, "Or enter this code on the sign-in page" and the code, "The button and the code work for 10 minutes." (wording approved 8 October 2026, with the Sign In page's).
+  - The button is a Symfony login link (`config/packages/security.php`, `login_link`): signed, valid for 10 minutes, and stops working if the account's email changes. It can be opened more than once within the 10 minutes, because some email services open links to check them before the customer clicks (a single-use link would be used up by them). A tampered or expired link returns to Sign In with "That sign-in link has expired. Please enter your email for a new one."
+  - Sign In page restyled like the site's form pages (email, then the code step with the code boxes, "Keep me signed in", "Send a new email", "Use a different email"); an unknown email gets the same message and no email.
+  - "Your Orders" (`/account/orders`) and each order's page restyled: placed orders only (paid or later; unfinished checkout attempts are left out), each with its date, lamps, total and status; an order's page shows the lamps as on the Card Payment summary, the totals, the gift line and the delivery address.
+  - The footer's "Sign in" / "Your orders" link is gone; the Contact page has "Your orders" under Terms & Conditions (asking to sign in first if needed). The old checkout's "already have an account" step (`SESSION_PENDING_EMAIL`) is removed.
+  - No database changes. To undo: revert the commit.
+  - Browser check `account.mjs`; the checks that sign in to admin look for the new subject.
 - Tested end to end with Stripe test keys before anything goes live; each sub-step notes how to undo it. No size abbreviations anywhere.
 
 ### Fixed: the wrong footer after moving between pages (found 8 October 2026)

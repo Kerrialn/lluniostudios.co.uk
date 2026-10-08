@@ -11,16 +11,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Security\Http\LoginLink\Exception\InvalidLoginLinkAuthenticationException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class SecurityController extends AbstractController
 {
-    /**
-     * Set by CheckoutController when a returning customer must verify a code to
-     * continue checkout — jumps the login page straight to the code step.
-     */
-    public const SESSION_PENDING_EMAIL = 'login_pending_email';
-
     public function __construct(
         private readonly UserRepository $userRepository,
         private readonly LoginCodeService $loginCodeService,
@@ -29,15 +24,14 @@ class SecurityController extends AbstractController
     }
 
     /**
-     * Passwordless login. Step 1 collects the email and emails a 6-digit code;
-     * step 2 (email + code) is intercepted by EmailCodeAuthenticator.
+     * Passwordless sign-in. Step 1 collects the email and sends the sign-in
+     * email (a one-click link, and a 6-digit code as a backup); step 2
+     * (email + code) is intercepted by EmailCodeAuthenticator.
      */
     #[Route(path: '/login', name: 'app_login', methods: ['GET', 'POST'])]
     public function login(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser() instanceof User) {
-            $request->getSession()->remove(self::SESSION_PENDING_EMAIL);
-
             return $this->redirectToRoute('account_orders');
         }
 
@@ -45,15 +39,13 @@ class SecurityController extends AbstractController
 
         // "Use a different email" resets back to the email step.
         if ($request->query->has('reset')) {
-            $session->remove(self::SESSION_PENDING_EMAIL);
             $session->remove(\Symfony\Component\Security\Http\SecurityRequestAttributes::LAST_USERNAME);
 
             return $this->redirectToRoute('app_login');
         }
 
-        $pendingEmail = (string) $session->get(self::SESSION_PENDING_EMAIL, '');
-        $email = $authenticationUtils->getLastUsername() ?: $pendingEmail;
-        $step = ($pendingEmail !== '') ? 'code' : 'email';
+        $email = $authenticationUtils->getLastUsername();
+        $step = 'email';
 
         // Step 1: an email-only POST requests a code (the code-submit POST is
         // handled by the authenticator and never reaches here).
@@ -82,8 +74,7 @@ class SecurityController extends AbstractController
                 }
 
                 if ($sent) {
-                    $session->remove(self::SESSION_PENDING_EMAIL);
-                    $this->addFlash('message', 'If that email has an account, we\'ve sent a 6-digit sign-in code.');
+                    $this->addFlash('message', 'If that email has an account, we\'ve sent a sign-in link and code.');
                     $step = 'code';
                 } else {
                     $this->addFlash('error', 'We couldn\'t send your code right now. Please try again in a moment.');
@@ -91,9 +82,12 @@ class SecurityController extends AbstractController
             }
         }
 
-        // Surface authenticator failures (bad/expired code) as an error toast.
+        // Surface authenticator failures as an error: an expired or changed
+        // sign-in link starts again; a wrong or expired code stays on the code step.
         $error = $authenticationUtils->getLastAuthenticationError();
-        if ($error instanceof \Symfony\Component\Security\Core\Exception\AuthenticationException) {
+        if ($error instanceof InvalidLoginLinkAuthenticationException) {
+            $this->addFlash('error', 'That sign-in link has expired. Please enter your email for a new one.');
+        } elseif ($error instanceof \Symfony\Component\Security\Core\Exception\AuthenticationException) {
             $this->addFlash('error', $this->translator->trans($error->getMessageKey(), $error->getMessageData(), 'security'));
             $step = 'code';
         }
@@ -107,6 +101,16 @@ class SecurityController extends AbstractController
                 'required' => false,
             ])->createView(),
         ]);
+    }
+
+    /**
+     * Where the sign-in email's button leads; Symfony's login link
+     * authenticator signs the customer in here.
+     */
+    #[Route(path: '/login/check', name: 'login_check')]
+    public function check(): never
+    {
+        throw new \LogicException('Handled by the login_link authenticator on the firewall.');
     }
 
     #[Route(path: '/logout', name: 'app_logout')]
