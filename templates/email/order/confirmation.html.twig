@@ -35,6 +35,17 @@
             <td style="padding:6px 0;"><strong>Total</strong></td>
             <td align="right" style="padding:6px 0;"><strong>{{ order.totalInGbp|format_currency('GBP') }}</strong></td>
         </tr>
+        {% if order.amountOwed > 0 %}
+            {# A quote paid by deposit (Step 10b.3); this email is restyled in Step 11. #}
+            <tr>
+                <td style="padding:6px 0;">Paid (deposit)</td>
+                <td align="right" style="padding:6px 0;">{{ (order.amountPaid / 100)|format_currency('GBP') }}</td>
+            </tr>
+            <tr>
+                <td style="padding:6px 0;">Balance to pay later</td>
+                <td align="right" style="padding:6px 0;">{{ (order.amountOwed / 100)|format_currency('GBP') }}</td>
+            </tr>
+        {% endif %}
     </table>
 
     {% if order.shippingAddress %}

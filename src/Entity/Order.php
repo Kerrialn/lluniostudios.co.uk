@@ -106,6 +106,30 @@ class Order implements HasReferenceNumber
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?CarbonImmutable $paidAt = null;
 
+    /**
+     * The "Reserve Your Design" request this order was quoted for (Step
+     * 10b.3); null for basket orders.
+     */
+    #[ORM\ManyToOne(targetEntity: DesignRequest::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?DesignRequest $designRequest = null;
+
+    /**
+     * What the payment being taken is for, in pence: a quote's deposit, or
+     * null for the whole total.
+     */
+    #[ORM\Column(nullable: true)]
+    private ?int $chargeNow = null;
+
+    /**
+     * Pence paid so far (the whole total for basket orders; a quote's deposit
+     * until the balance is paid, 10b.4).
+     */
+    #[ORM\Column(options: [
+        'default' => 0,
+    ])]
+    private int $amountPaid = 0;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private CarbonImmutable $createdAt;
 
@@ -440,6 +464,47 @@ class Order implements HasReferenceNumber
     public function isPaid(): bool
     {
         return $this->status === OrderStatus::PAID;
+    }
+
+    public function getDesignRequest(): ?DesignRequest
+    {
+        return $this->designRequest;
+    }
+
+    public function setDesignRequest(?DesignRequest $designRequest): void
+    {
+        $this->designRequest = $designRequest;
+    }
+
+    /**
+     * The amount the current payment is for.
+     */
+    public function getChargeNow(): int
+    {
+        return $this->chargeNow ?? $this->total;
+    }
+
+    public function setChargeNow(?int $chargeNow): void
+    {
+        $this->chargeNow = $chargeNow;
+    }
+
+    public function getAmountPaid(): int
+    {
+        return $this->amountPaid;
+    }
+
+    public function setAmountPaid(int $amountPaid): void
+    {
+        $this->amountPaid = $amountPaid;
+    }
+
+    /**
+     * Still to pay once paid (a quote's balance); 0 before any payment.
+     */
+    public function getAmountOwed(): int
+    {
+        return $this->amountPaid > 0 ? max(0, $this->total - $this->amountPaid) : 0;
     }
 
     public function __toString(): string

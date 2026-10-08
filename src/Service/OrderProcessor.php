@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Order;
+use App\Enum\DesignRequestStatus;
 use App\Enum\OrderStatus;
 use App\Repository\OrderRepository;
 use Carbon\CarbonImmutable;
@@ -32,6 +33,10 @@ final readonly class OrderProcessor
 
         $order->setStatus(OrderStatus::PAID);
         $order->setPaidAt(new CarbonImmutable());
+        // The whole total, or a quote's deposit.
+        $order->setAmountPaid($order->getChargeNow());
+        // A quoted request is now paid (Step 10b.3).
+        $order->getDesignRequest()?->setStatus(DesignRequestStatus::PAID);
 
         if ($revolutState !== null) {
             $order->setRevolutState($revolutState);

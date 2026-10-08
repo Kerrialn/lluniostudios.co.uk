@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{# One order in the customer's history (Step 10.6): the lamps as on the Card Payment summary, totals, gift and delivery. #}
+{# One order in the customer's history (Step 10.6): the lamps as on the Card Payment summary, totals, gift and delivery. A quote's order (10b.3) also has its extra lines, its delivery, and what has been paid and is still owed. #}
 {% block title %}Order {{ order.orderNumber }} | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
@@ -18,7 +18,7 @@
 
         <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
             <div class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-6">
-                {% for item in order.items %}
+                {% for item in order.items|filter(i => not i.extra) %}
                     <div class="flex flex-col border-t border-ll-line pt-3">
                         <div class="flex justify-between gap-4 pb-2 text-[15px]"><span>{{ constant('App\\Catalogue\\LumenFormaCatalogue::COLLECTION_NAME') }}</span><span>{{ m.money(item.lineTotal) }}</span></div>
                         <div class="{{ row }}"><span class="{{ rowKey }}">Size</span><span class="text-right">{{ item.sizeName }}</span></div>
@@ -37,12 +37,19 @@
 
             <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-[18px] p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
                 <div class="flex flex-col">
+                    {% for item in order.items|filter(i => i.extra) %}
+                        <div class="{{ total }}"><span>{{ item.productTitle }}</span><span class="text-right">{{ m.money(item.lineTotal) }}</span></div>
+                    {% endfor %}
                     <div class="{{ total }}"><span>Subtotal</span><span class="text-right">{{ m.money(order.subtotal) }}</span></div>
-                    <div class="{{ total }}"><span>DPD Next Day Delivery</span><span class="text-right">{{ m.money(order.shippingCost) }}</span></div>
+                    <div class="{{ total }}"><span>{{ order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Next Day Delivery' }}</span><span class="text-right">{{ m.money(order.shippingCost) }}</span></div>
                     {% if order.giftLine %}
                         <div class="{{ total }}"><span>Gift</span><span class="text-right">{{ order.giftLine }}</span></div>
                     {% endif %}
                     <div class="flex justify-between gap-3 text-[15px] py-3 border-t border-ll-ink border-b border-b-ll-line"><span>Total</span><span class="text-right">{{ m.money(order.total) }}</span></div>
+                    {% if order.amountOwed > 0 %}
+                        <div class="{{ total }}" data-order-paid><span>Paid</span><span class="text-right">{{ m.money(order.amountPaid) }}</span></div>
+                        <div class="{{ total }}" data-order-owed><span>Still to pay</span><span class="text-right">{{ m.money(order.amountOwed) }}</span></div>
+                    {% endif %}
                 </div>
                 {% if order.shippingAddress %}
                     {% set a = order.shippingAddress %}
@@ -51,7 +58,11 @@
                         <span>{{ [a.recipientName, a.company, a.line1, a.line2, a.city, a.county, a.postcode]|filter(v => v)|join(', ') }}</span>
                     </div>
                 {% endif %}
-                <p class="text-xs text-ll-mute leading-[1.5]">Hand-cast to order in our Dorset Studio. Dispatched within {{ lead_time.label }}, then DPD Next Day Delivery.</p>
+                {% if order.designRequest %}
+                    <p class="text-xs text-ll-mute leading-[1.5]">Hand-cast to order in our Dorset Studio.</p>
+                {% else %}
+                    <p class="text-xs text-ll-mute leading-[1.5]">Hand-cast to order in our Dorset Studio. Dispatched within {{ lead_time.label }}, then DPD Next Day Delivery.</p>
+                {% endif %}
             </aside>
         </div>
     </div>

@@ -53,6 +53,10 @@ class OrderCrudController extends AbstractCrudController
             MoneyField::new('subtotal')->setCurrency('GBP')->setStoredAsCents(true),
             MoneyField::new('shippingCost')->setCurrency('GBP')->setStoredAsCents(true),
             MoneyField::new('total')->setCurrency('GBP')->setStoredAsCents(true),
+            // What has been paid and is still owed (a quote paid by deposit, Step 10b.3).
+            MoneyField::new('amountPaid', 'Paid')->setCurrency('GBP')->setStoredAsCents(true)->setDisabled(),
+            MoneyField::new('amountOwed', 'Owed')->setCurrency('GBP')->setStoredAsCents(true)->hideOnForm(),
+            AssociationField::new('designRequest', 'Request')->hideOnIndex()->setDisabled(),
             TextField::new('giftLabel', 'Gift')->hideOnForm(),
             TextField::new('contactPhone', 'Mobile')->hideOnIndex()->setDisabled(),
             TextField::new('deliveryNotes', 'Delivery instructions')->hideOnIndex()->setDisabled(),

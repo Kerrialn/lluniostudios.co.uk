@@ -5,8 +5,14 @@
     Card Payment: each design with its configuration and quoted price, extra
     lines, delivery, the total (no VAT), what to pay now, the casting date,
     the studio's note and the date it is valid until. Once expired, a note
-    to ask for an updated quote instead. Paying comes with 10b.3.
+    to ask for an updated quote instead.
+    Paying (10b.3): the Card Payment page's fields, filled in from the request
+    (the postcode must stay the one quoted), Apple Pay / Google Pay above
+    them, card details, and "Pay £x" (the deposit or the whole total), with
+    the same page script as Card Payment (checkout_controller.js). Once
+    paid, the payment received and anything still owed instead of the form.
 #}
+{% form_theme form 'form_div_layout.html.twig' %}
 {% block title %}Your Quote | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
@@ -17,19 +23,27 @@
     {% set section = 'text-[11px] uppercase tracking-[0.14em] text-ll-mute border-t border-ll-line pt-4' %}
     {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-[13px] leading-[1.5]' %}
     {% set total = 'flex justify-between gap-3 text-[13px] py-2.5 border-t border-ll-line' %}
+    {% set grid = 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-x-5 gap-y-4' %}
+    {% set payable = not expired and not paidOrder %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
         <div class="flex flex-col gap-3.5 max-w-[640px]">
             <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Quote</h1>
             <p class="m-0 text-[13px] text-ll-mute">Request {{ designRequest.requestNumber }}</p>
-            {% if expired %}
+            {% if paidOrder %}
+                <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you. Your payment of {{ m.money(paidOrder.amountPaid) }} was received on {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}{{ paidOrder.amountOwed > 0 ? ', with ' ~ m.money(paidOrder.amountOwed) ~ ' to pay later' : '' }}. Your order is {{ paidOrder.orderNumber }}.</p>
+            {% elseif expired %}
                 <p class="m-0 text-[15px] leading-[1.5]" role="alert">This quote expired on {{ validUntil|date('j F Y', 'Europe/London') }}. Please <a href="{{ path('contact') }}" class="ll-link">contact us</a> or reply to the quote email, and we'll send you an updated quote.</p>
             {% else %}
-                <p class="m-0 text-[15px] leading-[1.5] text-ll-mute">Dear {{ designRequest.fullName }}, here is our quote for your Lumen Forma request. It is valid until {{ validUntil|date('j F Y', 'Europe/London') }}.</p>
+                <p class="m-0 text-[15px] leading-[1.5] text-ll-mute">Dear {{ designRequest.firstName }}, here is our quote for your Lumen Forma request. It is valid until {{ validUntil|date('j F Y', 'Europe/London') }}.</p>
             {% endif %}
             {% if quote.note and not expired %}<p class="m-0 text-[15px] leading-[1.5] whitespace-pre-line">{{ quote.note }}</p>{% endif %}
         </div>
 
-        <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start {{ expired ? 'opacity-50' : '' }}">
+        {% if payable %}
+            {{ form_start(form, { attr: { class: 'flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start', novalidate: 'novalidate', 'data-controller': 'checkout', 'data-checkout-stripe-key-value': stripeKey, 'data-checkout-express-url-value': path('quote_pay', { token: token, wallet: 1 }), 'data-checkout-subtotal-value': quote.dueNow, 'data-checkout-wallet-address-value': 'false', 'data-action': 'submit->checkout#pay' } }) }}
+        {% else %}
+            <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start {{ expired ? 'opacity-50' : '' }}">
+        {% endif %}
             <div class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-6">
                 <div class="{{ section }}">Your configuration</div>
                 {% for lamp in quote.lamps %}
@@ -58,6 +72,68 @@
                         <div class="{{ row }}"><span class="text-ll-mute">Price</span><span class="text-right">{{ m.money(lamp.unitPrice) }}{{ lamp.quantity > 1 ? ' each' : '' }}</span></div>
                     </div>
                 {% endfor %}
+
+                {% if payable %}
+                    {# Apple Pay / Google Pay: shown only when the device offers one. #}
+                    <div class="flex flex-col gap-3" data-checkout-target="expressArea" hidden>
+                        <div data-checkout-target="express"></div>
+                        <div class="text-xs text-ll-ink" role="alert" data-checkout-target="expressMessage" hidden></div>
+                    </div>
+                    <div class="{{ section }}">Contact</div>
+                    <div class="{{ grid }}">
+                        {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *' }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order and delivery updates) *' }) }}
+                    </div>
+
+                    <div class="{{ section }}">Delivery address</div>
+                    <div class="{{ grid }}">
+                        {{ include('checkout/_field.html.twig', { child: form.name, label: 'Full name *', wide: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.company, label: 'Company name (optional)', wide: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.line1, label: 'Address line 1 *', wide: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.line2, label: 'Address line 2', wide: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.town, label: 'Town/City *' }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.county, label: 'County' }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.postcode, label: 'Postcode *' }) }}
+                    </div>
+                    <div class="flex flex-col gap-2"><span class="text-[14px]">Country</span><div class="border border-ll-line h-12 flex items-center px-3.5 text-[15px] text-ll-mute">{{ designRequest.countryName ?? 'United Kingdom' }}</div></div>
+                    <div class="{{ grid }}">
+                        {{ include('checkout/_field.html.twig', { child: form.notes, label: 'Delivery instructions (optional)', wide: true }) }}
+                    </div>
+
+                    <div class="{{ section }}">Billing address</div>
+                    <div class="group/bill flex flex-col gap-6">
+                        <label class="min-h-11 flex items-center gap-3 text-[14px] cursor-pointer select-none transition-opacity hover:opacity-70">
+                            {{ form_widget(form.billingSame, { attr: { class: 'peer sr-only' } }) }}
+                            <span class="flex-none w-4 h-4 border border-ll-ink flex items-center justify-center peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink *:bg-transparent peer-checked:*:bg-ll-ink" aria-hidden="true"><span class="w-2 h-2"></span></span>
+                            Same as delivery address
+                        </label>
+                        <div class="{{ grid }} group-has-[input[name$='[billingSame]']:checked]/bill:hidden">
+                            {{ include('checkout/_field.html.twig', { child: form.billingName, label: 'Full name *', wide: true }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.billingLine1, label: 'Address line 1 *', wide: true }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.billingLine2, label: 'Address line 2', wide: true }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.billingTown, label: 'Town/City *' }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.billingCounty, label: 'County' }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.billingPostcode, label: 'Postcode *' }) }}
+                        </div>
+                    </div>
+
+                    <div class="{{ section }}">Card details</div>
+                    <div class="{{ grid }}">
+                        {{ include('checkout/_field.html.twig', { child: form.cardName, label: 'Name on card *', wide: true }) }}
+                        {% set cardBox = 'll-card-box w-full h-12 px-3.5 flex items-center border border-ll-mute text-[15px] leading-[1.5]' %}
+                        {% for box in [
+                            { target: 'cardNumber', label: 'Card number *', wide: true },
+                            { target: 'cardExpiry', label: 'Expiry (MM / YY) *', wide: false },
+                            { target: 'cardCvc', label: 'Security code (CVC) *', wide: false },
+                        ] %}
+                            <div class="flex flex-col gap-2 {{ box.wide ? 'col-[1/-1]' : '' }}">
+                                <span class="text-[14px]" id="{{ box.target }}-label">{{ box.label }}</span>
+                                <div class="{{ cardBox }}" data-checkout-target="{{ box.target }}" role="group" aria-labelledby="{{ box.target }}-label"></div>
+                                <span class="text-[12px] text-ll-ink" role="alert" hidden data-checkout-target="{{ box.target }}Error"></span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
             <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-[18px] p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line" data-quote-summary>
@@ -81,7 +157,22 @@
                     {% endif %}
                 </div>
                 <div class="{{ row }} border-t"><span class="text-ll-mute">Estimated casting date</span><span class="text-right">{{ quote.castingDate|date('j F Y') }}</span></div>
+                {% if paidOrder %}
+                    <div class="flex flex-col" data-quote-payments>
+                        <div class="{{ total }}"><span>Paid {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}</span><span>{{ m.money(paidOrder.amountPaid) }}</span></div>
+                        <div class="{{ total }}"><span class="{{ paidOrder.amountOwed > 0 ? '' : 'text-ll-mute' }}">Still to pay</span><span>{{ m.money(paidOrder.amountOwed) }}</span></div>
+                    </div>
+                {% elseif payable %}
+                    <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" hidden></div>
+                    <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">Pay {{ m.money(quote.dueNow) }}</button>
+                    <div class="text-xs text-ll-mute text-center leading-[1.5]">Payment is processed securely by our payment provider. Your card details are never stored by Llunio.</div>
+                    <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
+                {% endif %}
             </aside>
-        </div>
+        {% if payable %}
+            {{ form_end(form) }}
+        {% else %}
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

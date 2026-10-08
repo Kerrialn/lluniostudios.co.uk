@@ -20,6 +20,10 @@ import { loadStripe } from '@stripe/stripe-js';
  *   (outside the UK mainland the wallet refuses it and the page explains).
  *   Once approved, the wallet's details go through the same checks as the
  *   form (/checkout/express) and the payment is confirmed with the wallet.
+ * - The quote page (Step 10b.3) uses the same script with walletAddress
+ *   false: the address is the page's (filled in from the request), so the
+ *   wallet only pays; once approved, the page's fields go to the quote's
+ *   "pay" address (?wallet=1) and are checked as for a card.
  */
 const INK = '#ece3d3';
 const MUTE = '#a89b86';
@@ -29,10 +33,10 @@ const CARD_BOXES = ['cardNumber', 'cardExpiry', 'cardCvc'];
 export default class extends Controller {
     static targets = ['postcode', 'delivery', 'total', 'button', 'outsideNote', 'secure', 'message', 'express', 'expressArea', 'expressMessage',
         'cardNumber', 'cardExpiry', 'cardCvc', 'cardNumberError', 'cardExpiryError', 'cardCvcError'];
-    static values = { deliveryUrl: String, stripeKey: String, expressUrl: String, subtotal: Number };
+    static values = { deliveryUrl: String, stripeKey: String, expressUrl: String, subtotal: Number, walletAddress: { type: Boolean, default: true } };
 
     async connect() {
-        this.state = this.outsideNoteTarget.hidden ? 'mainland' : 'outside';
+        this.state = !this.hasOutsideNoteTarget || this.outsideNoteTarget.hidden ? 'mainland' : 'outside';
         this.cardComplete = {};
         if (!this.stripeKeyValue || !this.hasCardNumberTarget) return;
 
@@ -91,6 +95,11 @@ export default class extends Controller {
             this.walletOutside = false;
             this.showWalletMessage('');
             this.wallet.update({ amount: this.subtotalValue });
+            if (!this.walletAddressValue) {
+                // The quote page: the address is the page's; the wallet only pays.
+                event.resolve({ billingAddressRequired: true });
+                return;
+            }
             event.resolve({
                 emailRequired: true,
                 phoneNumberRequired: true,
@@ -117,7 +126,7 @@ export default class extends Controller {
         });
         express.on('cancel', () => {
             // An address outside the UK mainland: say why, as the form would.
-            if (this.walletOutside) this.showWalletMessage(this.outsideNoteTarget.textContent.trim());
+            if (this.walletOutside && this.hasOutsideNoteTarget) this.showWalletMessage(this.outsideNoteTarget.textContent.trim());
         });
         express.on('confirm', (event) => this.payWithWallet(event));
         express.mount(this.expressTarget);
@@ -133,7 +142,10 @@ export default class extends Controller {
         try {
             const shipping = event.shippingAddress || {};
             const billing = event.billingDetails || {};
-            const response = await fetch(this.expressUrlValue, {
+            const response = !this.walletAddressValue
+                // The quote page: its own fields, checked as for a card.
+                ? await fetch(this.expressUrlValue, { method: 'POST', body: new FormData(this.element), headers: { Accept: 'application/json' } })
+                : await fetch(this.expressUrlValue, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
                 body: JSON.stringify({
@@ -147,6 +159,13 @@ export default class extends Controller {
             if (data.status === 'redirect') {
                 event.paymentFailed({ reason: 'invalid_shipping_address' });
                 window.location.href = data.url;
+                return;
+            }
+            if (data.status === 'invalid') {
+                event.paymentFailed({ reason: 'fail' });
+                this.showFieldErrors(data.errors || {});
+                this.showWalletMessage(data.message || REQUIRED);
+                this.firstProblem()?.scrollIntoView({ block: 'center', behavior: 'smooth' });
                 return;
             }
             if (data.status !== 'confirm') {

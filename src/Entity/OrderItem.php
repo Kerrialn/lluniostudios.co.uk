@@ -44,10 +44,13 @@ class OrderItem
     private array $optionsSnapshot = [];
 
     /**
+     * A product's line, or (no product) a quote's extra line, e.g. "Custom
+     * pigment development".
+     *
      * @param array<int, array{option: string, value: string, lamp?: int}> $optionsSnapshot lamp 0 (or absent) = every lamp, 1..n = that lamp
      */
     public function __construct(
-        Product $product,
+        ?Product $product,
         string $productTitle,
         int $unitPrice,
         int $quantity,
@@ -140,6 +143,14 @@ class OrderItem
     public function getSizeName(): string
     {
         return (string) preg_replace('/^' . preg_quote(LumenFormaCatalogue::COLLECTION_NAME, '/') . '\s+/', '', $this->productTitle);
+    }
+
+    /**
+     * A quote's extra line (no lamp), e.g. "Custom pigment development".
+     */
+    public function isExtra(): bool
+    {
+        return $this->product === null && $this->optionsSnapshot === [];
     }
 
     public function getLineTotal(): int

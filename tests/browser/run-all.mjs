@@ -39,6 +39,7 @@ const CHECKS = [
     ['page-footers.mjs', '390', '844'],
     ['quote-form.mjs'],
     ['quote-send.mjs'],
+    ['quote-pay.mjs'],
 ];
 
 const args = process.argv.slice(2);
