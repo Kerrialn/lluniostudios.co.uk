@@ -153,6 +153,9 @@ export default class extends Controller {
                     phone: billing.phone,
                     shipping: { name: shipping.name, ...(shipping.address || {}) },
                     billing: { name: billing.name, ...(billing.address || {}) },
+                    // A gift sent directly: the message and recipient's mobile typed on the page.
+                    giftMessage: this.element.querySelector('[name$="[giftMessage]"]')?.value || '',
+                    recipientPhone: this.element.querySelector('[name$="[recipientPhone]"]')?.value || '',
                 }),
             });
             const data = await response.json().catch(() => ({ status: 'error' }));

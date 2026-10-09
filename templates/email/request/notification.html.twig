@@ -8,15 +8,18 @@
 {% extends 'email/_studio.html.twig' %}
 {% import 'email/_studio.html.twig' as layout %}
 {% set neededBy = giftDate %}
+{% set directGift = designRequest.directGift %}
+{% set giftMessage = designRequest.giftMessage %}
 {% set adminUrl = url('admin_design_request_detail', {entityId: designRequest.id}) %}
 {% set adminLabel = 'Open the request in admin' %}
 {% set summaryRows = {
     'Request': designRequest.requestNumber ~ ' · ' ~ designRequest.createdAt|date('j F Y, H:i', 'Europe/London'),
     'Lamps': lamps|join(', '),
-}|merge(customNames is not empty ? { 'Custom': customNames|join(', ')|capitalize } : {})|merge({
-    'Customer': designRequest.fullName,
-    'Payment': 'None taken',
-}) %}
+} %}
+{% if customNames is not empty %}{% set summaryRows = summaryRows|merge({ 'Custom': customNames|join(', ')|capitalize }) %}{% endif %}
+{% set summaryRows = summaryRows|merge({ 'Customer': designRequest.fullName }) %}
+{% if designRequest.directGift %}{% set summaryRows = summaryRows|merge({ 'Recipient': designRequest.giftRecipientName }) %}{% endif %}
+{% set summaryRows = summaryRows|merge({ 'Payment': 'None taken' }) %}
 
 {% block title %}{{ subject }}{% endblock %}
 {% block kind %}New request{% endblock %}
@@ -30,7 +33,12 @@
         'Phone': designRequest.phone,
         'Delivery address': designRequest.deliveryAddress,
         'Site access & delivery notes': designRequest.accessNotes ?: '—',
-    } %}
+        'Gift': designRequest.giftLabel,
+    }|merge(designRequest.directGift ? {
+        "Recipient's name": designRequest.giftRecipientName,
+        'Gift message': designRequest.giftMessage ?: '—',
+        "Recipient's mobile": designRequest.giftRecipientPhone ?: '— (the carrier has the customer\'s phone)',
+    } : {}) %}
         <tr><td width="35%" style="{{ keyStyle }}">{{ key }}</td><td style="{{ valueStyle }}">{{ value|nl2br }}</td></tr>
     {% endfor %}
     {% if designRequest.customDetails is not null %}

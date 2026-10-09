@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Enum\DesignRequestStatus;
+use App\Enum\GiftSendTo;
 use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
 use App\Repository\OrderRepository;
@@ -95,6 +96,28 @@ class Order implements HasReferenceNumber
     #[ORM\Column(type: 'date_immutable', nullable: true)]
     private ?\DateTimeImmutable $giftArriveBy = null;
 
+    /**
+     * Gift options (9 October 2026): "Send to me" or "Send directly to the
+     * recipient"; for a direct gift, the message for the card in the box and
+     * the recipient's mobile (DPD's delivery phone when given).
+     */
+    #[ORM\Column(length: 16, nullable: true, enumType: GiftSendTo::class)]
+    private ?GiftSendTo $giftSendTo = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $giftMessage = null;
+
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $giftRecipientPhone = null;
+
+    /**
+     * The buyer's name (Greeting name, 9 October 2026): the billing name, the
+     * name on card or the wallet's payer, or the request's name for a quote.
+     * Used for greetings, never the recipient's.
+     */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $customerName = null;
+
     #[ORM\Column(length: 128, nullable: true)]
     private ?string $revolutOrderId = null;
 
@@ -146,6 +169,13 @@ class Order implements HasReferenceNumber
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?CarbonImmutable $balancePaidAt = null;
 
+    /**
+     * The order's private link ("View your order", Step 11.1): a long
+     * random value; the page shows this one order without signing in.
+     */
+    #[ORM\Column(length: 64, unique: true)]
+    private string $viewToken;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private CarbonImmutable $createdAt;
 
@@ -163,6 +193,21 @@ class Order implements HasReferenceNumber
         $this->createdAt = new CarbonImmutable();
         $this->items = new ArrayCollection();
         $this->orderNumber = $this->generateOrderNumber();
+        $this->viewToken = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
+    }
+
+    public function getViewToken(): string
+    {
+        return $this->viewToken;
+    }
+
+    /**
+     * Placed: paid (in full or a deposit) or later. Only a placed order can
+     * be seen by its private link.
+     */
+    public function isPlaced(): bool
+    {
+        return $this->isPaid() || $this->status === OrderStatus::FULFILLED;
     }
 
     private function generateOrderNumber(): string
@@ -326,6 +371,55 @@ class Order implements HasReferenceNumber
     }
 
     /**
+     * The gift's details (Gift options): send to, message, recipient's mobile.
+     */
+    public function setGiftDetails(?GiftSendTo $sendTo, ?string $message, ?string $recipientPhone): void
+    {
+        $this->giftSendTo = $this->gift ? $sendTo : null;
+        $direct = $this->giftSendTo?->isDirect() === true;
+        $this->giftMessage = $direct ? $message : null;
+        $this->giftRecipientPhone = $direct ? $recipientPhone : null;
+    }
+
+    public function getGiftSendTo(): ?GiftSendTo
+    {
+        return $this->giftSendTo;
+    }
+
+    public function isDirectGift(): bool
+    {
+        return $this->gift && $this->giftSendTo?->isDirect() === true;
+    }
+
+    /**
+     * For admin: a direct gift's prominent packing note (Gift options).
+     */
+    public function getGiftPackingNote(): string
+    {
+        return $this->isDirectGift() ? '<strong class="badge bg-warning text-dark fs-6">Direct to recipient: no prices in the box</strong>' : '—';
+    }
+
+    public function getGiftMessage(): ?string
+    {
+        return $this->giftMessage;
+    }
+
+    public function getGiftRecipientPhone(): ?string
+    {
+        return $this->giftRecipientPhone;
+    }
+
+    public function getCustomerName(): ?string
+    {
+        return $this->customerName;
+    }
+
+    public function setCustomerName(?string $customerName): void
+    {
+        $this->customerName = $customerName;
+    }
+
+    /**
      * "Arrive by 23 October 2026" for a gift, or null.
      */
     public function getGiftLine(): ?string
@@ -338,7 +432,9 @@ class Order implements HasReferenceNumber
      */
     public function getGiftLabel(): string
     {
-        return $this->getGiftLine() ?? 'No';
+        $line = $this->getGiftLine();
+
+        return $line === null ? 'No' : $line . ($this->giftSendTo === null ? '' : ' · ' . ($this->isDirectGift() ? 'Direct to recipient' : 'To the customer'));
     }
 
     /**

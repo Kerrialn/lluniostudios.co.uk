@@ -6,12 +6,14 @@ namespace App\Service;
 
 use App\Entity\CommissionEnquiry;
 use App\Entity\DesignRequest;
+use App\Entity\Order;
 
 /**
  * The at-a-glance facts for the studio's notification emails (email rules,
- * Step 11.0): the subject ("New request · Atelier × 1 · Custom pigment")
- * and the summary at the top (the lamps by size and quantity, any Custom
- * choices, a gift's "Needed by" date).
+ * Step 11.0): the subject ("New request · Atelier × 1 · Custom pigment",
+ * "New order · Gallery × 2 · £1,598 · GIFT by 23 Oct") and the summary at
+ * the top (the lamps by size and quantity, any Custom choices, a gift's
+ * "Needed by" date).
  */
 final class StudioSummary
 {
@@ -88,11 +90,16 @@ final class StudioSummary
     }
 
     /**
-     * A gift carried from checkout ("Gift · Arrive by 23 October 2026" in the
-     * request's notes): its date, otherwise null.
+     * A gift's "Needed by" date (Gift options, 9 October 2026), or for a
+     * request made before then, a gift carried from checkout ("Gift · Arrive
+     * by 23 October 2026" in its notes); otherwise null.
      */
     public static function giftDate(DesignRequest $request): ?\DateTimeImmutable
     {
+        if ($request->isGift()) {
+            return $request->getGiftNeededBy();
+        }
+
         if (preg_match('/Gift · Arrive by (\d{1,2} [A-Z][a-z]+ \d{4})/', (string) $request->getAccessNotes(), $match) !== 1) {
             return null;
         }
@@ -113,7 +120,7 @@ final class StudioSummary
             'New request',
             implode(', ', self::lamps($request)),
             self::customs($request),
-            $gift === null ? null : 'GIFT by ' . $gift->format('j M'),
+            $gift === null ? null : 'GIFT by ' . $gift->format('j M') . ($request->isDirectGift() ? ' · DIRECT' : ''),
         ]));
     }
 
@@ -130,5 +137,69 @@ final class StudioSummary
             $enquiry->getCompany() ?? $enquiry->getName(),
             $files === 0 ? null : $files . ($files === 1 ? ' file' : ' files'),
         ]));
+    }
+
+    /**
+     * An order's lamps by size (its extra lines left out), e.g. ["Gallery × 2"].
+     *
+     * @return list<string>
+     */
+    public static function orderLamps(Order $order): array
+    {
+        $sizes = [];
+        foreach ($order->getItems() as $item) {
+            if (! $item->isExtra()) {
+                $sizes[$item->getSizeName()] = ($sizes[$item->getSizeName()] ?? 0) + $item->getQuantity();
+            }
+        }
+
+        $lamps = [];
+        foreach ($sizes as $size => $quantity) {
+            $lamps[] = $size . ' × ' . $quantity;
+        }
+
+        return $lamps;
+    }
+
+    /**
+     * The studio's subject for a payment (Step 11.1):
+     * "New order · Gallery × 2 · £1,598 · GIFT by 23 Oct",
+     * "Deposit paid · Atelier × 2 · £1,564 of £3,910",
+     * "Balance paid · Atelier × 2 · £2,346 · paid in full".
+     *
+     * @param 'order'|'deposit'|'balance' $kind
+     */
+    public static function orderSubject(Order $order, string $kind, int $amount): string
+    {
+        return implode(' · ', array_filter([
+            self::orderKind($kind),
+            implode(', ', self::orderLamps($order)),
+            match ($kind) {
+                'deposit' => self::money($amount) . ' of ' . self::money($order->getTotal()),
+                default => self::money($amount),
+            },
+            $kind === 'balance' ? 'paid in full' : null,
+            $order->getGiftArriveBy() === null ? null : 'GIFT by ' . $order->getGiftArriveBy()->format('j M') . ($order->isDirectGift() ? ' · DIRECT' : ''),
+        ]));
+    }
+
+    /**
+     * What the payment is: "New order", "Deposit paid" or "Balance paid".
+     */
+    public static function orderKind(string $kind): string
+    {
+        return match ($kind) {
+            'deposit' => 'Deposit paid',
+            'balance' => 'Balance paid',
+            default => 'New order',
+        };
+    }
+
+    /**
+     * "£1,598", or "£811.95" when there are pence.
+     */
+    public static function money(int $pence): string
+    {
+        return '£' . number_format($pence / 100, $pence % 100 === 0 ? 0 : 2);
     }
 }

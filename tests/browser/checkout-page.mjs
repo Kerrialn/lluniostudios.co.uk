@@ -95,12 +95,14 @@ try {
     const arrive = await ev(`document.querySelector('main aside input[type=date]').min`);
     await ev(`[...document.querySelectorAll('main aside label')].find(l => /This is a gift/.test(l.textContent)).click()`);
     await ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
+    // Gift options (9 October 2026): where to send it is required.
+    await ev(`[...document.querySelectorAll('main aside label')].find(l => /Send to me/.test(l.textContent))?.click()`);
     await ev(`[...document.querySelectorAll('main aside button')].find(e => e.textContent.trim() === 'Proceed to Payment').click()`); await sleep(2500);
     const labels = await ev(`[...document.querySelectorAll('main form label > span:first-child')].filter(s => s.getBoundingClientRect().height > 0).map(s => s.textContent.trim())`);
     a = await aside();
     const nice = new Date(arrive + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
     check('a gift asks for the same details as any order (no recipient fields)', labels.includes('Full name *') && labels.includes('Your Mobile (for order and delivery updates) *') && !labels.some((l) => /recipient/i.test(l)), JSON.stringify(labels));
-    check(`the summary shows "Gift · Arrive by ${nice}"`, a.gift === `Arrive by ${nice}`, a.gift);
+    check(`the summary shows "Gift · Arrive by ${nice}" and "Send to me"`, a.gift === `Arrive by ${nice}Send to me`, a.gift);
     sql(`update cart set gift_arrive_by = current_date where id = (select cart_id from cart_item order by created_at desc limit 1)`);
     await go(BASE_URL + '/checkout');
     check('a gift date that has become too soon sends the customer back to the basket to change it', (await ev('location.pathname')) === '/basket' && /Please choose a date on or after the earliest delivery date\./.test(await ev('document.body.innerText')));

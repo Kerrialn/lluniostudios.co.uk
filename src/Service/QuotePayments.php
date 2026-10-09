@@ -131,6 +131,12 @@ final readonly class QuotePayments
         } catch (Throwable $throwable) {
             $this->logger->error('Balance receipt email failed: ' . $throwable->getMessage());
         }
+
+        try {
+            $this->emails->sendOrderPaidNotificationEmail($order, 'balance', $balance);
+        } catch (Throwable $throwable) {
+            $this->logger->error('Balance paid notification failed: ' . $throwable->getMessage());
+        }
     }
 
     /**
@@ -295,9 +301,16 @@ final readonly class QuotePayments
     {
         $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $email = strtolower((string) $value('email'));
-        $account = $this->accounts->accountFor($email, $value('name'));
+        $request = $order->getDesignRequest();
+        // The buyer is the request's name (Greeting name), never a gift recipient's.
+        $buyer = $request?->getFullName() ?? $value('cardName');
+        $account = $this->accounts->accountFor($email, $buyer);
         $order->setUser($account);
         $order->setEmail($email);
+        $order->setCustomerName($buyer);
+        // The request's gift (Gift options): its date and choice; the message and recipient's mobile as confirmed on the page.
+        $order->setGiftArriveBy($request?->isGift() ? $request->getGiftNeededBy() : null);
+        $order->setGiftDetails($request?->getGiftSendTo(), $value('giftMessage'), $value('recipientPhone'));
 
         $delivery = new Address();
         $delivery->setRecipientName($value('name'));
@@ -308,7 +321,8 @@ final readonly class QuotePayments
         $delivery->setCounty($value('county'));
         $delivery->setPostcode($postcode);
         $delivery->setCountry($order->getDesignRequest()?->getCountry() ?? 'GB');
-        $delivery->setPhone($value('phone'));
+        // DPD's delivery phone: a direct gift's recipient's mobile when given.
+        $delivery->setPhone($order->isDirectGift() && $value('recipientPhone') !== null ? $value('recipientPhone') : $value('phone'));
         $delivery->setOwner($account);
         $order->setShippingAddress($delivery);
         $order->setContactPhone($value('phone'));

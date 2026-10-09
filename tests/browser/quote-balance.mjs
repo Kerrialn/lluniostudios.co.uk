@@ -12,7 +12,7 @@
 // Requests and Orders lists, the Requests filter, the order's page) and in
 // the customer's Your Orders: Deposit Paid after the deposit, Paid after the
 // balance.
-import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems } from './lib.mjs';
+import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems, studioEmailProblems } from './lib.mjs';
 
 const { check, summary } = checker();
 const b = await open(1440, 1000, 'quote-balance-admin', { mobile: false });
@@ -225,6 +225,11 @@ try {
     const receiptText = flat(receiptHtml);
     const receiptFormat = customerEmailProblems(receiptHtml, 'Ada', `Thank you. We have received your balance of £2,346, and your Lumen Forma order ${orderNumber} is now paid in full.`);
     check('the receipt follows the email template and rules: Montage C, no heading, "Dear Ada," then the opening, 01 Order (the order number), 02 Payments, one text size', receiptFormat.length === 0 && new RegExp(`01 Order Order number ${orderNumber} .*02 Payments Deposit`).test(receiptText.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), receiptFormat.join('; '));
+    let balanceStudio = null;
+    for (const m of await mailpit('to:lluniostudios@gmail.com subject:"Balance paid"')) if (!balanceStudio && new Date(m.Created) > paidSince && (await message(m.ID)).HTML.includes(orderNumber)) balanceStudio = m;
+    const balanceStudioHtml = balanceStudio ? (await message(balanceStudio.ID)).HTML : '';
+    const balanceStudioSummary = balanceStudioHtml.match(/data-studio-summary>([\s\S]*?)<\/table>/)?.[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    check('the studio is emailed "Balance paid · Atelier × 2 · £2,346 · paid in full", "Balance paid" first, the summary with the balance and the total', balanceStudio?.Subject === 'Balance paid · Atelier × 2 · £2,346 · paid in full' && studioEmailProblems(balanceStudioHtml, 'Balance paid').length === 0 && /Paid £2,346 balance · paid in full \(£3,910\)/.test(balanceStudioSummary ?? '') && !/Still to pay/.test(balanceStudioSummary ?? ''), balanceStudio?.Subject + ' | ' + balanceStudioSummary);
     check('a receipt: "Dear Ada,", the balance received, deposit, balance, paid in full', /Dear Ada,/.test(receiptText) && /We have received your balance of £2,346, and your Lumen Forma order LS-\d{6}-\d{4} is now paid in full\./.test(receiptText) && /Deposit · \d+ \w+ 20\d\d £1,564/.test(receiptText) && /Balance · \d+ \w+ 20\d\d £2,346/.test(receiptText) && /Paid in full £3,910/.test(receiptText), receipt?.Subject);
 
     // Afterwards.

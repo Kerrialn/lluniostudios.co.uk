@@ -1,0 +1,21 @@
+{#
+    A gift's "Send to me" / "Send directly to the recipient" (Gift options,
+    decided 9 October 2026), as two radio buttons styled like the site's
+    tick boxes. Used by the basket and Reserve Your Design.
+
+    field  the form field (expanded EnumType)
+#}
+<fieldset class="flex flex-col gap-1 pt-2" data-gift-send-to>
+    <legend class="text-[11px] uppercase tracking-[0.14em] text-ll-mute pb-1">Where should we send it? *</legend>
+    {% for choice in field %}
+        <label class="min-h-11 flex items-center gap-3 text-[13px] cursor-pointer select-none transition-opacity hover:opacity-70">
+            {{ form_widget(choice, { attr: { class: 'peer sr-only' } }) }}
+            <span class="flex-none w-4 h-4 rounded-full border border-ll-ink flex items-center justify-center peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink [&>span]:bg-transparent peer-checked:[&>span]:bg-ll-ink" aria-hidden="true"><span class="w-2 h-2 rounded-full"></span></span>
+            {{ choice.vars.label }}
+        </label>
+    {% endfor %}
+    {% for error in field.vars.errors %}
+        <div class="text-xs text-ll-ink" role="alert">{{ error.message }}</div>
+    {% endfor %}
+    {% do field.setRendered %}
+</fieldset>

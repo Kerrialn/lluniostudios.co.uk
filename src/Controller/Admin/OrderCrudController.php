@@ -197,6 +197,11 @@ class OrderCrudController extends AbstractCrudController
             MoneyField::new('amountOwed', 'Owed')->setCurrency('GBP')->setStoredAsCents(true)->hideOnForm(),
             AssociationField::new('designRequest', 'Request')->hideOnIndex()->setDisabled(),
             TextField::new('giftLabel', 'Gift')->hideOnForm(),
+            // Gift options (9 October 2026): a direct gift's packing note, its message (for the card) and the recipient's mobile.
+            TextField::new('giftPackingNote', 'Packing')->onlyOnDetail()->renderAsHtml(),
+            TextField::new('giftMessage', 'Gift message')->onlyOnDetail(),
+            TextField::new('giftRecipientPhone', "Recipient's mobile")->onlyOnDetail(),
+            TextField::new('customerName', 'Customer (buyer)')->onlyOnDetail(),
             TextField::new('contactPhone', 'Mobile')->hideOnIndex()->setDisabled(),
             TextField::new('deliveryNotes', 'Delivery instructions')->hideOnIndex()->setDisabled(),
             ChoiceField::new('shippingMethod')

@@ -1,60 +1,65 @@
-{% extends 'email/base.html.twig' %}
+{#
+    Email 01, "Thank you for your order" (Site v4 design, Llunio Email
+    Templates/01-order-confirmation.html), sent once an order is paid (in
+    full, or a quote's deposit). "The Pigment" for the design's Form/Finish
+    rows, "Dorset Studio" for "Bournemouth". Beyond the design: a quote's
+    extra lines and delivery, a deposit's paid and still to pay, a gift's
+    arrive-by date, where it is sent and its message (Gift options), and for a quote the estimated casting date in place of
+    the lead time. "View your order" opens the order's private page (Step
+    11.1). Laid out by email/_customer.html.twig (the email rules).
+#}
+{% extends 'email/_customer.html.twig' %}
+{% import 'email/_customer.html.twig' as layout %}
+{% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
+{% import _self as m %}
 
-{% block preheader %}Your Llunio Studios order {{ order.orderNumber }} is confirmed.{% endblock %}
+{% block title %}Your Llunio order {{ order.orderNumber }}{% endblock %}
+{% block preheader %}Thank you{{ firstName ? ', ' ~ firstName : '' }}. Your Lumen Forma order {{ order.orderNumber }} is confirmed.{% endblock %}
 
 {% block content %}
-    <div>Hi {{ order.shippingAddress ? order.shippingAddress.recipientName : order.email }},</div>
-    <p>Thank you for your order. We've received your payment and your order is confirmed.</p>
-
-    <p><strong>Order {{ order.orderNumber }}</strong></p>
-
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:12px 0;">
-        {% for item in order.items %}
-            <tr>
-                <td style="padding:6px 0;">
-                    {{ item.quantity }} × {{ item.productTitle }}
-                    {% for group in item.lampConfigurations %}
-                        {% if group.label %}<br><small><strong>{{ group.label }}</strong></small>{% endif %}
-                        {% for opt in group.options %}
-                            <br><small>{{ opt.option }}: {{ opt.value }}</small>
-                        {% endfor %}
-                    {% endfor %}
-                </td>
-                <td align="right" style="padding:6px 0;">{{ item.lineTotalInGbp|format_currency('GBP') }}</td>
-            </tr>
-        {% endfor %}
-        <tr>
-            <td style="padding:6px 0;">Subtotal</td>
-            <td align="right" style="padding:6px 0;">{{ order.subtotalInGbp|format_currency('GBP') }}</td>
-        </tr>
-        <tr>
-            <td style="padding:6px 0;">Shipping{% if order.shippingServiceName %} ({{ order.shippingServiceName }}){% endif %}</td>
-            <td align="right" style="padding:6px 0;">{{ order.shippingCostInGbp|format_currency('GBP') }}</td>
-        </tr>
-        <tr>
-            <td style="padding:6px 0;"><strong>Total</strong></td>
-            <td align="right" style="padding:6px 0;"><strong>{{ order.totalInGbp|format_currency('GBP') }}</strong></td>
-        </tr>
-        {% if order.amountOwed > 0 %}
-            {# A quote paid by deposit (Step 10b.3); this email is restyled in Step 11. #}
-            <tr>
-                <td style="padding:6px 0;">Paid (deposit)</td>
-                <td align="right" style="padding:6px 0;">{{ (order.amountPaid / 100)|format_currency('GBP') }}</td>
-            </tr>
-            <tr>
-                <td style="padding:6px 0;">Balance to pay later</td>
-                <td align="right" style="padding:6px 0;">{{ (order.amountOwed / 100)|format_currency('GBP') }}</td>
-            </tr>
-        {% endif %}
-    </table>
-
-    {% if order.shippingAddress %}
-        <p>
-            <strong>Shipping to</strong><br>
-            {{ order.shippingAddress.recipientName }}<br>
-            {{ order.shippingAddress.singleLine }}
-        </p>
-    {% else %}
-        <p><strong>Collection from the studio.</strong></p>
+<p style="{{ body }}">Thank you for your order. Your Lumen Forma will be cast by hand in our Dorset Studio.</p>
+{{ layout.section('01', 'Order') }}
+<p style="{{ label }}">Order number</p>
+<p style="{{ body }}">{{ order.orderNumber }}</p>
+{{ layout.section('02', 'Your configuration') }}
+{{ include('email/order/_lamps.html.twig') }}
+<div style="height:28px;line-height:28px;font-size:1px;">&nbsp;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-order-totals>
+    {% for item in order.items|filter(i => i.extra) %}
+        <tr><td width="60%" style="{{ keyStyle }}">{{ item.productTitle }}</td><td style="{{ valueStyle }}">{{ m.money(item.lineTotal) }}</td></tr>
+    {% endfor %}
+    <tr><td width="60%" style="{{ keyStyle }}">Delivery · {{ order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Next Day Delivery' }}</td><td style="{{ valueStyle }}">{{ m.money(order.shippingCost) }}</td></tr>
+    <tr><td width="60%" style="{{ strongKey }}">Total</td><td style="{{ strongValue }}">{{ m.money(order.total) }}</td></tr>
+    {% if order.amountOwed > 0 %}
+        <tr><td width="60%" style="{{ keyStyle }}">Paid (deposit)</td><td style="{{ valueStyle }}">{{ m.money(order.amountPaid) }}</td></tr>
+        <tr><td width="60%" style="{{ keyStyle }}">Balance to pay later</td><td style="{{ valueStyle }}">{{ m.money(order.amountOwed) }}</td></tr>
     {% endif %}
+</table>
+<div style="height:16px;line-height:16px;font-size:1px;">&nbsp;</div>
+<p style="{{ fine }}">Photography is illustrative of the Lumen Forma series. Each lamp is cast to your configuration and is unique.</p>
+{{ layout.section('03', 'Delivery') }}
+{% if order.shippingAddress %}
+    {% set a = order.shippingAddress %}
+    <p style="{{ label }}">Delivery address</p>
+    <p style="{{ body }}">{% for line in [a.recipientName, a.company, a.line1, a.line2, a.city, a.county, a.postcode]|filter(v => v) %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}</p>
+{% endif %}
+{% if order.giftArriveBy %}
+    <p style="{{ label }}">Gift</p>
+    <p style="{{ body }}" data-email-gift>Arrive by {{ order.giftArriveBy|date('j F Y') }}{% if order.giftSendTo %}<br>{{ order.giftSendTo.label }}{% endif %}</p>
+    {% if order.directGift and order.giftMessage %}
+        <p style="{{ label }}">Gift message</p>
+        <p style="{{ body }}" data-email-gift-message>{{ order.giftMessage|nl2br }}</p>
+    {% endif %}
+{% endif %}
+{% if castingDate %}
+    <p style="{{ label }}">Estimated casting date</p>
+    <p style="{{ body }}">{{ castingDate|date('j F Y') }}</p>
+{% else %}
+    <p style="{{ label }}">Expected lead time</p>
+    <p style="{{ body }}">Dispatched within {{ lead_time.label }}, then DPD Next Day Delivery</p>
+{% endif %}
+<div style="height:8px;line-height:8px;font-size:1px;">&nbsp;</div>
+{{ layout.button(url('order_view', { token: order.viewToken }), 'View your order') }}
+<div style="height:24px;line-height:24px;font-size:1px;">&nbsp;</div>
+<p style="{{ body }}">Reply to this email with any questions.</p>
 {% endblock %}

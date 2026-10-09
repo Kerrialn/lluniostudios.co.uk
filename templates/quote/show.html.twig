@@ -116,9 +116,9 @@
                         {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order and delivery updates) *' }) }}
                     </div>
 
-                    <div class="{{ section }}">Delivery address</div>
+                    <div class="{{ section }}">Delivery address{% if designRequest.directGift %} <span class="normal-case tracking-normal text-[13px]">(the recipient's: sent directly, with no prices in the box)</span>{% endif %}</div>
                     <div class="{{ grid }}">
-                        {{ include('checkout/_field.html.twig', { child: form.name, label: 'Full name *', wide: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.name, label: designRequest.directGift ? "Recipient's full name *" : 'Full name *', wide: true }) }}
                         {{ include('checkout/_field.html.twig', { child: form.company, label: 'Company name (optional)', wide: true }) }}
                         {{ include('checkout/_field.html.twig', { child: form.line1, label: 'Address line 1 *', wide: true }) }}
                         {{ include('checkout/_field.html.twig', { child: form.line2, label: 'Address line 2', wide: true }) }}
@@ -129,6 +129,12 @@
                     <div class="flex flex-col gap-2"><span class="text-[14px]">Country</span><div class="border border-ll-line h-12 flex items-center px-3.5 text-[15px] text-ll-mute">{{ designRequest.countryName ?? 'United Kingdom' }}</div></div>
                     <div class="{{ grid }}">
                         {{ include('checkout/_field.html.twig', { child: form.notes, label: 'Delivery instructions (optional)', wide: true }) }}
+                        {% if designRequest.directGift %}
+                            {{ include('checkout/_field.html.twig', { child: form.recipientPhone, label: "Recipient's mobile (optional)", hint: "(for the carrier's delivery updates; otherwise yours)", wide: true }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.giftMessage, label: 'Gift message (optional)', hint: '(for a card in the box, up to ' ~ constant('App\\Form\\Form\\CardPaymentForm::GIFT_MESSAGE_MAX') ~ ' characters)', area: true, wide: true }) }}
+                        {% else %}
+                            {% do form.recipientPhone.setRendered %}{% do form.giftMessage.setRendered %}
+                        {% endif %}
                     </div>
 
                     <div class="{{ section }}">Billing address</div>
@@ -177,6 +183,9 @@
                         <div class="{{ row }}"><span>{{ extra.label }}</span><span class="text-right">{{ m.money(extra.total) }}</span></div>
                     {% endfor %}
                     <div class="{{ row }}"><span>Delivery · {{ quote.deliveryLabel }}</span><span class="text-right">{{ m.money(quote.deliveryPrice) }}</span></div>
+                    {% if designRequest.gift %}
+                        <div class="{{ row }}" data-quote-gift><span>Gift</span><span class="text-right">Needed by {{ designRequest.giftNeededBy|date('j F Y') }}{% if designRequest.giftSendTo %}<br>{{ designRequest.giftSendTo.label }}{% endif %}</span></div>
+                    {% endif %}
                 </div>
                 <div class="flex flex-col">
                     <div class="{{ total }} text-[15px]"><span>Total</span><span>{{ m.money(quote.total) }}</span></div>

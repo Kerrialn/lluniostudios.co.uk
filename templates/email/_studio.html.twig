@@ -6,7 +6,10 @@
 
     Each email fills the blocks: title, kind (e.g. "New request"), summary
     (rows of {key: value}, set as summaryRows), details. neededBy (optional)
-    is a gift's date. adminUrl and adminLabel are the admin link.
+    is a gift's date; directGift (optional) adds "Direct to recipient: no
+    prices in the box" and giftMessage (optional) the card's message, both
+    prominent (Gift options, 9 October 2026). adminUrl and adminLabel are the
+    admin link.
     Styles for the details: keyStyle / valueStyle (a row), section(name).
 #}
 {% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
@@ -29,6 +32,12 @@
 <p style="margin:0 0 16px 0;{{ f }}font-weight:500;font-size:15px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#ece3d3;" data-studio-kind>{% block kind %}{% endblock %}</p>
 {% if neededBy|default(null) %}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;"><tr><td bgcolor="#ece3d3" style="background:#ece3d3;padding:12px 16px;{{ f }}font-weight:500;font-size:15px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#15120e;" data-studio-needed-by>Gift · Needed by {{ neededBy|date('j F Y') }}</td></tr></table>
+{% endif %}
+{% if directGift|default(false) %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;"><tr><td style="border:2px solid #ece3d3;padding:12px 16px;{{ f }}font-weight:500;font-size:15px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#ece3d3;" data-studio-direct>Direct to recipient: no prices in the box</td></tr></table>
+{% endif %}
+{% if giftMessage|default(null) %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;"><tr><td style="border-left:2px solid #ece3d3;padding:4px 0 4px 16px;{{ f }}font-size:15px;line-height:24px;color:#ece3d3;"><span style="display:block;font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;padding:0 0 4px 0;">Gift message for the card</span><span data-studio-gift-message>{{ giftMessage|nl2br }}</span></td></tr></table>
 {% endif %}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-studio-summary>
     {% for key, value in summaryRows %}

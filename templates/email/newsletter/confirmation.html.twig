@@ -6,7 +6,6 @@
 {% extends 'email/_customer.html.twig' %}
 {% import 'email/_customer.html.twig' as layout %}
 {% trans_default_domain 'email' %}
-{% set firstName = name|trim|split(' ')|first %}
 
 {% block title %}{{ 'news-letter-signup'|trans }}{% endblock %}
 

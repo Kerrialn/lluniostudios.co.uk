@@ -7,6 +7,10 @@
     configured), each with its full configuration. No payment is taken.
     Fields, sizes and spacing as the Card Payment page (its field partial),
     with the address in separate fields and a country (8 October 2026).
+    Gift options (9 October 2026): "This is a gift" shows the "Needed by"
+    date and where to send it; "Send directly to the recipient" shows the
+    recipient's name, the gift message and their mobile, and the address
+    becomes theirs. Shown and hidden by CSS (no script needed).
 #}
 {% block title %}Reserve Your Design | Llunio Studios{% endblock %}
 {% form_theme form 'form_div_layout.html.twig' %}
@@ -24,7 +28,9 @@
 
         <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
             {# What is typed is remembered if the visitor leaves and comes back (remember_form_controller.js), until sent. #}
-            {{ form_start(form, { attr: { class: 'flex-[1.5_1_460px] min-w-0 flex flex-col gap-6', novalidate: 'novalidate', 'data-controller': 'remember-form', 'data-remember-form-name-value': 'reserve', 'data-action': 'input->remember-form#save change->remember-form#save' } }) }}
+            {% set giftOnly = "[&:has([name$='[gift]']:checked)_[data-gift-only]]:flex" %}
+            {% set directOnly = "[&:has([name$='[gift]']:checked):has([name$='[giftSendTo]'][value=recipient]:checked)_[data-direct-only]]:flex" %}
+            {{ form_start(form, { attr: { class: 'flex-[1.5_1_460px] min-w-0 flex flex-col gap-6 ' ~ giftOnly ~ ' ' ~ directOnly, novalidate: 'novalidate', 'data-controller': 'remember-form', 'data-remember-form-name-value': 'reserve', 'data-action': 'input->remember-form#save change->remember-form#save' } }) }}
                 <div class="{{ section }}">Contact</div>
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.fullName, label: 'Full Name *', wide: true }) }}
@@ -32,7 +38,27 @@
                     {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Phone Number *', hint: '(Required by carriers for heavy-goods delivery scheduling)', wide: true }) }}
                 </div>
 
-                <div class="{{ section }}">Delivery address <span class="normal-case tracking-normal text-[13px]">(Required to calculate exact delivery costs)</span></div>
+                <div class="{{ section }}">Gift</div>
+                <div class="flex flex-col gap-4" data-reserve-gift>
+                    <label class="min-h-11 flex items-center gap-3 text-[14px] cursor-pointer select-none transition-opacity hover:opacity-70">
+                        {{ form_widget(form.gift, { attr: { class: 'peer sr-only' } }) }}
+                        <span class="flex-none w-4 h-4 border border-ll-ink flex items-center justify-center peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink *:bg-transparent peer-checked:*:bg-ll-ink" aria-hidden="true"><span class="w-2 h-2"></span></span>
+                        This is a gift
+                    </label>
+                    <div class="hidden flex-col gap-4" data-gift-only>
+                        <div class="{{ grid }}">
+                            {{ include('checkout/_field.html.twig', { child: form.giftNeededBy, label: 'Needed by *', hint: '(a preferred date, not a guarantee; each lamp is made by hand, please allow ' ~ lead_time.label ~ ')' }) }}
+                        </div>
+                        {{ include('partials/_gift_send_to.html.twig', { field: form.giftSendTo }) }}
+                        <div class="hidden {{ grid }}" data-direct-only>
+                            {{ include('checkout/_field.html.twig', { child: form.giftRecipientName, label: "Recipient's full name *", wide: true }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.giftRecipientPhone, label: "Recipient's mobile (optional)", hint: "(for the carrier's delivery updates; otherwise yours)", wide: true }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.giftMessage, label: 'Gift message (optional)', hint: '(for a card in the box, up to ' ~ constant('App\\Form\\Form\\CardPaymentForm::GIFT_MESSAGE_MAX') ~ ' characters)', area: true, wide: true }) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="{{ section }}">Delivery address <span class="normal-case tracking-normal text-[13px]">(Required to calculate exact delivery costs)</span><span class="hidden normal-case tracking-normal text-[13px]" data-direct-only>&nbsp;· the recipient's address: sent directly, with no prices in the box</span></div>
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.addressLine1, label: 'Address line 1 *', wide: true }) }}
                     {{ include('checkout/_field.html.twig', { child: form.addressLine2, label: 'Address line 2', wide: true }) }}

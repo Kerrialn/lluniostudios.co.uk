@@ -8,7 +8,6 @@
 #}
 {% extends 'email/_customer.html.twig' %}
 {% import 'email/_customer.html.twig' as layout %}
-{% set firstName = enquiry.name|trim|split(' ')|first %}
 
 {% block title %}Your commission enquiry{% endblock %}
 {% block preheader %}Thank you for sharing your idea. We will be in touch to talk it through.{% endblock %}

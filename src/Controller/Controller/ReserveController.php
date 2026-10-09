@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller\Controller;
 
+use App\Catalogue\GiftDate;
 use App\Catalogue\LumenFormaPhotos;
 use App\Entity\DesignRequest;
+use App\Enum\GiftSendTo;
 use App\Form\Form\ReserveForm;
 use App\Repository\CartRepository;
 use App\Service\CartResolver;
@@ -44,6 +46,7 @@ final class ReserveController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly EmailService $emailService,
         private readonly LoggerInterface $logger,
+        private readonly GiftDate $giftDate,
     ) {
     }
 
@@ -73,15 +76,20 @@ final class ReserveController extends AbstractController
         ];
         if (\is_array($prefill)) {
             $start = array_merge($start, array_filter(array_map(static fn (mixed $value): ?string => \is_string($value) && $value !== '' ? $value : null, $prefill), static fn (?string $value): bool => $value !== null));
+            // A gift carried from checkout: its tick, date and choice as the form's own values.
+            $start['gift'] = isset($start['gift']);
+            $start['giftNeededBy'] = isset($start['giftNeededBy']) ? (\DateTimeImmutable::createFromFormat('!Y-m-d', $start['giftNeededBy']) ?: null) : null;
+            $start['giftSendTo'] = GiftSendTo::tryFrom($start['giftSendTo'] ?? '');
         }
 
         $form = $this->createForm(ReserveForm::class, $start, [
             'custom_choices' => $customChoices,
+            'earliest' => $this->giftDate->earliest(),
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array{fullName: string, email: string, phone: string, addressLine1: string, addressLine2: ?string, town: string, county: ?string, postcode: string, country: string, accessNotes: ?string, customDetails?: ?string} $data */
+            /** @var array{fullName: string, email: string, phone: string, addressLine1: string, addressLine2: ?string, town: string, county: ?string, postcode: string, country: string, accessNotes: ?string, customDetails?: ?string, gift?: bool, giftNeededBy?: ?\DateTimeImmutable, giftSendTo?: ?GiftSendTo, giftRecipientName?: ?string, giftMessage?: ?string, giftRecipientPhone?: ?string} $data */
             $data = $form->getData();
             $designRequest = new DesignRequest(
                 fullName: trim($data['fullName']),
@@ -99,6 +107,10 @@ final class ReserveController extends AbstractController
                 (string) DeliveryArea::normalise($data['postcode']),
                 $data['country'],
             );
+            if ($data['gift'] ?? false) {
+                $designRequest->setGift($data['giftNeededBy'], $data['giftSendTo'], $optional($data['giftRecipientName'] ?? null), $optional($data['giftMessage'] ?? null), $optional($data['giftRecipientPhone'] ?? null));
+            }
+
             foreach ($items as $item) {
                 $designRequest->addItem($item);
             }

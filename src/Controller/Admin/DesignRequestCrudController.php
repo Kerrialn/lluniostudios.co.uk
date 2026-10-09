@@ -149,6 +149,12 @@ class DesignRequestCrudController extends AbstractCrudController
             ...$address,
             TextareaField::new('accessNotes', 'Site access & delivery notes')->setDisabled()->hideOnIndex(),
             TextareaField::new('customDetails')->setDisabled()->hideOnIndex(),
+            // Gift options (9 October 2026).
+            TextField::new('giftLabel', 'Gift')->hideOnForm(),
+            TextField::new('giftPackingNote', 'Packing')->onlyOnDetail()->renderAsHtml(),
+            TextField::new('giftRecipientName', "Recipient's name")->onlyOnDetail(),
+            TextField::new('giftMessage', 'Gift message')->onlyOnDetail(),
+            TextField::new('giftRecipientPhone', "Recipient's mobile")->onlyOnDetail(),
             Field::new('items', 'Lamps')
                 ->setTemplatePath('admin/field/design_request_items.html.twig')
                 ->onlyOnDetail(),

@@ -1,0 +1,39 @@
+{#
+    An order's lamps for its emails (Site v4 email 01 "REPEAT PER LAMP"
+    block, as email/request/_lamps.html.twig for requests): one block per
+    design, or per lamp when customised lamp by lamp. Rows: Size, The
+    Pigment, Cable, Footing, Light, Quantity, Price (as paid). Extra lines
+    (a quote's, e.g. "Custom pigment development") are not lamps and are
+    left out. Text at the body size (15px), as the email rules of Step 11.0.
+#}
+{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
+{% set keyStyle = 'padding:10px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
+{% set valueStyle = 'padding:10px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:15px;line-height:24px;mso-line-height-rule:exactly;color:#ece3d3;text-align:right;' %}
+{% set lamps = order.items|filter(i => not i.extra) %}
+{% for item in lamps %}
+    {% set design = loop %}
+    {% set price = (item.unitPrice / 100)|format_currency('GBP', {fraction_digit: item.unitPrice % 100 == 0 ? 0 : 2}) %}
+    {% for group in item.lampConfigurations %}
+        {% set values = {} %}
+        {% for option in group.options %}{% set values = values|merge({ (option.option): option.value }) %}{% endfor %}
+        {% set labels = [] %}
+        {% if lamps|length > 1 %}{% set labels = labels|merge(['Design ' ~ design.index ~ ' of ' ~ lamps|length]) %}{% endif %}
+        {% if group.label %}{% set labels = labels|merge([group.label ~ ' of ' ~ item.quantity]) %}{% elseif item.quantity > 1 %}{% set labels = labels|merge(['Same configuration for each lamp']) %}{% endif %}
+        {% set quantity = group.label ? 1 : item.quantity %}
+        <p style="margin:{{ design.first and loop.first ? '0' : '32px' }} 0 4px 0;{{ f }}font-weight:500;font-size:15px;line-height:24px;letter-spacing:0.08em;text-transform:uppercase;color:#ece3d3;">Lumen Forma</p>
+        {% if labels is not empty %}<p style="margin:0 0 10px 0;{{ f }}font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">{{ labels|join(' · ') }}</p>{% endif %}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+            {% for key, value in {
+                'Size': item.sizeName,
+                'The Pigment': values['The Pigment'] ?? '—',
+                'Cable': values['Cable Colour'] ?? '—',
+                'Footing': values['Footing Material'] ?? '—',
+                'Light': (values['Bulb Style'] ?? '—') ~ (values['Bulb Count'] ?? null ? ' / ' ~ values['Bulb Count'] : ''),
+                'Quantity': quantity,
+                'Price': price ~ (quantity > 1 ? ' each' : ''),
+            } %}
+                <tr><td width="40%" style="{{ keyStyle }}">{{ key }}</td><td style="{{ valueStyle }}">{{ value }}</td></tr>
+            {% endfor %}
+        </table>
+    {% endfor %}
+{% endfor %}

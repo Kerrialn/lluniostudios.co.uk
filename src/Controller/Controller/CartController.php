@@ -43,14 +43,15 @@ class CartController extends AbstractController
         $proceedForm = $this->createForm(BasketProceedForm::class, [
             'gift' => $cart->isGift(),
             'arriveBy' => $cart->getGiftArriveBy(),
+            'sendTo' => $cart->getGiftSendTo(),
         ], [
             'earliest' => $earliest,
         ]);
         $proceedForm->handleRequest($request);
         if ($proceedForm->isSubmitted() && $blockers === [] && ! $cart->isEmpty() && $proceedForm->isValid()) {
-            /** @var array{gift: bool, arriveBy: ?\DateTimeImmutable} $choice */
+            /** @var array{gift: bool, arriveBy: ?\DateTimeImmutable, sendTo: ?\App\Enum\GiftSendTo} $choice */
             $choice = $proceedForm->getData();
-            $cart->setGiftArriveBy($choice['gift'] ? $choice['arriveBy'] : null);
+            $cart->setGiftArriveBy($choice['gift'] ? $choice['arriveBy'] : null, $choice['sendTo']);
             $this->cartRepository->save($cart, true);
 
             return $this->redirectToRoute('checkout');

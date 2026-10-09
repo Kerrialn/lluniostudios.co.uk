@@ -9,7 +9,7 @@
 // order in admin show paid and owed. A full-payment quote, paid as Apple Pay /
 // Google Pay would (the page's fields sent with ?wallet=1), is paid in full
 // (the order and request Paid).
-import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL } from './lib.mjs';
+import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems, studioEmailProblems } from './lib.mjs';
 
 const { check, summary } = checker();
 const b = await open(1440, 1000, 'quote-pay-admin', { mobile: false });
@@ -145,8 +145,32 @@ try {
     // The order email.
     await sleep(1000);
     const confirmation = (await mailpit(`to:${EMAIL}`)).filter((m) => new Date(m.Created) > since && !/quote/i.test(m.Subject))[0];
-    const confirmationText = confirmation ? (await message(confirmation.ID)).Text.replace(/\s+/g, ' ') : '';
-    check('the order email shows the deposit paid and the balance', /Paid \(deposit\) £1,564\.00/.test(confirmationText) && /Balance to pay later £2,346\.00/.test(confirmationText), confirmation?.Subject);
+    const confirmationHtml = confirmation ? (await message(confirmation.ID)).HTML : '';
+    const confirmationText = confirmationHtml.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
+    const orderNumber = sql(`select order_number from orders where design_request_id = '${deposit.id}' and status = 'deposit_paid'`).match(/LS-\d{6}-\d{4}/)?.[0];
+    const format = customerEmailProblems(confirmationHtml, 'Ada', 'Thank you for your order. Your Lumen Forma will be cast by hand in our Dorset Studio.');
+    check('email 01 "Your Llunio order LS-…" follows the email rules: Montage C, no heading, "Dear Ada," then "Thank you for your order…", one text size', confirmation?.Subject === `Your Llunio order ${orderNumber}` && format.length === 0, format.join('; ') + ' | ' + confirmation?.Subject);
+    check('email 01 for a quote: the extra line, the quote\'s delivery, the total, the deposit paid and the balance', /Custom pigment development £150/.test(confirmationText) && /Delivery · DPD Next Day Delivery £60/.test(confirmationText) && /Total £3,910/.test(confirmationText) && /Paid \(deposit\) £1,564/.test(confirmationText) && /Balance to pay later £2,346/.test(confirmationText), confirmationText.slice(confirmationText.indexOf('Your configuration'), confirmationText.indexOf('Your configuration') + 900));
+    check('email 01 for a quote: 03 Delivery with the address and the estimated casting date (no lead time)', /03 Delivery Delivery address Ada Pay 1 High Street Wimborne Dorset BH21 1AA Estimated casting date 16 November 2026 View your order/.test(confirmationText), confirmationText.slice(confirmationText.indexOf('03 Delivery'), confirmationText.indexOf('03 Delivery') + 300));
+    // "View your order": the order's private page, without signing in, never indexed.
+    const viewLink = confirmationHtml.match(/<a href="([^"]+\/order\/[A-Za-z0-9_-]+)"[^>]*>View your order</)?.[1].replace(/^https?:\/\/[^/]+/, BASE_URL);
+    const viewPage = await open(1440, 1000, 'quote-pay-view', { mobile: false });
+    try {
+        await viewPage.send('Network.enable'); await viewPage.send('Network.clearBrowserCookies');
+        await viewPage.send('Page.navigate', { url: viewLink }); await sleep(2500);
+        const view = await viewPage.ev(`(async () => ({ path: location.pathname, h1: document.querySelector('main h1')?.innerText, text: document.querySelector('main').innerText.replace(/\\s+/g, ' '), back: [...document.querySelectorAll('main a')].some(a => /Your Orders/.test(a.textContent)), robots: await fetch(location.href).then(r => r.headers.get('x-robots-tag')) }))()`);
+        check('"View your order" opens the order without signing in: the order, Deposit Paid, the extra line, paid and still to pay; no link to Your Orders; never indexed', /^\/order\/[A-Za-z0-9_-]{32}$/.test(view.path) && view.h1 === `ORDER ${orderNumber}` && /DEPOSIT PAID/i.test(view.text) && /Custom pigment development £150/.test(view.text) && /Paid £1,564/.test(view.text) && /Still to pay £2,346/.test(view.text) && !view.back && view.robots === 'noindex, nofollow', JSON.stringify({ ...view, text: view.text.slice(0, 200) }));
+        const missing = await viewPage.ev(`fetch(${JSON.stringify(BASE_URL + '/order/not-a-real-order-link-1234567890')}).then(r => r.status)`);
+        check('an unknown order link is not found', missing === 404, missing);
+    } finally { viewPage.close(); }
+    // The studio: "Deposit paid".
+    const studio = async (kind, number) => { for (const m of await mailpit(`to:lluniostudios@gmail.com subject:"${kind}"`)) if (new Date(m.Created) > since && (await message(m.ID)).HTML.includes(number)) return m; return null; };
+    const depositMail = await studio('Deposit paid', orderNumber);
+    const depositHtml = depositMail ? (await message(depositMail.ID)).HTML : '';
+    const depositSummary = depositHtml.match(/data-studio-summary>([\s\S]*?)<\/table>/)?.[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const depositFormat = studioEmailProblems(depositHtml, 'Deposit paid');
+    check('the studio is emailed "Deposit paid · Atelier × 2 · £1,564 of £3,910": no greeting, the summary first (order, lamps, paid, still to pay, customer, delivery, request, casting)', depositMail?.Subject === 'Deposit paid · Atelier × 2 · £1,564 of £3,910' && depositFormat.length === 0 && new RegExp(`^Order ${orderNumber} · \\d+ \\w+ 2026, \\d\\d:\\d\\d Lamps Atelier × 2 Paid £1,564 deposit of £3,910 Still to pay £2,346 Customer Ada Pay Delivery DPD Next Day Delivery · BH21 1AA Request ${number} Casting 16 November 2026 \\(estimated\\)$`).test(depositSummary ?? ''), depositFormat.join('; ') + ' | ' + depositMail?.Subject + ' | ' + depositSummary);
+    check('and replies to it go to the customer', ((await message(depositMail?.ID ?? '')).ReplyTo || []).some((r) => r.Address === EMAIL));
 
     // Admin.
     const orderId = uuid(sql(`select id from orders where design_request_id = '${deposit.id}' and status = 'deposit_paid'`));
@@ -168,6 +192,10 @@ try {
     const fullDone = await c.ev(`document.querySelector('main').innerText.replace(/\\s+/g, ' ')`);
     const fullOrder = sql(`select o.total, o.amount_paid, r.status from orders o join design_request r on r.id = o.design_request_id where o.design_request_id = '${full.id}' and o.status = 'paid'`).replace(/\s+/g, ' ');
     check('a full-payment quote is paid in full: "Paid · £910", nothing owed, the order and request Paid', /Paid · £910/.test(fullDone) && !/Balance to pay later/.test(fullDone) && /91000 91000 paid\b/.test(fullOrder), fullOrder);
+    await sleep(1000);
+    const fullNumberPaid = sql(`select order_number from orders where design_request_id = '${full.id}' and status = 'paid'`).match(/LS-\d{6}-\d{4}/)?.[0];
+    const fullStudio = await studio('New order', fullNumberPaid);
+    check('the studio is emailed "New order · Gallery × 1 · £910"', fullStudio?.Subject === 'New order · Gallery × 1 · £910', fullStudio?.Subject);
 
     // Unknown or unsent links.
     await go(c, BASE_URL + '/quote/not-a-real-quote-link-123/complete', 2000);

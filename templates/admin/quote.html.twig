@@ -60,6 +60,17 @@
                     {% else %}
                         <br><span style="white-space: pre-line">{{ designRequest.deliveryAddress }}</span>
                     {% endif %}
+                    {# Gift options (9 October 2026). #}
+                    {% if designRequest.gift %}
+                        <div class="small mt-2" data-quote-gift>
+                            <strong>Gift: {{ designRequest.giftLabel }}</strong>
+                            {% if designRequest.directGift %}
+                                <br><span class="badge bg-warning text-dark">Direct to recipient: no prices in the box</span>
+                                <br>Recipient: {{ designRequest.giftRecipientName }}{% if designRequest.giftRecipientPhone %} · {{ designRequest.giftRecipientPhone }}{% endif %}
+                                {% if designRequest.giftMessage %}<br>Gift message: <span style="white-space: pre-line">{{ designRequest.giftMessage }}</span>{% endif %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
                 <div class="col-md-6">
                     {% if designRequest.accessNotes %}<p class="mb-1"><em>Site access and delivery notes:</em> {{ designRequest.accessNotes }}</p>{% endif %}

@@ -18,6 +18,14 @@
 {{ layout.section('01', 'Request') }}
 <p style="{{ label }}">Request number</p>
 <p style="{{ body }}">{{ designRequest.requestNumber }}</p>
+{% if designRequest.gift %}
+    <p style="{{ label }}">Gift</p>
+    <p style="{{ body }}" data-email-gift>Needed by {{ designRequest.giftNeededBy|date('j F Y') }}{% if designRequest.giftSendTo %}<br>{{ designRequest.giftSendTo.label }}{% if designRequest.directGift %}: {{ designRequest.giftRecipientName }}{% endif %}{% endif %}</p>
+    {% if designRequest.directGift and designRequest.giftMessage %}
+        <p style="{{ label }}">Gift message</p>
+        <p style="{{ body }}" data-email-gift-message>{{ designRequest.giftMessage|nl2br }}</p>
+    {% endif %}
+{% endif %}
 {{ layout.section('02', 'Your configuration') }}
 {{ include('email/request/_lamps.html.twig') }}
 <div style="height:28px;line-height:28px;font-size:1px;">&nbsp;</div>

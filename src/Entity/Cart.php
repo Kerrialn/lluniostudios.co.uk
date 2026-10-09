@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\GiftSendTo;
 use App\Repository\CartRepository;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -42,6 +43,13 @@ class Cart
 
     #[ORM\Column(type: 'date_immutable', nullable: true)]
     private ?DateTimeImmutable $giftArriveBy = null;
+
+    /**
+     * A gift's "Send to me" or "Send directly to the recipient" (Gift
+     * options, 9 October 2026).
+     */
+    #[ORM\Column(length: 16, nullable: true, enumType: GiftSendTo::class)]
+    private ?GiftSendTo $giftSendTo = null;
 
     public function __construct()
     {
@@ -107,10 +115,25 @@ class Cart
     /**
      * Mark the order as a gift arriving by this date, or not a gift (null).
      */
-    public function setGiftArriveBy(?DateTimeImmutable $arriveBy): void
+    public function setGiftArriveBy(?DateTimeImmutable $arriveBy, ?GiftSendTo $sendTo = null): void
     {
         $this->gift = $arriveBy instanceof DateTimeImmutable;
         $this->giftArriveBy = $arriveBy;
+        $this->giftSendTo = $this->gift ? $sendTo : null;
+    }
+
+    public function getGiftSendTo(): ?GiftSendTo
+    {
+        return $this->giftSendTo;
+    }
+
+    /**
+     * A gift sent directly to the recipient (their name and address on the
+     * Card Payment page, with a gift message and their mobile).
+     */
+    public function isDirectGift(): bool
+    {
+        return $this->gift && $this->giftSendTo?->isDirect() === true;
     }
 
     public function getUser(): ?User

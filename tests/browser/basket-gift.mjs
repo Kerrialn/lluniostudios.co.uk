@@ -43,7 +43,9 @@ try {
 
     // Messages.
     await proceed(); s = await state();
-    check('gift with no date: "Please choose a date to continue.", stays on the basket', s.path === '/basket' && s.ticked && s.dateShown && JSON.stringify(s.errors) === JSON.stringify(['Please choose a date to continue.']), JSON.stringify(s));
+    check('gift with no date or where to send it: "Please choose a date to continue.", "Please choose where to send it.", stays on the basket', s.path === '/basket' && s.ticked && s.dateShown && JSON.stringify(s.errors) === JSON.stringify(['Please choose a date to continue.', 'Please choose where to send it.']), JSON.stringify(s));
+    // Gift options (9 October 2026): "Send to me" for the rest of this check (gift-options.mjs covers sending directly).
+    await ev(`[...document.querySelectorAll('main aside label')].find(l => /Send to me/.test(l.textContent)).click()`);
     check('the date box is outlined in cream when there is a message', (await ev(`getComputedStyle(document.querySelector('main aside input[type=date]')).borderTopColor`)) === 'rgb(236, 227, 211)');
     await setDate(dayBefore); await proceed(); s = await state();
     check('a date too soon: "Please choose a date on or after the earliest delivery date."', s.path === '/basket' && JSON.stringify(s.errors) === JSON.stringify(['Please choose a date on or after the earliest delivery date.']) && s.value === dayBefore, JSON.stringify(s));
@@ -53,6 +55,7 @@ try {
     await setDate(later); await proceed();
     check('a good date goes on to checkout', (await ev('location.pathname')) === '/checkout');
     check('the gift and its date are saved on the basket', cartRow() === `gift-yes ${later}`, cartRow());
+    check('and where to send it ("me")', /\bme\b/.test(sql("select gift_send_to from cart where id = (select cart_id from cart_item order by created_at desc limit 1)")));
     await go(BASE_URL + '/basket'); s = await state();
     check('back at the basket, still ticked with the date', s.ticked && s.dateShown && s.value === later, JSON.stringify(s));
     await tick(); await sleep(200); await proceed();

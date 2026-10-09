@@ -2,7 +2,8 @@
     The layout of every customer email (Site v4 design, Llunio Email
     Templates), with the email rules decided 9 October 2026 (Step 11.0):
     the Montage C header (logo top-left), no heading block, "Dear {first
-    name}," then a blank line and the email's text, all body text one size
+    name}," (the buyer's, tidied by GreetingName; "Dear Customer," when none
+    is usable) then a blank line and the email's text, all body text one size
     (15px, as the personal note), the design's numbered sections, and the
     footer with "Dorset Studio" (no phone line until a number is given,
     question 18).
@@ -58,7 +59,7 @@
 <table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#15120e;">
 <tr><td bgcolor="#15120e" style="background:#15120e;padding:0;"><img src="{{ absolute_url(asset('images/email/header-montage-c.jpg')) }}" width="600" alt="Llunio Studios — Llunio lamps" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;{{ f }}font-size:13px;line-height:20px;letter-spacing:0.22em;text-transform:uppercase;color:#ece3d3;"></td></tr>
 <tr><td class="px" style="padding:44px 40px 8px 40px;">
-<p style="{{ body }}" data-email-greeting>{{ firstName|default(null) ? 'Dear ' ~ firstName ~ ',' : 'Hello,' }}</p>
+<p style="{{ body }}" data-email-greeting>{{ firstName|default(null) ? 'Dear ' ~ firstName ~ ',' : 'Dear Customer,' }}</p>
 {% block content %}{% endblock %}
 </td></tr>
 <tr><td style="padding:40px 0 0 0;"></td></tr>

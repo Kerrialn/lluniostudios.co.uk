@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{# One order in the customer's history (Step 10.6): the lamps as on the Card Payment summary, totals, gift and delivery. A quote's order (10b.3) also has its extra lines, its delivery, and what has been paid and is still owed. #}
+{# One order in the customer's history (Step 10.6): the lamps as on the Card Payment summary, totals, gift and delivery. A quote's order (10b.3) also has its extra lines, its delivery, and what has been paid and is still owed. Also the order's private page ("View your order", Step 11.1; private: true), with no link back to Your Orders. #}
 {% block title %}Order {{ order.orderNumber }} | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
@@ -10,7 +10,7 @@
     {% set total = 'flex justify-between gap-3 text-[13px] py-2.5 border-t border-ll-line' %}
     {% import _self as m %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
-        <a href="{{ path('account_orders') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Your Orders</a>
+        {% if not private|default(false) %}<a href="{{ path('account_orders') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Your Orders</a>{% endif %}
         <div class="flex justify-between items-baseline gap-4 flex-wrap">
             <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Order {{ order.orderNumber }}</h1>
             <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.status.label }} · {{ order.createdAt|date('j F Y', 'Europe/London') }}</span>
@@ -43,7 +43,10 @@
                     <div class="{{ total }}"><span>Subtotal</span><span class="text-right">{{ m.money(order.subtotal) }}</span></div>
                     <div class="{{ total }}"><span>{{ order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Next Day Delivery' }}</span><span class="text-right">{{ m.money(order.shippingCost) }}</span></div>
                     {% if order.giftLine %}
-                        <div class="{{ total }}"><span>Gift</span><span class="text-right">{{ order.giftLine }}</span></div>
+                        <div class="{{ total }}" data-order-gift><span>Gift</span><span class="text-right">{{ order.giftLine }}{% if order.giftSendTo %}<br>{{ order.giftSendTo.label }}{% endif %}</span></div>
+                        {% if order.directGift and order.giftMessage %}
+                            <div class="{{ total }} flex-col" data-order-gift-message><span>Gift message</span><span class="text-ll-mute whitespace-pre-line">{{ order.giftMessage }}</span></div>
+                        {% endif %}
                     {% endif %}
                     <div class="flex justify-between gap-3 text-[15px] py-3 border-t border-ll-ink border-b border-b-ll-line"><span>Total</span><span class="text-right">{{ m.money(order.total) }}</span></div>
                     {% if order.amountOwed > 0 %}

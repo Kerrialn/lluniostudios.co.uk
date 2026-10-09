@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace App\Form\Form;
 
 use App\Entity\DesignRequest;
+use App\Enum\GiftSendTo;
 use App\Shipping\DeliveryArea;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -23,6 +27,12 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  * is in separate fields with DPD's limits, as on the Card Payment page, plus
  * a country (United Kingdom, Isle of Man, Guernsey or Jersey; decided
  * 8 October 2026) that must match the postcode.
+ *
+ * Gift options (9 October 2026): "This is a gift" with a "Needed by" date (a
+ * preferred date, not a guarantee; no earlier than GiftDate::earliest(), as
+ * at checkout) and "Send to me" or "Send directly to the recipient"; sent
+ * directly, the recipient's name (the address is theirs), an optional gift
+ * message (a card in the box) and the recipient's mobile.
  */
 final class ReserveForm extends AbstractType
 {
@@ -88,6 +98,38 @@ final class ReserveForm extends AbstractType
                     'autocomplete' => 'shipping country',
                 ],
             ])
+            ->add('gift', CheckboxType::class, [
+                'required' => false,
+            ])
+            ->add('giftNeededBy', DateType::class, [
+                'required' => false,
+                'widget' => 'single_text',
+                'input' => 'datetime_immutable',
+                'invalid_message' => BasketProceedForm::NO_DATE,
+                'attr' => [
+                    'min' => $options['earliest']->format('Y-m-d'),
+                ],
+            ])
+            ->add('giftSendTo', EnumType::class, [
+                'class' => GiftSendTo::class,
+                'expanded' => true,
+                'required' => false,
+                'placeholder' => false,
+                'choice_label' => static fn (GiftSendTo $choice): string => $choice->label(),
+            ])
+            ->add('giftRecipientName', TextType::class, self::text(CardPaymentForm::MAX['name'], 'off'))
+            ->add('giftMessage', TextareaType::class, self::text(CardPaymentForm::GIFT_MESSAGE_MAX, 'off'))
+            ->add('giftRecipientPhone', TelType::class, [
+                'required' => false,
+                'constraints' => [
+                    new Assert\Regex(pattern: '/^\+?[\d\s()-]{7,15}$/', message: 'Please enter a valid phone number.'),
+                ],
+                'attr' => [
+                    'autocomplete' => 'off',
+                    'inputmode' => 'tel',
+                    'maxlength' => CardPaymentForm::MAX['phone'],
+                ],
+            ])
             ->add('accessNotes', TextareaType::class, [
                 'required' => false,
                 'constraints' => [new Assert\Length(max: 2000)],
@@ -140,9 +182,33 @@ final class ReserveForm extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
+        $resolver->setRequired('earliest');
+        $resolver->setAllowedTypes('earliest', \DateTimeInterface::class);
         $resolver->setDefaults([
             'custom_choices' => false,
             'constraints' => [
+                // A gift needs its date, where to send it and, sent directly, the recipient's name.
+                new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
+                    if (! \is_array($data) || ! ($data['gift'] ?? false)) {
+                        return;
+                    }
+
+                    $neededBy = $data['giftNeededBy'] ?? null;
+                    /** @var \DateTimeInterface $earliest */
+                    $earliest = $context->getRoot()->getConfig()->getOption('earliest');
+                    if (! $neededBy instanceof \DateTimeInterface) {
+                        $context->buildViolation(BasketProceedForm::NO_DATE)->atPath('[giftNeededBy]')->addViolation();
+                    } elseif ($neededBy->format('Y-m-d') < $earliest->format('Y-m-d')) {
+                        $context->buildViolation(BasketProceedForm::TOO_EARLY)->atPath('[giftNeededBy]')->addViolation();
+                    }
+
+                    $sendTo = $data['giftSendTo'] ?? null;
+                    if (! $sendTo instanceof GiftSendTo) {
+                        $context->buildViolation(BasketProceedForm::NO_SEND_TO)->atPath('[giftSendTo]')->addViolation();
+                    } elseif ($sendTo->isDirect() && trim((string) ($data['giftRecipientName'] ?? '')) === '') {
+                        $context->buildViolation("Please enter the recipient's full name.")->atPath('[giftRecipientName]')->addViolation();
+                    }
+                }),
                 new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
                     $postcode = \is_array($data) ? DeliveryArea::normalise((string) ($data['postcode'] ?? '')) : null;
                     if ($postcode === null || ! isset(DesignRequest::COUNTRIES[(string) ($data['country'] ?? '')])) {

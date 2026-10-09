@@ -62,13 +62,17 @@ final class QuoteController extends AbstractController
         $form = $this->createForm(CardPaymentForm::class, [
             'email' => $request->getEmail(),
             'phone' => $request->getPhone(),
-            'name' => $request->getFullName(),
+            // A gift sent directly: the recipient's name, with the gift message and their mobile (Gift options).
+            'name' => $request->isDirectGift() ? $request->getGiftRecipientName() : $request->getFullName(),
+            'giftMessage' => $request->getGiftMessage(),
+            'recipientPhone' => $request->getGiftRecipientPhone(),
             'line1' => $request->getAddressLine1(),
             'line2' => $request->getAddressLine2(),
             'town' => $request->getTown(),
             'county' => $request->getCounty(),
             'postcode' => $request->getPostcode(),
-            'billingSame' => true,
+            // A gift sent directly: the buyer enters their own billing address.
+            'billingSame' => ! $request->isDirectGift(),
         ], [
             'action' => $this->generateUrl('quote_pay', [
                 'token' => $token,

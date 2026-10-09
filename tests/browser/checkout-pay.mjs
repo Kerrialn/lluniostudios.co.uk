@@ -134,6 +134,8 @@ try {
     const arrive = await ev(`document.querySelector('main aside input[type=date]').min`);
     await ev(`[...document.querySelectorAll('main aside label')].find(l => /This is a gift/.test(l.textContent)).click()`);
     await ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
+    // Gift options (9 October 2026): where to send it is required.
+    await ev(`[...document.querySelectorAll('main aside label')].find(l => /Send to me/.test(l.textContent))?.click()`);
     await ev(`[...document.querySelectorAll('main aside button')].find(e => e.textContent.trim() === 'Proceed to Payment').click()`); await sleep(2000);
     await openCheckout();
     await fill({ ...details, billingSame: true, name: 'Grace Friend' });

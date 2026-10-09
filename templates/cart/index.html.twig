@@ -111,13 +111,15 @@
                                     <span class="flex-none w-4 h-4 border border-ll-ink flex items-center justify-center peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink [&>span]:bg-transparent peer-checked:[&>span]:bg-ll-ink" aria-hidden="true"><span class="w-2 h-2"></span></span>
                                     This is a gift
                                 </label>
-                                <div class="hidden group-has-[:checked]:flex flex-col gap-2">
+                                <div class="hidden group-has-[input[name$='[gift]']:checked]:flex flex-col gap-2">
                                     <label for="{{ proceedForm.arriveBy.vars.id }}" class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">When does it need to arrive by? *</label>
                                     {{ form_widget(proceedForm.arriveBy, { attr: { class: 'w-full min-h-11 bg-transparent text-ll-ink border ' ~ (dateErrors is empty ? 'border-ll-line' : 'border-ll-ink') ~ ' rounded-none px-3 py-2.5 text-sm leading-[1.5] outline-none [&::-webkit-datetime-edit-fields-wrapper]:py-px focus:border-ll-ink [color-scheme:dark]' } }) }}
                                     <div class="text-xs text-ll-mute leading-normal">Each lamp is made by hand. Please allow {{ lead_time.label }}.</div>
                                     {% for error in dateErrors %}
                                         <div class="text-xs text-ll-ink" role="alert">{{ error.message }}</div>
                                     {% endfor %}
+                                    {# Gift options (9 October 2026): to the customer, or directly to the recipient. #}
+                                    {{ include('partials/_gift_send_to.html.twig', { field: proceedForm.sendTo }) }}
                                 </div>
                             </div>
                             <button type="submit" class="ll-cta bg-ll-ink text-ll-bg py-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]">Proceed to Payment</button>

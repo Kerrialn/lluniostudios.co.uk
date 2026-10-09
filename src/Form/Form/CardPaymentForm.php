@@ -9,6 +9,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -20,7 +21,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  * address, billing address. Field lengths are DPD's label limits (to confirm
  * with DPD); a gift asks for the same details (decided 7 October 2026). The
  * billing address is asked for only when "Same as delivery address" is
- * unticked.
+ * unticked. A gift sent directly to the recipient (Gift options, 9 October
+ * 2026) has the recipient's name and address as the delivery's, plus an
+ * optional gift message (for a card in the box) and the recipient's mobile
+ * (DPD's delivery phone when given); the page shows those two fields only
+ * then.
  */
 final class CardPaymentForm extends AbstractType
 {
@@ -39,6 +44,11 @@ final class CardPaymentForm extends AbstractType
     ];
 
     public const REQUIRED_MESSAGE = 'Please complete the required fields to continue.';
+
+    /**
+     * A gift message's limit (a card in the box).
+     */
+    public const GIFT_MESSAGE_MAX = 250;
 
     private const PHONE_PATTERN = '/^\+?[\d\s()-]{7,15}$/';
 
@@ -100,7 +110,19 @@ final class CardPaymentForm extends AbstractType
             ->add('town', TextType::class, $text(self::MAX['town'], 'shipping address-level2'))
             ->add('county', TextType::class, $text(self::MAX['county'], 'shipping address-level1', false))
             ->add('postcode', TextType::class, $postcode('shipping postal-code'))
-            ->add('notes', TextType::class, $text(self::MAX['notes'], 'off', false));
+            ->add('notes', TextType::class, $text(self::MAX['notes'], 'off', false))
+            ->add('giftMessage', TextareaType::class, $text(self::GIFT_MESSAGE_MAX, 'off', false))
+            ->add('recipientPhone', TelType::class, [
+                'required' => false,
+                'constraints' => [
+                    new Assert\Regex(pattern: self::PHONE_PATTERN, message: 'Please enter a valid phone number.'),
+                ],
+                'attr' => [
+                    'maxlength' => self::MAX['phone'],
+                    'autocomplete' => 'off',
+                    'inputmode' => 'tel',
+                ],
+            ]);
 
         // Card details: the name here; number, expiry and security code are
         // Stripe's own secure boxes (never sent to this site).

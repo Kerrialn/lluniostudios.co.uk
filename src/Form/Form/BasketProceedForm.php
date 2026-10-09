@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Form\Form;
 
 use App\Catalogue\GiftDate;
+use App\Enum\GiftSendTo;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -16,13 +18,16 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 /**
  * The basket's "This is a gift" and "When does it need to arrive by?",
  * sent with "Proceed to Payment" (Site v4 prototype, Step 10.1). A gift
- * needs a date no earlier than GiftDate::earliest().
+ * needs a date no earlier than GiftDate::earliest(), and "Send to me" or
+ * "Send directly to the recipient" (Gift options, 9 October 2026).
  */
 final class BasketProceedForm extends AbstractType
 {
     public const NO_DATE = 'Please choose a date to continue.';
 
     public const TOO_EARLY = 'Please choose a date on or after the earliest delivery date.';
+
+    public const NO_SEND_TO = 'Please choose where to send it.';
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -38,6 +43,13 @@ final class BasketProceedForm extends AbstractType
                 'attr' => [
                     'min' => $options['earliest']->format('Y-m-d'),
                 ],
+            ])
+            ->add('sendTo', EnumType::class, [
+                'class' => GiftSendTo::class,
+                'expanded' => true,
+                'required' => false,
+                'placeholder' => false,
+                'choice_label' => static fn (GiftSendTo $choice): string => $choice->label(),
             ]);
     }
 
@@ -59,6 +71,10 @@ final class BasketProceedForm extends AbstractType
                         $context->buildViolation(self::NO_DATE)->atPath('[arriveBy]')->addViolation();
                     } elseif ($arriveBy->format('Y-m-d') < $earliest->format('Y-m-d')) {
                         $context->buildViolation(self::TOO_EARLY)->atPath('[arriveBy]')->addViolation();
+                    }
+
+                    if (! ($data['sendTo'] ?? null) instanceof GiftSendTo) {
+                        $context->buildViolation(self::NO_SEND_TO)->atPath('[sendTo]')->addViolation();
                     }
                 }),
             ],

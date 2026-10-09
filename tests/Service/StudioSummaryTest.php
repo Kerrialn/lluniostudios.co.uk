@@ -6,6 +6,8 @@ namespace App\Tests\Service;
 
 use App\Entity\DesignRequest;
 use App\Entity\DesignRequestItem;
+use App\Entity\Order;
+use App\Entity\OrderItem;
 use App\Service\StudioSummary;
 use PHPUnit\Framework\TestCase;
 
@@ -14,6 +16,12 @@ use PHPUnit\Framework\TestCase;
  */
 final class StudioSummaryTest extends TestCase
 {
+    private const GREY = [[
+        'option' => 'The Pigment',
+        'value' => 'Grey',
+        'lamp' => 0,
+    ]];
+
     public function testLampsBySizeInTheRequestsOrder(): void
     {
         $request = $this->request([
@@ -74,6 +82,27 @@ final class StudioSummaryTest extends TestCase
         self::assertSame('2026-10-23', StudioSummary::giftDate($request)?->format('Y-m-d'));
         self::assertSame('New request · Gallery × 2 · GIFT by 23 Oct', StudioSummary::requestSubject($request));
         self::assertNull(StudioSummary::giftDate($this->request([$this->item('Gallery', 1, [])], 'Two flights of stairs.')));
+    }
+
+    public function testPaidOrderSubjects(): void
+    {
+        $order = new Order();
+        $order->addItem(new OrderItem(product: null, productTitle: 'Lumen Forma Gallery', unitPrice: 79900, quantity: 2, optionsSnapshot: self::GREY));
+        $order->setTotal(159800);
+        self::assertSame(['Gallery × 2'], StudioSummary::orderLamps($order));
+        self::assertSame('New order · Gallery × 2 · £1,598', StudioSummary::orderSubject($order, 'order', 159800));
+
+        $order->setGiftArriveBy(new \DateTimeImmutable('2026-10-23'));
+        self::assertSame('New order · Gallery × 2 · £1,598 · GIFT by 23 Oct', StudioSummary::orderSubject($order, 'order', 159800));
+
+        $quote = new Order();
+        $quote->addItem(new OrderItem(product: null, productTitle: 'Lumen Forma Atelier', unitPrice: 185000, quantity: 2, optionsSnapshot: self::GREY));
+        $quote->addItem(new OrderItem(product: null, productTitle: 'Custom pigment development', unitPrice: 15000, quantity: 1));
+        $quote->setTotal(391000);
+        self::assertSame(['Atelier × 2'], StudioSummary::orderLamps($quote), 'extra lines are not lamps');
+        self::assertSame('Deposit paid · Atelier × 2 · £1,564 of £3,910', StudioSummary::orderSubject($quote, 'deposit', 156400));
+        self::assertSame('Balance paid · Atelier × 2 · £2,346 · paid in full', StudioSummary::orderSubject($quote, 'balance', 234600));
+        self::assertSame('£811.95', StudioSummary::money(81195));
     }
 
     /**

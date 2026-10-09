@@ -1,0 +1,68 @@
+{#
+    To the studio: an order has been paid (Step 11.1): a new order
+    (checkout, or a quote paid in full), a quote's deposit or its balance.
+    At the top (email rules, Step 11.0): what it is, a gift's "Needed by",
+    the order, lamps by size and quantity, what was paid (and still owed),
+    the customer, delivery, and for a quote the request and casting date;
+    then the customer's details, the configuration and the totals. Replying
+    answers the customer.
+#}
+{% extends 'email/_studio.html.twig' %}
+{% import 'email/_studio.html.twig' as layout %}
+{% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
+{% import _self as m %}
+{% set neededBy = order.giftArriveBy %}
+{% set directGift = order.directGift %}
+{% set giftMessage = order.giftMessage %}
+{% set adminUrl = url('admin_order_detail', {entityId: order.id}) %}
+{% set adminLabel = 'Open the order in admin' %}
+{% set a = order.shippingAddress %}
+{% set paidAt = kind == 'balance' ? order.balancePaidAt : order.paidAt %}
+{% set summaryRows = {
+    'Order': order.orderNumber ~ (paidAt ? ' · ' ~ paidAt|date('j F Y, H:i', 'Europe/London') : ''),
+    'Lamps': lamps|join(', '),
+    'Paid': kind == 'deposit' ? m.money(amount) ~ ' deposit of ' ~ m.money(order.total)
+        : (kind == 'balance' ? m.money(amount) ~ ' balance · paid in full (' ~ m.money(order.total) ~ ')' : m.money(amount)),
+} %}
+{% if order.amountOwed > 0 %}{% set summaryRows = summaryRows|merge({ 'Still to pay': m.money(order.amountOwed) }) %}{% endif %}
+{% set summaryRows = summaryRows|merge({ 'Customer': order.customerName ?: (a ? a.recipientName : order.email) }) %}
+{% if order.directGift and a %}{% set summaryRows = summaryRows|merge({ 'Recipient': a.recipientName }) %}{% endif %}
+{% set summaryRows = summaryRows|merge({ 'Delivery': (order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Next Day Delivery') ~ (a and a.postcode ? ' · ' ~ a.postcode : '') }) %}
+{% if order.designRequest %}{% set summaryRows = summaryRows|merge({ 'Request': order.designRequest.requestNumber }) %}{% endif %}
+{% if castingDate %}{% set summaryRows = summaryRows|merge({ 'Casting': castingDate|date('j F Y') ~ ' (estimated)' }) %}{% endif %}
+
+{% block title %}{{ subject }}{% endblock %}
+{% block kind %}{{ kindLabel }}{% endblock %}
+
+{% block details %}
+{{ layout.section('Customer') }}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for key, value in {
+        'Name': order.customerName ?: (a ? a.recipientName : '—'),
+        'Email': order.email ?? '—',
+        'Mobile': order.contactPhone ?: '—',
+        'Delivery address': a ? [a.recipientName, a.company, a.line1, a.line2, a.city, a.county, a.postcode]|filter(v => v)|join(', ') : '—',
+        'Delivery phone (DPD)': a ? a.phone : '—',
+        'Delivery instructions': order.deliveryNotes ?: '—',
+        'Billing address': order.billingAddressLabel,
+        'Gift': order.giftLabel,
+    }|merge(order.gift and order.giftSendTo ? { 'Send to': order.giftSendTo.label } : {})|merge(order.directGift ? {
+        'Gift message': order.giftMessage ?: '—',
+        "Recipient's mobile": order.giftRecipientPhone ?: '— (DPD has the customer\'s mobile)',
+    } : {}) %}
+        <tr><td width="35%" style="{{ keyStyle }}">{{ key }}</td><td style="{{ valueStyle }}">{{ value }}</td></tr>
+    {% endfor %}
+</table>
+{{ layout.section('Configuration') }}
+{{ include('email/order/_lamps.html.twig') }}
+{{ layout.section('Totals') }}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for item in order.items|filter(i => i.extra) %}
+        <tr><td width="35%" style="{{ keyStyle }}">{{ item.productTitle }}</td><td style="{{ valueStyle }}">{{ m.money(item.lineTotal) }}</td></tr>
+    {% endfor %}
+    <tr><td width="35%" style="{{ keyStyle }}">Delivery</td><td style="{{ valueStyle }}">{{ m.money(order.shippingCost) }}</td></tr>
+    <tr><td width="35%" style="{{ keyStyle }}">Total</td><td style="{{ valueStyle }}">{{ m.money(order.total) }}</td></tr>
+    <tr><td width="35%" style="{{ keyStyle }}">Paid</td><td style="{{ valueStyle }}">{{ m.money(order.amountPaid) }}</td></tr>
+    <tr><td width="35%" style="{{ keyStyle }}">Still to pay</td><td style="{{ valueStyle }}">{{ m.money(order.amountOwed) }}</td></tr>
+</table>
+{% endblock %}

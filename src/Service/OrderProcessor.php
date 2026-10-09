@@ -60,6 +60,13 @@ final readonly class OrderProcessor
             // Never fail the payment flow because of a mail problem.
             $this->logger->error('Order confirmation email failed: ' . $throwable->getMessage());
         }
+
+        // The studio is told of every payment (Step 11.1).
+        try {
+            $this->emailService->sendOrderPaidNotificationEmail($order, $deposit ? 'deposit' : 'order', $order->getAmountPaid());
+        } catch (Throwable $throwable) {
+            $this->logger->error('Order paid notification failed: ' . $throwable->getMessage());
+        }
     }
 
     public function markFailed(Order $order, ?string $revolutState = null): void

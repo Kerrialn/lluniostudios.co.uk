@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\DesignRequestStatus;
+use App\Enum\GiftSendTo;
 use App\Repository\DesignRequestRepository;
+use App\Service\GreetingName;
 use Carbon\CarbonImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -77,6 +79,32 @@ class DesignRequest implements HasReferenceNumber
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $customDetails = null;
+
+    /**
+     * Gift options (9 October 2026): "This is a gift" with a preferred
+     * "Needed by" date (not a guarantee), "Send to me" or "Send directly to
+     * the recipient"; for a direct gift, the recipient's name (the delivery
+     * name), the message for the card and the recipient's mobile.
+     */
+    #[ORM\Column(options: [
+        'default' => false,
+    ])]
+    private bool $gift = false;
+
+    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    private ?\DateTimeImmutable $giftNeededBy = null;
+
+    #[ORM\Column(length: 16, nullable: true, enumType: GiftSendTo::class)]
+    private ?GiftSendTo $giftSendTo = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $giftRecipientName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $giftMessage = null;
+
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $giftRecipientPhone = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
@@ -158,11 +186,82 @@ class DesignRequest implements HasReferenceNumber
     }
 
     /**
-     * The first word of the full name, for "Dear Ada," (as the sign-in email).
+     * The first name for "Dear Ada," (GreetingName: titles and initials
+     * skipped, capitals fixed), or null ("Dear Customer,").
      */
-    public function getFirstName(): string
+    public function getFirstName(): ?string
     {
-        return explode(' ', trim($this->fullName))[0];
+        return GreetingName::firstName($this->fullName);
+    }
+
+    /**
+     * A gift (Gift options): needed by this date (preferred), sent to the
+     * customer or directly to the recipient; or not a gift (null date).
+     */
+    public function setGift(?\DateTimeImmutable $neededBy, ?GiftSendTo $sendTo = null, ?string $recipientName = null, ?string $message = null, ?string $recipientPhone = null): void
+    {
+        $this->gift = $neededBy instanceof \DateTimeImmutable;
+        $this->giftNeededBy = $neededBy;
+        $this->giftSendTo = $this->gift ? $sendTo : null;
+        $direct = $this->giftSendTo?->isDirect() === true;
+        $this->giftRecipientName = $direct ? $recipientName : null;
+        $this->giftMessage = $direct ? $message : null;
+        $this->giftRecipientPhone = $direct ? $recipientPhone : null;
+    }
+
+    public function isGift(): bool
+    {
+        return $this->gift;
+    }
+
+    public function getGiftNeededBy(): ?\DateTimeImmutable
+    {
+        return $this->giftNeededBy;
+    }
+
+    public function getGiftSendTo(): ?GiftSendTo
+    {
+        return $this->giftSendTo;
+    }
+
+    public function isDirectGift(): bool
+    {
+        return $this->gift && $this->giftSendTo?->isDirect() === true;
+    }
+
+    public function getGiftRecipientName(): ?string
+    {
+        return $this->giftRecipientName;
+    }
+
+    /**
+     * For admin: a direct gift's prominent packing note (Gift options).
+     */
+    public function getGiftPackingNote(): string
+    {
+        return $this->isDirectGift() ? '<strong class="badge bg-warning text-dark fs-6">Direct to recipient: no prices in the box</strong>' : '—';
+    }
+
+    public function getGiftMessage(): ?string
+    {
+        return $this->giftMessage;
+    }
+
+    public function getGiftRecipientPhone(): ?string
+    {
+        return $this->giftRecipientPhone;
+    }
+
+    /**
+     * For admin: "Needed by 23 October 2026 · Direct to recipient", or "No".
+     */
+    public function getGiftLabel(): string
+    {
+        if (! $this->giftNeededBy instanceof \DateTimeImmutable) {
+            return 'No';
+        }
+
+        return 'Needed by ' . $this->giftNeededBy->format('j F Y') . ($this->giftSendTo === null ? '' : ' · ' . ($this->isDirectGift() ? 'Direct to recipient' : 'To the customer'));
     }
 
     public function getEmail(): string
@@ -197,6 +296,8 @@ class DesignRequest implements HasReferenceNumber
         }
 
         return array_values(array_filter([
+            // A direct gift goes to the recipient by name.
+            $this->isDirectGift() ? $this->giftRecipientName : null,
             $this->addressLine1,
             $this->addressLine2,
             $this->town,

@@ -10,6 +10,7 @@ use App\Entity\NewsletterSubscriber;
 use App\Entity\Order;
 use App\Entity\Quote;
 use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -30,6 +31,8 @@ final readonly class EmailService
 
     public const BALANCE_RECEIVED_SUBJECT = 'Your Lumen Forma order is paid in full';
 
+    public const ORDER_SUBJECT = 'Your Llunio order';
+
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(STUDIO_NOTIFICATION_EMAIL)%')]
@@ -37,6 +40,7 @@ final readonly class EmailService
         // The studio's public email (replies to customer emails): STUDIO_EMAIL in .env.
         #[Autowire('%env(STUDIO_EMAIL)%')]
         private string $studioEmail,
+        private EntityManagerInterface $entityManager,
     )
     {
     }
@@ -102,7 +106,7 @@ final readonly class EmailService
                 'order' => $order,
                 'token' => $token,
                 'note' => $note,
-                'firstName' => $request?->getFirstName() ?? $name,
+                'firstName' => $this->firstName($order),
             ],
         );
         $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
@@ -125,7 +129,7 @@ final readonly class EmailService
             context: [
                 'order' => $order,
                 'balance' => $balance,
-                'firstName' => $request?->getFirstName() ?? $name,
+                'firstName' => $this->firstName($order),
             ],
         );
         $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
@@ -168,6 +172,7 @@ final readonly class EmailService
             name: $enquiry->getName(),
             context: [
                 'enquiry' => $enquiry,
+                'firstName' => GreetingName::firstName($enquiry->getName()),
             ],
         );
     }
@@ -205,6 +210,7 @@ final readonly class EmailService
             name: $newsletterSubscriber->getName(),
             context: array_merge($context, [
                 'name' => $newsletterSubscriber->getName(),
+                'firstName' => GreetingName::firstName($newsletterSubscriber->getName()),
             ]),
         );
     }
@@ -223,26 +229,100 @@ final readonly class EmailService
             context: [
                 'code' => $code,
                 'link' => $link,
-                'name' => $user->getFirstName(),
+                'name' => GreetingName::firstName($user->getFullName() ?? $user->getFirstName()),
             ],
         );
     }
 
+    /**
+     * Email 01 (Site v4 design): "Thank you for your order", once an order
+     * is paid (in full, or a quote's deposit), with "View your order" (the
+     * order's private page, Step 11.1). Replies go to the studio.
+     */
     public function sendOrderConfirmationEmail(Order $order): void
     {
         if ($order->getEmail() === null) {
             return;
         }
 
-        $this->send(
-            subject: 'Your Llunio Studios order ' . $order->getOrderNumber(),
+        $email = $this->compose(
+            subject: self::ORDER_SUBJECT . ' ' . $order->getOrderNumber(),
             template: '/email/order/confirmation.html.twig',
             email: $order->getEmail(),
-            name: $order->getShippingAddress()?->getRecipientName() ?? $order->getEmail(),
+            name: $order->getCustomerName() ?? $order->getEmail(),
             context: [
                 'order' => $order,
+                'firstName' => $this->firstName($order),
+                'castingDate' => $this->castingDate($order),
             ],
         );
+        $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * Tells the studio an order has been paid (Step 11.1): a new order
+     * (checkout, or a quote paid in full), a quote's deposit or its
+     * balance. Replies go to the customer.
+     *
+     * @param 'order'|'deposit'|'balance' $kind
+     * @param int $amount the payment just taken, in pence
+     */
+    public function sendOrderPaidNotificationEmail(Order $order, string $kind, int $amount): void
+    {
+        $email = $this->compose(
+            subject: $subject = StudioSummary::orderSubject($order, $kind, $amount),
+            template: '/email/order/notification.html.twig',
+            email: $this->studioNotificationEmail,
+            name: 'Llunio Studios',
+            context: [
+                'order' => $order,
+                'kind' => $kind,
+                'kindLabel' => StudioSummary::orderKind($kind),
+                'amount' => $amount,
+                'subject' => $subject,
+                'lamps' => StudioSummary::orderLamps($order),
+                'castingDate' => $this->castingDate($order),
+            ],
+        );
+        if ($order->getEmail() !== null) {
+            $email->replyTo(new Address($order->getEmail(), $order->getCustomerName() ?? $order->getEmail()));
+        }
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * The buyer's first name (Greeting name, 9 October 2026), never a gift
+     * recipient's: from the order's buyer name (billing name, name on card or
+     * the wallet's payer), the request's name for a quote's order, otherwise
+     * the account's; tidied by GreetingName. Null: "Dear Customer,".
+     */
+    private function firstName(Order $order): ?string
+    {
+        return GreetingName::firstName($order->getCustomerName() ?? $order->getDesignRequest()?->getFullName() ?? $order->getUser()?->getFullName());
+    }
+
+    /**
+     * A quote's order: the estimated casting date the customer was sent.
+     */
+    private function castingDate(Order $order): ?\DateTimeImmutable
+    {
+        $request = $order->getDesignRequest();
+        if ($request === null) {
+            return null;
+        }
+
+        $quote = $this->entityManager->getRepository(Quote::class)->findOneBy([
+            'designRequest' => $request,
+        ]);
+        $sent = $quote?->getSent()['castingDate'] ?? null;
+        if (\is_string($sent)) {
+            return new \DateTimeImmutable($sent);
+        }
+
+        return $quote?->getCastingDate();
     }
 
     /**

@@ -37,12 +37,15 @@ let p = await page();
 check('Reserve Your Design opens the request form', p.path === '/reserve' && p.h1 === 'Reserve Your Design' && !/Casting Slot/.test(p.text), p.path + ' ' + p.h1);
 check('it says no payment is taken', /No payment is taken today/.test(p.text));
 check('it carries the basket lamp and the lamp being configured, each in full', JSON.stringify(p.rows) === JSON.stringify(['Edition=Gallery', 'The Pigment=White', 'Cable Colour=Slate Grey', 'Footing Material=Brushed Copper', 'Bulb Style=Crown Gold LED', 'Quantity=1', 'Edition=Atelier', 'The Pigment=Custom', 'Cable Colour=Raw Jute', 'Footing Material=Polished Copper', 'Bulb Style / Count=Smoked Glass LED / Dual Array', 'Quantity=1']), JSON.stringify(p.rows));
-check('the fields, the address in separate fields, with Custom Details for a Custom choice', JSON.stringify(p.labels) === JSON.stringify(['Full Name *', 'Email Address * (For sending the invoice and build schedule)', 'Phone Number * (Required by carriers for heavy-goods delivery scheduling)', 'Address line 1 *', 'Address line 2', 'Town/City *', 'County', 'Postcode *', 'Country *', "Site Access & Delivery Notes (e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", "Custom Details (Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)"]), JSON.stringify(p.labels));
+// The gift's fields (Step 11.1b) are checked by gift-options.mjs.
+const giftLabel = (l) => /^(Needed by|Recipient's|Gift message|This is a gift|Send to me|Send directly)/.test(l);
+check('the fields, the address in separate fields, with Custom Details for a Custom choice', JSON.stringify(p.labels.filter((l) => !giftLabel(l))) === JSON.stringify(['Full Name *', 'Email Address * (For sending the invoice and build schedule)', 'Phone Number * (Required by carriers for heavy-goods delivery scheduling)', 'Address line 1 *', 'Address line 2', 'Town/City *', 'County', 'Postcode *', 'Country *', "Site Access & Delivery Notes (e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", "Custom Details (Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)"]), JSON.stringify(p.labels));
 // As the Card Payment page: 14px labels above 48px boxes with a border; typed
 // text, placeholders and the dropdown's choices in the page's light colour.
 const look = await ev(`(() => {
     const css = (e) => getComputedStyle(e);
-    const boxes = [...document.querySelectorAll('form[name=reserve_form] input:not([type=hidden]), form[name=reserve_form] select, form[name=reserve_form] textarea')];
+    // Boxes the gift's hidden fields don't count in (shown only for a gift); tick boxes and radio buttons aren't boxes.
+    const boxes = [...document.querySelectorAll('form[name=reserve_form] input:not([type=hidden]):not([type=checkbox]):not([type=radio]), form[name=reserve_form] select, form[name=reserve_form] textarea')].filter(e => e.getBoundingClientRect().height > 0);
     const name = document.querySelector('[name="reserve_form[fullName]"]');
     name.placeholder = 'x';
     const placeholder = getComputedStyle(name, '::placeholder').color;
@@ -53,7 +56,7 @@ const look = await ev(`(() => {
         borders: [...new Set(boxes.map(e => css(e).borderTopStyle + ' ' + css(e).borderTopWidth + ' ' + css(e).borderLeftStyle))],
         heights: [...new Set(boxes.filter(e => e.tagName !== 'TEXTAREA').map(e => css(e).height))],
         fonts: [...new Set(boxes.map(e => css(e).fontSize))],
-        labels: [...new Set([...document.querySelectorAll('form[name=reserve_form] label > span:first-child')].map(e => css(e).fontSize))],
+        labels: [...new Set([...document.querySelectorAll('form[name=reserve_form] label > span:first-child')].filter(e => e.getBoundingClientRect().height > 0).map(e => css(e).fontSize))],
         placeholder,
         option: css(country.options[0]).color + ' on ' + css(country.options[0]).backgroundColor,
         countries: [...country.options].map(o => o.value + '=' + o.textContent),

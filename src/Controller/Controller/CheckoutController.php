@@ -113,7 +113,8 @@ class CheckoutController extends AbstractController
         $user = $this->getUser();
         $form = $this->createForm(CardPaymentForm::class, [
             'email' => $user instanceof User ? $user->getEmail() : null,
-            'billingSame' => true,
+            // A gift sent directly: the delivery address is the recipient's, so the buyer enters their own billing address (decided 9 October 2026).
+            'billingSame' => ! $cart->isDirectGift(),
         ]);
         $form->handleRequest($request);
 
@@ -162,6 +163,8 @@ class CheckoutController extends AbstractController
             'summary' => $this->summary($cart),
             'gift' => $cart->isGift(),
             'giftArriveBy' => $cart->getGiftArriveBy(),
+            'giftSendTo' => $cart->isGift() ? $cart->getGiftSendTo() : null,
+            'directGift' => $cart->isDirectGift(),
             'delivery' => $this->deliveryFor($cart, (string) $form->get('postcode')->getData()),
             'requiredMissing' => $this->requiredMissing($form),
             'formErrors' => array_map(static fn ($error): string => $error->getMessage(), iterator_to_array($form->getErrors())),
@@ -207,7 +210,11 @@ class CheckoutController extends AbstractController
             'town' => $text($shipping['city'] ?? ''),
             'county' => $text($shipping['state'] ?? ''),
             'postcode' => $text($shipping['postal_code'] ?? ''),
-            'cardName' => $text($billing['name'] ?? '') ?: $text($shipping['name'] ?? ''),
+            // The name on card is the payer's; for a direct gift the delivery name is the recipient's, so never used for it.
+            'cardName' => $text($billing['name'] ?? '') ?: ($cart->isDirectGift() ? '' : $text($shipping['name'] ?? '')),
+            'payerName' => $text($billing['name'] ?? ''),
+            'giftMessage' => $text($wallet['giftMessage'] ?? ''),
+            'recipientPhone' => $text($wallet['recipientPhone'] ?? ''),
             // The wallet's billing address, unless it is the delivery address (or not given).
             'billingSame' => \in_array($text($billing['postal_code'] ?? ''), ['', $text($shipping['postal_code'] ?? '')], true),
             'billingName' => $text($billing['name'] ?? ''),
@@ -229,7 +236,13 @@ class CheckoutController extends AbstractController
         $form = $this->createForm(CardPaymentForm::class, null, [
             'csrf_protection' => false,
         ]);
-        $form->submit(array_map(static fn (mixed $value): mixed => \is_bool($value) ? ($value ? '1' : null) : $value, $data));
+        $submitted = $data;
+        unset($submitted['payerName']);
+        if ($submitted['cardName'] === '') {
+            // A wallet that shares no payer name: the card form's name is not needed to pay.
+            $submitted['cardName'] = '-';
+        }
+        $form->submit(array_map(static fn (mixed $value): mixed => \is_bool($value) ? ($value ? '1' : null) : $value, $submitted));
         if (! $form->isValid() || $postcode === null) {
             // E.g. an address line longer than the courier allows: the card form explains.
             return new JsonResponse([
@@ -317,10 +330,10 @@ class CheckoutController extends AbstractController
 
         $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $email = strtolower((string) $value('email'));
-        $account = $this->orderAccounts->accountFor($email, $value('name'));
+        $account = $this->orderAccounts->accountFor($email, self::buyerName($data));
 
         $order = $this->orderFactory->createFromCart($cart, $account, $email, $quote, $this->deliveryAddress($cart, $data, $postcode, $account));
-        $this->applyDetails($order, $data);
+        $this->applyDetails($order, $data, $cart);
         $order->setStatus(OrderStatus::AWAITING_PAYMENT);
         $this->orderRepository->save($order, true);
         $request->getSession()->set(self::SESSION_ORDERS, array_values(array_unique([...$this->sessionOrders($request), $order->getOrderNumber()])));
@@ -343,23 +356,26 @@ class CheckoutController extends AbstractController
         $delivery->setCounty($value('county'));
         $delivery->setPostcode($postcode);
         $delivery->setCountry('GB');
-        // DPD's delivery phone is the customer's own mobile (gifts too).
-        $delivery->setPhone($value('phone'));
+        // DPD's delivery phone: a direct gift's recipient's mobile when given, otherwise the customer's own.
+        $delivery->setPhone($cart->isDirectGift() && $value('recipientPhone') !== null ? $value('recipientPhone') : $value('phone'));
         $delivery->setOwner($owner);
 
         return $delivery;
     }
 
     /**
-     * The contact phone, delivery instructions and billing address.
+     * The contact phone, delivery instructions, billing address, the buyer's
+     * name and the gift's details.
      *
      * @param array<string, mixed> $data
      */
-    private function applyDetails(Order $order, array $data): void
+    private function applyDetails(Order $order, array $data, Cart $cart): void
     {
         $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $order->setContactPhone($value('phone'));
         $order->setDeliveryNotes($value('notes'));
+        $order->setCustomerName(self::buyerName($data));
+        $order->setGiftDetails($cart->isGift() ? $cart->getGiftSendTo() : null, $value('giftMessage'), $value('recipientPhone'));
         $billing = null;
         if (! ($data['billingSame'] ?? true)) {
             $billing = new Address();
@@ -414,11 +430,11 @@ class CheckoutController extends AbstractController
                 // Same basket: keep the order and payment, with the latest details.
                 $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
                 $email = strtolower((string) $value('email'));
-                $account = $this->orderAccounts->accountFor($email, $value('name'));
+                $account = $this->orderAccounts->accountFor($email, self::buyerName($data));
                 $order->setUser($account);
                 $order->setEmail($email);
                 $order->setShippingAddress($this->deliveryAddress($cart, $data, $postcode, $account));
-                $this->applyDetails($order, $data);
+                $this->applyDetails($order, $data, $cart);
                 $this->orderRepository->save($order, true);
             } else {
                 if ($order->getStatus() === OrderStatus::AWAITING_PAYMENT) {
@@ -500,7 +516,7 @@ class CheckoutController extends AbstractController
         $lines = array_map(static fn ($item): string => implode(':', [(string) $item->getId(), $item->getQuantity(), $item->getUnitPrice(), (string) $item->getHash()]), $cart->getCartItems()->toArray());
         sort($lines);
 
-        return hash('sha256', implode('|', $lines) . '|' . ($cart->getGiftArriveBy()?->format('Y-m-d') ?? '') . '|' . $postcode);
+        return hash('sha256', implode('|', $lines) . '|' . ($cart->getGiftArriveBy()?->format('Y-m-d') ?? '') . '|' . ($cart->getGiftSendTo()->value ?? '') . '|' . $postcode);
     }
 
     /**
@@ -545,15 +561,25 @@ class CheckoutController extends AbstractController
     {
         $value = static fn (string $key): string => trim((string) ($data[$key] ?? ''));
         $postcode = DeliveryArea::normalise($value('postcode')) ?? $value('postcode');
-        // Reserve has no company field: it goes in the notes, with a gift's date.
+        // Reserve has no company field: it goes in the notes.
         $notes = array_filter([
             $value('company') !== '' ? 'Company: ' . $value('company') : '',
-            $cart->isGift() && $cart->getGiftArriveBy() !== null ? 'Gift · Arrive by ' . $cart->getGiftArriveBy()->format('j F Y') : '',
             $value('notes'),
         ], static fn (string $line): bool => $line !== '');
+        // A gift keeps its date and choices; sent directly, the delivery name is the recipient's and the customer's name is the buyer's (if given).
+        $direct = $cart->isDirectGift();
+        $gift = $cart->isGift() && $cart->getGiftArriveBy() !== null ? [
+            'gift' => '1',
+            'giftNeededBy' => $cart->getGiftArriveBy()->format('Y-m-d'),
+            'giftSendTo' => $cart->getGiftSendTo()->value ?? '',
+            'giftRecipientName' => $direct ? $value('name') : '',
+            'giftMessage' => $direct ? $value('giftMessage') : '',
+            'giftRecipientPhone' => $direct ? $value('recipientPhone') : '',
+        ] : [];
 
         $request->getSession()->set(ReserveController::PREFILL_KEY, [
-            'fullName' => $value('name'),
+            ...$gift,
+            'fullName' => $direct ? (string) self::buyerName($data) : $value('name'),
             'email' => $value('email'),
             'phone' => $value('phone'),
             'addressLine1' => $value('line1'),
@@ -568,6 +594,25 @@ class CheckoutController extends AbstractController
         return $this->redirectToRoute('basket_request', [
             'basket' => 1,
         ]);
+    }
+
+    /**
+     * The buyer's name (Greeting name, 9 October 2026), never a gift
+     * recipient's: the billing name if a separate billing address was given,
+     * otherwise the name on card, otherwise the wallet's payer name.
+     *
+     * @param array<string, mixed> $data
+     */
+    private static function buyerName(array $data): ?string
+    {
+        $value = static fn (string $key): string => trim((string) ($data[$key] ?? ''));
+        foreach ([($data['billingSame'] ?? true) ? '' : $value('billingName'), $value('cardName') === '-' ? '' : $value('cardName'), $value('payerName')] as $name) {
+            if ($name !== '') {
+                return $name;
+            }
+        }
+
+        return null;
     }
 
     /**
