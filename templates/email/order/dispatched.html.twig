@@ -2,9 +2,10 @@
     Email 05, "Your Lumen Forma is on its way" (Site v4 design, Llunio Email
     Templates/05-dispatched.html), sent when the studio marks the order
     Dispatched (Step 11.3): "Dear {first name}," (the buyer's), "Your Lumen
-    Forma {sizes} lamp has left the studio and is on its way to you." and the
-    invitation to share a photo (wording decided 9 October 2026, replacing
-    the design's sentence), 01 Delivery (order number, courier, tracking number), "Track
+    Forma {sizes} lamp has left the studio and is on its way to you." and
+    "We hope it's even better in person, and we'd love to hear what you think
+    once it arrives." (wording decided 9 October 2026, replacing the design's
+    sentence; the photo request moved to email 06), 01 Delivery (order number, courier, tracking number), "Track
     your delivery" (DPD's tracking page; none for Palletways) and "View your
     order". Laid out by email/_customer.html.twig (the email rules).
 #}
@@ -16,8 +17,7 @@
 
 {% block content %}
 <p style="{{ body }}">{{ order.onItsWaySentence }}</p>
-<p style="{{ body }}">We hope it's even better in person. Would you do us a small favour? Once it's settled in, we'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page.</p>
-<p style="{{ body }}">By sending us a photo, you're happy for us to share it.</p>
+<p style="{{ body }}">We hope it's even better in person, and we'd love to hear what you think once it arrives.</p>
 {{ layout.section('01', 'Delivery') }}
 <p style="{{ label }}">Order number</p>
 <p style="{{ body }}">{{ order.orderNumber }}</p>

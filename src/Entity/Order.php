@@ -203,6 +203,12 @@ class Order implements HasReferenceNumber
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $trackingNumber = null;
 
+    /**
+     * Delivered (Step 11.4): when it was marked.
+     */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $deliveredAt = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private CarbonImmutable $createdAt;
 
@@ -286,6 +292,25 @@ class Order implements HasReferenceNumber
         $this->trackingNumber = $trackingNumber;
     }
 
+    /**
+     * "Mark Delivered" (admin, Step 11.4): a dispatched order.
+     */
+    public function canMarkDelivered(): bool
+    {
+        return $this->stage === OrderStage::DISPATCHED;
+    }
+
+    public function markDelivered(CarbonImmutable $now): void
+    {
+        $this->stage = OrderStage::DELIVERED;
+        $this->deliveredAt = $now;
+    }
+
+    public function getDeliveredAt(): ?CarbonImmutable
+    {
+        return $this->deliveredAt;
+    }
+
     public function getDispatchedAt(): ?CarbonImmutable
     {
         return $this->dispatchedAt;
@@ -297,13 +322,14 @@ class Order implements HasReferenceNumber
     }
 
     /**
-     * Email 05's opening (wording decided 9 October 2026): the lamps by size,
-     * "Your Lumen Forma Gallery lamp has left the studio and is on its way
-     * to you.", "Your Lumen Forma Gallery lamps have left …", "Your Lumen
-     * Forma Gallery and Studio lamps have left …" (sizes listed naturally,
-     * in order).
+     * The lamps for emails 05 and 06 (wording decided 9 October 2026), by
+     * size, listed naturally: "Your Lumen Forma Gallery lamp", "Your Lumen
+     * Forma Gallery lamps", "Your Lumen Forma Gallery and Studio lamps";
+     * with whether there are several.
+     *
+     * @return array{string, bool}
      */
-    public function getOnItsWaySentence(): string
+    private function yourLamps(): array
     {
         $sizes = [];
         $lamps = 0;
@@ -317,11 +343,32 @@ class Order implements HasReferenceNumber
         $names = array_keys($sizes);
         $last = array_pop($names);
         $list = $names === [] ? (string) $last : implode(', ', $names) . ' and ' . $last;
-        if ($lamps <= 1) {
-            return 'Your Lumen Forma ' . $list . ' lamp has left the studio and is on its way to you.';
-        }
 
-        return 'Your Lumen Forma ' . $list . ' lamps have left the studio and are on their way to you.';
+        return ['Your Lumen Forma ' . $list . ($lamps > 1 ? ' lamps' : ' lamp'), $lamps > 1];
+    }
+
+    /**
+     * Email 05: "Your Lumen Forma Gallery lamp has left the studio and is on
+     * its way to you." / "… lamps have left the studio and are on their way
+     * to you."
+     */
+    public function getOnItsWaySentence(): string
+    {
+        [$lamps, $several] = $this->yourLamps();
+
+        return $lamps . ($several ? ' have left the studio and are on their way to you.' : ' has left the studio and is on its way to you.');
+    }
+
+    /**
+     * Email 06: "Your Lumen Forma Gallery lamp has been delivered. We hope
+     * it's found the perfect place in your home." / "… lamps have been
+     * delivered. We hope they've found …"
+     */
+    public function getDeliveredSentence(): string
+    {
+        [$lamps, $several] = $this->yourLamps();
+
+        return $lamps . ($several ? " have been delivered. We hope they've found the perfect place in your home." : " has been delivered. We hope it's found the perfect place in your home.");
     }
 
     public function getCourierLabel(): string

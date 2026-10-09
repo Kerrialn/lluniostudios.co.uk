@@ -1,4 +1,4 @@
-// Order stages (Step 11.2): In Production; (Step 11.3) Dispatched. A paid order has "Mark In
+// Order stages: In Production (Step 11.2), Dispatched (11.3), Delivered (11.4). A paid order has "Mark In
 // Production" (in the Orders list's menu and as a button on its page); the
 // confirm page suggests the expected dispatch date (the end of the 7–14 day
 // lead time from payment, as no quote) and refuses a past date; confirming
@@ -11,7 +11,11 @@
 // tracking number (required); marking emails 05 "Your Lumen Forma is on its
 // way" (the email rules' format, courier, tracking number, "Track your
 // delivery" to DPD, "View your order") and both actions go; admin and the
-// private order page show it.
+// private order page show it. Then "Mark Delivered" (only once dispatched):
+// confirming marks it and emails 06 "Your Lumen Forma has arrived" (the
+// email rules' format, "… lamp has been delivered …", the photo request, no
+// care section, "View your order", Facebook in the footer); admin and the
+// private order page say "Delivered".
 import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems } from './lib.mjs';
 import { writeFileSync } from 'node:fs';
 
@@ -126,7 +130,7 @@ try {
     const since5 = new Date();
     await b.ev(`(() => { document.querySelector('[data-tracking-number]').value = '1550 1234 5678'; document.querySelector('[data-mark-dispatched]').click(); })()`); await sleep(3500);
     const afterDispatch = await b.ev(`({ path: location.pathname, text: document.body.innerText.replace(/\\s+/g, ' '), actions: [...document.querySelectorAll('a')].map(a => a.textContent.trim()).filter(t => /^Mark /.test(t)) })`);
-    check('"Marked Dispatched: … has been emailed (DPD, tracking number 1550 1234 5678)."; no more "Mark" actions', afterDispatch.path === `/admin/order/${orderId}` && afterDispatch.text.includes(`Marked Dispatched: ${EMAIL} has been emailed (DPD, tracking number 1550 1234 5678).`) && afterDispatch.actions.length === 0, JSON.stringify(afterDispatch.actions));
+    check('"Marked Dispatched: … has been emailed (DPD, tracking number 1550 1234 5678)."; only "Mark Delivered" left', afterDispatch.path === `/admin/order/${orderId}` && afterDispatch.text.includes(`Marked Dispatched: ${EMAIL} has been emailed (DPD, tracking number 1550 1234 5678).`) && JSON.stringify(afterDispatch.actions) === JSON.stringify(['Mark Delivered']), JSON.stringify(afterDispatch.actions));
     const dispatchRow = sql(`select stage, courier, tracking_number, dispatched_at is not null, status from orders where id = '${orderId}'`).replace(/\s+/g, ' ');
     check('the order: dispatched, DPD, the tracking number, when; still paid', dispatchRow.includes('dispatched dpd 1550 1234 5678 1 paid'), dispatchRow);
     check('admin shows Stage Dispatched, the courier, tracking number and link', /Stage Dispatched/i.test(afterDispatch.text) && /Courier DPD/i.test(afterDispatch.text) && /Tracking Number 1550 1234 5678/i.test(afterDispatch.text) && afterDispatch.text.includes('track.dpd.co.uk/search?reference=155012345678'), afterDispatch.text.slice(afterDispatch.text.indexOf('Dispatched'), afterDispatch.text.indexOf('Dispatched') + 300));
@@ -139,7 +143,7 @@ try {
     const format5 = customerEmailProblems(html5, 'Ada', 'Your Lumen Forma Gallery lamp has left the studio and is on its way to you.');
     check(`email 05 "Your Lumen Forma is on its way (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp has left the studio and is on its way to you.", one text size`, mail5?.Subject === `Your Lumen Forma is on its way (${orderNumber})` && format5.length === 0, format5.join('; ') + ' | ' + mail5?.Subject);
     const plain5 = flat(html5);
-    check('then the invitation to share a photo (Facebook or Instagram, @llunio_studios, or reply) and "By sending us a photo, you\'re happy for us to share it."', plain5.includes("on its way to you. We hope it's even better in person. Would you do us a small favour? Once it's settled in, we'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page. By sending us a photo, you're happy for us to share it. 01 Delivery"), plain5.slice(plain5.indexOf('Dear Ada'), plain5.indexOf('Dear Ada') + 500));
+    check('then "We hope it\'s even better in person, and we\'d love to hear what you think once it arrives." (no photo request)', plain5.includes("on its way to you. We hope it's even better in person, and we'd love to hear what you think once it arrives. 01 Delivery") && !/photo/i.test(plain5), plain5.slice(plain5.indexOf('Dear Ada'), plain5.indexOf('Dear Ada') + 300));
     const text5 = flat(html5);
     check('01 Delivery: order number, "Courier DPD", the tracking number; "Track your delivery" (DPD\'s page) and "View your order"', text5.includes(`01 Delivery Order number ${orderNumber} Courier DPD Tracking number 1550 1234 5678 Track your delivery View your order Reply to this email with any questions.`) && /<a href="https:\/\/track\.dpd\.co\.uk\/search\?reference=155012345678"[^>]*>Track your delivery</.test(html5), text5.slice(text5.indexOf('01 Delivery'), text5.indexOf('01 Delivery') + 250));
 
@@ -147,5 +151,35 @@ try {
     await go(c, view);
     const page5 = await c.ev(`({ status: document.querySelector('main h1')?.nextElementSibling?.innerText, tracking: document.querySelector('[data-order-tracking]')?.innerText.replace(/\\s+/g, ' '), link: document.querySelector('[data-order-tracking] a')?.href })`);
     check('the private order page: "Dispatched", the courier, tracking number and "Track your delivery"', /^DISPATCHED ·/i.test(page5.status ?? '') && /DPD Tracking number 1550 1234 5678 Track your delivery/i.test(page5.tracking ?? '') && page5.link === 'https://track.dpd.co.uk/search?reference=155012345678', JSON.stringify(page5));
+
+    // Delivered (Step 11.4).
+    await go(b, `${BASE_URL}/admin/order/${orderId}`, 3000);
+    const deliveredButton = await b.ev(`[...document.querySelectorAll('a')].find(a => /^\\s*Mark Delivered\\s*$/.test(a.textContent))?.getAttribute('href')`);
+    await go(b, `${BASE_URL}/admin/order`, 3000);
+    const deliveredMenu = await b.ev(`!![...document.querySelectorAll('tbody tr')].find(r => r.innerText.includes(${JSON.stringify(orderNumber)}))?.querySelector('a[href*="/delivered"]')`);
+    check('"Mark Delivered" on the dispatched order (its page and the list\'s menu)', /\/delivered/.test(deliveredButton ?? '') && deliveredMenu, deliveredButton);
+    await go(b, new URL(deliveredButton, BASE_URL).href, 3000);
+    const deliveredPage = await b.ev(`({ note: document.querySelector('[data-delivered-note]')?.innerText.replace(/\\s+/g, ' '), button: document.querySelector('[data-mark-delivered]')?.textContent.trim() })`);
+    check('it asks to confirm: who will be emailed, the dispatch and tracking', deliveredPage.note?.startsWith(`This marks the order Delivered and emails ${EMAIL} "Your Lumen Forma has arrived".`) && /with DPD, tracking number 1550 1234 5678/.test(deliveredPage.note ?? '') && deliveredPage.button === 'Mark Delivered and email the customer', JSON.stringify(deliveredPage));
+    const since6 = new Date();
+    await b.ev(`document.querySelector('[data-mark-delivered]').click()`); await sleep(3500);
+    const afterDelivered = await b.ev(`({ path: location.pathname, text: document.body.innerText.replace(/\\s+/g, ' '), actions: [...document.querySelectorAll('a')].map(a => a.textContent.trim()).filter(t => /^Mark /.test(t)) })`);
+    check('"Marked Delivered: … has been emailed."; Stage Delivered with its date; no more "Mark" actions', afterDelivered.path === `/admin/order/${orderId}` && afterDelivered.text.includes(`Marked Delivered: ${EMAIL} has been emailed.`) && /Stage Delivered/i.test(afterDelivered.text) && afterDelivered.actions.length === 0 && /delivered 1/.test(sql(`select stage, delivered_at is not null from orders where id = '${orderId}'`).replace(/\s+/g, ' ')), afterDelivered.text.slice(0, 160));
+
+    // Email 06.
+    let mail6 = null;
+    for (let i = 0; i < 10 && !mail6; i++) { mail6 = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma has arrived"`)).find((m) => new Date(m.Created) > since6); if (!mail6) await sleep(500); }
+    const html6 = mail6 ? (await message(mail6.ID)).HTML : '';
+    writeFileSync(out('email-06.html'), html6);
+    const format6 = customerEmailProblems(html6, 'Ada', "Your Lumen Forma Gallery lamp has been delivered. We hope it's found the perfect place in your home.");
+    check(`email 06 "Your Lumen Forma has arrived (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp has been delivered. We hope it's found the perfect place in your home.", one text size, "Llunio Studios" in full`, mail6?.Subject === `Your Lumen Forma has arrived (${orderNumber})` && format6.length === 0, format6.join('; ') + ' | ' + mail6?.Subject);
+    const text6 = flat(html6);
+    check('then the photo request (Facebook or Instagram, @llunio_studios, or a reply) and "By sending us a photo, you\'re happy for us to share it.", "View your order"; no care or Share section', text6.includes("in your home. Would you do us a small favour? We'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page. By sending us a photo, you're happy for us to share it. View your order Reply to this email with any questions.") && !/\b0[12] (Care|Share)\b/.test(text6), text6.slice(text6.indexOf('Dear Ada'), text6.indexOf('Dear Ada') + 600));
+    check('the email footer: Facebook (the placeholder link), Instagram, YouTube', /<a href="https:\/\/www\.facebook\.com\/"[^>]*><img [^>]*icon-facebook\.png[^>]*alt="Facebook"[\s\S]*icon-instagram\.png[\s\S]*icon-youtube\.png/.test(html6));
+
+    // The private order page.
+    await go(c, view);
+    const page6 = await c.ev(`({ status: document.querySelector('main h1')?.nextElementSibling?.innerText, delivered: document.querySelector('[data-order-delivered]')?.innerText })`);
+    check('the private order page: "Delivered" and when', /^DELIVERED ·/i.test(page6.status ?? '') && /^DELIVERED \d+ \w+ 20\d\d$/i.test(page6.delivered ?? ''), JSON.stringify(page6));
     summary();
 } finally { b.close(); c?.close(); }

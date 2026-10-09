@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Dispatched (Step 11.3): only once paid in full, the courier and its
- * tracking link.
+ * tracking link; Delivered (Step 11.4) after it.
  */
 final class OrderDispatchTest extends TestCase
 {
@@ -39,6 +39,22 @@ final class OrderDispatchTest extends TestCase
         self::assertFalse($order->canDispatch(), 'only once');
         self::assertFalse($order->canStartProduction());
         self::assertSame('https://track.dpd.co.uk/search?reference=155012345678', $order->getTrackingUrl());
+
+        // Delivered (Step 11.4): only once dispatched, then once.
+        self::assertTrue($order->canMarkDelivered());
+        $order->markDelivered(new CarbonImmutable());
+        self::assertSame('Delivered', $order->getDisplayStatus());
+        self::assertNotNull($order->getDeliveredAt());
+        self::assertFalse($order->canMarkDelivered());
+    }
+
+    public function testNotDeliveredBeforeDispatch(): void
+    {
+        $order = new Order();
+        $order->setStatus(OrderStatus::PAID);
+        self::assertFalse($order->canMarkDelivered());
+        $order->markInProduction(new \DateTimeImmutable('2026-10-22'), new CarbonImmutable());
+        self::assertFalse($order->canMarkDelivered());
     }
 
     public function testPalletwaysHasNoLinkAndIsLikelyForPallets(): void
@@ -51,7 +67,7 @@ final class OrderDispatchTest extends TestCase
         self::assertSame(Courier::PALLETWAYS, $order->getLikelyCourier());
     }
 
-    public function testTheOnItsWaySentence(): void
+    public function testTheSentencesForEmails05And06(): void
     {
         $lamp = static fn (string $size, int $quantity): OrderItem => new OrderItem(product: null, productTitle: 'Lumen Forma ' . $size, unitPrice: 79900, quantity: $quantity, optionsSnapshot: [[
             'option' => 'The Pigment',
@@ -72,5 +88,8 @@ final class OrderDispatchTest extends TestCase
         self::assertSame('Your Lumen Forma Gallery and Studio lamps have left the studio and are on their way to you.', $order([$lamp('Gallery', 1), $lamp('Studio', 1)])->getOnItsWaySentence());
         self::assertSame('Your Lumen Forma Atelier, Gallery and Studio lamps have left the studio and are on their way to you.', $order([$lamp('Atelier', 2), $lamp('Gallery', 1), $lamp('Studio', 1)])->getOnItsWaySentence());
         self::assertSame('Your Lumen Forma Atelier lamp has left the studio and is on its way to you.', $order([$lamp('Atelier', 1), new OrderItem(product: null, productTitle: 'Custom pigment development', unitPrice: 15000, quantity: 1)])->getOnItsWaySentence(), 'extra lines are not lamps');
+
+        self::assertSame("Your Lumen Forma Gallery lamp has been delivered. We hope it's found the perfect place in your home.", $order([$lamp('Gallery', 1)])->getDeliveredSentence());
+        self::assertSame("Your Lumen Forma Gallery and Studio lamps have been delivered. We hope they've found the perfect place in your home.", $order([$lamp('Gallery', 1), $lamp('Studio', 1)])->getDeliveredSentence());
     }
 }

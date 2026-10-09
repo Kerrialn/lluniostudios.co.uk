@@ -126,7 +126,7 @@
                 <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" {{ requiredMissing or formErrors is not empty ? '' : 'hidden' }}>{{ requiredMissing ? constant('App\\Form\\Form\\CardPaymentForm::REQUIRED_MESSAGE') : formErrors|first }}</div>
                 <div class="text-xs text-ll-mute leading-[1.5]" data-checkout-target="outsideNote" {{ delivery.state == 'outside' ? '' : 'hidden' }}>{{ constant('App\\Shipping\\DeliveryArea::OUTSIDE_NOTE') }}</div>
                 <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">{{ delivery.button }}</button>
-                <div class="text-xs text-ll-mute text-center leading-[1.5]" data-checkout-target="secure" {{ delivery.state == 'outside' ? 'hidden' : '' }}>Payment is processed securely by our payment provider. Your card details are never stored by Llunio.</div>
+                <div class="text-xs text-ll-mute text-center leading-[1.5]" data-checkout-target="secure" {{ delivery.state == 'outside' ? 'hidden' : '' }}>Payment is processed securely by our payment provider. Your card details are never stored by Llunio Studios.</div>
                 <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
             </aside>
         {{ form_end(form) }}

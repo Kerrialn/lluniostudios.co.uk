@@ -13,7 +13,7 @@
 {% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
 {% import _self as m %}
 
-{% block title %}Your Llunio order {{ order.orderNumber }}{% endblock %}
+{% block title %}Your Llunio Studios order {{ order.orderNumber }}{% endblock %}
 {% block preheader %}Thank you{{ firstName ? ', ' ~ firstName : '' }}. Your Lumen Forma order {{ order.orderNumber }} is confirmed.{% endblock %}
 
 {% block content %}

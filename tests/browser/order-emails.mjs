@@ -1,5 +1,5 @@
 // Order emails (Step 11.1), for a basket order sent as a gift: email 01
-// ("Your Llunio order LS-…") in the email rules' format, with the lamp, DPD
+// ("Your Llunio Studios order LS-…") in the email rules' format, with the lamp, DPD
 // delivery and total, 03 Delivery (address, "Gift · Arrive by", the 7–14 day
 // lead time) and "View your order"; the order's private page (no sign-in,
 // never indexed; an unpaid order's link isn't found); and the studio's
@@ -50,12 +50,12 @@ try {
 
     // Email 01.
     await sleep(1200);
-    const mail = (await mailpit(`to:${EMAIL} subject:"Your Llunio order"`)).find((m) => new Date(m.Created) > since);
+    const mail = (await mailpit(`to:${EMAIL} subject:"Your Llunio Studios order"`)).find((m) => new Date(m.Created) > since);
     const html = mail ? (await message(mail.ID)).HTML : '';
     const text = flat(html);
     writeFileSync(out('email-01-gift.html'), html);
     const format = customerEmailProblems(html, 'Ada', 'Thank you for your order. Your Lumen Forma will be cast by hand in our Dorset Studio.');
-    check(`email 01 "Your Llunio order ${orderNumber}" follows the email rules: Montage C, no heading, "Dear Ada," then "Thank you for your order…", one text size`, mail?.Subject === `Your Llunio order ${orderNumber}` && format.length === 0, format.join('; ') + ' | ' + mail?.Subject);
+    check(`email 01 "Your Llunio Studios order ${orderNumber}" follows the email rules: Montage C, no heading, "Dear Ada," then "Thank you for your order…", one text size`, mail?.Subject === `Your Llunio Studios order ${orderNumber}` && format.length === 0, format.join('; ') + ' | ' + mail?.Subject);
     check('01 Order (the order number), 02 Your configuration (the lamp in full, its price), the delivery and total; nothing about deposits', new RegExp(`01 Order Order number ${orderNumber} 02 Your configuration Lumen Forma Size Gallery The Pigment Grey Cable Raw Jute Footing Polished Copper Light Smoked Glass LED Quantity 1 Price £799 Delivery · DPD Next Day Delivery ${delivery.replace('.', '\\.')} Total ${total.replace('.', '\\.')} Photography is illustrative`).test(text) && !/deposit/i.test(text), text.slice(text.indexOf('01 Order'), text.indexOf('01 Order') + 500));
     check(`03 Delivery: the address, "Gift · Arrive by ${nice}" and "Send to me", the lead time, "View your order"`, new RegExp(`03 Delivery Delivery address Ada Gift 1 High Street Wimborne BH21 1AA Gift Arrive by ${nice} Send to me Expected lead time Dispatched within 7–14 days, then DPD Next Day Delivery View your order Reply to this email with any questions\\.`).test(text), text.slice(text.indexOf('03 Delivery'), text.indexOf('03 Delivery') + 300));
     check('replies go to the studio', ((await message(mail?.ID ?? '')).ReplyTo || []).length === 1);

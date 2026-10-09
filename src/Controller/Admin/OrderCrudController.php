@@ -75,13 +75,73 @@ class OrderCrudController extends AbstractCrudController
             ->linkToCrudAction('markDispatched')
             ->displayIf(static fn (Order $order): bool => $order->canDispatch());
 
+        // Step 11.4: a dispatched order.
+        $delivered = static fn (): Action => Action::new('markDelivered', 'Mark Delivered', 'fa fa-house')
+            ->linkToCrudAction('markDelivered')
+            ->displayIf(static fn (Order $order): bool => $order->canMarkDelivered());
+
         return $actions
             ->add(Crud::PAGE_DETAIL, $requestBalance)
             ->add(Crud::PAGE_INDEX, $requestBalance)
             ->add(Crud::PAGE_DETAIL, $inProduction()->addCssClass('btn btn-primary'))
             ->add(Crud::PAGE_INDEX, $inProduction())
             ->add(Crud::PAGE_DETAIL, $dispatched()->addCssClass('btn btn-primary'))
-            ->add(Crud::PAGE_INDEX, $dispatched());
+            ->add(Crud::PAGE_INDEX, $dispatched())
+            ->add(Crud::PAGE_DETAIL, $delivered()->addCssClass('btn btn-primary'))
+            ->add(Crud::PAGE_INDEX, $delivered());
+    }
+
+    /**
+     * "Mark Delivered" (Step 11.4): a page to confirm, then the stage is set
+     * and email 06 sent. If the email can't be sent, nothing is marked.
+     *
+     * @param AdminContext<Order> $context
+     */
+    #[AdminRoute(path: '/{entityId}/delivered', name: 'delivered', options: [
+        'methods' => ['GET', 'POST'],
+    ])]
+    public function markDelivered(AdminContext $context, Request $request, EmailService $emails, EntityManagerInterface $entityManager, AdminUrlGenerator $urls, LoggerInterface $logger): Response
+    {
+        $order = $context->getEntity()->getInstance();
+        if (! $order instanceof Order) {
+            throw $this->createNotFoundException();
+        }
+
+        $detail = $urls->unsetAll()->setController(self::class)->setAction(Action::DETAIL)->setEntityId($order->getId())->generateUrl();
+        if (! $order->canMarkDelivered()) {
+            $this->addFlash('warning', 'This order can\'t be marked Delivered.');
+
+            return $this->redirect($detail);
+        }
+
+        if ($request->isMethod('POST')) {
+            if (! $this->isCsrfTokenValid('delivered-' . $order->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Something went wrong; please try again.');
+
+                return $this->redirect($detail);
+            }
+
+            $order->markDelivered(new CarbonImmutable());
+            try {
+                $emails->sendDeliveredEmail($order);
+                $entityManager->flush();
+                $this->addFlash('success', 'Marked Delivered: ' . $order->getEmail() . ' has been emailed.');
+            } catch (\Throwable $exception) {
+                $logger->error('Delivered email failed', [
+                    'order' => $order->getOrderNumber(),
+                    'exception' => $exception,
+                ]);
+                $entityManager->refresh($order);
+                $this->addFlash('danger', 'The email could not be sent, so the order has not been marked Delivered. Please try again.');
+            }
+
+            return $this->redirect($detail);
+        }
+
+        return $this->render('admin/delivered.html.twig', [
+            'order' => $order,
+            'backUrl' => $detail,
+        ]);
     }
 
     /**
@@ -409,6 +469,8 @@ class OrderCrudController extends AbstractCrudController
             TextField::new('courierLabel', 'Courier')->hideOnIndex()->hideOnForm(),
             TextField::new('trackingNumber', 'Tracking number')->hideOnIndex()->hideOnForm(),
             UrlField::new('trackingUrl', 'Tracking link')->hideOnIndex()->hideOnForm(),
+            // Step 11.4.
+            DateTimeField::new('deliveredAt', 'Delivered')->hideOnIndex()->hideOnForm(),
             DateTimeField::new('createdAt')->setDisabled(),
             CollectionField::new('items')->onlyOnDetail(),
         ];

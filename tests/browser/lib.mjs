@@ -132,6 +132,10 @@ export function customerEmailProblems(html, firstName, opening = null) {
     if (opening !== null && paragraphs[1] !== opening) problems.push(`then "${paragraphs[1]}"`);
     const sizes = new Set([...html.replace(/<img[^>]*>/g, '').matchAll(/font-size:(\d+)px/g)].map((m) => m[1]).filter((s) => !['1', '11', '12', '15'].includes(s)));
     if (sizes.size > 0) problems.push(`text sizes ${[...sizes].join(', ')}px`);
+    // The studio's name always in full (decided 9 October 2026), in the text and the images' alt text.
+    const words = html.replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]*\balt="([^"]*)"[^>]*>/g, ' $1 ').replace(/<[^>]+>/g, ' ');
+    const shortened = words.match(/Llunio(?! Studios)\S*/g);
+    if (shortened) problems.push(`"Llunio" without "Studios": ${shortened.join(', ')}`);
     return problems;
 }
 

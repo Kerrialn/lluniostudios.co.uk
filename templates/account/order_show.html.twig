@@ -64,6 +64,7 @@
                 {% if order.dispatchedAt %}
                     {# Dispatched (Step 11.3). #}
                     <div class="flex flex-col gap-1.5 text-[13px] leading-[1.5]" data-order-tracking>
+                        {% if order.deliveredAt %}<span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute" data-order-delivered>Delivered {{ order.deliveredAt|date('j F Y', 'Europe/London') }}</span>{% endif %}
                         <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Dispatched {{ order.dispatchedAt|date('j F Y', 'Europe/London') }} · {{ order.courierLabel }}</span>
                         <span>Tracking number {{ order.trackingNumber }}</span>
                         {% if order.trackingUrl %}<a href="{{ order.trackingUrl }}" target="_blank" rel="noopener" class="self-start underline transition-colors hover:text-ll-mute">Track your delivery</a>{% endif %}

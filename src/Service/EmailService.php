@@ -30,11 +30,13 @@ final readonly class EmailService
 
     public const BALANCE_RECEIVED_SUBJECT = 'Your Lumen Forma order is paid in full';
 
-    public const ORDER_SUBJECT = 'Your Llunio order';
+    public const ORDER_SUBJECT = 'Your Llunio Studios order';
 
     public const IN_PRODUCTION_SUBJECT = 'Your Lumen Forma is being cast';
 
     public const DISPATCHED_SUBJECT = 'Your Lumen Forma is on its way';
+
+    public const DELIVERED_SUBJECT = 'Your Lumen Forma has arrived';
 
     public function __construct(
         private MailerInterface $mailer,
@@ -307,6 +309,15 @@ final readonly class EmailService
     public function sendDispatchedEmail(Order $order): void
     {
         $this->sendStageEmail($order, self::DISPATCHED_SUBJECT, '/email/order/dispatched.html.twig');
+    }
+
+    /**
+     * Email 06 (Site v4 design): "Your Lumen Forma has arrived", when the
+     * studio marks the order Delivered (Step 11.4). Replies go to the studio.
+     */
+    public function sendDeliveredEmail(Order $order): void
+    {
+        $this->sendStageEmail($order, self::DELIVERED_SUBJECT, '/email/order/delivered.html.twig');
     }
 
     /**

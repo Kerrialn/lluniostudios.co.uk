@@ -105,7 +105,7 @@ try {
     check('paid; the order keeps the buyer (the billing name), "recipient", the message and the recipient\'s mobile; DPD\'s phone is the recipient\'s; the account is the buyer\'s', paid === 'succeeded' && /mrs ada LOVELACE recipient 07700 900999 07700 900123 Grace Friend 07700 900999 mrs Happy birthday, Grace!\|Love, Ada/.test(row), row);
 
     // Email 01.
-    const mail = await latest(`to:${EMAIL} subject:"Your Llunio order"`, since, orderNumber);
+    const mail = await latest(`to:${EMAIL} subject:"Your Llunio Studios order"`, since, orderNumber);
     const text = flat(mail?.HTML ?? '');
     check('email 01 greets the buyer, "Dear Ada," (from "mrs ada LOVELACE"), never the recipient; addressed to the buyer', /Dear Ada,/.test(text) && !/Dear Grace/.test(text) && (mail?.To?.[0]?.Name ?? '') === 'mrs ada LOVELACE', JSON.stringify(mail?.To));
     check(`email 01's delivery: the recipient's address, "Gift: Arrive by ${niceDate(arrive)} / Send directly to the recipient", the gift message`, text.includes(`Delivery address Grace Friend / 2 Gift Lane / Wimborne / BH21 1AA Gift Arrive by ${niceDate(arrive)} / Send directly to the recipient Gift message Happy birthday, Grace! / Love, Ada`), text.slice(text.indexOf('03 Delivery'), text.indexOf('03 Delivery') + 300));
@@ -143,7 +143,7 @@ try {
     await go(b, r.completeUrl.replace(/^https?:\/\/[^/]+/, BASE_URL), 3000);
     const walletOrder = r.completeUrl.split('/').pop();
     const walletRow = sql(`select o.customer_name, o.gift_message, s.phone from orders o join address s on s.id = o.shipping_address_id where o.order_number = '${walletOrder}'`).replace(/\s+/g, ' ');
-    const walletMail = await latest(`to:${EMAIL} subject:"Your Llunio order"`, since, walletOrder);
+    const walletMail = await latest(`to:${EMAIL} subject:"Your Llunio Studios order"`, since, walletOrder);
     check('a wallet payment: the buyer is the payer (DR BOB PAYER), greeted "Dear Bob,"; the message kept; with no recipient\'s mobile DPD has the customer\'s', walletPaid === 'succeeded' && /DR BOB PAYER From Bob 07700 900123/.test(walletRow) && /Dear Bob,/.test(flat(walletMail?.HTML ?? '')), walletRow);
 
     // 5. Outside the UK mainland: a direct gift goes to Reserve Your Design with every detail.
@@ -218,7 +218,7 @@ try {
     const quotePaid = await a.ev(`Stripe(document.querySelector('main form').dataset.checkoutStripeKeyValue).confirmCardPayment(${JSON.stringify(started.clientSecret)}, { payment_method: 'pm_card_visa' }).then(x => x.error ? x.error.message : x.paymentIntent.status)`);
     await go(a, started.completeUrl.replace(/^https?:\/\/[^/]+/, BASE_URL), 3000);
     const quoteOrder = sql(`select o.customer_name, o.gift, o.gift_arrive_by, o.gift_send_to, s.recipient_name, s.phone, replace(o.gift_message, chr(10), '|') from orders o join address s on s.id = o.shipping_address_id where o.design_request_id = '${requestId}' and o.status in ('paid', 'deposit_paid')`).replace(/\s+/g, ' ');
-    const quoteOrderMail = await latest(`to:${EMAIL} subject:"Your Llunio order"`, since);
+    const quoteOrderMail = await latest(`to:${EMAIL} subject:"Your Llunio Studios order"`, since);
     check('paid: the order carries the gift (date, "recipient", message), the recipient\'s name and mobile for DPD, the buyer; email 01 greets "Dear Ada,"', quotePaid === 'succeeded' && quoteOrder.includes(`MRS ADA LOVELACE 1 ${earliest} recipient Grace Friend 07700 900999 Happy birthday, Grace!|Love, Ada`) && /Dear Ada,/.test(flat(quoteOrderMail?.HTML ?? '')), quoteOrder);
     summary();
 } finally { b.close(); a?.close(); }
