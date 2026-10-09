@@ -29,7 +29,7 @@
                         </span>
                         <span class="flex flex-col items-end gap-1">
                             <span class="text-[15px]">{{ order.totalInGbp|format_currency('GBP', {fraction_digit: order.total % 100 == 0 ? 0 : 2}) }}</span>
-                            <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.status.label }}</span>
+                            <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.displayStatus }}</span>
                         </span>
                     </a>
                 {% endfor %}

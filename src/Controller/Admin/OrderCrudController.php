@@ -3,9 +3,14 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Order;
+use App\Enum\OrderStage;
 use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
+use App\Service\EmailService;
+use App\Service\OrderDates;
 use App\Service\QuotePayments;
+use Carbon\CarbonImmutable;
+use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -16,6 +21,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
@@ -57,9 +63,86 @@ class OrderCrudController extends AbstractCrudController
             ->linkToCrudAction('requestBalance')
             ->displayIf(static fn (Order $order): bool => $order->canRequestBalance() && $order->getDesignRequest() !== null);
 
+        // Step 11.2: a placed order not yet in production.
+        $inProduction = static fn (): Action => Action::new('markInProduction', 'Mark In Production', 'fa fa-industry')
+            ->linkToCrudAction('markInProduction')
+            ->displayIf(static fn (Order $order): bool => $order->canStartProduction());
+
         return $actions
             ->add(Crud::PAGE_DETAIL, $requestBalance)
-            ->add(Crud::PAGE_INDEX, $requestBalance);
+            ->add(Crud::PAGE_INDEX, $requestBalance)
+            ->add(Crud::PAGE_DETAIL, $inProduction()->addCssClass('btn btn-primary'))
+            ->add(Crud::PAGE_INDEX, $inProduction());
+    }
+
+    /**
+     * "Mark In Production" (Step 11.2): a page to confirm with the expected
+     * dispatch date (suggested: a quote's casting date, otherwise the end of
+     * the lead time from payment), then the stage is set and email 04 sent.
+     * If the email can't be sent, nothing is marked.
+     *
+     * @param AdminContext<Order> $context
+     */
+    #[AdminRoute(path: '/{entityId}/in-production', name: 'in_production', options: [
+        'methods' => ['GET', 'POST'],
+    ])]
+    public function markInProduction(AdminContext $context, Request $request, OrderDates $dates, EmailService $emails, EntityManagerInterface $entityManager, AdminUrlGenerator $urls, LoggerInterface $logger): Response
+    {
+        $order = $context->getEntity()->getInstance();
+        if (! $order instanceof Order) {
+            throw $this->createNotFoundException();
+        }
+
+        $detail = $urls->unsetAll()->setController(self::class)->setAction(Action::DETAIL)->setEntityId($order->getId())->generateUrl();
+        if (! $order->canStartProduction()) {
+            $this->addFlash('warning', 'This order can\'t be marked In Production.');
+
+            return $this->redirect($detail);
+        }
+
+        $today = OrderDates::today();
+        $date = $dates->suggestedDispatch($order);
+        $problem = null;
+        if ($request->isMethod('POST')) {
+            if (! $this->isCsrfTokenValid('in-production-' . $order->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Something went wrong; please try again.');
+
+                return $this->redirect($detail);
+            }
+
+            $typed = OrderDates::day((string) $request->request->get('expectedDispatch'));
+            if ($typed === null) {
+                $problem = 'Please enter the expected dispatch date.';
+            } elseif ($typed < $today) {
+                $problem = 'The expected dispatch date can\'t be in the past.';
+                $date = $typed;
+            } else {
+                $order->markInProduction($typed, new CarbonImmutable());
+                try {
+                    $emails->sendInProductionEmail($order);
+                    $entityManager->flush();
+                    $this->addFlash('success', 'Marked In Production: ' . $order->getEmail() . ' has been emailed (expected dispatch ' . $typed->format('j F Y') . ').');
+                } catch (\Throwable $exception) {
+                    $logger->error('In Production email failed', [
+                        'order' => $order->getOrderNumber(),
+                        'exception' => $exception,
+                    ]);
+                    $entityManager->refresh($order);
+                    $this->addFlash('danger', 'The email could not be sent, so the order has not been marked In Production. Please try again.');
+                }
+
+                return $this->redirect($detail);
+            }
+        }
+
+        return $this->render('admin/in_production.html.twig', [
+            'order' => $order,
+            'backUrl' => $detail,
+            'date' => $date,
+            'today' => $today,
+            'castingDate' => $dates->castingDate($order),
+            'problem' => $problem,
+        ]);
     }
 
     /**
@@ -132,7 +215,22 @@ class OrderCrudController extends AbstractCrudController
 
     public function configureFilters(Filters $filters): Filters
     {
-        return $filters->add(ChoiceFilter::new('status')->setChoices(self::statusLabels()));
+        return $filters
+            ->add(ChoiceFilter::new('status')->setChoices(self::statusLabels()))
+            ->add(ChoiceFilter::new('stage')->setChoices(self::stageLabels()));
+    }
+
+    /**
+     * The stages (Step 11.2): label => stored value.
+     *
+     * @return array<string, string>
+     */
+    private static function stageLabels(): array
+    {
+        return array_combine(
+            array_map(static fn (OrderStage $s): string => $s->label(), OrderStage::cases()),
+            array_map(static fn (OrderStage $s): string => $s->value, OrderStage::cases()),
+        );
     }
 
     /**
@@ -183,6 +281,8 @@ class OrderCrudController extends AbstractCrudController
                     OrderStatus::FULFILLED->value => 'success',
                 ])
                 ->hideOnForm(),
+            // The stage's label, or nothing before it is marked (EasyAdmin would show "Null").
+            TextField::new('stageLabel', 'Stage')->hideOnForm(),
             ChoiceField::new('status')
                 ->setChoices(array_combine(
                     array_map(static fn (OrderStatus $s) => $s->label(), OrderStatus::cases()),
@@ -219,6 +319,9 @@ class OrderCrudController extends AbstractCrudController
             DateTimeField::new('paidAt')->hideOnIndex()->setDisabled(),
             DateTimeField::new('balanceRequestedAt', 'Balance requested')->hideOnIndex()->hideOnForm(),
             DateTimeField::new('balancePaidAt', 'Balance paid')->hideOnIndex()->hideOnForm(),
+            // Step 11.2: the studio's stage.
+            DateTimeField::new('inProductionAt', 'In Production since')->hideOnIndex()->hideOnForm(),
+            DateField::new('expectedDispatch', 'Expected dispatch')->hideOnIndex()->hideOnForm(),
             DateTimeField::new('createdAt')->setDisabled(),
             CollectionField::new('items')->onlyOnDetail(),
         ];

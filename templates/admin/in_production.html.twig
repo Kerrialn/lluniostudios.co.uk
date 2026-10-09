@@ -1,0 +1,31 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{#
+    "Mark In Production" (Step 11.2): confirm with the expected dispatch
+    date, then the order is marked and email 04 goes to the customer.
+#}
+{% block content_title %}Mark order {{ order.orderNumber }} In Production{% endblock %}
+
+{% block page_actions %}
+    <a class="btn btn-secondary" href="{{ backUrl }}">Back to the order</a>
+{% endblock %}
+
+{% block main %}
+    {% if problem %}<div class="alert alert-danger" data-in-production-problem>{{ problem }}</div>{% endif %}
+    <p data-in-production-note>
+        This marks the order In Production and emails {{ order.email }} "Your Lumen Forma is being cast" with the expected dispatch date below.
+        {% if order.amountOwed > 0 %}<br>A balance of {{ (order.amountOwed / 100)|format_currency('GBP') }} is still owed; it can be requested at any time, and must be paid before dispatch.{% endif %}
+    </p>
+    <form method="post" style="max-width: 32rem">
+        <input type="hidden" name="_token" value="{{ csrf_token('in-production-' ~ order.id) }}">
+        <div class="mb-3">
+            <label class="form-label" for="expected-dispatch">Expected dispatch</label>
+            <input class="form-control" type="date" id="expected-dispatch" name="expectedDispatch" value="{{ date|date('Y-m-d') }}" min="{{ today|date('Y-m-d') }}" required data-expected-dispatch>
+            <div class="form-text">
+                {% if castingDate %}Suggested: the quote's estimated casting date ({{ castingDate|date('j F Y') }}).{% else %}Suggested: {{ lead_time.label }} from payment ({{ (order.paidAt ?? order.createdAt)|date('j F Y', 'Europe/London') }}), the longest of the lead time.{% endif %}
+                Change it if needed; it can't be in the past.
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" data-mark-in-production>Mark In Production and email the customer</button>
+    </form>
+{% endblock %}

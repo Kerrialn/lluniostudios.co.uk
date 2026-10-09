@@ -1,0 +1,29 @@
+{#
+    Email 04, "Your Lumen Forma is being cast" (Site v4 design, Llunio Email
+    Templates/04-in-production.html), sent when the studio marks the order
+    In Production (Step 11.2): "Dear {first name}," (the buyer's), "Your
+    Lumen Forma is now in production. Expected dispatch date is: {e.g.
+    Friday 23 October 2026}." and the studio's thanks (wording decided
+    9 October 2026, replacing the design's sentence), 01 Progress (the order number and the expected
+    dispatch date given in admin), "View your order". "Dorset Studio" for
+    "Bournemouth". Laid out by email/_customer.html.twig (the email rules).
+#}
+{% extends 'email/_customer.html.twig' %}
+{% import 'email/_customer.html.twig' as layout %}
+
+{% block title %}Your Lumen Forma is being cast{% endblock %}
+{% block preheader %}Order {{ order.orderNumber }}: your lamp is now in production in our Dorset Studio.{% endblock %}
+
+{% block content %}
+<p style="{{ body }}">Your Lumen Forma is now in production. Expected dispatch date is: {{ order.expectedDispatch|date('l j F Y') }}.</p>
+<p style="{{ body }}">Thank you for supporting our small studio. Every piece is made with care, and we can't wait for you to see yours.</p>
+{{ layout.section('01', 'Progress') }}
+<p style="{{ label }}">Order number</p>
+<p style="{{ body }}">{{ order.orderNumber }}</p>
+<p style="{{ label }}">Expected dispatch</p>
+<p style="{{ body }}" data-email-dispatch>{{ order.expectedDispatch|date('j F Y') }}</p>
+<div style="height:8px;line-height:8px;font-size:1px;">&nbsp;</div>
+{{ layout.button(url('order_view', { token: order.viewToken }), 'View your order') }}
+<div style="height:24px;line-height:24px;font-size:1px;">&nbsp;</div>
+<p style="{{ body }}">Reply to this email with any questions.</p>
+{% endblock %}

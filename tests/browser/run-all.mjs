@@ -43,6 +43,7 @@ const CHECKS = [
     ['quote-balance.mjs'],
     ['order-emails.mjs'],
     ['gift-options.mjs'],
+    ['order-stages.mjs'],
 ];
 
 const args = process.argv.slice(2);

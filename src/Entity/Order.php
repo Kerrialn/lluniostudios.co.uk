@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Enum\DesignRequestStatus;
 use App\Enum\GiftSendTo;
+use App\Enum\OrderStage;
 use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
 use App\Repository\OrderRepository;
@@ -176,6 +177,19 @@ class Order implements HasReferenceNumber
     #[ORM\Column(length: 64, unique: true)]
     private string $viewToken;
 
+    /**
+     * The studio's stage (Step 11.2): In Production, with when it was marked
+     * and the expected dispatch date given to the customer (email 04).
+     */
+    #[ORM\Column(length: 32, nullable: true, enumType: OrderStage::class)]
+    private ?OrderStage $stage = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $inProductionAt = null;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $expectedDispatch = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private CarbonImmutable $createdAt;
 
@@ -194,6 +208,53 @@ class Order implements HasReferenceNumber
         $this->items = new ArrayCollection();
         $this->orderNumber = $this->generateOrderNumber();
         $this->viewToken = rtrim(strtr(base64_encode(random_bytes(24)), '+/', '-_'), '=');
+    }
+
+    public function getStage(): ?OrderStage
+    {
+        return $this->stage;
+    }
+
+    /**
+     * For admin: the stage's label, or empty before one is set.
+     */
+    public function getStageLabel(): string
+    {
+        return $this->stage?->label() ?? '';
+    }
+
+    public function getInProductionAt(): ?CarbonImmutable
+    {
+        return $this->inProductionAt;
+    }
+
+    public function getExpectedDispatch(): ?\DateTimeImmutable
+    {
+        return $this->expectedDispatch;
+    }
+
+    /**
+     * "Mark In Production" (admin): a placed order not yet in production.
+     */
+    public function canStartProduction(): bool
+    {
+        return $this->isPlaced() && $this->stage === null;
+    }
+
+    public function markInProduction(\DateTimeImmutable $expectedDispatch, CarbonImmutable $now): void
+    {
+        $this->stage = OrderStage::IN_PRODUCTION;
+        $this->inProductionAt = $now;
+        $this->expectedDispatch = $expectedDispatch;
+    }
+
+    /**
+     * What the customer sees as the order's status: its stage once marked
+     * (e.g. "In Production"), otherwise the payment status ("Paid").
+     */
+    public function getDisplayStatus(): string
+    {
+        return $this->stage?->label() ?? $this->status->label();
     }
 
     public function getViewToken(): string

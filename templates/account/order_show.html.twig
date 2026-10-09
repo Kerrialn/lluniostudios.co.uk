@@ -13,7 +13,7 @@
         {% if not private|default(false) %}<a href="{{ path('account_orders') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Your Orders</a>{% endif %}
         <div class="flex justify-between items-baseline gap-4 flex-wrap">
             <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Order {{ order.orderNumber }}</h1>
-            <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.status.label }} · {{ order.createdAt|date('j F Y', 'Europe/London') }}</span>
+            <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.displayStatus }} · {{ order.createdAt|date('j F Y', 'Europe/London') }}</span>
         </div>
 
         <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
@@ -59,6 +59,13 @@
                     <div class="flex flex-col gap-1.5 text-[13px] leading-[1.5]">
                         <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Delivery address</span>
                         <span>{{ [a.recipientName, a.company, a.line1, a.line2, a.city, a.county, a.postcode]|filter(v => v)|join(', ') }}</span>
+                    </div>
+                {% endif %}
+                {% if order.expectedDispatch %}
+                    {# In Production (Step 11.2). #}
+                    <div class="flex flex-col gap-1.5 text-[13px] leading-[1.5]" data-order-dispatch>
+                        <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Expected dispatch</span>
+                        <span>{{ order.expectedDispatch|date('j F Y') }}</span>
                     </div>
                 {% endif %}
                 {% if order.designRequest %}

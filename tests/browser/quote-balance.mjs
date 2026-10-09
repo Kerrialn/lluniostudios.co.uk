@@ -104,7 +104,7 @@ try {
         await go(b, `${BASE_URL}/admin/order`, 3000);
         const order = await b.ev(row(orderNumber));
         await go(b, `${BASE_URL}/admin/order/${orderId}`, 3000);
-        const orderPage = (await b.ev(`document.querySelector('main, .content').innerText.replace(/\\s+/g, ' ')`)).match(/Status (.+?) Subtotal/)?.[1];
+        const orderPage = (await b.ev(`document.querySelector('main, .content').innerText.replace(/\\s+/g, ' ')`)).match(/Status (.+?) (?:Stage|Subtotal)/)?.[1];
         await go(c, `${BASE_URL}/account/orders`, 2500);
         const account = await c.ev(`[...document.querySelectorAll('main a[href*="/account/orders/"]')].find(a => a.innerText.includes(${JSON.stringify(orderNumber)}))?.innerText.replace(/\\s+/g, ' ')`);
         await go(c, `${BASE_URL}/account/orders/${orderNumber}`, 2500);

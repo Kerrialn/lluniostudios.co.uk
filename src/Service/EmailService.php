@@ -10,7 +10,6 @@ use App\Entity\NewsletterSubscriber;
 use App\Entity\Order;
 use App\Entity\Quote;
 use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -33,6 +32,8 @@ final readonly class EmailService
 
     public const ORDER_SUBJECT = 'Your Llunio order';
 
+    public const IN_PRODUCTION_SUBJECT = 'Your Lumen Forma is being cast';
+
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(STUDIO_NOTIFICATION_EMAIL)%')]
@@ -40,7 +41,7 @@ final readonly class EmailService
         // The studio's public email (replies to customer emails): STUDIO_EMAIL in .env.
         #[Autowire('%env(STUDIO_EMAIL)%')]
         private string $studioEmail,
-        private EntityManagerInterface $entityManager,
+        private OrderDates $orderDates,
     )
     {
     }
@@ -253,7 +254,33 @@ final readonly class EmailService
             context: [
                 'order' => $order,
                 'firstName' => $this->firstName($order),
-                'castingDate' => $this->castingDate($order),
+                'castingDate' => $this->orderDates->castingDate($order),
+            ],
+        );
+        $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * Email 04 (Site v4 design): "Your Lumen Forma is being cast", when the
+     * studio marks the order In Production (Step 11.2). Replies go to the
+     * studio.
+     */
+    public function sendInProductionEmail(Order $order): void
+    {
+        if ($order->getEmail() === null) {
+            throw new \LogicException('Order ' . $order->getOrderNumber() . ' has no email address.');
+        }
+
+        $email = $this->compose(
+            subject: self::IN_PRODUCTION_SUBJECT . ' (' . $order->getOrderNumber() . ')',
+            template: '/email/order/in_production.html.twig',
+            email: $order->getEmail(),
+            name: $order->getCustomerName() ?? $order->getEmail(),
+            context: [
+                'order' => $order,
+                'firstName' => $this->firstName($order),
             ],
         );
         $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
@@ -283,7 +310,7 @@ final readonly class EmailService
                 'amount' => $amount,
                 'subject' => $subject,
                 'lamps' => StudioSummary::orderLamps($order),
-                'castingDate' => $this->castingDate($order),
+                'castingDate' => $this->orderDates->castingDate($order),
             ],
         );
         if ($order->getEmail() !== null) {
@@ -302,27 +329,6 @@ final readonly class EmailService
     private function firstName(Order $order): ?string
     {
         return GreetingName::firstName($order->getCustomerName() ?? $order->getDesignRequest()?->getFullName() ?? $order->getUser()?->getFullName());
-    }
-
-    /**
-     * A quote's order: the estimated casting date the customer was sent.
-     */
-    private function castingDate(Order $order): ?\DateTimeImmutable
-    {
-        $request = $order->getDesignRequest();
-        if ($request === null) {
-            return null;
-        }
-
-        $quote = $this->entityManager->getRepository(Quote::class)->findOneBy([
-            'designRequest' => $request,
-        ]);
-        $sent = $quote?->getSent()['castingDate'] ?? null;
-        if (\is_string($sent)) {
-            return new \DateTimeImmutable($sent);
-        }
-
-        return $quote?->getCastingDate();
     }
 
     /**
