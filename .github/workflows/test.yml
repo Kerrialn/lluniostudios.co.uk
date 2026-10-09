@@ -8,23 +8,25 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     env:
-        DATABASE_URL: postgresql://pinboardable:pinboardable@127.0.0.1:5432/pinboardable?serverVersion=13&charset=utf8
+        # A throwaway test database, as local Docker's (PostgreSQL 16 with PostGIS).
+        DATABASE_URL: postgresql://lluniostudios:lluniostudios@127.0.0.1:5432/lluniostudios?serverVersion=16&charset=utf8
 
     services:
       db:
-          image: postgres:13
+          image: postgis/postgis:16-3.4
           env:
-              POSTGRES_USER: pinboardable
-              POSTGRES_PASSWORD: pinboardable
+              POSTGRES_DB: lluniostudios
+              POSTGRES_USER: lluniostudios
+              POSTGRES_PASSWORD: lluniostudios
           options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
           ports:
               - 5432:5432
 
     steps:
-      -   uses: actions/checkout@v4
+      -   uses: actions/checkout@v5
       -   uses: shivammathur/setup-php@v2
           with:
-            php-version: 8.2
+            php-version: '8.4' # as local Docker
             coverage: none # default is xdebug
             extensions: mbstring, uuid # needed by phpunit
 
@@ -35,23 +37,26 @@ jobs:
   ecs:
       runs-on: ubuntu-latest
       steps:
-        -   uses: actions/checkout@v4
+        -   uses: actions/checkout@v5
         -   uses: shivammathur/setup-php@v2
             with:
-              php-version: 8.2
+              php-version: '8.4' # as local Docker
               coverage: none # default is xdebug
 
         -   run: composer install --dev --no-progress
         -   run: composer run-script check-cs
 
 
+  # Advisory: Rector reports its suggestions without failing the checks.
+  # Applying them is a decision for later (merge plan, Step 12 notes).
   rector:
       runs-on: ubuntu-latest
+      continue-on-error: true
       steps:
-        -   uses: actions/checkout@v4
+        -   uses: actions/checkout@v5
         -   uses: shivammathur/setup-php@v2
             with:
-              php-version: 8.2
+              php-version: '8.4' # as local Docker
               coverage: none # default is xdebug
 
         -   run: composer install --dev --no-progress
@@ -60,10 +65,10 @@ jobs:
   phpstan:
       runs-on: ubuntu-latest
       steps:
-        -   uses: actions/checkout@v4
+        -   uses: actions/checkout@v5
         -   uses: shivammathur/setup-php@v2
             with:
-              php-version: 8.2
+              php-version: '8.4' # as local Docker
               coverage: none
 
         -   run: composer install --dev --no-progress
