@@ -4,17 +4,17 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 9 October 2026 (Step 10b done; Step 11 decisions and email rules recorded; 11.0 in progress).
+Last updated: 9 October 2026, night (Steps 11.0–11.4 committed; 11.5 email review prepared; branches pushed to GitHub).
 
 ---
 
 ## Start here (for a new session)
 
-- **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Nothing has been pushed yet. Never push to `main` or merge anything unless asked. To push: `git push -u origin symfony-7.4-upgrade design-foundation`.
-- **Next step:** Step 11 (order journey emails), 11.0 first. Then Step 11b (Advanced SEO) and Step 12. See "Steps" below.
+- **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Both branches were pushed to GitHub (`origin`, git@github.com:Kerrialn/lluniostudios.co.uk.git) as branches on 9 October 2026, at your request; push again with `git push origin symfony-7.4-upgrade design-foundation` when asked. Never push to `main` or merge anything unless asked.
+- **Next step:** you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
 - **The prototype:** `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip`. Inside it:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Unzip and open it in Chrome. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
-  - `Llunio Email Templates/01-…06-*.html`: the six customer emails (02 is built; see Step 8).
+  - `Llunio Email Templates/01-…06-*.html`: the six customer emails (all built, Steps 8, 9 and 11, with the email rules and wording decided since).
   - `uploads/`: the real photo originals (15–20MB). `assets/email/`: email header images.
   - Older wireframes and concepts (`Llunio Site v3`, `Llunio Wireframes*`, `Lumen Forma Product Concepts*`) are history, not the spec.
 - **Local environment:**
@@ -24,7 +24,7 @@ Last updated: 9 October 2026 (Step 10b done; Step 11 decisions and email rules r
   - Admin sign-in is by emailed 6-digit code; the local admin is `lluniostudios@gmail.com` (the code arrives in Mailpit). Promote others with `php bin/console app:user:promote <email>`.
   - The Lumen Forma sizes are created by `php bin/console app:lumen-forma:setup` (only what is missing). They are deliberately **unpublished**: the configurator doesn't need publishing; the old product pages do, and those pages are being retired.
 - **Checks after every step:** `composer test`, `composer phpstan`, `composer check-cs` (`composer fix-cs` to fix), `php bin/console lint:twig templates`, `npm run build`. Then click through at desktop (1440) and phone (390) widths against the matching prototype screen.
-  - **Browser checks:** `node tests/browser/run-all.mjs` runs the end-to-end checks for Steps 6–8 and the old shop redirects against the local site in headless Chrome (about 15 minutes; `--clean` removes the test baskets, requests and emails afterwards). `tests/browser/compare/` measures our pages against the prototype (set `PROTOTYPE_DIR` to the unzipped brief). See `tests/browser/README.md`; add a check there for each new step.
+  - **Browser checks:** `node tests/browser/run-all.mjs` runs every end-to-end check (35 runs, Steps 6–11) against the local site in headless Chrome (about 25 minutes; `--clean` removes the test baskets, requests and emails afterwards). `tests/browser/compare/` measures our pages against the prototype (set `PROTOTYPE_DIR` to the unzipped brief). See `tests/browser/README.md`; add a check there for each new step.
 
 ### How the work is done (standing rules)
 
@@ -57,7 +57,7 @@ Last updated: 9 October 2026 (Step 10b done; Step 11 decisions and email rules r
 | 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (deferred full browser run for 9.2 and 9.3 done 7 October 2026: 17 of 17 passed) | `73bdb27` (9.1), `74ce773` (9.2), `2a3e0f9` (9.3) |
 | 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | Done (10.1–10.6; Apple Pay and Google Pay still to be tested by hand at launch) | `c1bdd31` (10.1), `8b54643` (10.2), `042aa0d` (10.3), `570274d` (10.4), `10d5537` (10.5), `3db5174` (10.6); footer fix `ae621bb` |
 | 10b | Quotes (10b.1 quote form, 10b.2 sending, 10b.3 paying, 10b.4 balance) | Done (10b.1–10b.4; 10b.3 and 10b.4 checked by hand 9 October 2026; full browser run 32 of 32 passed) | `482b26f` (10b.1), `a4f85fd` (10b.2), `3b2fe1c` (10b.3), `031e6bb` (10b.4) |
-| 11 | Order journey emails (11.0 email format, 11.1 email 01 and paid-order notifications, 11.2–11.4 stages and emails 04–06, 11.5 wording pass) | In progress (11.0–11.4 done; 11.4 still to be checked by hand; 11.5 prepared) | `60499c2` (11.0), `1739f36` (11.1, 11.1b), `d09fc15` (11.2), `d66f803` (11.3) |
+| 11 | Order journey emails (11.0 email format, 11.1 email 01 and paid-order notifications, 11.2–11.4 stages and emails 04–06, 11.5 wording pass) | In progress (11.0–11.4 done; 11.4 still to be checked by hand; 11.5 review prepared, waiting for you) | `60499c2` (11.0), `1739f36` (11.1, 11.1b), `d09fc15` (11.2), `d66f803` (11.3), `f61bb32` (11.4) |
 | 11b | Advanced SEO | Later (nothing built; outline and questions first) | — |
 | 11c | Terms & Conditions (new text) | Waiting for your text | — |
 | 11d | Privacy Policy (new page) | Waiting for your text | — |
@@ -373,12 +373,12 @@ Restyle email 01; new order stages In production / Dispatched / Delivered with a
   - **Facebook (decided 9 October 2026):** a Facebook icon in the site footer, in the same style, in the order Contact, Facebook, Instagram, YouTube; and a "Facebook" link on the Contact page before Instagram. The page doesn't exist yet: both use one setting, `FACEBOOK_URL` in `.env` (a placeholder, Facebook's home page, marked as such), to be set at launch (Step 12). The email footers have Facebook too (added before committing 11.4, same placeholder setting): Facebook, Instagram, YouTube, with a matching icon (`public/images/email/icon-facebook.png`, drawn from the site footer's Facebook outline in the same colour and weight as the other email icons). Check `page-footers.mjs` extended.
   - Migration `Version20261009060000` (dispatched time, courier, tracking number; undo with `doctrine:migrations:migrate prev`, which puts dispatched orders back to In Production and forgets their tracking).
   - Checks: `order-stages.mjs` extended (blocked while owed, the courier and tracking number, email 05, admin, the private page); unit tests `tests/Entity/OrderDispatchTest.php`.
-- **11.4 Delivered and email 06 (done; committed at your request on 9 October 2026 before your hand checks, with the wording, "Llunio Studios" and email-footer Facebook changes; full browser run with `--clean`: 34 of 35 passed, the one failure being Chrome not starting for `page-footers.mjs 390 844`, which then passed twice on its own):**
+- **11.4 Delivered and email 06 (done, `f61bb32`; committed at your request on 9 October 2026 before your hand checks, with the wording, "Llunio Studios" and email-footer Facebook changes; full browser run with `--clean`: 34 of 35 passed, the one failure being Chrome not starting for `page-footers.mjs 390 844`, which then passed twice on its own):**
   - **"Mark Delivered"** on a dispatched order (in the Orders list's menu and as a button on its page): a page to confirm (who will be emailed, when and how it was dispatched, with the tracking link), then "Mark Delivered and email the customer" marks it and sends email 06; if the email can't be sent, nothing is marked. Admin shows Stage "Delivered" and when; customers see "Delivered" (Your Orders, the private order page, with the date).
   - **Email 06** (`templates/email/order/delivered.html.twig`), subject "Your Lumen Forma has arrived (LS-…)" (the design's title with the order number): "Dear {first name}," then (wording decided 9 October 2026, replacing the design's sentence and its Share section) "Your Lumen Forma {size} lamp has been delivered. We hope it's found the perfect place in your home." (several: "Your Lumen Forma Gallery and Studio lamps have been delivered. We hope they've found the perfect place in your home."; `Order::getDeliveredSentence()`), "Would you do us a small favour? We'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page." and "By sending us a photo, you're happy for us to share it.", then "View your order" and "Reply to this email with any questions.". **Open item:** the care instructions (question 18), to go in as a Care section when written.
   - Migration `Version20261009070000` (when delivered; undo with `doctrine:migrations:migrate prev`, which puts delivered orders back to Dispatched).
   - Checks: `order-stages.mjs` extended (Delivered, email 06, admin, the private page); unit tests in `tests/Entity/OrderDispatchTest.php`.
-- **11.5 Wording pass:** every email sent to you to read and approve.
+- **11.5 Wording pass (review prepared 9 October 2026; no wording changed yet):** every automated email, customer and studio, rendered with made-up sample details (Ada Lovelace; Grace Hopper as a gift's recipient) in one page to read: **`var/email-review/emails.html`** (open it in a browser: `open var/email-review/emails.html`; it works on its own, pictures included). 17 emails, numbered, each with who it goes to and its subject: 1 sign-in; 2 email 01 (a basket order sent directly as a gift); 3 email 02 (a larger size with a Custom choice, a gift); 4 the quote (deposit, personal note); 5 email 01 (a quote paid by deposit); 6 balance request (personal note); 7 receipt; 8–10 emails 04–06; 11 email 03 (For Your Home); 12 newsletter confirmation (only from the old maintenance page; its wording still says "requesting access to our platform"); 13–17 the studio's: new request, new commission, new order, deposit paid, balance paid. Email 02's other seven openings are listed in Step 8. Rebuild the page after any change with `docker compose exec -T php php var/email-review/build.php` (the script is in the same folder; it renders the site's own templates without the database and sends nothing; `var/` isn't in git). **Next:** you mark up what to change; then each change, its checks, and a commit when you say.
 
 ### Step 11b: Advanced SEO (later)
 Added 9 October 2026. Nothing is built for it yet. When we reach it: first outline in plain English what it covers, and ask any questions before building anything.
@@ -411,6 +411,13 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 ---
 
 ## Questions still open
+
+**Waiting for you (as of 9 October 2026)**
+- Hand checks of 11.4 (Delivered, email 06, the email 05 wording, "Llunio Studios" in full, Facebook in the footers): committed before your checks, at your request.
+- The email review (11.5): what to change in each email.
+- The new Terms & Conditions text (11c) and the Privacy Policy text (11d).
+- Care instructions for email 06 and a studio phone number (question 18).
+- The Facebook page's address, once created (`FACEBOOK_URL`; a placeholder until then).
 
 **Checkout and delivery**
 None open (questions 1, 2, 6 and 7 answered 7 October 2026).
