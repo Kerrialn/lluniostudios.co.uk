@@ -34,6 +34,8 @@ final readonly class EmailService
 
     public const IN_PRODUCTION_SUBJECT = 'Your Lumen Forma is being cast';
 
+    public const DISPATCHED_SUBJECT = 'Your Lumen Forma is on its way';
+
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(STUDIO_NOTIFICATION_EMAIL)%')]
@@ -269,13 +271,22 @@ final readonly class EmailService
      */
     public function sendInProductionEmail(Order $order): void
     {
+        $this->sendStageEmail($order, self::IN_PRODUCTION_SUBJECT, '/email/order/in_production.html.twig');
+    }
+
+    /**
+     * A stage's email (04–06): "{subject} (LS-…)" to the buyer, replies to
+     * the studio.
+     */
+    private function sendStageEmail(Order $order, string $subject, string $template): void
+    {
         if ($order->getEmail() === null) {
             throw new \LogicException('Order ' . $order->getOrderNumber() . ' has no email address.');
         }
 
         $email = $this->compose(
-            subject: self::IN_PRODUCTION_SUBJECT . ' (' . $order->getOrderNumber() . ')',
-            template: '/email/order/in_production.html.twig',
+            subject: $subject . ' (' . $order->getOrderNumber() . ')',
+            template: $template,
             email: $order->getEmail(),
             name: $order->getCustomerName() ?? $order->getEmail(),
             context: [
@@ -286,6 +297,16 @@ final readonly class EmailService
         $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
 
         $this->mailer->send($email);
+    }
+
+    /**
+     * Email 05 (Site v4 design): "Your Lumen Forma is on its way", when the
+     * studio marks the order Dispatched (Step 11.3). Replies go to the
+     * studio.
+     */
+    public function sendDispatchedEmail(Order $order): void
+    {
+        $this->sendStageEmail($order, self::DISPATCHED_SUBJECT, '/email/order/dispatched.html.twig');
     }
 
     /**

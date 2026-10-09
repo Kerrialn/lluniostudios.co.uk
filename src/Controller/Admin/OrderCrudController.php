@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Order;
+use App\Enum\Courier;
 use App\Enum\OrderStage;
 use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
@@ -26,6 +27,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\UrlField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use Psr\Log\LoggerInterface;
@@ -68,11 +70,91 @@ class OrderCrudController extends AbstractCrudController
             ->linkToCrudAction('markInProduction')
             ->displayIf(static fn (Order $order): bool => $order->canStartProduction());
 
+        // Step 11.3: a placed order not yet dispatched (the page explains if the balance is still owed).
+        $dispatched = static fn (): Action => Action::new('markDispatched', 'Mark Dispatched', 'fa fa-truck')
+            ->linkToCrudAction('markDispatched')
+            ->displayIf(static fn (Order $order): bool => $order->canDispatch());
+
         return $actions
             ->add(Crud::PAGE_DETAIL, $requestBalance)
             ->add(Crud::PAGE_INDEX, $requestBalance)
             ->add(Crud::PAGE_DETAIL, $inProduction()->addCssClass('btn btn-primary'))
-            ->add(Crud::PAGE_INDEX, $inProduction());
+            ->add(Crud::PAGE_INDEX, $inProduction())
+            ->add(Crud::PAGE_DETAIL, $dispatched()->addCssClass('btn btn-primary'))
+            ->add(Crud::PAGE_INDEX, $dispatched());
+    }
+
+    /**
+     * "Mark Dispatched" (Step 11.3): only once paid in full (otherwise the
+     * page points to "Request balance"); a page to confirm the courier (DPD
+     * or Palletways) and the tracking number, then the stage is set and
+     * email 05 sent. If the email can't be sent, nothing is marked.
+     *
+     * @param AdminContext<Order> $context
+     */
+    #[AdminRoute(path: '/{entityId}/dispatched', name: 'dispatched', options: [
+        'methods' => ['GET', 'POST'],
+    ])]
+    public function markDispatched(AdminContext $context, Request $request, EmailService $emails, EntityManagerInterface $entityManager, AdminUrlGenerator $urls, LoggerInterface $logger): Response
+    {
+        $order = $context->getEntity()->getInstance();
+        if (! $order instanceof Order) {
+            throw $this->createNotFoundException();
+        }
+
+        $detail = $urls->unsetAll()->setController(self::class)->setAction(Action::DETAIL)->setEntityId($order->getId())->generateUrl();
+        if (! $order->canDispatch()) {
+            $this->addFlash('warning', 'This order can\'t be marked Dispatched.');
+
+            return $this->redirect($detail);
+        }
+
+        $courier = $order->getLikelyCourier();
+        $tracking = '';
+        $problem = null;
+        if ($request->isMethod('POST') && $order->canDispatchNow()) {
+            if (! $this->isCsrfTokenValid('dispatched-' . $order->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Something went wrong; please try again.');
+
+                return $this->redirect($detail);
+            }
+
+            $courier = Courier::tryFrom((string) $request->request->get('courier')) ?? $courier;
+            $tracking = trim((string) $request->request->get('trackingNumber'));
+            if ($tracking === '') {
+                $problem = 'Please enter the tracking number.';
+            } elseif (preg_match('/^[A-Za-z0-9 -]{4,64}$/', $tracking) !== 1) {
+                $problem = 'Please enter a tracking number of letters and numbers only (4 to 64).';
+            } else {
+                $order->markDispatched($courier, $tracking, new CarbonImmutable());
+                try {
+                    $emails->sendDispatchedEmail($order);
+                    $entityManager->flush();
+                    $this->addFlash('success', 'Marked Dispatched: ' . $order->getEmail() . ' has been emailed (' . $courier->label() . ', tracking number ' . $tracking . ').');
+                } catch (\Throwable $exception) {
+                    $logger->error('Dispatched email failed', [
+                        'order' => $order->getOrderNumber(),
+                        'exception' => $exception,
+                    ]);
+                    $entityManager->refresh($order);
+                    $this->addFlash('danger', 'The email could not be sent, so the order has not been marked Dispatched. Please try again.');
+                }
+
+                return $this->redirect($detail);
+            }
+        }
+
+        return $this->render('admin/dispatched.html.twig', [
+            'order' => $order,
+            'backUrl' => $detail,
+            'couriers' => Courier::cases(),
+            'courier' => $courier,
+            'tracking' => $tracking,
+            'problem' => $problem,
+            'requestBalanceUrl' => $order->canRequestBalance() && $order->getDesignRequest() !== null
+                ? $urls->unsetAll()->setController(self::class)->setAction('requestBalance')->setEntityId($order->getId())->generateUrl()
+                : null,
+        ]);
     }
 
     /**
@@ -322,6 +404,11 @@ class OrderCrudController extends AbstractCrudController
             // Step 11.2: the studio's stage.
             DateTimeField::new('inProductionAt', 'In Production since')->hideOnIndex()->hideOnForm(),
             DateField::new('expectedDispatch', 'Expected dispatch')->hideOnIndex()->hideOnForm(),
+            // Step 11.3.
+            DateTimeField::new('dispatchedAt', 'Dispatched')->hideOnIndex()->hideOnForm(),
+            TextField::new('courierLabel', 'Courier')->hideOnIndex()->hideOnForm(),
+            TextField::new('trackingNumber', 'Tracking number')->hideOnIndex()->hideOnForm(),
+            UrlField::new('trackingUrl', 'Tracking link')->hideOnIndex()->hideOnForm(),
             DateTimeField::new('createdAt')->setDisabled(),
             CollectionField::new('items')->onlyOnDetail(),
         ];

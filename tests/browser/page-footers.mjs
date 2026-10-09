@@ -42,7 +42,7 @@ try {
     const verify = async (label) => {
         const f = await footer();
         const want = expected(f.path);
-        const ok = f.wrappers === 1 && f.footers === (want === 'none' ? 0 : 1) && f.kind === want && (want === 'none' || (f.shown && f.icons === 3));
+        const ok = f.wrappers === 1 && f.footers === (want === 'none' ? 0 : 1) && f.kind === want && (want === 'none' || (f.shown && f.icons === 4));
         check(`${label}: ${f.path} shows ${want === 'none' ? 'no footer' : `the ${want} footer`}`, ok, JSON.stringify(f));
         return f.path;
     };
@@ -77,5 +77,11 @@ try {
         }
     }
     check('the whole route ran as Swup page transitions (no full reloads)', (await ev('window.__sameDocument === true')) && (await ev('performance.getEntriesByType("navigation").length')) === reloads);
+    // The icons in order, Facebook included (9 October 2026), and the Contact page's links.
+    await ev(`location.href = '/contact'`); await sleep(2500);
+    const icons = await ev(`[...document.querySelectorAll('#footer footer a[aria-label]')].map(a => a.getAttribute('aria-label'))`);
+    const links = await ev(`[...document.querySelectorAll('main address a')].map(a => a.textContent.trim()).filter(t => /^(Facebook|Instagram|YouTube)$/.test(t))`);
+    const facebook = await ev(`document.querySelector('[data-footer-facebook]')?.href === document.querySelector('[data-contact-facebook]')?.href && /facebook\\.com/.test(document.querySelector('[data-footer-facebook]')?.href)`);
+    check('footer icons: Contact, Facebook, Instagram, YouTube; the Contact page lists Facebook, Instagram, YouTube (Facebook\'s link is the one setting)', JSON.stringify(icons) === JSON.stringify(['Contact', 'Facebook', 'Instagram', 'YouTube']) && JSON.stringify(links) === JSON.stringify(['Facebook', 'Instagram', 'YouTube']) && facebook, JSON.stringify({ icons, links, facebook }));
     summary();
 } finally { b.close(); }

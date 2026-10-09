@@ -1,0 +1,43 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{#
+    "Mark Dispatched" (Step 11.3): only once the order is paid in full
+    (otherwise a pointer to "Request balance"); confirm the courier and the
+    tracking number, then the order is marked and email 05 goes out.
+#}
+{% block content_title %}Mark order {{ order.orderNumber }} Dispatched{% endblock %}
+
+{% block page_actions %}
+    <a class="btn btn-secondary" href="{{ backUrl }}">Back to the order</a>
+{% endblock %}
+
+{% block main %}
+    {% if order.amountOwed > 0 %}
+        <div class="alert alert-warning" data-dispatch-blocked>
+            This order can't be dispatched yet: the balance of {{ (order.amountOwed / 100)|format_currency('GBP') }} hasn't been paid.
+            {% if requestBalanceUrl %}
+                {{ order.balanceRequestedAt ? 'It was requested on ' ~ order.balanceRequestedAt|date('j F Y', 'Europe/London') ~ '.' : 'Request it first.' }}
+                <a class="btn btn-sm btn-primary ms-2" href="{{ requestBalanceUrl }}" data-dispatch-request-balance>{{ order.balanceRequestedAt ? 'Request balance again' : 'Request balance' }}</a>
+            {% endif %}
+        </div>
+    {% else %}
+        {% if problem %}<div class="alert alert-danger" data-dispatched-problem>{{ problem }}</div>{% endif %}
+        <p data-dispatched-note>This marks the order Dispatched and emails {{ order.email }} "Your Lumen Forma is on its way" with the courier and tracking number. DPD's tracking link is added for DPD.</p>
+        <form method="post" style="max-width: 32rem">
+            <input type="hidden" name="_token" value="{{ csrf_token('dispatched-' ~ order.id) }}">
+            <div class="mb-3">
+                <label class="form-label" for="courier">Courier</label>
+                <select class="form-select" id="courier" name="courier" data-courier>
+                    {% for choice in couriers %}
+                        <option value="{{ choice.value }}"{{ choice == courier ? ' selected' : '' }}>{{ choice.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="tracking-number">Tracking number</label>
+                <input class="form-control" type="text" id="tracking-number" name="trackingNumber" value="{{ tracking }}" maxlength="64" required data-tracking-number>
+            </div>
+            <button type="submit" class="btn btn-primary" data-mark-dispatched>Mark Dispatched and email the customer</button>
+        </form>
+    {% endif %}
+{% endblock %}

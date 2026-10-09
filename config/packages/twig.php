@@ -12,6 +12,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             'lead_time' => '@App\Catalogue\LeadTime',
             // The studio's public email (STUDIO_EMAIL in .env).
             'studio_email' => '%env(STUDIO_EMAIL)%',
+            // The studio's Facebook page (FACEBOOK_URL in .env; a placeholder until the page exists).
+            'facebook_url' => '%env(FACEBOOK_URL)%',
         ],
         'form_themes' => [
             'form/theme/tailwind_layout.html.twig',

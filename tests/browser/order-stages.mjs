@@ -1,4 +1,4 @@
-// Order stages (Step 11.2): In Production. A paid order has "Mark In
+// Order stages (Step 11.2): In Production; (Step 11.3) Dispatched. A paid order has "Mark In
 // Production" (in the Orders list's menu and as a button on its page); the
 // confirm page suggests the expected dispatch date (the end of the 7–14 day
 // lead time from payment, as no quote) and refuses a past date; confirming
@@ -6,7 +6,12 @@
 // rules' format, the order number, the expected dispatch, "View your
 // order") and the action goes; admin shows the stage (column, filter, its
 // dates); the private order page says "In Production" with the expected
-// dispatch. The payment status is kept.
+// dispatch. The payment status is kept. Then "Mark Dispatched": blocked
+// while a balance is owed (with the reason); the courier (DPD suggested) and
+// tracking number (required); marking emails 05 "Your Lumen Forma is on its
+// way" (the email rules' format, courier, tracking number, "Track your
+// delivery" to DPD, "View your order") and both actions go; admin and the
+// private order page show it.
 import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems } from './lib.mjs';
 import { writeFileSync } from 'node:fs';
 
@@ -100,5 +105,47 @@ try {
     await go(c, view);
     const page = await c.ev(`({ status: document.querySelector('main h1')?.nextElementSibling?.innerText, dispatch: document.querySelector('[data-order-dispatch]')?.innerText.replace(/\\s+/g, ' ') })`);
     check(`the private order page: "In Production" and "Expected dispatch ${nice(suggested)}"`, /^IN PRODUCTION ·/i.test(page.status ?? '') && page.dispatch === `EXPECTED DISPATCH ${nice(suggested)}`.replace(/^EXPECTED DISPATCH/, 'EXPECTED DISPATCH'), JSON.stringify(page));
+
+    // Dispatched (Step 11.3). Blocked while a balance is owed.
+    await go(b, `${BASE_URL}/admin/order/${orderId}`, 3000);
+    const dispatchButton = await b.ev(`[...document.querySelectorAll('a')].find(a => /^\\s*Mark Dispatched\\s*$/.test(a.textContent))?.getAttribute('href')`);
+    check('"Mark Dispatched" on the order in production', /\/dispatched/.test(dispatchButton ?? ''), dispatchButton);
+    sql(`update orders set amount_paid = total - 10000 where id = '${orderId}'`);
+    await go(b, new URL(dispatchButton, BASE_URL).href, 3000);
+    const blocked = await b.ev(`({ text: document.querySelector('[data-dispatch-blocked]')?.innerText.replace(/\\s+/g, ' '), form: !!document.querySelector('[data-mark-dispatched]') })`);
+    check('with a balance owed: "This order can\'t be dispatched yet: the balance of £100.00 hasn\'t been paid." and no form', /^This order can't be dispatched yet: the balance of £100\.00 hasn't been paid\./.test(blocked.text ?? '') && !blocked.form, JSON.stringify(blocked));
+    sql(`update orders set amount_paid = total where id = '${orderId}'`);
+
+    // Paid in full: courier and tracking number.
+    await go(b, new URL(dispatchButton, BASE_URL).href, 3000);
+    const dispatchPage = await b.ev(`({ courier: document.querySelector('[data-courier]')?.value, couriers: [...document.querySelectorAll('[data-courier] option')].map(o => o.textContent.trim()), tracking: document.querySelector('[data-tracking-number]')?.value, button: document.querySelector('[data-mark-dispatched]')?.textContent.trim() })`);
+    check('paid in full: the courier (DPD or Palletways, DPD suggested) and the tracking number', dispatchPage.courier === 'dpd' && JSON.stringify(dispatchPage.couriers) === JSON.stringify(['DPD', 'Palletways']) && dispatchPage.tracking === '' && dispatchPage.button === 'Mark Dispatched and email the customer', JSON.stringify(dispatchPage));
+    await b.shot(out('dispatched.png'));
+    await b.ev(`(() => { document.querySelector('[data-tracking-number]').removeAttribute('required'); document.querySelector('[data-mark-dispatched]').click(); })()`); await sleep(2500);
+    check('no tracking number: "Please enter the tracking number." and nothing marked', (await b.ev(`document.querySelector('[data-dispatched-problem]')?.textContent.trim()`)) === 'Please enter the tracking number.' && /in_production/.test(sql(`select stage from orders where id = '${orderId}'`)));
+    const since5 = new Date();
+    await b.ev(`(() => { document.querySelector('[data-tracking-number]').value = '1550 1234 5678'; document.querySelector('[data-mark-dispatched]').click(); })()`); await sleep(3500);
+    const afterDispatch = await b.ev(`({ path: location.pathname, text: document.body.innerText.replace(/\\s+/g, ' '), actions: [...document.querySelectorAll('a')].map(a => a.textContent.trim()).filter(t => /^Mark /.test(t)) })`);
+    check('"Marked Dispatched: … has been emailed (DPD, tracking number 1550 1234 5678)."; no more "Mark" actions', afterDispatch.path === `/admin/order/${orderId}` && afterDispatch.text.includes(`Marked Dispatched: ${EMAIL} has been emailed (DPD, tracking number 1550 1234 5678).`) && afterDispatch.actions.length === 0, JSON.stringify(afterDispatch.actions));
+    const dispatchRow = sql(`select stage, courier, tracking_number, dispatched_at is not null, status from orders where id = '${orderId}'`).replace(/\s+/g, ' ');
+    check('the order: dispatched, DPD, the tracking number, when; still paid', dispatchRow.includes('dispatched dpd 1550 1234 5678 1 paid'), dispatchRow);
+    check('admin shows Stage Dispatched, the courier, tracking number and link', /Stage Dispatched/i.test(afterDispatch.text) && /Courier DPD/i.test(afterDispatch.text) && /Tracking Number 1550 1234 5678/i.test(afterDispatch.text) && afterDispatch.text.includes('track.dpd.co.uk/search?reference=155012345678'), afterDispatch.text.slice(afterDispatch.text.indexOf('Dispatched'), afterDispatch.text.indexOf('Dispatched') + 300));
+
+    // Email 05.
+    let mail5 = null;
+    for (let i = 0; i < 10 && !mail5; i++) { mail5 = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma is on its way"`)).find((m) => new Date(m.Created) > since5); if (!mail5) await sleep(500); }
+    const html5 = mail5 ? (await message(mail5.ID)).HTML : '';
+    writeFileSync(out('email-05.html'), html5);
+    const format5 = customerEmailProblems(html5, 'Ada', 'Your Lumen Forma Gallery lamp has left the studio and is on its way to you.');
+    check(`email 05 "Your Lumen Forma is on its way (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp has left the studio and is on its way to you.", one text size`, mail5?.Subject === `Your Lumen Forma is on its way (${orderNumber})` && format5.length === 0, format5.join('; ') + ' | ' + mail5?.Subject);
+    const plain5 = flat(html5);
+    check('then the invitation to share a photo (Facebook or Instagram, @llunio_studios, or reply) and "By sending us a photo, you\'re happy for us to share it."', plain5.includes("on its way to you. We hope it's even better in person. Would you do us a small favour? Once it's settled in, we'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page. By sending us a photo, you're happy for us to share it. 01 Delivery"), plain5.slice(plain5.indexOf('Dear Ada'), plain5.indexOf('Dear Ada') + 500));
+    const text5 = flat(html5);
+    check('01 Delivery: order number, "Courier DPD", the tracking number; "Track your delivery" (DPD\'s page) and "View your order"', text5.includes(`01 Delivery Order number ${orderNumber} Courier DPD Tracking number 1550 1234 5678 Track your delivery View your order Reply to this email with any questions.`) && /<a href="https:\/\/track\.dpd\.co\.uk\/search\?reference=155012345678"[^>]*>Track your delivery</.test(html5), text5.slice(text5.indexOf('01 Delivery'), text5.indexOf('01 Delivery') + 250));
+
+    // The private order page.
+    await go(c, view);
+    const page5 = await c.ev(`({ status: document.querySelector('main h1')?.nextElementSibling?.innerText, tracking: document.querySelector('[data-order-tracking]')?.innerText.replace(/\\s+/g, ' '), link: document.querySelector('[data-order-tracking] a')?.href })`);
+    check('the private order page: "Dispatched", the courier, tracking number and "Track your delivery"', /^DISPATCHED ·/i.test(page5.status ?? '') && /DPD Tracking number 1550 1234 5678 Track your delivery/i.test(page5.tracking ?? '') && page5.link === 'https://track.dpd.co.uk/search?reference=155012345678', JSON.stringify(page5));
     summary();
 } finally { b.close(); c?.close(); }

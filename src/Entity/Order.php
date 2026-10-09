@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\Courier;
 use App\Enum\DesignRequestStatus;
 use App\Enum\GiftSendTo;
 use App\Enum\OrderStage;
@@ -190,6 +191,18 @@ class Order implements HasReferenceNumber
     #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $expectedDispatch = null;
 
+    /**
+     * Dispatched (Step 11.3): when, by which courier, its tracking number.
+     */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $dispatchedAt = null;
+
+    #[ORM\Column(length: 32, nullable: true, enumType: Courier::class)]
+    private ?Courier $courier = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $trackingNumber = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private CarbonImmutable $createdAt;
 
@@ -246,6 +259,96 @@ class Order implements HasReferenceNumber
         $this->stage = OrderStage::IN_PRODUCTION;
         $this->inProductionAt = $now;
         $this->expectedDispatch = $expectedDispatch;
+    }
+
+    /**
+     * "Mark Dispatched" (admin): a placed order not yet dispatched or later.
+     * It can be dispatched only once paid in full (canDispatchNow).
+     */
+    public function canDispatch(): bool
+    {
+        return $this->isPlaced() && ($this->stage === null || $this->stage === OrderStage::IN_PRODUCTION);
+    }
+
+    /**
+     * Paid in full (decided 9 October 2026: dispatch waits for the balance).
+     */
+    public function canDispatchNow(): bool
+    {
+        return $this->canDispatch() && $this->getAmountOwed() === 0;
+    }
+
+    public function markDispatched(Courier $courier, string $trackingNumber, CarbonImmutable $now): void
+    {
+        $this->stage = OrderStage::DISPATCHED;
+        $this->dispatchedAt = $now;
+        $this->courier = $courier;
+        $this->trackingNumber = $trackingNumber;
+    }
+
+    public function getDispatchedAt(): ?CarbonImmutable
+    {
+        return $this->dispatchedAt;
+    }
+
+    public function getCourier(): ?Courier
+    {
+        return $this->courier;
+    }
+
+    /**
+     * Email 05's opening (wording decided 9 October 2026): the lamps by size,
+     * "Your Lumen Forma Gallery lamp has left the studio and is on its way
+     * to you.", "Your Lumen Forma Gallery lamps have left …", "Your Lumen
+     * Forma Gallery and Studio lamps have left …" (sizes listed naturally,
+     * in order).
+     */
+    public function getOnItsWaySentence(): string
+    {
+        $sizes = [];
+        $lamps = 0;
+        foreach ($this->items as $item) {
+            if (! $item->isExtra()) {
+                $sizes[$item->getSizeName()] = true;
+                $lamps += $item->getQuantity();
+            }
+        }
+
+        $names = array_keys($sizes);
+        $last = array_pop($names);
+        $list = $names === [] ? (string) $last : implode(', ', $names) . ' and ' . $last;
+        if ($lamps <= 1) {
+            return 'Your Lumen Forma ' . $list . ' lamp has left the studio and is on its way to you.';
+        }
+
+        return 'Your Lumen Forma ' . $list . ' lamps have left the studio and are on their way to you.';
+    }
+
+    public function getCourierLabel(): string
+    {
+        return $this->courier?->label() ?? '';
+    }
+
+    public function getTrackingNumber(): ?string
+    {
+        return $this->trackingNumber;
+    }
+
+    /**
+     * The courier's tracking page for this order (DPD), or null.
+     */
+    public function getTrackingUrl(): ?string
+    {
+        return $this->courier !== null && $this->trackingNumber !== null ? $this->courier->trackingUrl($this->trackingNumber) : null;
+    }
+
+    /**
+     * The courier a dispatch most likely uses: Palletways when the order's
+     * delivery was quoted by pallet, otherwise DPD.
+     */
+    public function getLikelyCourier(): Courier
+    {
+        return str_contains(strtolower((string) $this->shippingServiceName), 'palletways') ? Courier::PALLETWAYS : Courier::DPD;
     }
 
     /**

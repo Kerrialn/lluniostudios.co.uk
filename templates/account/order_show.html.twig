@@ -61,7 +61,14 @@
                         <span>{{ [a.recipientName, a.company, a.line1, a.line2, a.city, a.county, a.postcode]|filter(v => v)|join(', ') }}</span>
                     </div>
                 {% endif %}
-                {% if order.expectedDispatch %}
+                {% if order.dispatchedAt %}
+                    {# Dispatched (Step 11.3). #}
+                    <div class="flex flex-col gap-1.5 text-[13px] leading-[1.5]" data-order-tracking>
+                        <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Dispatched {{ order.dispatchedAt|date('j F Y', 'Europe/London') }} · {{ order.courierLabel }}</span>
+                        <span>Tracking number {{ order.trackingNumber }}</span>
+                        {% if order.trackingUrl %}<a href="{{ order.trackingUrl }}" target="_blank" rel="noopener" class="self-start underline transition-colors hover:text-ll-mute">Track your delivery</a>{% endif %}
+                    </div>
+                {% elseif order.expectedDispatch %}
                     {# In Production (Step 11.2). #}
                     <div class="flex flex-col gap-1.5 text-[13px] leading-[1.5]" data-order-dispatch>
                         <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Expected dispatch</span>
