@@ -1,0 +1,39 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{#
+    "Request balance" (Step 10b.4): confirm before emailing the customer to
+    pay the rest of a quote paid by deposit.
+#}
+{% macro money(pence) %}{{ (pence / 100)|format_currency('GBP') }}{% endmacro %}
+{% import _self as m %}
+
+{% block content_title %}Request balance for order {{ order.orderNumber }}{% endblock %}
+
+{% block page_actions %}
+    <a class="btn btn-secondary" href="{{ backUrl }}">{{ app.request.query.get('from') == 'request' ? 'Back to the request' : 'Back to the order' }}</a>
+{% endblock %}
+
+{% block main %}
+    <div class="card mb-4" style="max-width: 32rem">
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <tr><td>Order total</td><td class="text-end">{{ m.money(order.total) }}</td></tr>
+                <tr><td>Paid {{ order.paidAt|date('j F Y', 'Europe/London') }}</td><td class="text-end">{{ m.money(order.amountPaid) }}</td></tr>
+                <tr class="fw-bold"><td>Balance to pay</td><td class="text-end" data-balance-owed>{{ m.money(order.amountOwed) }}</td></tr>
+            </table>
+        </div>
+    </div>
+    <p data-balance-note>
+        This emails {{ order.email }} a link to pay {{ m.money(order.amountOwed) }} by card, Apple Pay or Google Pay on their quote page.
+        {% if order.balanceRequestedAt %}<br><strong>Already requested on {{ order.balanceRequestedAt|date('j F Y, H:i', 'Europe/London') }}</strong>: this sends the email again.{% endif %}
+    </p>
+    <form method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('request-balance-' ~ order.id) }}">
+        <div class="mb-3" style="max-width: 32rem">
+            <label class="form-label" for="balance-note">Personal note (optional)</label>
+            <textarea class="form-control" id="balance-note" name="note" rows="4" maxlength="{{ noteMax }}" data-balance-note-input>{{ note }}</textarea>
+            <div class="form-text">Shown in the email under "Here is the balance…", as the quote email's note. Left empty, nothing extra is added.</div>
+        </div>
+        <button type="submit" class="btn btn-primary" data-request-balance>{{ order.balanceRequestedAt ? 'Send again' : 'Send balance request' }}</button>
+    </form>
+{% endblock %}

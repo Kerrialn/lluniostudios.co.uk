@@ -10,6 +10,8 @@ final readonly class StripePaymentIntentResult
         public string $id,
         public string $clientSecret,
         public string $status,
+        // In pence.
+        public int $amount = 0,
     ) {
     }
 }

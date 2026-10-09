@@ -50,6 +50,16 @@ class OrderRepository extends ServiceEntityRepository
         ]);
     }
 
+    /**
+     * The order whose quote balance (Step 10b.4) this Stripe payment is for.
+     */
+    public function findByBalancePaymentIntentId(string $id): ?Order
+    {
+        return $this->findOneBy([
+            'balancePaymentIntentId' => $id,
+        ]);
+    }
+
     public function findByOrderNumber(string $orderNumber): ?Order
     {
         return $this->findOneBy([
@@ -67,7 +77,7 @@ class OrderRepository extends ServiceEntityRepository
     {
         return $this->findBy([
             'user' => $user,
-            'status' => [OrderStatus::PAID, OrderStatus::FULFILLED],
+            'status' => [OrderStatus::DEPOSIT_PAID, OrderStatus::PAID, OrderStatus::FULFILLED],
         ], [
             'createdAt' => 'DESC',
         ]);

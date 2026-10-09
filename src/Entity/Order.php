@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\DesignRequestStatus;
 use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
 use App\Repository\OrderRepository;
@@ -129,6 +130,21 @@ class Order implements HasReferenceNumber
         'default' => 0,
     ])]
     private int $amountPaid = 0;
+
+    /**
+     * When the studio last emailed the customer to pay the balance (10b.4).
+     */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $balanceRequestedAt = null;
+
+    /**
+     * The balance's own Stripe payment (the deposit's is stripePaymentIntentId).
+     */
+    #[ORM\Column(length: 128, nullable: true)]
+    private ?string $balancePaymentIntentId = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?CarbonImmutable $balancePaidAt = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private CarbonImmutable $createdAt;
@@ -461,9 +477,12 @@ class Order implements HasReferenceNumber
         return $this->shippingCost / 100;
     }
 
+    /**
+     * A payment has been taken: paid in full, or a quote's deposit.
+     */
     public function isPaid(): bool
     {
-        return $this->status === OrderStatus::PAID;
+        return $this->status === OrderStatus::PAID || $this->status === OrderStatus::DEPOSIT_PAID;
     }
 
     public function getDesignRequest(): ?DesignRequest
@@ -497,6 +516,50 @@ class Order implements HasReferenceNumber
     public function setAmountPaid(int $amountPaid): void
     {
         $this->amountPaid = $amountPaid;
+    }
+
+    public function getBalanceRequestedAt(): ?CarbonImmutable
+    {
+        return $this->balanceRequestedAt;
+    }
+
+    public function setBalanceRequestedAt(?CarbonImmutable $balanceRequestedAt): void
+    {
+        $this->balanceRequestedAt = $balanceRequestedAt;
+    }
+
+    public function getBalancePaymentIntentId(): ?string
+    {
+        return $this->balancePaymentIntentId;
+    }
+
+    public function setBalancePaymentIntentId(?string $balancePaymentIntentId): void
+    {
+        $this->balancePaymentIntentId = $balancePaymentIntentId;
+    }
+
+    public function getBalancePaidAt(): ?CarbonImmutable
+    {
+        return $this->balancePaidAt;
+    }
+
+    /**
+     * The balance has been paid: the order is paid in full.
+     */
+    public function markBalancePaid(CarbonImmutable $paidAt): void
+    {
+        $this->balancePaidAt = $paidAt;
+        $this->amountPaid = $this->total;
+        $this->status = OrderStatus::PAID;
+        $this->designRequest?->setStatus(DesignRequestStatus::PAID);
+    }
+
+    /**
+     * A balance the studio can ask for: paid by deposit, the rest still owed.
+     */
+    public function canRequestBalance(): bool
+    {
+        return $this->isPaid() && $this->getAmountOwed() > 0;
     }
 
     /**

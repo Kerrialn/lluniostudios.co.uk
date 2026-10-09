@@ -31,6 +31,12 @@
             New draft, not saved yet. Prices are filled in from the request and the delivery estimate.
         {% endif %}
     </p>
+    {% if paidOrder %}
+        <div class="alert alert-success small" data-quote-order>
+            Paid: order <a href="{{ orderUrl }}">{{ paidOrder.orderNumber }}</a> · Paid {{ m.money(paidOrder.amountPaid) }}{% if paidOrder.amountOwed > 0 %} · Owed {{ m.money(paidOrder.amountOwed) }}{% endif %}{% if paidOrder.balancePaidAt %} · paid in full{% endif %}.
+            {% if requestBalanceUrl %}<a class="btn btn-sm btn-primary ms-2" href="{{ requestBalanceUrl }}">{{ paidOrder.balanceRequestedAt ? 'Request balance again' : 'Request balance' }}</a>{% endif %}
+        </div>
+    {% endif %}
     {% if quote.changedSinceSent %}
         <div class="alert alert-warning small" data-quote-changed>Changed since it was sent: the customer still sees the quote sent on {{ quote.sentAt|date('j F Y', 'Europe/London') }}. Send it again for them to see the changes (valid for a new 14 days).</div>
     {% endif %}
@@ -147,7 +153,7 @@
         </div>
 
         <button type="submit" class="btn btn-secondary">{{ quote.isSent ? 'Save' : 'Save draft' }}</button>
-        <button type="submit" name="send" value="1" class="btn btn-primary ms-2" data-quote-send data-confirm="{{ (quote.isSent ? 'Send this quote again to ' : 'Send this quote to ') ~ designRequest.email ~ '? It will be valid for 14 days.' }}">{{ quote.isSent ? 'Send again' : 'Send quote' }}</button>
+        {% if not paidOrder %}<button type="submit" name="send" value="1" class="btn btn-primary ms-2" data-quote-send data-confirm="{{ (quote.isSent ? 'Send this quote again to ' : 'Send this quote to ') ~ designRequest.email ~ '? It will be valid for 14 days.' }}">{{ quote.isSent ? 'Send again' : 'Send quote' }}</button>{% endif %}
         <span class="small text-muted ms-2">Saving does not send anything. Sending needs the estimated casting date.</span>
     {{ form_end(form) }}
 
@@ -197,7 +203,7 @@
                 event.target.closest('[data-quote-extra]').remove();
                 recalc();
             });
-            form.querySelector('[data-quote-send]').addEventListener('click', (event) => {
+            form.querySelector('[data-quote-send]')?.addEventListener('click', (event) => {
                 if (!window.confirm(event.currentTarget.dataset.confirm)) event.preventDefault();
             });
             form.addEventListener('input', recalc);

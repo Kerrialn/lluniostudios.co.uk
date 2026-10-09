@@ -5,7 +5,13 @@ namespace App\Controller\Admin;
 use App\Entity\Order;
 use App\Enum\OrderStatus;
 use App\Enum\ShippingMethod;
+use App\Service\QuotePayments;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
+use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
@@ -14,11 +20,22 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
+use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Orders, newest first. The gift column shows "Arrive by [date]" for gifts
  * (Step 10.5); an order's page also shows the customer's mobile, delivery
  * instructions and billing address from the Card Payment page.
+ *
+ * A quote paid by deposit (Step 10b.4): "Request balance" (on the order's
+ * page and in the list, while a balance is owed) asks to confirm, then emails
+ * the customer to pay the rest on the quote page, with an optional personal
+ * note; it can be sent again. A request whose order is Deposit Paid has the
+ * same action, which comes here and returns to the request.
  *
  * @extends AbstractCrudController<Order>
  */
@@ -27,6 +44,113 @@ class OrderCrudController extends AbstractCrudController
     public static function getEntityFqcn(): string
     {
         return Order::class;
+    }
+
+    /**
+     * The balance email's personal note, as long as the quote's.
+     */
+    private const NOTE_MAX = 2000;
+
+    public function configureActions(Actions $actions): Actions
+    {
+        $requestBalance = Action::new('requestBalance', 'Request balance', 'fa fa-envelope')
+            ->linkToCrudAction('requestBalance')
+            ->displayIf(static fn (Order $order): bool => $order->canRequestBalance() && $order->getDesignRequest() !== null);
+
+        return $actions
+            ->add(Crud::PAGE_DETAIL, $requestBalance)
+            ->add(Crud::PAGE_INDEX, $requestBalance);
+    }
+
+    /**
+     * "Request balance": a page to confirm (what is owed, when it was last
+     * asked for), then the email.
+     *
+     * @param AdminContext<Order> $context
+     */
+    #[AdminRoute(path: '/{entityId}/request-balance', name: 'request_balance', options: [
+        'methods' => ['GET', 'POST'],
+    ])]
+    public function requestBalance(AdminContext $context, Request $request, QuotePayments $payments, AdminUrlGenerator $urls, LoggerInterface $logger): Response
+    {
+        $order = $context->getEntity()->getInstance();
+        if (! $order instanceof Order) {
+            throw $this->createNotFoundException();
+        }
+
+        // Back to the request when asked from there, otherwise to the order.
+        $designRequest = $request->query->get('from') === 'request' ? $order->getDesignRequest() : null;
+        $detail = $designRequest !== null
+            ? $urls->unsetAll()->setController(DesignRequestCrudController::class)->setAction(Action::DETAIL)->setEntityId($designRequest->getId())->generateUrl()
+            : $urls->unsetAll()->setController(self::class)->setAction(Action::DETAIL)->setEntityId($order->getId())->generateUrl();
+        if (! $order->canRequestBalance() || $payments->tokenFor($order) === null) {
+            $this->addFlash('warning', 'There is no balance to request for this order.');
+
+            return $this->redirect($detail);
+        }
+
+        if ($request->isMethod('POST')) {
+            if (! $this->isCsrfTokenValid('request-balance-' . $order->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Something went wrong; please try again.');
+
+                return $this->redirect($detail);
+            }
+
+            $note = trim((string) $request->request->get('note'));
+            if (mb_strlen($note) > self::NOTE_MAX) {
+                $this->addFlash('danger', 'The personal note can be at most ' . self::NOTE_MAX . ' characters. Nothing has been sent.');
+
+                return $this->render('admin/request_balance.html.twig', [
+                    'order' => $order,
+                    'backUrl' => $detail,
+                    'note' => $note,
+                    'noteMax' => self::NOTE_MAX,
+                ]);
+            }
+
+            try {
+                $payments->requestBalance($order, $note === '' ? null : $note);
+                $this->addFlash('success', 'Balance requested: ' . $order->getEmail() . ' has been emailed to pay ' . self::money($order->getAmountOwed()) . '.');
+            } catch (\Throwable $exception) {
+                $logger->error('Requesting a balance failed', [
+                    'order' => $order->getOrderNumber(),
+                    'exception' => $exception,
+                ]);
+                $this->addFlash('danger', 'The balance request could not be sent. Please try again.');
+            }
+
+            return $this->redirect($detail);
+        }
+
+        return $this->render('admin/request_balance.html.twig', [
+            'order' => $order,
+            'backUrl' => $detail,
+            'note' => '',
+            'noteMax' => self::NOTE_MAX,
+        ]);
+    }
+
+    public function configureFilters(Filters $filters): Filters
+    {
+        return $filters->add(ChoiceFilter::new('status')->setChoices(self::statusLabels()));
+    }
+
+    /**
+     * Label => stored value, for showing and filtering.
+     *
+     * @return array<string, string>
+     */
+    private static function statusLabels(): array
+    {
+        return array_combine(
+            array_map(static fn (OrderStatus $s): string => $s->label(), OrderStatus::cases()),
+            array_map(static fn (OrderStatus $s): string => $s->value, OrderStatus::cases()),
+        );
+    }
+
+        private static function money(int $pence): string
+    {
+        return '£' . number_format($pence / 100, 2);
     }
 
     public function configureCrud(Crud $crud): Crud
@@ -45,11 +169,26 @@ class OrderCrudController extends AbstractCrudController
             IdField::new('id')->onlyOnDetail(),
             TextField::new('orderNumber')->setDisabled(),
             TextField::new('email'),
+            // Shown by its label ("Deposit Paid"; with the cases themselves
+            // EasyAdmin shows their names, e.g. DEPOSIT_PAID); edited as the case.
+            ChoiceField::new('status')
+                ->setChoices(self::statusLabels())
+                ->renderAsBadges([
+                    OrderStatus::PENDING->value => 'secondary',
+                    OrderStatus::AWAITING_PAYMENT->value => 'warning',
+                    OrderStatus::DEPOSIT_PAID->value => 'primary',
+                    OrderStatus::PAID->value => 'success',
+                    OrderStatus::FAILED->value => 'danger',
+                    OrderStatus::CANCELLED->value => 'secondary',
+                    OrderStatus::FULFILLED->value => 'success',
+                ])
+                ->hideOnForm(),
             ChoiceField::new('status')
                 ->setChoices(array_combine(
                     array_map(static fn (OrderStatus $s) => $s->label(), OrderStatus::cases()),
                     OrderStatus::cases(),
-                )),
+                ))
+                ->onlyOnForms(),
             MoneyField::new('subtotal')->setCurrency('GBP')->setStoredAsCents(true),
             MoneyField::new('shippingCost')->setCurrency('GBP')->setStoredAsCents(true),
             MoneyField::new('total')->setCurrency('GBP')->setStoredAsCents(true),
@@ -73,6 +212,8 @@ class OrderCrudController extends AbstractCrudController
             TextField::new('revolutOrderId')->hideOnIndex()->setDisabled(),
             TextField::new('revolutState')->hideOnIndex()->setDisabled(),
             DateTimeField::new('paidAt')->hideOnIndex()->setDisabled(),
+            DateTimeField::new('balanceRequestedAt', 'Balance requested')->hideOnIndex()->hideOnForm(),
+            DateTimeField::new('balancePaidAt', 'Balance paid')->hideOnIndex()->hideOnForm(),
             DateTimeField::new('createdAt')->setDisabled(),
             CollectionField::new('items')->onlyOnDetail(),
         ];

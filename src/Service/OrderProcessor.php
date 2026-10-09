@@ -22,21 +22,23 @@ final readonly class OrderProcessor
     }
 
     /**
-     * Mark an order paid. Idempotent: a repeat call (e.g. webhook + return page)
-     * is a no-op once the order is already PAID.
+     * Mark an order paid: Paid, or Deposit Paid when a quote's deposit was
+     * taken (the balance makes it Paid, Order::markBalancePaid). Idempotent:
+     * a repeat call (e.g. webhook + return page) is a no-op once paid.
      */
     public function markPaid(Order $order, ?string $revolutState = null): void
     {
-        if ($order->getStatus() === OrderStatus::PAID) {
+        if ($order->isPaid()) {
             return;
         }
 
-        $order->setStatus(OrderStatus::PAID);
+        $deposit = $order->getChargeNow() < $order->getTotal();
+        $order->setStatus($deposit ? OrderStatus::DEPOSIT_PAID : OrderStatus::PAID);
         $order->setPaidAt(new CarbonImmutable());
         // The whole total, or a quote's deposit.
         $order->setAmountPaid($order->getChargeNow());
-        // A quoted request is now paid (Step 10b.3).
-        $order->getDesignRequest()?->setStatus(DesignRequestStatus::PAID);
+        // A quoted request is now paid, or its deposit is (Step 10b).
+        $order->getDesignRequest()?->setStatus($deposit ? DesignRequestStatus::DEPOSIT_PAID : DesignRequestStatus::PAID);
 
         if ($revolutState !== null) {
             $order->setRevolutState($revolutState);
@@ -62,7 +64,7 @@ final readonly class OrderProcessor
 
     public function markFailed(Order $order, ?string $revolutState = null): void
     {
-        if ($order->getStatus() === OrderStatus::PAID) {
+        if ($order->isPaid()) {
             return;
         }
 

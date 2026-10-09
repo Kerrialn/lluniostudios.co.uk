@@ -40,6 +40,7 @@ const CHECKS = [
     ['quote-form.mjs'],
     ['quote-send.mjs'],
     ['quote-pay.mjs'],
+    ['quote-balance.mjs'],
 ];
 
 const args = process.argv.slice(2);

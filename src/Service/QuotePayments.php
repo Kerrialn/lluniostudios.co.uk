@@ -14,6 +14,7 @@ use App\Payment\StripePaymentClient;
 use App\Payment\StripePaymentIntentResult;
 use App\Repository\OrderRepository;
 use App\Shipping\DeliveryArea;
+use Carbon\CarbonImmutable;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -23,7 +24,13 @@ use Throwable;
  * delivery and total, linked to the account for the email given; the
  * payment taken is the deposit or the whole total (Order::chargeNow), by
  * card, Apple Pay or Google Pay. Once paid (OrderProcessor::markPaid) the
- * order records what has been paid and the request becomes Paid.
+ * order records what has been paid, and the order and request become Paid
+ * (or Deposit Paid).
+ *
+ * The balance (10b.4): "Request balance" in admin emails the customer to pay
+ * the rest on the quote page (its own Stripe payment); once paid the order
+ * is paid in full (the order and request become Paid) and a receipt is
+ * emailed.
  */
 final readonly class QuotePayments
 {
@@ -34,7 +41,96 @@ final readonly class QuotePayments
         private OrderProcessor $processor,
         private Quotes $quotes,
         private LoggerInterface $logger,
+        private EmailService $emails,
     ) {
+    }
+
+    /**
+     * The quote's private link for an order made from a quote.
+     */
+    public function tokenFor(Order $order): ?string
+    {
+        $request = $order->getDesignRequest();
+
+        return $request === null ? null : $this->quotes->find($request)?->getToken();
+    }
+
+    /**
+     * Email the customer to pay the balance (may be sent again), with the
+     * studio's personal note if one is given.
+     */
+    public function requestBalance(Order $order, ?string $note = null): void
+    {
+        $token = $this->tokenFor($order);
+        if (! $order->canRequestBalance() || $token === null) {
+            throw new \LogicException('No balance to request for ' . $order->getOrderNumber());
+        }
+
+        $this->emails->sendBalanceRequestEmail($order, $token, $note);
+        $order->setBalanceRequestedAt(new CarbonImmutable());
+        $this->orders->save($order, true);
+    }
+
+    /**
+     * The balance's payment for the page to confirm: the earlier one while
+     * it is still for the amount owed, otherwise a new one.
+     */
+    public function startBalance(Order $order, string $cardName): StripePaymentIntentResult
+    {
+        $owed = $order->getAmountOwed();
+        if ($order->getBalancePaymentIntentId() !== null) {
+            try {
+                $intent = $this->stripe->retrievePaymentIntent($order->getBalancePaymentIntentId());
+                if ($intent->amount === $owed && \in_array($intent->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
+                    return $intent;
+                }
+
+                if (\in_array($intent->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
+                    $this->stripe->cancelPaymentIntent($intent->id);
+                }
+            } catch (Throwable $throwable) {
+                $this->logger->warning('Stripe balance payment lookup failed: ' . $throwable->getMessage());
+            }
+        }
+
+        $intent = $this->stripe->createPaymentIntent($owed, $order->getCurrency(), $order->getOrderNumber() . '-balance', $order->getEmail(), cardOnly: true);
+        $order->setBalancePaymentIntentId($intent->id);
+        $this->orders->save($order, true);
+
+        return $intent;
+    }
+
+    /**
+     * After paying the balance (the page, or Stripe's webhook): Stripe is
+     * asked whether it went through; if so the order is paid in full and a
+     * receipt is emailed (once).
+     */
+    public function finishBalance(Order $order): void
+    {
+        if ($order->getBalancePaidAt() !== null || $order->getBalancePaymentIntentId() === null) {
+            return;
+        }
+
+        try {
+            $intent = $this->stripe->retrievePaymentIntent($order->getBalancePaymentIntentId());
+        } catch (Throwable $throwable) {
+            $this->logger->error('Stripe balance payment lookup failed: ' . $throwable->getMessage());
+
+            return;
+        }
+
+        if ($intent->status !== 'succeeded') {
+            return;
+        }
+
+        $balance = $order->getAmountOwed();
+        $order->markBalancePaid(new CarbonImmutable());
+        $this->orders->save($order, true);
+        try {
+            $this->emails->sendBalanceReceivedEmail($order, $balance);
+        } catch (Throwable $throwable) {
+            $this->logger->error('Balance receipt email failed: ' . $throwable->getMessage());
+        }
     }
 
     /**
@@ -43,7 +139,7 @@ final readonly class QuotePayments
     public function paidOrder(DesignRequest $request): ?Order
     {
         foreach ($this->ordersFor($request) as $order) {
-            if (\in_array($order->getStatus(), [OrderStatus::PAID, OrderStatus::FULFILLED], true)) {
+            if (\in_array($order->getStatus(), [OrderStatus::DEPOSIT_PAID, OrderStatus::PAID, OrderStatus::FULFILLED], true)) {
                 return $order;
             }
         }

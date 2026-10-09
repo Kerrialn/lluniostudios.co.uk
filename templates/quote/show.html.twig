@@ -11,6 +11,9 @@
     them, card details, and "Pay £x" (the deposit or the whole total), with
     the same page script as Card Payment (checkout_controller.js). Once
     paid, the payment received and anything still owed instead of the form.
+    The balance (10b.4): once the studio has asked for it, the name on the
+    card, Stripe's boxes (or Apple Pay / Google Pay) and "Pay balance £x";
+    once paid, "paid in full".
 #}
 {% form_theme form 'form_div_layout.html.twig' %}
 {% block title %}Your Quote | Llunio Studios{% endblock %}
@@ -29,7 +32,11 @@
         <div class="flex flex-col gap-3.5 max-w-[640px]">
             <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Quote</h1>
             <p class="m-0 text-[13px] text-ll-mute">Request {{ designRequest.requestNumber }}</p>
-            {% if paidOrder %}
+            {% if paidOrder and paidOrder.balancePaidAt %}
+                <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you. Your order {{ paidOrder.orderNumber }} is paid in full.</p>
+            {% elseif paidOrder and balanceForm %}
+                <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you for your deposit of {{ m.money(paidOrder.amountPaid) }}, received on {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}. The balance of {{ m.money(paidOrder.amountOwed) }} for your order {{ paidOrder.orderNumber }} can be paid below.</p>
+            {% elseif paidOrder %}
                 <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you. Your payment of {{ m.money(paidOrder.amountPaid) }} was received on {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}{{ paidOrder.amountOwed > 0 ? ', with ' ~ m.money(paidOrder.amountOwed) ~ ' to pay later' : '' }}. Your order is {{ paidOrder.orderNumber }}.</p>
             {% elseif expired %}
                 <p class="m-0 text-[15px] leading-[1.5]" role="alert">This quote expired on {{ validUntil|date('j F Y', 'Europe/London') }}. Please <a href="{{ path('contact') }}" class="ll-link">contact us</a> or reply to the quote email, and we'll send you an updated quote.</p>
@@ -39,7 +46,10 @@
             {% if quote.note and not expired %}<p class="m-0 text-[15px] leading-[1.5] whitespace-pre-line">{{ quote.note }}</p>{% endif %}
         </div>
 
-        {% if payable %}
+        {% if balanceForm %}
+            {% form_theme balanceForm 'form_div_layout.html.twig' %}
+            {{ form_start(balanceForm, { attr: { class: 'flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start', novalidate: 'novalidate', 'data-controller': 'checkout', 'data-checkout-stripe-key-value': stripeKey, 'data-checkout-express-url-value': path('quote_balance', { token: token, wallet: 1 }), 'data-checkout-subtotal-value': paidOrder.amountOwed, 'data-checkout-wallet-address-value': 'false', 'data-action': 'submit->checkout#pay' } }) }}
+        {% elseif payable %}
             {{ form_start(form, { attr: { class: 'flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start', novalidate: 'novalidate', 'data-controller': 'checkout', 'data-checkout-stripe-key-value': stripeKey, 'data-checkout-express-url-value': path('quote_pay', { token: token, wallet: 1 }), 'data-checkout-subtotal-value': quote.dueNow, 'data-checkout-wallet-address-value': 'false', 'data-action': 'submit->checkout#pay' } }) }}
         {% else %}
             <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start {{ expired ? 'opacity-50' : '' }}">
@@ -73,7 +83,28 @@
                     </div>
                 {% endfor %}
 
-                {% if payable %}
+                {% if balanceForm %}
+                    <div class="flex flex-col gap-3" data-checkout-target="expressArea" hidden>
+                        <div data-checkout-target="express"></div>
+                        <div class="text-xs text-ll-ink" role="alert" data-checkout-target="expressMessage" hidden></div>
+                    </div>
+                    <div class="{{ section }}">Card details</div>
+                    <div class="{{ grid }}" data-balance-card>
+                        {{ include('checkout/_field.html.twig', { child: balanceForm.cardName, label: 'Name on card *', wide: true }) }}
+                        {% set cardBox = 'll-card-box w-full h-12 px-3.5 flex items-center border border-ll-mute text-[15px] leading-[1.5]' %}
+                        {% for box in [
+                            { target: 'cardNumber', label: 'Card number *', wide: true },
+                            { target: 'cardExpiry', label: 'Expiry (MM / YY) *', wide: false },
+                            { target: 'cardCvc', label: 'Security code (CVC) *', wide: false },
+                        ] %}
+                            <div class="flex flex-col gap-2 {{ box.wide ? 'col-[1/-1]' : '' }}">
+                                <span class="text-[14px]" id="{{ box.target }}-label">{{ box.label }}</span>
+                                <div class="{{ cardBox }}" data-checkout-target="{{ box.target }}" role="group" aria-labelledby="{{ box.target }}-label"></div>
+                                <span class="text-[12px] text-ll-ink" role="alert" hidden data-checkout-target="{{ box.target }}Error"></span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% elseif payable %}
                     {# Apple Pay / Google Pay: shown only when the device offers one. #}
                     <div class="flex flex-col gap-3" data-checkout-target="expressArea" hidden>
                         <div data-checkout-target="express"></div>
@@ -157,11 +188,23 @@
                     {% endif %}
                 </div>
                 <div class="{{ row }} border-t"><span class="text-ll-mute">Estimated casting date</span><span class="text-right">{{ quote.castingDate|date('j F Y') }}</span></div>
-                {% if paidOrder %}
+                {% if paidOrder and paidOrder.balancePaidAt %}
+                    <div class="flex flex-col" data-quote-payments>
+                        <div class="{{ total }}"><span>Deposit {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}</span><span>{{ m.money(paidOrder.chargeNow) }}</span></div>
+                        <div class="{{ total }}"><span>Balance {{ paidOrder.balancePaidAt|date('j F Y', 'Europe/London') }}</span><span>{{ m.money(paidOrder.total - paidOrder.chargeNow) }}</span></div>
+                        <div class="{{ total }}"><span>Paid in full</span><span>{{ m.money(paidOrder.total) }}</span></div>
+                    </div>
+                {% elseif paidOrder %}
                     <div class="flex flex-col" data-quote-payments>
                         <div class="{{ total }}"><span>Paid {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}</span><span>{{ m.money(paidOrder.amountPaid) }}</span></div>
                         <div class="{{ total }}"><span class="{{ paidOrder.amountOwed > 0 ? '' : 'text-ll-mute' }}">Still to pay</span><span>{{ m.money(paidOrder.amountOwed) }}</span></div>
                     </div>
+                    {% if balanceForm %}
+                        <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" hidden></div>
+                        <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">Pay balance {{ m.money(paidOrder.amountOwed) }}</button>
+                        <div class="text-xs text-ll-mute text-center leading-[1.5]">Payment is processed securely by our payment provider. Your card details are never stored by Llunio.</div>
+                        <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
+                    {% endif %}
                 {% elseif payable %}
                     <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" hidden></div>
                     <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">Pay {{ m.money(quote.dueNow) }}</button>
@@ -169,7 +212,9 @@
                     <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
                 {% endif %}
             </aside>
-        {% if payable %}
+        {% if balanceForm %}
+            {{ form_end(balanceForm) }}
+        {% elseif payable %}
             {{ form_end(form) }}
         {% else %}
             </div>

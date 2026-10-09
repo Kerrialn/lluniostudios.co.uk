@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+
+{#
+    After paying a quote's balance (Step 10b.4), laid out like the other
+    thank-you pages: paid in full; while Stripe hasn't confirmed yet, a note
+    that the payment is being confirmed.
+#}
+{% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
+{% import _self as m %}
+{% block title %}Payment Received | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
+{% block body %}
+    {% if order.balancePaidAt %}
+        {{ include('partials/_received.html.twig', {
+            heading: 'Payment Received',
+            message: 'Thank you. Your order ' ~ order.orderNumber ~ ' is now paid in full.',
+            lines: ['Paid in full · ' ~ m.money(order.total)],
+        }) }}
+    {% else %}
+        {{ include('partials/_received.html.twig', {
+            heading: 'Payment Received',
+            message: "Thank you. We're just confirming your payment and will email you shortly.",
+            confirmation: false,
+        }) }}
+    {% endif %}
+{% endblock %}

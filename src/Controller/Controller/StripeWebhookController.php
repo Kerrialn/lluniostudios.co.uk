@@ -5,6 +5,7 @@ namespace App\Controller\Controller;
 use App\Payment\StripePaymentClient;
 use App\Repository\OrderRepository;
 use App\Service\OrderProcessor;
+use App\Service\QuotePayments;
 use Psr\Log\LoggerInterface;
 use Stripe\Exception\SignatureVerificationException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,6 +21,7 @@ class StripeWebhookController extends AbstractController
         private readonly OrderRepository $orderRepository,
         private readonly OrderProcessor $orderProcessor,
         private readonly LoggerInterface $logger,
+        private readonly QuotePayments $quotePayments,
     ) {
     }
 
@@ -45,6 +47,19 @@ class StripeWebhookController extends AbstractController
         if ($paymentIntentId === '') {
             return new JsonResponse([
                 'status' => 'ignored',
+            ]);
+        }
+
+        // A quote's balance (Step 10b.4): paid in full once it succeeds; a
+        // failed balance payment leaves the order as it is (the deposit stands).
+        $balanceOrder = $this->orderRepository->findByBalancePaymentIntentId($paymentIntentId);
+        if ($balanceOrder instanceof \App\Entity\Order) {
+            if ($event->type === 'payment_intent.succeeded') {
+                $this->quotePayments->finishBalance($balanceOrder);
+            }
+
+            return new JsonResponse([
+                'status' => 'ok',
             ]);
         }
 

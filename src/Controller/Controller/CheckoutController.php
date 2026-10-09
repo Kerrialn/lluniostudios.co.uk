@@ -665,7 +665,7 @@ class CheckoutController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if ($order->getStatus() === OrderStatus::PAID) {
+        if ($order->isPaid()) {
             return $this->redirectToRoute('checkout_complete', [
                 'orderNumber' => $orderNumber,
             ]);

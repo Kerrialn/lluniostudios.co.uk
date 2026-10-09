@@ -26,6 +26,10 @@ final readonly class EmailService
 
     public const QUOTE_SUBJECT = 'Your Lumen Forma quote';
 
+    public const BALANCE_SUBJECT = 'Your Lumen Forma balance';
+
+    public const BALANCE_RECEIVED_SUBJECT = 'Your Lumen Forma order is paid in full';
+
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(STUDIO_NOTIFICATION_EMAIL)%')]
@@ -74,6 +78,54 @@ final readonly class EmailService
                 'quote' => $view,
                 'token' => $token,
                 'validUntil' => $validUntil,
+            ],
+        );
+        $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * Asking for a quote's balance (Step 10b.4): the order total, what was
+     * paid and "Pay balance" (the quote page). Replies go to the studio.
+     */
+    public function sendBalanceRequestEmail(Order $order, string $token, ?string $note = null): void
+    {
+        $request = $order->getDesignRequest();
+        $name = $request?->getFullName() ?? (string) $order->getEmail();
+        $email = $this->compose(
+            subject: self::BALANCE_SUBJECT . ', ' . $name,
+            template: '/email/order/balance_request.html.twig',
+            email: (string) $order->getEmail(),
+            name: $name,
+            context: [
+                'order' => $order,
+                'token' => $token,
+                'note' => $note,
+                'firstName' => $request?->getFirstName() ?? $name,
+            ],
+        );
+        $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * The receipt once a quote's balance is paid (Step 10b.4).
+     */
+    public function sendBalanceReceivedEmail(Order $order, int $balance): void
+    {
+        $request = $order->getDesignRequest();
+        $name = $request?->getFullName() ?? (string) $order->getEmail();
+        $email = $this->compose(
+            subject: self::BALANCE_RECEIVED_SUBJECT . ' (' . $order->getOrderNumber() . ')',
+            template: '/email/order/balance_received.html.twig',
+            email: (string) $order->getEmail(),
+            name: $name,
+            context: [
+                'order' => $order,
+                'balance' => $balance,
+                'firstName' => $request?->getFirstName() ?? $name,
             ],
         );
         $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));

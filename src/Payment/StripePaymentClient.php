@@ -82,6 +82,7 @@ final readonly class StripePaymentClient
             id: (string) $intent->id,
             clientSecret: (string) $intent->client_secret,
             status: (string) $intent->status,
+            amount: (int) $intent->amount,
         );
     }
 
@@ -97,6 +98,7 @@ final readonly class StripePaymentClient
             id: (string) $intent->id,
             clientSecret: (string) $intent->client_secret,
             status: (string) $intent->status,
+            amount: (int) $intent->amount,
         );
     }
 

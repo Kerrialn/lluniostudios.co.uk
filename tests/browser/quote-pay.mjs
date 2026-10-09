@@ -3,11 +3,12 @@
 // a different postcode is refused (delivery was quoted for the request's);
 // paying by card (Stripe's test card, typed into Stripe's boxes) makes the
 // order: the quote's lines, delivery and total, the deposit paid and the
-// balance owed, linked to the request (now Paid) and the account for the
+// balance owed, the order and request now Deposit Paid, linked to the account for the
 // email; "Order & Slot Confirmed" shows what was paid and is owed; the quote
 // page then shows the payment instead of the form; the order email and the
 // order in admin show paid and owed. A full-payment quote, paid as Apple Pay /
-// Google Pay would (the page's fields sent with ?wallet=1), is paid in full.
+// Google Pay would (the page's fields sent with ?wallet=1), is paid in full
+// (the order and request Paid).
 import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL } from './lib.mjs';
 
 const { check, summary } = checker();
@@ -129,11 +130,11 @@ try {
     s = await pay(25000);
     const done = await c.ev(`({ path: location.pathname, text: document.querySelector('main').innerText.replace(/\\s+/g, ' ') })`);
     check('paid: "Order & Slot Confirmed", "Paid · £1,564", "Balance to pay later · £2,346"', /\/quote\/.+\/complete$/.test(done.path) && /Order & Slot Confirmed/i.test(done.text) && /Paid · £1,564/.test(done.text) && /Balance to pay later · £2,346/.test(done.text), done.text.slice(0, 300));
-    const order = sql(`select o.order_number, o.status, o.total, o.subtotal, o.shipping_cost, o.amount_paid, o.charge_now, o.shipping_service_name, u.email, r.status as request_status from orders o join users u on u.id = o.user_id join design_request r on r.id = o.design_request_id where o.design_request_id = '${deposit.id}' and o.status = 'paid'`).replace(/\s+/g, ' ');
-    check('the order: paid, total £3,910 (lamps and extra £3,850, delivery £60), £1,564 paid, the account for the email, the request now Paid', /LS-\d{6}-\d{4} paid 391000 385000 6000 156400 156400 DPD Next Day Delivery ada\.pay@example\.test paid/.test(order), order);
-    const items = sql(`select product_title, quantity, unit_price, product_id is null as extra from order_item i join orders o on o.id = i.order_id where o.design_request_id = '${deposit.id}' and o.status = 'paid' order by i.product_id is null, product_title`).replace(/\s+/g, ' ');
+    const order = sql(`select o.order_number, o.status, o.total, o.subtotal, o.shipping_cost, o.amount_paid, o.charge_now, o.shipping_service_name, u.email, r.status as request_status from orders o join users u on u.id = o.user_id join design_request r on r.id = o.design_request_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid'`).replace(/\s+/g, ' ');
+    check('the order: Deposit Paid, total £3,910 (lamps and extra £3,850, delivery £60), £1,564 paid, the account for the email, the request now Deposit Paid', /LS-\d{6}-\d{4} deposit_paid 391000 385000 6000 156400 156400 DPD Next Day Delivery ada\.pay@example\.test deposit_paid/.test(order), order);
+    const items = sql(`select product_title, quantity, unit_price, product_id is null as extra from order_item i join orders o on o.id = i.order_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid' order by i.product_id is null, product_title`).replace(/\s+/g, ' ');
     check("its lines: the design at the quoted price, the extra line", /Lumen Forma Atelier 2 185000 Custom pigment development 1 15000 1 /.test(items), items);
-    const address = sql(`select a.line1, a.city, a.county, a.postcode from orders o join address a on a.id = o.shipping_address_id where o.design_request_id = '${deposit.id}' and o.status = 'paid'`).replace(/\s+/g, ' ');
+    const address = sql(`select a.line1, a.city, a.county, a.postcode from orders o join address a on a.id = o.shipping_address_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid'`).replace(/\s+/g, ' ');
     check('delivered to the confirmed address', /1 High Street Wimborne Dorset BH21 1AA/.test(address), address);
 
     // The quote page now.
@@ -148,10 +149,10 @@ try {
     check('the order email shows the deposit paid and the balance', /Paid \(deposit\) £1,564\.00/.test(confirmationText) && /Balance to pay later £2,346\.00/.test(confirmationText), confirmation?.Subject);
 
     // Admin.
-    const orderId = uuid(sql(`select id from orders where design_request_id = '${deposit.id}' and status = 'paid'`));
+    const orderId = uuid(sql(`select id from orders where design_request_id = '${deposit.id}' and status = 'deposit_paid'`));
     await go(b, `${BASE_URL}/admin/order/${orderId}`, 3000);
     const adminText = await b.ev(`document.querySelector('main, .content').innerText.replace(/\\s+/g, ' ')`);
-    check('the order in admin: Paid £1,564, Owed £2,346, the request', /Paid £1,564\.00/.test(adminText) && /Owed £2,346\.00/.test(adminText) && adminText.includes(number), adminText.slice(0, 400));
+    check('the order in admin: Deposit Paid, Paid £1,564, Owed £2,346, the request', /Status Deposit Paid/.test(adminText) && /Paid £1,564\.00/.test(adminText) && /Owed £2,346\.00/.test(adminText) && adminText.includes(number), adminText.slice(0, 400));
 
     // A full-payment quote, paid as a wallet would (the page's fields with ?wallet=1).
     await go(c, full.link, 3000);
@@ -166,7 +167,7 @@ try {
     await go(c, started.completeUrl.replace(/^https?:\/\/[^/]+/, BASE_URL), 3000);
     const fullDone = await c.ev(`document.querySelector('main').innerText.replace(/\\s+/g, ' ')`);
     const fullOrder = sql(`select o.total, o.amount_paid, r.status from orders o join design_request r on r.id = o.design_request_id where o.design_request_id = '${full.id}' and o.status = 'paid'`).replace(/\s+/g, ' ');
-    check('a full-payment quote is paid in full: "Paid · £910", nothing owed', /Paid · £910/.test(fullDone) && !/Balance to pay later/.test(fullDone) && /91000 91000 paid/.test(fullOrder), fullOrder);
+    check('a full-payment quote is paid in full: "Paid · £910", nothing owed, the order and request Paid', /Paid · £910/.test(fullDone) && !/Balance to pay later/.test(fullDone) && /91000 91000 paid\b/.test(fullOrder), fullOrder);
 
     // Unknown or unsent links.
     await go(c, BASE_URL + '/quote/not-a-real-quote-link-123/complete', 2000);
