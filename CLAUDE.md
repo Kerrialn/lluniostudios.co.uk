@@ -123,4 +123,6 @@ Images upload to `/public/uploads/images` via Vich Uploader with SmartUniqueName
 
 ## For my brother
 
+- **Rector suggestions:** the GitHub "rector" check is advisory (it reports without failing). On 10 October 2026 it suggested changes to 54 files (code tidying such as removing unneeded casts). Whether to apply them is your call (`composer rector` applies, `composer rector-dry` shows them).
+
 - **`Product::$price` type mismatch:** the column is an `integer` (pence) but the property, getter and setter are typed `?string`, so `doctrine:schema:validate` reports the mapping as invalid. Left as it is during the design merge because changing it ripples into the basket code (e.g. `CartItem::setUnitPrice($product->getPrice())`). Fix by typing it `?int` throughout and updating the callers.
