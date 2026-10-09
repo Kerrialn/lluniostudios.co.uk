@@ -1,0 +1,45 @@
+{#
+    The layout of the studio's notification emails (email rules, Step
+    11.0): no greeting, readable at a glance. A short summary at the top
+    (what it is, the facts, for a gift a prominent "Needed by [date]", a
+    link to admin), then the full details underneath.
+
+    Each email fills the blocks: title, kind (e.g. "New request"), summary
+    (rows of {key: value}, set as summaryRows), details. neededBy (optional)
+    is a gift's date. adminUrl and adminLabel are the admin link.
+    Styles for the details: keyStyle / valueStyle (a row), section(name).
+#}
+{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
+{% set keyStyle = 'padding:8px 12px 8px 0;border-bottom:1px solid #3a342b;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
+{% set valueStyle = 'padding:8px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:15px;line-height:24px;color:#ece3d3;' %}
+{% set summaryKey = 'padding:6px 12px 6px 0;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
+{% set summaryValue = 'padding:6px 0;' ~ f ~ 'font-weight:500;font-size:15px;line-height:24px;color:#ece3d3;' %}
+{% macro section(name) %}
+<div style="height:32px;line-height:32px;font-size:1px;">&nbsp;</div>
+<p style="margin:0 0 8px 0;padding:12px 0 0 0;border-top:1px solid #ece3d3;font-family:'Archivo',Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">{{ name }}</p>
+{% endmacro %}
+<!DOCTYPE html>
+<html lang="en-GB">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}{% endblock %}</title></head>
+<body style="margin:0;padding:0;background:#15120e;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#15120e" style="background:#15120e;">
+<tr><td align="center" style="padding:32px 16px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;">
+<tr><td>
+<p style="margin:0 0 16px 0;{{ f }}font-weight:500;font-size:15px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#ece3d3;" data-studio-kind>{% block kind %}{% endblock %}</p>
+{% if neededBy|default(null) %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;"><tr><td bgcolor="#ece3d3" style="background:#ece3d3;padding:12px 16px;{{ f }}font-weight:500;font-size:15px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#15120e;" data-studio-needed-by>Gift · Needed by {{ neededBy|date('j F Y') }}</td></tr></table>
+{% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-studio-summary>
+    {% for key, value in summaryRows %}
+        <tr><td width="30%" style="{{ summaryKey }}">{{ key }}</td><td style="{{ summaryValue }}">{{ value|nl2br }}</td></tr>
+    {% endfor %}
+</table>
+<p style="margin:16px 0 0 0;{{ f }}font-size:15px;line-height:24px;color:#ece3d3;"><a href="{{ adminUrl }}" style="color:#ece3d3;">{{ adminLabel }}</a> · reply to this email to answer the customer.</p>
+{% block details %}{% endblock %}
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

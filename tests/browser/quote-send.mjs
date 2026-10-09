@@ -6,7 +6,7 @@
 // page. Changes saved afterwards reach neither the email nor the page until
 // it is sent again (same link, a new 14 days). An expired quote says so.
 // An unknown link is not found.
-import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, STUDIO_EMAIL } from './lib.mjs';
+import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, STUDIO_EMAIL, customerEmailProblems } from './lib.mjs';
 
 const { check, summary } = checker();
 const b = await open(1440, 1000, 'quote-send', { mobile: false });
@@ -90,9 +90,9 @@ try {
     check('one email: "Your Lumen Forma quote, Ada Send"', mails.length === 1 && mails[0].Subject === 'Your Lumen Forma quote, Ada Send', JSON.stringify(mails.map((m) => m.Subject)));
     const mail = await message(mails[0].ID);
     const text = mail.HTML.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/\s+/g, ' ');
-    const opening = mail.HTML.match(/<p class="lede"[^>]*>([^<]*)<\/p>\s*<p class="lede"[^>]*>([^<]*)<\/p>/);
-    check('the email opens "Dear Ada," (first name only) then "Thank you for your patience. Here is our quote for your Lumen Forma request …", with no heading', opening?.[1] === 'Dear Ada,' && opening?.[2] === `Thank you for your patience. Here is our quote for your Lumen Forma request ${number}.` && !/Your quote is ready/i.test(text) && !/<h1/.test(mail.HTML), JSON.stringify(opening?.slice(1)));
-    check('then the studio\'s note', text.includes('We look forward to casting it.'));
+    const format = customerEmailProblems(mail.HTML, 'Ada', `Thank you for your patience. Here is our quote for your Lumen Forma request ${number}.`);
+    check('the email follows the email rules: Montage C, no heading, "Dear Ada," (first name only) then "Thank you for your patience. Here is our quote for your Lumen Forma request …", one text size', format.length === 0 && !/Your quote is ready/i.test(text), format.join('; '));
+    check('then the studio\'s note, as its own paragraph', /<p [^>]*data-email-note>We look forward to casting it\.<\/p>/.test(mail.HTML) && text.indexOf('We look forward to casting it.') < text.indexOf('Your configuration'));
     check('each design with its configuration and quoted price (£1,850 each)', /Size Atelier/.test(text) && /The Pigment Grey/.test(text) && /Light Smoked Glass LED \/ Dual Array/.test(text) && /Price £1,850 each/.test(text) && !/Starting at/.test(text), text.slice(300, 1200));
     check('the breakdown: lamps, extra line, delivery, total, 40% deposit and the balance', /Lumen Forma Atelier × 2 £3,700/.test(text) && /Custom pigment development £150/.test(text) && /Delivery · DPD Next Day Delivery £60/.test(text) && /Total £3,910/.test(text) && /Deposit to pay now \(40%\) £1,564/.test(text) && /Balance to pay later £2,346/.test(text) && !/VAT/.test(text), text.slice(text.indexOf('Quote'), text.indexOf('Quote') + 500));
     check(`the casting date, "Pay now · £1,564" and "valid until ${validUntil}"`, /Estimated casting date 16 November 2026/.test(text) && /Pay now · £1,564/.test(text) && text.includes(`This quote is valid until ${validUntil}.`), text.slice(text.indexOf('Casting')));

@@ -139,12 +139,16 @@ final readonly class EmailService
     public function sendDesignRequestNotificationEmail(DesignRequest $designRequest): void
     {
         $email = $this->compose(
-            subject: 'New request ' . $designRequest->getRequestNumber() . ' from ' . $designRequest->getFullName(),
+            subject: $subject = StudioSummary::requestSubject($designRequest),
             template: '/email/request/notification.html.twig',
             email: $this->studioNotificationEmail,
             name: 'Llunio Studios',
             context: [
                 'designRequest' => $designRequest,
+                'subject' => $subject,
+                'lamps' => StudioSummary::lamps($designRequest),
+                'customNames' => StudioSummary::customNames($designRequest),
+                'giftDate' => StudioSummary::giftDate($designRequest),
             ],
         );
         $email->replyTo(new Address($designRequest->getEmail(), $designRequest->getFullName()));
@@ -175,12 +179,13 @@ final readonly class EmailService
     public function sendCommissionNotificationEmail(CommissionEnquiry $enquiry): void
     {
         $email = $this->compose(
-            subject: 'New commission enquiry ' . $enquiry->getEnquiryNumber() . ' from ' . ($enquiry->getCompany() ?? $enquiry->getName()),
+            subject: $subject = StudioSummary::commissionSubject($enquiry),
             template: '/email/commission/notification.html.twig',
             email: $this->studioNotificationEmail,
             name: 'Llunio Studios',
             context: [
                 'enquiry' => $enquiry,
+                'subject' => $subject,
             ],
         );
         $email->replyTo(new Address($enquiry->getEmail(), $enquiry->getName()));

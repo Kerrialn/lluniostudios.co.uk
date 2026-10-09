@@ -4,10 +4,11 @@
     lamp. Rows: Size, The Pigment, Cable, Footing, Light, Quantity, Price.
     quoted (optional, the quote email): the quoted price for each lamp, by
     the request item's id; shown in place of the size's price.
+    Text at the body size (15px), as the email rules of Step 11.0.
 #}
 {% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
 {% set keyStyle = 'padding:10px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
-{% set valueStyle = 'padding:10px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:14px;line-height:20px;color:#ece3d3;text-align:right;' %}
+{% set valueStyle = 'padding:10px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:15px;line-height:24px;mso-line-height-rule:exactly;color:#ece3d3;text-align:right;' %}
 {% set items = designRequest.items %}
 {% set quoted = quoted|default({}) %}
 {% for item in items %}
@@ -21,7 +22,7 @@
         {% if items|length > 1 %}{% set labels = labels|merge(['Design ' ~ loop.parent.loop.index ~ ' of ' ~ items|length]) %}{% endif %}
         {% if group.label %}{% set labels = labels|merge([group.label ~ ' of ' ~ item.quantity]) %}{% elseif item.quantity > 1 %}{% set labels = labels|merge(['Same configuration for each lamp']) %}{% endif %}
         {% set light = item.value('Bulb Style', lamp) ~ (item.value('Bulb Count', lamp) ? ' / ' ~ item.value('Bulb Count', lamp) : '') %}
-        <p style="margin:{{ loop.parent.loop.first and loop.first ? '0' : '32px' }} 0 4px 0;{{ f }}font-weight:300;font-size:22px;line-height:28px;letter-spacing:0.03em;text-transform:uppercase;color:#ece3d3;">Lumen Forma</p>
+        <p style="margin:{{ loop.parent.loop.first and loop.first ? '0' : '32px' }} 0 4px 0;{{ f }}font-weight:500;font-size:15px;line-height:24px;letter-spacing:0.08em;text-transform:uppercase;color:#ece3d3;">Lumen Forma</p>
         {% if labels is not empty %}<p style="margin:0 0 10px 0;{{ f }}font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">{{ labels|join(' · ') }}</p>{% endif %}
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
             {% for key, value in {

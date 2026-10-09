@@ -1,57 +1,22 @@
 {#
-    The sign-in email (Step 10.6), in the same style as the design's emails
-    02 and 03: a one-click "Sign in" button, with the 6-digit code
-    underneath as a backup. Both work for 10 minutes.
+    The sign-in email (Step 10.6), in the style of the design's emails: a
+    one-click "Sign in" button, with the 6-digit code underneath as a
+    backup. Both work for 10 minutes. Laid out by email/_customer.html.twig
+    (the email rules of Step 11.0); an account without a name is greeted
+    "Hello,".
 #}
-{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
-{% set label = 'margin:0 0 10px 0;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
-{% set body = 'margin:0 0 16px 0;' ~ f ~ 'font-size:15px;line-height:24px;mso-line-height-rule:exactly;color:#ece3d3;' %}
-<!DOCTYPE html>
-<html lang="en-GB" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
-<meta name="supported-color-schemes" content="light dark">
-<title>Sign in to Llunio Studios</title>
-<style>
-@media only screen and (max-width:620px){.wrap{width:100% !important;}.px,.hpx{padding-left:24px !important;padding-right:24px !important;}.h1{font-size:32px !important;line-height:34px !important;}.lede{font-size:18px !important;line-height:27px !important;}}
-:root{color-scheme:light dark;supported-color-schemes:light dark;}
-</style>
-</head>
-<body style="margin:0;padding:0;background:#15120e;-webkit-text-size-adjust:100%;">
-<span style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">Your sign-in link for Llunio Studios. Your code is {{ code }}.</span>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#15120e" style="background:#15120e;">
-<tr><td align="center" style="padding:0;">
-<table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#15120e;">
-<tr><td bgcolor="#15120e" style="background:#15120e;padding:0;"><img src="{{ absolute_url(asset('images/email/header-montage.jpg')) }}" width="600" alt="Llunio Studios — Llunio lamps" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;{{ f }}font-size:13px;line-height:20px;letter-spacing:0.22em;text-transform:uppercase;color:#ece3d3;"></td></tr>
-<tr><td class="hpx" style="padding:40px 40px 0 40px;">
-<p style="{{ label }}color:#ece3d3;">Your account</p>
-<h1 class="h1" style="margin:0;{{ f }}font-weight:300;font-size:44px;line-height:46px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.03em;color:#ece3d3;">Sign in to<br>Llunio Studios</h1>
-</td></tr>
-<tr><td class="px" style="padding:44px 40px 8px 40px;">
-<p class="lede" style="margin:0 0 24px 0;{{ f }}font-weight:300;font-size:20px;line-height:30px;mso-line-height-rule:exactly;color:#ece3d3;">{{ name ? 'Dear ' ~ name ~ ', press' : 'Press' }} the button below to sign in and see your orders.</p>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td bgcolor="#ece3d3" style="background:#ece3d3;text-align:center;">
-<a href="{{ link }}" target="_blank" style="display:block;padding:18px 24px;{{ f }}font-size:12px;line-height:18px;text-transform:uppercase;letter-spacing:0.16em;color:#15120e;text-decoration:none;">Sign in</a>
-</td></tr></table>
+{% extends 'email/_customer.html.twig' %}
+{% import 'email/_customer.html.twig' as layout %}
+{% set firstName = name %}
+
+{% block title %}Sign in to Llunio Studios{% endblock %}
+{% block preheader %}Your sign-in link for Llunio Studios. Your code is {{ code }}.{% endblock %}
+
+{% block content %}
+<p style="{{ body }}">Press the button below to sign in and see your orders.</p>
+{{ layout.button(link, 'Sign in') }}
 <div style="height:32px;line-height:32px;font-size:1px;">&nbsp;</div>
 <p style="{{ label }}">Or enter this code on the sign-in page</p>
-<p style="margin:0 0 24px 0;{{ f }}font-weight:300;font-size:32px;line-height:36px;letter-spacing:0.2em;color:#ece3d3;">{{ code }}</p>
-<p style="{{ body }}color:#a89b86;">The button and the code work for 10 minutes. If you didn't ask to sign in, you can ignore this email.</p>
-</td></tr>
-<tr><td style="padding:40px 0 0 0;"></td></tr>
-<tr><td class="px" style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="1" style="height:1px;line-height:1px;font-size:1px;background:#3a342b;">&nbsp;</td></tr></table></td></tr>
-<tr><td class="px" style="padding:28px 40px 40px 40px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-<td valign="top" style="{{ f }}font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">Llunio Studios<br>{{ studio_email }}<br>{{ constant('App\\Service\\EmailService::STUDIO_ADDRESS') }}</td>
-<td valign="top" align="right" width="90"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td style="padding:0 0 0 12px;"><a href="https://www.instagram.com/llunio_studios/" target="_blank" title="Llunio Studios on Instagram"><img src="{{ absolute_url(asset('images/email/icon-instagram.png')) }}" width="24" height="24" alt="Instagram" style="display:block;width:24px;height:24px;border:0;{{ f }}font-size:11px;color:#a89b86;"></a></td>
-<td style="padding:0 0 0 12px;"><a href="https://www.youtube.com/@LlunioStudios" target="_blank" title="Llunio Studios on YouTube"><img src="{{ absolute_url(asset('images/email/icon-youtube.png')) }}" width="24" height="24" alt="YouTube" style="display:block;width:24px;height:24px;border:0;{{ f }}font-size:11px;color:#a89b86;"></a></td>
-</tr></table></td></tr></table>
-<p style="margin:24px 0 0 0;{{ f }}font-size:12px;line-height:18px;color:#a89b86;">You're receiving this email because someone asked to sign in to the Llunio Studios account for this address.</p>
-</td></tr>
-</table>
-</td></tr>
-</table>
-</body>
-</html>
+<p style="{{ body }}letter-spacing:0.2em;" data-login-code>{{ code }}</p>
+<p style="{{ body }}">The button and the code work for 10 minutes. If you didn't ask to sign in, you can ignore this email.</p>
+{% endblock %}

@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 9 October 2026 (Step 10b done; Step 11 next).
+Last updated: 9 October 2026 (Step 10b done; Step 11 decisions and email rules recorded; 11.0 in progress).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Nothing has been pushed yet. Never push to `main` or merge anything unless asked. To push: `git push -u origin symfony-7.4-upgrade design-foundation`.
-- **Next step:** Step 11 (order journey emails): outline and questions first. Then Step 11b (Advanced SEO) and Step 12. See "Steps" below.
+- **Next step:** Step 11 (order journey emails), 11.0 first. Then Step 11b (Advanced SEO) and Step 12. See "Steps" below.
 - **The prototype:** `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip`. Inside it:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Unzip and open it in Chrome. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (02 is built; see Step 8).
@@ -56,8 +56,8 @@ Last updated: 9 October 2026 (Step 10b done; Step 11 next).
 | — | `/products`, `/collections` redirect to Lighting Designs; old pages removed | Done | `2418e07` |
 | 9 | Bespoke Commissions (9.1 page and forms, 9.2 saving, uploads and admin, 9.3 thank-you page, email 03, notification) | Done (deferred full browser run for 9.2 and 9.3 done 7 October 2026: 17 of 17 passed) | `73bdb27` (9.1), `74ce773` (9.2), `2a3e0f9` (9.3) |
 | 10 | Checkout reshape (10.1 basket and gift, 10.2 Card Payment page, 10.3 paying by card, 10.4 Apple Pay / Google Pay, 10.5 confirmation and gift details, 10.6 sign-in and order history) | Done (10.1–10.6; Apple Pay and Google Pay still to be tested by hand at launch) | `c1bdd31` (10.1), `8b54643` (10.2), `042aa0d` (10.3), `570274d` (10.4), `10d5537` (10.5), `3db5174` (10.6); footer fix `ae621bb` |
-| 10b | Quotes (10b.1 quote form, 10b.2 sending, 10b.3 paying, 10b.4 balance) | Done (10b.1–10b.4; 10b.3 and 10b.4 checked by hand 9 October 2026; full browser run 32 of 32 passed) | `482b26f` (10b.1), `a4f85fd` (10b.2), `3b2fe1c` (10b.3) |
-| 11 | Order journey emails 01, 03–06 | Not started | — |
+| 10b | Quotes (10b.1 quote form, 10b.2 sending, 10b.3 paying, 10b.4 balance) | Done (10b.1–10b.4; 10b.3 and 10b.4 checked by hand 9 October 2026; full browser run 32 of 32 passed) | `482b26f` (10b.1), `a4f85fd` (10b.2), `3b2fe1c` (10b.3), `031e6bb` (10b.4) |
+| 11 | Order journey emails (11.0 email format, 11.1 email 01 and paid-order notifications, 11.2–11.4 stages and emails 04–06, 11.5 wording pass) | In progress (11.0 done; 11.1 next) | — |
 | 11b | Advanced SEO | Later (nothing built; outline and questions first) | — |
 | 12 | Launch checks | Not started | — |
 
@@ -283,7 +283,7 @@ Decisions of 8 October 2026 are in the table above (Quotes: payment, VAT, extra 
   - Paid and owed also show on the order in admin (Paid, Owed, the request), in "Your Orders" (with the extra lines and the quote's delivery) and in the order email (restyled in Step 11).
   - Migration `Version20261008220000` (the order's request, the amount charged now and the amount paid; orders already paid count as paid in full; undo with `doctrine:migrations:migrate prev`). Browser check `quote-pay.mjs`; unit tests for paid and owed.
 - **10b.4 The balance:** "Request balance" in admin emails the customer a link to pay the rest (card, Apple Pay or Google Pay); once paid the order shows nothing owed.
-  - **Done (checked by hand 9 October 2026; full browser run with `--clean`: 32 of 32 passed):** on an order paid by deposit, "Request balance" (on the order's page and in the list in admin, and from the request's quote page) opens a page to confirm (the total, what was paid, the balance, who will be emailed; "Send balance request", or "Send again" with when it was last asked for), then emails the customer: "Your Lumen Forma balance, {name}", "Dear {first name}," "Here is the balance for your Lumen Forma order {number}.", Order total, Paid {date}, Balance to pay, "Pay balance · £x" (to the quote page), "Reply to this email with any questions." Replies go to the studio's email.
+  - **Done (`031e6bb`; checked by hand 9 October 2026; full browser run with `--clean`: 32 of 32 passed):** on an order paid by deposit, "Request balance" (on the order's page and in the list in admin, and from the request's quote page) opens a page to confirm (the total, what was paid, the balance, who will be emailed; "Send balance request", or "Send again" with when it was last asked for), then emails the customer: "Your Lumen Forma balance, {name}", "Dear {first name}," "Here is the balance for your Lumen Forma order {number}.", Order total, Paid {date}, Balance to pay, "Pay balance · £x" (to the quote page), "Reply to this email with any questions." Replies go to the studio's email.
   - The quote page then says "Thank you for your deposit of £x, received on {date}. The balance of £y for your order {number} can be paid below." with the name on the card (filled in), Stripe's card boxes, Apple Pay / Google Pay, and "Pay balance £y" (no address: it was confirmed with the deposit). The balance is its own Stripe payment; Stripe's webhook also completes it if the customer closes the page before returning.
   - Once paid: "Payment Received" ("Thank you. Your order {number} is now paid in full.", "Paid in full · £total"); the order is paid in full (Paid = total, Owed £0, "Balance paid" date in admin; no more "Request balance"); the quote page shows the deposit, the balance and "Paid in full"; a receipt email.
   - Migration `Version20261009010000` (balance requested, its payment, balance paid). Browser check `quote-balance.mjs`; unit tests.
@@ -298,8 +298,48 @@ Decisions of 8 October 2026 are in the table above (Quotes: payment, VAT, extra 
   - **Statuses (decided 9 October 2026, see "Statuses: deposits"):** paying a deposit makes the order and its request **Deposit Paid** (new status, `deposit_paid`); paying the balance, or paying a quote or basket in full, makes them **Paid**. A Deposit Paid order counts as placed (Your Orders) and paid for everything else (`Order::isPaid()`: a payment has been taken). Admin shows statuses by their labels with badges on the Requests and Orders lists, and both lists can be filtered by status. Migration `Version20261009020000` (data only: orders already paid by deposit with a balance owed, and their requests, become Deposit Paid; undo with `doctrine:migrations:migrate prev`, which makes them Paid again). Checks: `quote-pay.mjs` (Deposit Paid after the deposit, Paid for a full payment), `quote-balance.mjs` (the status in admin's lists, filters, the order's page and edit dropdowns, and in Your Orders, before and after the balance); unit tests in `tests/Entity/OrderPaymentTest.php`.
 - Needs, later: questions 25 (Palletways account) and 26 (packed sizes and weights) for real delivery prices.
 
-### Step 11: Order journey emails (not started)
-Restyle email 01; new order stages In production / Dispatched / Delivered with a tracking-number field and admin buttons sending emails 04–06 (question 16). "Dorset Studio" for every "Bournemouth" in the design's templates. Email images are hosted on the site (`public/images/email/`).
+### Step 11: Order journey emails (in progress)
+Restyle email 01; new order stages In production / Dispatched / Delivered with admin buttons sending emails 04–06; a studio email for every paid order; the email rules below applied to every automated email. "Dorset Studio" for every "Bournemouth" in the design's templates. Email images are hosted on the site (`public/images/email/`).
+
+**Decisions of 9 October 2026 (answers to the Step 11 questions):**
+1. **Stages are marked by hand in admin** (answers question 16). *Later:* DPD tracking could mark Dispatched/Delivered automatically once the DPD account exists.
+2. **Each stage button asks to confirm, then changes the stage and sends its email** (as "Send quote" and "Request balance").
+3. **Expected dispatch date (email 04): set by you when marking In production, pre-filled** from the quote's estimated casting date for quote orders, otherwise from the 7–14 day lead time.
+4. **Dispatched is blocked until the order is Paid in full**, with a message pointing to "Request balance".
+5. **Courier: a choice of DPD or Palletways, plus the tracking number**; the DPD tracking link is built automatically.
+6. **No care text or studio phone number yet:** email 06 is built without the care section and every email leaves out the phone line. *Open items:* the care instructions and the phone number (question 18).
+7. **"View your order": each order gets a long private link** (like the quote page) showing that one order without signing in.
+8. **The studio is emailed (lluniostudios@gmail.com) whenever an order is paid:** checkout, a quote's deposit and a quote's balance.
+
+**Email rules (decided 9 October 2026), for every automated email, existing and new:**
+- *Customer emails:*
+  - No heading block at the top: no small label (e.g. "REQUEST RECEIVED") and no large heading (e.g. "YOUR REQUEST IS WITH US").
+  - Every email opens with "Dear [first name]," then a blank line, then the email's text.
+  - All body text is one size, the same as the personal note (15px). Nothing oversized repeating what's already said.
+  - A personal note, if there is one, is its own paragraph under the opening text.
+  - Example (the request email): "Dear Ada," / blank line / "Thank you for your request. Your design is one of our larger sizes, so we'll be in touch to confirm lead time according to our casting schedule, including a bespoke delivery quote." / blank line / personal note if any.
+  - The payment received (receipt) email is rebuilt from the Claude Design email template, like the others.
+  - Every header uses **Montage C** (`assets/email/header-montage-c.jpg` in the design files: the logo top-left on the photo's empty space), not Montage A.
+- *Studio notification emails (to you):*
+  - No greeting; readable at a glance.
+  - The subject says what it is and the key facts, e.g. "New order · Gallery × 2 · £1,598 · GIFT by 23 Oct" or "New request · Atelier × 1 · Custom pigment".
+  - The top of the email is a short summary: what it is (order, request, commission, deposit or balance paid), the lamps with size and quantity, the amount paid, and for gifts a prominent "Needed by [date]".
+  - The full details (configuration, customer, address, link to admin) follow underneath.
+
+**Sub-steps:**
+- **11.0 Email format (done; checked by hand 9 October 2026; full browser run with `--clean`: 32 of 32 passed):** the rules above applied to the existing emails.
+  - Every customer email now uses one layout, `templates/email/_customer.html.twig`: the Montage C header (`public/images/email/header-montage-c.jpg`, from the design's `assets/email/header-montage-c.jpg`, resized as before and re-encoded with all metadata removed), "Dear {first name}," then a blank line, the email's text, the design's numbered sections (01, 02…), the footer. Body text, table values and totals are all 15px (totals in a slightly heavier weight); small uppercase labels (11px) and fine print (12px, e.g. "Photography is illustrative…" and the footer) stay as in the design. An account without a name (sign-in) is greeted "Hello,".
+  - Moved to it: email 02 (request received: "Thank you for your request. {opening}", then "Your casting slot is now secured. No payment has been taken." as its own paragraph), email 03 (commission: "Thank you for telling us about your idea. We'll be in touch by …"), the quote (its note its own paragraph under the opening), the balance request (likewise), the sign-in email (the code at body size, spaced out) and the newsletter confirmation (only sent from the old maintenance page, question 20; its wording, which still talks of "requesting access to our platform", is left for the wording pass). The receipt is rebuilt from the template: the opening, 01 Order (the order number), 02 Payments.
+  - Email 01 (the order confirmation) is still the old plain email until 11.1 rebuilds it.
+  - Studio notifications use `templates/email/_studio.html.twig`: no greeting; what it is first ("New request", "New commission enquiry"), a gift's "Gift · Needed by [date]" in a cream band, then a summary (request: number and time, lamps by size and quantity, any Custom choices, customer, "Payment: None taken"; commission: number and time, type, who from, contact by, number of files) and "Open … in admin", then the full details. Subjects (`StudioSummary`): "New request · Gallery × 1, Atelier × 1 · Custom pigment" (lamps in the request's order; "· GIFT by 23 Oct" for a gift carried from checkout) and "New commission · For Your Home · Ada Test · 2 files" (the company for a Project).
+  - The old header `public/images/email/header-montage.jpg` (Montage A) is deleted (9 October 2026, at your request).
+  - No database changes. To undo: revert the commit.
+  - Checks: `lib.mjs` gains `customerEmailProblems()` and `studioEmailProblems()`, used by `reserve.mjs`, `commissions-saving.mjs`, `account.mjs`, `quote-send.mjs` and `quote-balance.mjs` (Montage C, no heading, "Dear Ada," then the opening, only the allowed text sizes; the studio summaries and subjects; the receipt's sections); unit tests `tests/Service/StudioSummaryTest.php`.
+- **11.1 Email 01 and paid-order notifications:** email 01 restyled (gifts, quote orders with extra lines, deposits), the private "View your order" link, and the studio email for every paid order.
+- **11.2 In production and email 04** (with the expected dispatch date).
+- **11.3 Dispatched and email 05** (courier and tracking; blocked until paid in full).
+- **11.4 Delivered and email 06** (no care section yet).
+- **11.5 Wording pass:** every email sent to you to read and approve.
 
 ### Step 11b: Advanced SEO (later)
 Added 9 October 2026. Nothing is built for it yet. When we reach it: first outline in plain English what it covers, and ask any questions before building anything.
@@ -334,13 +374,12 @@ None open (questions 1, 2, 6 and 7 answered 7 October 2026).
 26. **Packed sizes and weights** for Atelier, Estate and Monument (delivery prices in Step 10b).
 
 **Commissions and emails**
-16. **Order stages for emails 04–06:** marked by hand in admin, or Dispatched/Delivered from DPD tracking once live?
 17. **Cancellations:** online before production, or by email only?
-18. **Care instructions** for email 06, and a studio phone number for the email footers.
+18. **Care instructions** for email 06, and a studio phone number for the email footers. (Step 11 is built without them; open items.)
 
 **Content and pages**
 20. The newsletter sign-up: keep, move or remove? (Lumen Forma being the only product line at launch is answered.)
 23. **Origin story and T&Cs:** final as written? Checked for consumer-law wording? The T&Cs must also state the **deposit and cancellation terms** for quoted orders (added 8 October 2026).
 24. **Go-live:** a launch date or gift-season deadline that should change the order of steps?
 
-Answered (for reference): Express Payment layout (1), delivery area (2), accounts (6), "View your order" (7), gift date, order confirmation page; commission uploads (15); Lumen Forma is the only product line at launch (part of 20); remove the old shop code; studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.
+Answered (for reference): order stages by hand (16, 9 October 2026); Express Payment layout (1), delivery area (2), accounts (6), "View your order" (7), gift date, order confirmation page; commission uploads (15); Lumen Forma is the only product line at launch (part of 20); remove the old shop code; studio address; "Dorset Studio"; collect from studio (off, kept in code); 3rd-lamp behaviour; upgrade; who builds; Stripe; DPD mock then live per consignment; sizes and weights (placeholders); 2-lamp basket limit; "The Pigment"; quantity rule (1–10 per configuration); bulb count; prices; option prices (none); homepage (Test 2); notifications (lluniostudios@gmail.com); one Reserve page; `/products` and `/collections` redirect; request follow-up by quotes (Step 10b); email 02 wording.

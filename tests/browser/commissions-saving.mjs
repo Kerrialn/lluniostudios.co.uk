@@ -9,7 +9,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, PROJECT_DIR, STUDIO_EMAIL } from './lib.mjs';
+import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, PROJECT_DIR, STUDIO_EMAIL, customerEmailProblems, studioEmailProblems } from './lib.mjs';
 
 const ADMIN = 'lluniostudios@gmail.com';
 const STORE = join(PROJECT_DIR, 'var', 'commission-uploads');
@@ -56,17 +56,24 @@ try {
     // Emails for the Home enquiry.
     await sleep(800);
     let toCustomer = (await mailpit(`to:ada.test@example.test subject:"Your commission enquiry"`)).find((m) => new Date(m.Created) > new Date(Date.now() - 120000));
-    let toStudio = (await mailpit(`to:lluniostudios@gmail.com subject:"${homeNumber}"`))[0];
+    // The studio's notification: its subject has no number, so found by its contents.
+    const studioMail = async (number) => { for (const m of await mailpit(`to:lluniostudios@gmail.com subject:"New commission"`)) if ((await mailBody(m.ID)).HTML.includes(number)) return m; return null; };
+    let toStudio = await studioMail(homeNumber);
     check('email 03 sent to the customer, "Your commission enquiry"', !!toCustomer);
     if (toCustomer) {
         const m = await mailBody(toCustomer.ID);
-        check('email 03: "Dear Ada Test", "by phone" (as chosen), the reference, "For Your Home"', m.HTML.includes('Dear Ada Test, thank you for telling us about your idea.') && m.HTML.includes('in touch by phone to talk it through together') && m.HTML.includes(homeNumber) && m.HTML.includes('For Your Home'));
-        check('email 03: Dorset Studio, never Bournemouth; images hosted on the site', /Dorset Studio/.test(m.HTML) && !/Bournemouth/.test(m.HTML) && m.HTML.includes(BASE_URL + '/images/email/header-montage.jpg'));
+        const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for telling us about your idea. We'll be in touch by phone to talk it through together, whether it's fully formed or still taking shape.");
+        check('email 03 follows the email rules: Montage C, no heading, "Dear Ada," then the opening with "by phone" (as chosen), one text size', format.length === 0, format.join('; '));
+        check('email 03: the reference, "For Your Home"', m.HTML.includes(homeNumber) && m.HTML.includes('For Your Home'));
+        check('email 03: Dorset Studio, never Bournemouth; images hosted on the site', /Dorset Studio/.test(m.HTML) && !/Bournemouth/.test(m.HTML) && m.HTML.includes(BASE_URL + '/images/email/header-montage-c.jpg'));
         writeFileSync(out('email-03-home.html'), m.HTML);
     }
-    check('notification sent to lluniostudios@gmail.com', toStudio?.Subject === `New commission enquiry ${homeNumber} from Ada Test`, toStudio?.Subject);
+    check('notification sent to lluniostudios@gmail.com: "New commission · For Your Home · Ada Test · 2 files"', toStudio?.Subject === 'New commission · For Your Home · Ada Test · 2 files', toStudio?.Subject);
     if (toStudio) {
         const m = await mailBody(toStudio.ID);
+        const format = studioEmailProblems(m.HTML, 'New commission enquiry');
+        const summary = m.HTML.match(/data-studio-summary>([\s\S]*?)<\/table>/)?.[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        check('notification: no greeting; "New commission enquiry" first, then the summary: enquiry, type, from, contact by, files', format.length === 0 && new RegExp(`^Enquiry ${homeNumber} · \\d+ \\w+ 2026, \\d\\d:\\d\\d Type For Your Home From Ada Test Contact by Phone Files 2 files$`).test(summary ?? ''), format.join('; ') + ' | ' + summary);
         check('notification: replies go to the customer', (m.ReplyTo || []).some((r) => r.Address === 'ada.test@example.test'));
         check('notification: every detail, the file names (not attached) and a link to the enquiry in admin', /07700 900123/.test(m.HTML) && /stairwell/.test(m.HTML) && /Hall photo\.jpg \(2\.0MB\)/.test(m.HTML) && /sketch\.pdf \(1\.0MB\)/.test(m.HTML) && (m.Attachments || []).length === 0 && /\/admin\/commission-enquiry\//.test(m.HTML));
         writeFileSync(out('email-commission-notification.html'), m.HTML);
@@ -100,8 +107,8 @@ try {
         check('email 03 for a Project: "by email", the reference, "For Your Project"', m.HTML.includes('in touch by email to talk it through together') && m.HTML.includes(projectNumber) && m.HTML.includes('For Your Project'));
         writeFileSync(out('email-03-project.html'), m.HTML);
     } else check('email 03 for a Project sent', false);
-    toStudio = (await mailpit(`to:lluniostudios@gmail.com subject:"${projectNumber}"`))[0];
-    check('notification for a Project names the company', toStudio?.Subject === `New commission enquiry ${projectNumber} from Test Architects Ltd`, toStudio?.Subject);
+    toStudio = await studioMail(projectNumber);
+    check('notification for a Project names the company: "New commission · For Your Project · Test Architects Ltd…"', /^New commission · For Your Project · Test Architects Ltd( · \d+ files?)?$/.test(toStudio?.Subject ?? ''), toStudio?.Subject);
 
     // The server's own checks (the page's checks bypassed).
     const saved = count('true');

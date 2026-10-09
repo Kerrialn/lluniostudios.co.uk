@@ -5,7 +5,7 @@
 // nothing revealed); "Your Orders" listing placed orders only; an order's
 // page; signing out. An order is placed first (paid with Stripe's test card,
 // as a wallet would).
-import { open, sleep, checker, sql, BASE_URL, MAILPIT_URL, STUDIO_EMAIL } from './lib.mjs';
+import { open, sleep, checker, sql, BASE_URL, MAILPIT_URL, STUDIO_EMAIL, customerEmailProblems } from './lib.mjs';
 
 const { check, summary } = checker();
 const EMAIL = 'ada.signin@example.test';
@@ -69,9 +69,10 @@ try {
     check('then the code step, pointing to the email', /Press the button in the email we've sent to ada\.signin@example\.test, or enter its 6-digit code here\./.test(codeStep), codeStep.slice(0, 200));
     let mail = await latestSignIn(since);
     const button = mail?.HTML.match(/<a href="([^"]+)"[^>]*>Sign in<\/a>/);
-    const code = mail?.HTML.match(/letter-spacing:0\.2em;color:#ece3d3;">(\d{6})</)?.[1];
+    const code = mail?.HTML.match(/data-login-code>(\d{6})</)?.[1];
     check('the email, "Sign in to Llunio Studios": a "Sign in" button and the 6-digit code', !!button && /\/login\/check\?/.test(button[1]) && /^\d{6}$/.test(code ?? ''), mail?.Subject);
-    check('in the brand style, with "Dear Ada" and the 10-minute note', /Dear Ada, press the button below to sign in and see your orders\./.test(mail?.HTML ?? '') && /work for 10 minutes/.test(mail?.HTML ?? '') && /#15120e/.test(mail?.HTML ?? ''));
+    const format = customerEmailProblems(mail?.HTML ?? '', 'Ada', 'Press the button below to sign in and see your orders.');
+    check('it follows the email rules: Montage C, no heading, "Dear Ada," then "Press the button below…", one text size; the 10-minute note', format.length === 0 && /work for 10 minutes/.test(mail?.HTML ?? ''), format.join('; '));
 
     // A tampered link is refused.
     await go(c, button[1].replace(/&amp;/g, '&').replace(/hash=[^&]+/, 'hash=tampered'));

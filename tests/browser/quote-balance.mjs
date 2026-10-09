@@ -12,7 +12,7 @@
 // Requests and Orders lists, the Requests filter, the order's page) and in
 // the customer's Your Orders: Deposit Paid after the deposit, Paid after the
 // balance.
-import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL } from './lib.mjs';
+import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems } from './lib.mjs';
 
 const { check, summary } = checker();
 const b = await open(1440, 1000, 'quote-balance-admin', { mobile: false });
@@ -156,9 +156,11 @@ try {
     const balanceText = flat(balanceHtml);
     check('the email "Your Lumen Forma balance, Ada Balance": "Dear Ada,", the total, paid, the balance, "Pay balance · £2,346"', balanceMail?.Subject === 'Your Lumen Forma balance, Ada Balance' && /Dear Ada,/.test(balanceText) && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\./.test(balanceText) && /Order total £3,910/.test(balanceText) && /Paid \d+ \w+ 20\d\d £1,564/.test(balanceText) && /Balance to pay £2,346/.test(balanceText) && /Pay balance · £2,346/.test(balanceText), balanceText.slice(0, 600));
     // The note: after the opening, before 01, in the quote email's note style, its line break kept.
-    const quoteNote = (await message(quoteMail.ID)).HTML.match(/<p style="([^"]+)">Thank you for your patience with the custom pigment\.<\/p>/)?.[1];
-    const balanceNote = balanceHtml.match(/<p style="([^"]+)" data-balance-note>Casting is going well\.<br \/>\s*We will be in touch before dispatch\.<\/p>/)?.[1];
+    const quoteNote = (await message(quoteMail.ID)).HTML.match(/<p style="([^"]+)" data-email-note>Thank you for your patience with the custom pigment\.<\/p>/)?.[1];
+    const balanceNote = balanceHtml.match(/<p style="([^"]+)" data-email-note data-balance-note>Casting is going well\.<br \/>\s*We will be in touch before dispatch\.<\/p>/)?.[1];
     check('the personal note is in the email under the opening, in the same style as the quote email\'s note', !!quoteNote && balanceNote === quoteNote && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\. Casting is going well\. We will be in touch before dispatch\. .*01 Balance/.test(balanceText), JSON.stringify({ quoteNote, balanceNote }));
+    const balanceFormat = customerEmailProblems(balanceHtml, 'Ada', `Here is the balance for your Lumen Forma order ${orderNumber}.`);
+    check('the balance email follows the email rules: Montage C, no heading, "Dear Ada," then the opening, one text size', balanceFormat.length === 0, balanceFormat.join('; '));
     const balanceLink = balanceHtml.match(/<a href="([^"]+\/quote\/[A-Za-z0-9_-]+)"/)?.[1].replace(/^https?:\/\/[^/]+/, BASE_URL);
     check('"Pay balance" goes to the quote page', balanceLink === link, balanceLink);
 
@@ -219,7 +221,10 @@ try {
     // The receipt.
     await sleep(1000);
     const receipt = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma order is paid in full"`)).filter((m) => new Date(m.Created) > paidSince)[0];
-    const receiptText = receipt ? flat((await message(receipt.ID)).HTML) : '';
+    const receiptHtml = receipt ? (await message(receipt.ID)).HTML : '';
+    const receiptText = flat(receiptHtml);
+    const receiptFormat = customerEmailProblems(receiptHtml, 'Ada', `Thank you. We have received your balance of £2,346, and your Lumen Forma order ${orderNumber} is now paid in full.`);
+    check('the receipt follows the email template and rules: Montage C, no heading, "Dear Ada," then the opening, 01 Order (the order number), 02 Payments, one text size', receiptFormat.length === 0 && new RegExp(`01 Order Order number ${orderNumber} .*02 Payments Deposit`).test(receiptText.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), receiptFormat.join('; '));
     check('a receipt: "Dear Ada,", the balance received, deposit, balance, paid in full', /Dear Ada,/.test(receiptText) && /We have received your balance of £2,346, and your Lumen Forma order LS-\d{6}-\d{4} is now paid in full\./.test(receiptText) && /Deposit · \d+ \w+ 20\d\d £1,564/.test(receiptText) && /Balance · \d+ \w+ 20\d\d £2,346/.test(receiptText) && /Paid in full £3,910/.test(receiptText), receipt?.Subject);
 
     // Afterwards.

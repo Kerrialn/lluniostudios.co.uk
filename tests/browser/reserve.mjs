@@ -1,5 +1,5 @@
 // Step 8: Reserve Your Design, end to end.
-import { open, sleep, sql, out, BASE_URL, MAILPIT_URL } from './lib.mjs';
+import { open, sleep, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems, studioEmailProblems } from './lib.mjs';
 import { writeFileSync } from 'node:fs';
 const b = await open(1440, 900, 'reserve');
 let ok = true;
@@ -102,19 +102,25 @@ check('nothing left to reserve afterwards', (await ev('location.pathname')) === 
 // Emails
 await sleep(800);
 const toCustomer = (await mailpit(`to:ada.test@example.test after:${since.slice(0, 10)}`)).find(m => m.Subject === 'We have your request, Ada Test');
-const toStudio = (await mailpit(`to:lluniostudios@gmail.com subject:"${number}"`))[0];
+let toStudio = null;
+for (const m of (await mailpit(`to:lluniostudios@gmail.com subject:"New request" after:${since.slice(0, 10)}`))) if (!toStudio && (await mailBody(m.ID)).HTML.includes(number)) toStudio = m;
 check('email 02 sent to the customer', !!toCustomer);
-check('notification sent to lluniostudios@gmail.com', !!toStudio && toStudio.Subject === `New request ${number} from Ada Test`, toStudio?.Subject);
+check('notification sent to lluniostudios@gmail.com: "New request · Gallery × 1, Atelier × 1 · Custom pigment"', !!toStudio && toStudio.Subject === 'New request · Gallery × 1, Atelier × 1 · Custom pigment', toStudio?.Subject);
 if (toCustomer) {
     const m = await mailBody(toCustomer.ID);
     check('email 02: request number, both lamps in full, "No payment has been taken", Dorset Studio', m.HTML.includes(number) && /Atelier/.test(m.HTML) && /Smoked Glass LED \/ Dual Array/.test(m.HTML) && /Gallery/.test(m.HTML) && /Dorset Studio/.test(m.HTML) && !/Bournemouth/.test(m.HTML));
-    check('email 02: the opening for a larger size with a custom option, then "Your casting slot is now secured."', m.HTML.includes("Dear Ada Test, thank you for your request. Your design is one of our larger sizes and includes a custom option, so we&#039;ll be in touch to develop it with you and to confirm lead time according to our casting schedule, including a bespoke delivery quote.") && m.HTML.includes('Your casting slot is now secured. No payment has been taken.'));
+    const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for your request. Your design is one of our larger sizes and includes a custom option, so we'll be in touch to develop it with you and to confirm lead time according to our casting schedule, including a bespoke delivery quote.");
+    check('email 02 follows the email rules: Montage C, no heading, "Dear Ada," then the opening for a larger size with a custom option, one text size', format.length === 0, format.join('; '));
+    check('email 02: then "Your casting slot is now secured. No payment has been taken."', m.HTML.includes('Your casting slot is now secured. No payment has been taken.'));
     check('email 02: prices as in the design (from price for Atelier)', /Starting at £1,699/.test(m.HTML) && /£799/.test(m.HTML));
-    check('email 02: images hosted on the site', m.HTML.includes(BASE_URL + '/images/email/header-montage.jpg'));
+    check('email 02: images hosted on the site', m.HTML.includes(BASE_URL + '/images/email/header-montage-c.jpg'));
     writeFileSync(out('email-02.html'), m.HTML);
 }
 if (toStudio) {
     const m = await mailBody(toStudio.ID);
+    const format = studioEmailProblems(m.HTML, 'New request');
+    const summary = m.HTML.match(/data-studio-summary>([\s\S]*?)<\/table>/)?.[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    check('notification: no greeting; "New request" first, then the summary: request, lamps, Custom, customer, no payment', format.length === 0 && new RegExp(`^Request ${number} · \\d+ \\w+ 2026, \\d\\d:\\d\\d Lamps Gallery × 1, Atelier × 1 Custom Pigment Customer Ada Test Payment None taken$`).test(summary ?? ''), format.join('; ') + ' | ' + summary);
     check('notification: replies go to the customer', (m.ReplyTo || []).some(r => r.Address === 'ada.test@example.test'));
     check('notification: every detail and a link to the request in admin', /1 High Street<br \/>\s*Wimborne<br \/>\s*Dorset<br \/>\s*BH21 1AA<br \/>\s*United Kingdom/.test(m.HTML) && /07700 900123/.test(m.HTML) && /Two flights of stairs/.test(m.HTML) && /RAL 7044/.test(m.HTML) && /\/admin\/design-request\//.test(m.HTML));
     writeFileSync(out('email-notification.html'), m.HTML);

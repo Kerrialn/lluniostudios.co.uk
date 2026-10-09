@@ -116,3 +116,32 @@ export async function open(W, H, name = 'default', { mobile = true } = {}) {
     };
     return { send, ev, size, shot, listeners, clearStorage, close: () => { ws.close(); chrome.kill(); } };
 }
+
+// The email rules (Step 11.0). What's wrong with a customer email's HTML, as a
+// list (empty when it follows them): the Montage C header (not Montage A), no
+// heading, "Dear {firstName}," first, then the given opening paragraph
+// (optional), and only the allowed text sizes (15px body, 11px labels, 12px
+// fine print; 1px spacers; the header image's alt text is left out).
+export function customerEmailProblems(html, firstName, opening = null) {
+    const problems = [];
+    if (!html.includes('/images/email/header-montage-c.jpg')) problems.push('no Montage C header');
+    if (/header-montage\.jpg/.test(html)) problems.push('Montage A header');
+    if (/<h1/i.test(html)) problems.push('a heading');
+    const paragraphs = [...html.matchAll(/<p [^>]*>([\s\S]*?)<\/p>/g)].map((m) => m[1].replace(/<br \/>\s*/g, '\n').replace(/&#039;/g, "'").replace(/&amp;/g, '&').trim());
+    if (paragraphs[0] !== `Dear ${firstName},`) problems.push(`opens "${paragraphs[0]}"`);
+    if (opening !== null && paragraphs[1] !== opening) problems.push(`then "${paragraphs[1]}"`);
+    const sizes = new Set([...html.replace(/<img[^>]*>/g, '').matchAll(/font-size:(\d+)px/g)].map((m) => m[1]).filter((s) => !['1', '11', '12', '15'].includes(s)));
+    if (sizes.size > 0) problems.push(`text sizes ${[...sizes].join(', ')}px`);
+    return problems;
+}
+
+// The studio's notification emails: no greeting, what it is first, the summary
+// at the top. What's wrong, as a list.
+export function studioEmailProblems(html, kind) {
+    const problems = [];
+    if (/Dear /.test(html)) problems.push('a greeting');
+    const first = html.match(/data-studio-kind>([^<]*)</)?.[1];
+    if (first !== kind) problems.push(`starts "${first}"`);
+    if (!/data-studio-summary/.test(html)) problems.push('no summary');
+    return problems;
+}
