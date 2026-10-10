@@ -154,6 +154,39 @@ final class LumenFormaCatalogue
         'Bulb Count' => 'bulb count',
     ];
 
+    /**
+     * Longest description a customer can write under a Custom choice.
+     */
+    public const CUSTOM_DESCRIPTION_MAX = 500;
+
+    /**
+     * The box under a Custom choice (10 October 2026): its label and the
+     * message when it is left empty (it is required whenever its Custom
+     * value is chosen, for every lamp). The line under every box is
+     * BasketRules::CUSTOM_CHOICE_NOTE. What is written there is carried into
+     * Reserve Your Design's "Custom Details".
+     *
+     * @var array<string, array{label: string, warning: string}>
+     */
+    public const CUSTOM_PROMPTS = [
+        'The Pigment' => [
+            'label' => 'Describe the colour you have in mind',
+            'warning' => 'Please describe the colour you have in mind to continue.',
+        ],
+        'Cable Colour' => [
+            'label' => 'Describe the cable colour you have in mind or send a link',
+            'warning' => 'Please describe the cable colour you have in mind to continue.',
+        ],
+        'Footing Material' => [
+            'label' => 'Describe the footing material and finish you have in mind',
+            'warning' => 'Please describe the footing material and finish you have in mind to continue.',
+        ],
+        'Bulb Style' => [
+            'label' => 'Describe the bulb you have in mind or send a link',
+            'warning' => 'Please describe the bulb you have in mind to continue.',
+        ],
+    ];
+
     public static function goesToRequest(string $value): bool
     {
         return str_starts_with($value, 'Custom');

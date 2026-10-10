@@ -49,10 +49,11 @@ final class BasketRules
     ];
 
     /**
-     * Shown in the configurator under an option list as soon as a Custom value
-     * is chosen there.
+     * Shown in the configurator under a Custom choice's description box (on
+     * every stage with one), in place of the separate "Custom options are
+     * developed with you and quoted individually." line (10 October 2026).
      */
-    public const CUSTOM_CHOICE_NOTE = 'Custom options are developed with you and quoted individually.';
+    public const CUSTOM_CHOICE_NOTE = 'You can upload reference photos when you reserve your design, Custom options are developed with you and quoted individually.';
 
     /**
      * Replaces the two notes above when a Request size and a Custom choice

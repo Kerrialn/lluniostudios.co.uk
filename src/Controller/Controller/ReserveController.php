@@ -7,18 +7,24 @@ namespace App\Controller\Controller;
 use App\Catalogue\GiftDate;
 use App\Catalogue\LumenFormaPhotos;
 use App\Entity\DesignRequest;
+use App\Entity\DesignRequestFile;
 use App\Enum\GiftSendTo;
+use App\Form\Form\CommissionFields;
 use App\Form\Form\ReserveForm;
 use App\Repository\CartRepository;
 use App\Service\CartResolver;
+use App\Service\CommissionFileStorage;
 use App\Service\DesignRequestLamps;
 use App\Service\EmailService;
 use App\Shipping\DeliveryArea;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -47,6 +53,8 @@ final class ReserveController extends AbstractController
         private readonly EmailService $emailService,
         private readonly LoggerInterface $logger,
         private readonly GiftDate $giftDate,
+        private readonly CommissionFileStorage $storage,
+        private readonly ?Profiler $profiler = null,
     ) {
     }
 
@@ -70,6 +78,9 @@ final class ReserveController extends AbstractController
         }
 
         $customChoices = DesignRequestLamps::hasCustomChoice($items);
+        // What was written under the configurator's Custom choices starts the
+        // "Custom Details" box (still editable).
+        $carriedDetails = $customChoices ? $this->lamps->pendingCustomDetails() : '';
         $prefill = $request->isMethod('GET') ? $request->getSession()->remove(self::PREFILL_KEY) : null;
         $start = [
             'country' => 'GB',
@@ -82,11 +93,28 @@ final class ReserveController extends AbstractController
             $start['giftSendTo'] = GiftSendTo::tryFrom($start['giftSendTo'] ?? '');
         }
 
+        if ($request->isMethod('GET') && '' !== $carriedDetails) {
+            $start['customDetails'] = $carriedDetails;
+        }
+
         $form = $this->createForm(ReserveForm::class, $start, [
             'custom_choices' => $customChoices,
+            // Room for every carried description, and more besides.
+            'custom_details_max' => max(ReserveForm::CUSTOM_DETAILS_MAX, mb_strlen($carriedDetails) + ReserveForm::CUSTOM_DETAILS_MAX),
             'earliest' => $this->giftDate->earliest(),
         ]);
+        $tooLarge = $request->isMethod('POST') && $request->request->count() === 0 && $request->files->count() === 0;
+        if ($tooLarge) {
+            // More was sent than PHP accepts at once (reference photos over
+            // post_max_size), so it arrives empty: as Bespoke Commissions.
+            $this->profiler?->disable();
+        }
+
         $form->handleRequest($request);
+        if ($tooLarge && ! $form->isSubmitted()) {
+            $form->submit(null, false);
+            $form->addError(new FormError(CommissionFields::tooLargeMessage()));
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var array{fullName: string, email: string, phone: string, addressLine1: string, addressLine2: ?string, town: string, county: ?string, postcode: string, country: string, accessNotes: ?string, customDetails?: ?string, gift?: bool, giftNeededBy?: ?\DateTimeImmutable, giftSendTo?: ?GiftSendTo, giftRecipientName?: ?string, giftMessage?: ?string, giftRecipientPhone?: ?string} $data */
@@ -115,6 +143,19 @@ final class ReserveController extends AbstractController
                 $designRequest->addItem($item);
             }
 
+            // Reference photos, kept privately; removed again if saving fails.
+            /** @var list<DesignRequestFile> $stored */
+            $stored = [];
+            if ($customChoices) {
+                foreach ((array) $form->get('referencePhotos')->getData() as $upload) {
+                    if ($upload instanceof UploadedFile) {
+                        $file = $this->storage->storeForRequest($upload);
+                        $stored[] = $file;
+                        $designRequest->addFile($file);
+                    }
+                }
+            }
+
             $this->entityManager->persist($designRequest);
 
             // The basket's lamps are now in the request.
@@ -125,7 +166,16 @@ final class ReserveController extends AbstractController
                 $this->cartRepository->save(cart: $cart);
             }
 
-            $this->entityManager->flush();
+            try {
+                $this->entityManager->flush();
+            } catch (\Throwable $exception) {
+                foreach ($stored as $file) {
+                    $this->storage->remove($file);
+                }
+
+                throw $exception;
+            }
+
             // What was typed is used, and the configurator's choices if its lamp was in the request.
             $request->getSession()->set(ConfiguratorController::FORGET_CHOICES_KEY, $this->lamps->hasNewPending() ? ['reserve', 'configurator'] : ['reserve']);
             $this->lamps->forgetPending();
@@ -154,6 +204,7 @@ final class ReserveController extends AbstractController
             'form' => $form,
             'items' => $items,
             'customChoices' => $customChoices,
+            'carriedDetails' => $carriedDetails,
             // The size's own photo only when every lamp is that size (never another size's).
             'photo' => 1 === \count($sizes) ? (LumenFormaPhotos::forSize((string) reset($sizes))[3] ?? null) : null,
         ]);

@@ -45,7 +45,7 @@ final class LumenFormaConfigurator
     /**
      * Option groups in stage order, then position.
      *
-     * @return list<array{name: string, stage: string, values: list<array{value: string, request: bool}>, sizes: list<string>, warning: string, heading: bool}>
+     * @return list<array{name: string, stage: string, values: list<array{value: string, request: bool}>, sizes: list<string>, warning: string, heading: bool, prompt: ?array{label: string, warning: string}}>
      */
     public function groups(): array
     {
@@ -65,6 +65,7 @@ final class LumenFormaConfigurator
                         'sizes' => [],
                         'warning' => self::warning($name),
                         'heading' => ! \in_array($name, LumenFormaCatalogue::UNTITLED_OPTIONS, true),
+                        'prompt' => LumenFormaCatalogue::CUSTOM_PROMPTS[$name] ?? null,
                     ];
                 }
                 $groups[$name]['sizes'][] = (string) $product->getSlug();
@@ -180,6 +181,38 @@ final class LumenFormaConfigurator
         $noun = LumenFormaCatalogue::CHOICE_NOUNS[$option] ?? mb_strtolower((string) preg_replace('/^The /', '', $option));
 
         return 'Please choose a ' . $noun . ' to continue.';
+    }
+
+    /**
+     * The descriptions sent with a design (its "details": one entry per lamp
+     * entry, { <option name>: <text> }) for each Custom value chosen, in
+     * order: lamp (0-based, as in the configuration), option and text,
+     * trimmed and cut to LumenFormaCatalogue::CUSTOM_DESCRIPTION_MAX
+     * characters ('' when missing; otherwise kept as written, links included).
+     *
+     * @return list<array{lamp: int, option: string, text: string}>
+     */
+    public static function customDescriptions(LumenFormaConfiguration $configuration, mixed $data): array
+    {
+        $details = \is_array($data) && \is_array($data['details'] ?? null) ? array_values($data['details']) : [];
+        $descriptions = [];
+        foreach ($configuration->lamps as $index => $choices) {
+            $written = \is_array($details[$index] ?? null) ? $details[$index] : [];
+            foreach ($choices as [$option, $value]) {
+                if (! LumenFormaCatalogue::goesToRequest($value->getValue())) {
+                    continue;
+                }
+
+                $text = $written[$option->getName()] ?? null;
+                $descriptions[] = [
+                    'lamp' => $index,
+                    'option' => $option->getName(),
+                    'text' => \is_string($text) ? trim(mb_substr(trim($text), 0, LumenFormaCatalogue::CUSTOM_DESCRIPTION_MAX)) : '',
+                ];
+            }
+        }
+
+        return $descriptions;
     }
 
     public static function sizeName(Product $product): string

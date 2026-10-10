@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Entity\CommissionEnquiryFile;
+use App\Entity\DesignRequestFile;
+use App\Entity\StoredFile;
 use App\Service\CommissionFileStorage;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -13,8 +15,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Downloads a file attached to a Bespoke Commissions enquiry, for the studio
- * only. Always as a download under the customer's file name, never opened in
+ * Downloads a file attached to a Bespoke Commissions enquiry, or a request's
+ * reference photo, for the studio only. Always as a download under the customer's file name, never opened in
  * the browser.
  */
 #[IsGranted('ROLE_ADMIN')]
@@ -27,6 +29,17 @@ final class CommissionFileController extends AbstractController
 
     #[Route(path: '/admin/commission-file/{id}', name: 'admin_commission_file', methods: ['GET'])]
     public function download(CommissionEnquiryFile $file): BinaryFileResponse
+    {
+        return $this->send($file);
+    }
+
+    #[Route(path: '/admin/request-file/{id}', name: 'admin_design_request_file', methods: ['GET'])]
+    public function downloadRequestFile(DesignRequestFile $file): BinaryFileResponse
+    {
+        return $this->send($file);
+    }
+
+    private function send(StoredFile $file): BinaryFileResponse
     {
         $path = $this->storage->path($file);
         if (! is_file($path)) {

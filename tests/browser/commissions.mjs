@@ -97,7 +97,7 @@ try {
         const input = (await send('Runtime.evaluate', { expression: `document.querySelector('[data-client=${client}] input[type=file]')` })).result.result;
         await send('DOM.setFileInputFiles', { files, objectId: input.objectId });
         await sleep(400);
-        return ev(`(() => { const f = document.querySelector('[data-client=${client}] [data-commission-target=fileField]'); const e = f.querySelector('[data-commission-target=fileError]'); return { listed: [...f.querySelectorAll('li')].map(l => l.textContent), error: e.hidden ? '' : e.textContent, kept: f.querySelector('input').files.length }; })()`);
+        return ev(`(() => { const f = document.querySelector('[data-client=${client}] [data-controller=file-chooser]'); const e = f.querySelector('[data-file-chooser-target=error]'); return { listed: [...f.querySelectorAll('li')].map(l => l.textContent), error: e.hidden ? '' : e.textContent, kept: f.querySelector('input').files.length }; })()`);
     };
     let f = await choose('project', [make('plan.pdf', 2), make('model.dwg', 3), make('mood.HEIC', 1)]);
     check('several files can be chosen and are listed', JSON.stringify(f.listed) === JSON.stringify(['plan.pdf (2.0MB)', 'model.dwg (3.0MB)', 'mood.HEIC (1.0MB)']) && f.error === '' && f.kept === 3, JSON.stringify(f));

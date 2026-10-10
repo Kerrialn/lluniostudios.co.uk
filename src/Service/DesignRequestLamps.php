@@ -94,6 +94,32 @@ final readonly class DesignRequestLamps
     }
 
     /**
+     * What the customer wrote under the configured lamp's Custom choices
+     * (10 October 2026), as the start of Reserve Your Design's "Custom
+     * Details": one line per description, "The Pigment: …" (with "Lamp 2 · "
+     * first when customised individually), see
+     * LumenFormaConfigurator::customDescriptions(). Empty when there are none.
+     */
+    public function pendingCustomDetails(): string
+    {
+        $pending = $this->requestStack->getSession()->get(self::SESSION_KEY);
+        $design = \is_array($pending) ? ($pending['design'] ?? null) : null;
+        $configuration = $this->configurator->read($design);
+        if (! $configuration instanceof LumenFormaConfiguration) {
+            return '';
+        }
+
+        $lines = [];
+        foreach (LumenFormaConfigurator::customDescriptions($configuration, $design) as $description) {
+            if ('' !== $description['text']) {
+                $lines[] = ($configuration->individually ? 'Lamp ' . ($description['lamp'] + 1) . ' · ' : '') . $description['option'] . ': ' . $description['text'];
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * Whether any lamp has any Custom choice (pigment, cable, footing or
      * bulb): the form then asks for "Custom Details".
      *

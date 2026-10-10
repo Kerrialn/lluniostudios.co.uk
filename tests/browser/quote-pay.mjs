@@ -32,7 +32,7 @@ try {
         await go(b, BASE_URL + '/lighting-designs', 2000);
         await b.ev(`document.querySelector('form[action$="/lighting-designs/add"]').removeAttribute('data-action')`); await sleep(100);
         const lamps = size === 'lumen-forma-gallery' ? [{ ...lamp, 'Bulb Count': undefined, 'The Pigment': 'Custom' }] : [lamp];
-        await b.ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify({ size, quantity, mode: 'all', lamps }))}; f.requestSubmit(); })()`);
+        await b.ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify({ size, quantity, mode: 'all', lamps, details: [{ 'The Pigment': 'Warm grey.' }] }))}; f.requestSubmit(); })()`);
         await sleep(2500);
         const form = { fullName, email: EMAIL, phone: '07700 900123', addressLine1: '1 High Street', town: 'Wimborne', county: 'Dorset', postcode: 'BH21 1AA', customDetails: 'Warm grey.' };
         await b.ev(`(() => { for (const [k, v] of Object.entries(${JSON.stringify(form)})) { const e = document.querySelector('[name="reserve_form[' + k + ']"]'); if (e) e.value = v; } document.querySelector('form[name=reserve_form]').requestSubmit(); })()`); await sleep(3000);

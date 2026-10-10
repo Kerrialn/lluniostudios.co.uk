@@ -15,13 +15,15 @@ const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 const tab = (i) => ev(`document.querySelectorAll('.ll-cfg-unit')[${i}].click()`);
 const more = () => ev(`document.querySelector('[data-action="configurator#more"]').click()`);
+// A Custom choice needs its description (10 October 2026).
+const describe = (g, text = 'A description.') => ev(`(() => { const t = document.querySelector('[data-configurator-target=describe][data-group="${g}"] textarea'); t.value = ${JSON.stringify(text)}; t.dispatchEvent(new Event('input', { bubbles: true })); })()`);
 const fill = async (lamps = 1, values = {}) => {
     const v = { 'The Pigment': 'White', 'Cable Colour': 'Slate Grey', 'Footing Material': 'Brushed Copper', 'Bulb Style': 'Crown Gold LED', 'Bulb Count': 'Single Array', ...values };
     for (const [stage, groups] of [[1, ['The Pigment']], [2, ['Cable Colour']], [3, ['Footing Material']], [4, ['Bulb Style', 'Bulb Count']]]) {
         await jump(stage);
         for (let l = 0; l < lamps; l++) {
             if (lamps > 1) await tab(l);
-            for (const g of groups) { const has = await ev(`!!document.querySelector('.ll-cfg-opt[data-group="${g}"]') && !document.querySelector('[data-configurator-target=group][data-group="${g}"]').hidden`); if (has) await pick(g, l === 1 && v[g + ' 2'] ? v[g + ' 2'] : v[g]); }
+            for (const g of groups) { const has = await ev(`!!document.querySelector('.ll-cfg-opt[data-group="${g}"]') && !document.querySelector('[data-configurator-target=group][data-group="${g}"]').hidden`); if (has) { const value = l === 1 && v[g + ' 2'] ? v[g + ' 2'] : v[g]; await pick(g, value); if (value.startsWith('Custom')) await describe(g); } }
         }
     }
     await jump(5);
@@ -86,7 +88,7 @@ const lamp = { 'The Pigment': 'White', 'Cable Colour': 'Slate Grey', 'Footing Ma
 await fresh(); await open_();
 k = await force({ size: 'lumen-forma-atelier', quantity: 1, mode: 'all', lamps: [{ ...lamp, 'Bulb Count': 'Dual Array' }] });
 check('server: an Atelier sent directly goes to the request route', k.url === '/reserve', k.url);
-await open_(); k = await force({ size: 'lumen-forma-gallery', quantity: 1, mode: 'all', lamps: [{ ...lamp, 'Cable Colour': 'Custom Textile / Length' }] });
+await open_(); k = await force({ size: 'lumen-forma-gallery', quantity: 1, mode: 'all', lamps: [{ ...lamp, 'Cable Colour': 'Custom Textile / Length' }], details: [{ 'Cable Colour': 'Ochre twill.' }] });
 check('server: a Custom value sent directly goes to the request route', k.url === '/reserve', k.url);
 await open_(); k = await force({ size: 'lumen-forma-gallery', quantity: 3, mode: 'all', lamps: [lamp] });
 check('server: 3 lamps sent directly go to the request route', k.url === '/reserve', k.url);

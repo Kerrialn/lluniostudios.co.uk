@@ -1,9 +1,0 @@
-{# An enquiry's attached files on its admin page: each name, its size and a download link (CommissionFileController). #}
-{% for file in entity.instance.files %}
-    <div class="mb-1">
-        <a href="{{ path('admin_commission_file', { id: file.id }) }}">{{ file.originalName }}</a>
-        · {{ file.size >= 1048576 ? (file.size / 1048576)|number_format(1) ~ 'MB' : max(1, (file.size / 1024)|round) ~ 'KB' }}
-    </div>
-{% else %}
-    None
-{% endfor %}

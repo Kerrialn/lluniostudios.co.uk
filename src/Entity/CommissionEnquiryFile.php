@@ -17,7 +17,7 @@ use Symfony\Component\Uid\Uuid;
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'commission_enquiry_file')]
-class CommissionEnquiryFile
+class CommissionEnquiryFile implements StoredFile
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]

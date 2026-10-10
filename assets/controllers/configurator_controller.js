@@ -36,8 +36,7 @@ import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
  *    size, a Custom value, or more than the checkout limit of lamps in the
  *    whole basket. Then it is "Reserve Your Design" (the request route) and
  *    the "Purchase route" note, on The Scale and under the button, says why.
- *    Choosing a Custom value shows a short line under that list (for the lamp
- *    being edited). The server checks again.
+ *    The server checks again.
  *  - Editing a basket line (7.6, edit value): starts from that line's size,
  *    quantity, choices (per lamp when customised individually) on the review.
  *  - Remembered choices (8 October 2026): size, quantity, every option,
@@ -52,10 +51,23 @@ import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
  *    was typed on Reserve Your Design. Not while editing a basket line.
  *    On the review, the line under "Reserve Your Design" is not shown (the
  *    purchase route note says it); "Cast Your Lamp" keeps its line.
+ *  - Custom descriptions (10 October 2026): under a Custom choice, a box to
+ *    describe it (up to 500 characters), for the lamp being edited (each
+ *    lamp starts from the shared text, as with choices). Required while
+ *    Custom is chosen, for every lamp: moving on without it goes back as for
+ *    a missing choice, with "Please describe ... to continue.". Under every
+ *    box, one small line: "You can upload reference photos when you reserve
+ *    your design, Custom options are developed with you and quoted
+ *    individually." (BasketRules::CUSTOM_CHOICE_NOTE). Kept
+ *    while the choice is changed and back, remembered with the choices,
+ *    shown on the review under that choice and sent with the design; only
+ *    those under a Custom choice still chosen count. The server carries
+ *    them into Reserve Your Design's "Custom Details".
  */
 const SLIDE = 'transform .7s cubic-bezier(.2,.7,.2,1)';
 const SWIPE_MIN = 50;
 const MIN_LAMPS = 1;
+const DESCRIPTION_MAX = 500; // LumenFormaCatalogue::CUSTOM_DESCRIPTION_MAX
 const WIDE = '(min-width: 900px)';
 const SIDEWAYS = '(max-width: 899px) and (orientation: landscape)';
 
@@ -63,7 +75,7 @@ export default class extends Controller {
     static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
         'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity',
         'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle', 'modes', 'mode', 'units',
-        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'customNote', 'startAgain'];
+        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'describe', 'describeWarning', 'startAgain'];
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         maxLamps: { type: Number, default: 10 }, basketLamps: Number, maxCheckout: { type: Number, default: 2 },
@@ -80,6 +92,8 @@ export default class extends Controller {
         this.warned = new Set();
         this.mode = 'all';
         this.lampChoices = [];
+        this.details = {};
+        this.lampDetails = [];
         this.unit = 0;
         this.startSize = this.sizeValue;
         if (this.editValue?.id) this.loadDesign(this.editValue);
@@ -173,16 +187,19 @@ export default class extends Controller {
 
     goTo(step, lamp = undefined) {
         const target = Math.max(0, Math.min(this.stagesValue.length - 1, step));
-        // The first stage before the target with a choice missing for any lamp.
+        // The first stage before the target with a choice (or a Custom
+        // choice's description) missing for any lamp.
         const lamps = this.lampConfigurations();
-        const isMissing = (group) => this.available(group) && lamps.some((lamp) => !lamp[group.name]);
+        const details = this.lampDetailTexts();
+        const lampMissing = (group, i) => !lamps[i][group.name] || this.needsDescription(group, lamps[i], details[i]);
+        const isMissing = (group) => this.available(group) && lamps.some((_, i) => lampMissing(group, i));
         const first = this.groupsValue.find((group) => this.stageOf(group) < target && isMissing(group));
         if (first) {
             const stage = this.stageOf(first);
             const missing = this.groupsValue.filter((group) => this.stageOf(group) === stage && isMissing(group));
             missing.forEach((group) => this.warned.add(group.name));
             // Opens the first lamp missing a choice there.
-            if (this.individually()) this.unit = lamps.findIndex((lamp) => missing.some((group) => !lamp[group.name]));
+            if (this.individually()) this.unit = lamps.findIndex((_, i) => missing.some((group) => lampMissing(group, i)));
             this.step = stage;
         } else {
             // A new stage opens on Lamp 1 (or on the lamp asked for, e.g. a review row).
@@ -215,6 +232,30 @@ export default class extends Controller {
         this.renderPhoto();
     }
 
+    // A Custom choice's description, for the lamp being edited.
+    describe(event) {
+        const { group } = event.currentTarget.dataset;
+        const text = event.currentTarget.value.slice(0, DESCRIPTION_MAX);
+        if (this.individually()) {
+            this.lampDetails[this.unit] = { ...(this.lampDetails[this.unit] || {}), [group]: text };
+        } else {
+            this.details[group] = text;
+        }
+        this.renderDescribeWarnings();
+        this.renderReview();
+        this.remember();
+    }
+
+    // "Please describe ... to continue.", once asked for, while still empty.
+    renderDescribeWarnings() {
+        const current = this.current();
+        const details = this.individually() ? this.detailsFor(this.unit) : this.details;
+        this.describeWarningTargets.forEach((el) => {
+            const group = this.groupsValue.find((g) => g.name === el.dataset.group);
+            el.hidden = !(group && this.warned.has(group.name) && this.needsDescription(group, current, details));
+        });
+    }
+
     fewer() {
         this.quantity = Math.max(MIN_LAMPS, this.quantity - 1);
         this.unit = Math.min(this.unit, this.quantity - 1);
@@ -239,6 +280,43 @@ export default class extends Controller {
     // One lamp's choices: the shared ones, overridden by its own.
     choicesFor(i) {
         return { ...this.choices, ...(this.lampChoices[i] || {}) };
+    }
+
+    // One lamp's descriptions, as choicesFor().
+    detailsFor(i) {
+        return { ...this.details, ...(this.lampDetails[i] || {}) };
+    }
+
+    // The descriptions that count for a lamp's choices: under a Custom choice
+    // still chosen, and not empty.
+    customDetails(lamp, details) {
+        return Object.fromEntries(this.groupsValue
+            .filter((group) => this.available(group) && this.isCustom(group, lamp[group.name]))
+            .map((group) => [group.name, (details[group.name] || '').trim()])
+            .filter(([, text]) => text !== ''));
+    }
+
+    isCustom(group, value) {
+        return group.values.some((v) => v.request && v.value === value);
+    }
+
+    // A Custom choice whose description is still empty.
+    needsDescription(group, lamp, details) {
+        return Boolean(group.prompt) && this.isCustom(group, lamp[group.name]) && !(details[group.name] || '').trim();
+    }
+
+    // Every lamp's written descriptions, as lampConfigurations().
+    lampDetailTexts() {
+        return this.individually()
+            ? Array.from({ length: this.quantity }, (_, i) => this.detailsFor(i))
+            : [this.details];
+    }
+
+    // Every lamp's descriptions that count (one entry when customising all).
+    lampDescriptions() {
+        return this.individually()
+            ? Array.from({ length: this.quantity }, (_, i) => this.customDetails(this.choicesFor(i), this.detailsFor(i)))
+            : [this.customDetails(this.choices, this.details)];
     }
 
     // The choices being edited: the current lamp's, or the shared ones.
@@ -280,12 +358,16 @@ export default class extends Controller {
         this.groupTargets.forEach((el) => {
             el.hidden = !el.dataset.sizes.split(',').includes(size.slug);
         });
-        // "Custom options are developed with you..." under a list whose chosen
-        // value (for the lamp being edited) is a Custom one.
-        this.customNoteTargets.forEach((el) => {
+        // The description box under a Custom choice, with the lamp's own text.
+        const details = this.individually() ? this.detailsFor(this.unit) : this.details;
+        this.describeTargets.forEach((el) => {
             const group = this.groupsValue.find((g) => g.name === el.dataset.group);
-            el.hidden = !group?.values.some((v) => v.request && v.value === current[group.name]);
+            el.hidden = !group || !this.isCustom(group, current[group.name]);
+            const box = el.querySelector('textarea');
+            const text = details[el.dataset.group] || '';
+            if (box && box.value !== text) box.value = text;
         });
+        this.renderDescribeWarnings();
         this.warningTargets.forEach((el) => {
             const name = el.dataset.group;
             el.hidden = !(this.warned.has(name) && !current[name]);
@@ -322,13 +404,21 @@ export default class extends Controller {
         this.mode = saved.mode === 'individual' ? 'individual' : 'all';
         this.choices = valid(saved.choices);
         this.lampChoices = (Array.isArray(saved.lamps) ? saved.lamps : []).slice(0, this.maxLampsValue).map(valid);
+        // Descriptions: text only, for options that have the box.
+        const texts = (lamp) => Object.fromEntries(Object.entries(lamp && typeof lamp === 'object' ? lamp : {})
+            .filter(([name, text]) => typeof text === 'string' && this.groupsValue.some((group) => group.name === name && group.prompt))
+            .map(([name, text]) => [name, text.slice(0, DESCRIPTION_MAX)]));
+        this.details = texts(saved.details);
+        this.lampDetails = (Array.isArray(saved.lampDetails) ? saved.lampDetails : []).slice(0, this.maxLampsValue).map(texts);
         return true;
     }
 
-    // Every choice the size needs, made for every lamp.
+    // Every choice the size needs (with a Custom choice's description), made
+    // for every lamp.
     isFinished() {
         const groups = this.groupsValue.filter((group) => this.available(group));
-        return this.lampConfigurations().every((lamp) => groups.every((group) => lamp[group.name]));
+        const details = this.lampDetailTexts();
+        return this.lampConfigurations().every((lamp, i) => groups.every((group) => lamp[group.name] && !this.needsDescription(group, lamp, details[i])));
     }
 
     // A returning visitor with a finished design: the panel already revealed,
@@ -358,6 +448,7 @@ export default class extends Controller {
         if (this.hasChoices()) {
             saveChoices('configurator', {
                 version: 1, size: this.sizeValue, quantity: this.quantity, mode: this.mode, choices: this.choices, lamps: this.lampChoices,
+                details: this.details, lampDetails: this.lampDetails,
             });
         } else {
             forgetChoices('configurator');
@@ -374,6 +465,8 @@ export default class extends Controller {
         this.mode = 'all';
         this.choices = {};
         this.lampChoices = [];
+        this.details = {};
+        this.lampDetails = [];
         this.unit = 0;
         this.warned.clear();
         this.slot = null;
@@ -486,15 +579,20 @@ export default class extends Controller {
             ['Size', size.name, 0], ['Price', size.price, 0], ['Quantity', String(this.quantity), 0],
         ];
         if (this.quantity >= 2) rows.push(['Configuration', this.individually() ? 'Customise Individually' : 'Customise All', 0]);
+        // Under a value: its Custom description (customising all), or each
+        // described option's name and description (a lamp's row).
+        const descriptions = this.lampDescriptions();
         if (this.individually()) {
             this.lampConfigurations().forEach((lamp, i) => {
-                rows.push([`Lamp ${i + 1}`, groups.map((g) => lamp[g.name]).filter(Boolean).join(' · ') || '—', stageOfKey(groups[0]?.stage), i]);
+                const notes = Object.entries(descriptions[i]).map(([name, text]) => `${name}: ${text}`);
+                rows.push([`Lamp ${i + 1}`, groups.map((g) => lamp[g.name]).filter(Boolean).join(' · ') || '—', stageOfKey(groups[0]?.stage), i, notes]);
             });
         } else {
-            groups.forEach((g) => rows.push([g.name, this.choices[g.name] || '—', this.stageOf(g)]));
+            groups.forEach((g) => rows.push([g.name, this.choices[g.name] || '—', this.stageOf(g), undefined,
+                descriptions[0][g.name] ? [descriptions[0][g.name]] : []]));
         }
 
-        this.reviewTarget.replaceChildren(...rows.map(([key, value, stage, lamp]) => {
+        this.reviewTarget.replaceChildren(...rows.map(([key, value, stage, lamp, notes = []]) => {
             const row = document.createElement('button');
             row.type = 'button';
             row.className = 'll-cfg-review-row flex justify-between gap-4 w-full py-[11px] border-b border-ll-line-soft text-[13px] text-left';
@@ -507,6 +605,12 @@ export default class extends Controller {
             const v = document.createElement('span');
             v.className = 'text-right';
             v.textContent = value;
+            notes.forEach((note) => {
+                const n = document.createElement('span');
+                n.className = 'block mt-1 text-[12px] leading-[1.45] text-ll-mute whitespace-pre-line [overflow-wrap:anywhere]';
+                n.textContent = note;
+                v.append(n);
+            });
             row.append(k, v);
             return row;
         }));
@@ -528,6 +632,7 @@ export default class extends Controller {
             lamps: this.lampConfigurations().map((lamp) => Object.fromEntries(this.groupsValue
                 .filter((group) => this.available(group))
                 .map((group) => [group.name, lamp[group.name]]))),
+            details: this.lampDescriptions(),
         });
     }
 

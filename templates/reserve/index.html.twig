@@ -11,6 +11,10 @@
     date and where to send it; "Send directly to the recipient" shows the
     recipient's name, the gift message and their mobile, and the address
     becomes theirs. Shown and hidden by CSS (no script needed).
+    "Custom Details" starts with what was written under the configurator's
+    Custom choices (10 October 2026), still editable; under it, optional
+    "Reference photos" (the Bespoke Commissions file box and rules; files
+    aren't remembered if the visitor leaves the page).
 #}
 {% block title %}Reserve Your Design | Llunio Studios{% endblock %}
 {% form_theme form 'form_div_layout.html.twig' %}
@@ -70,7 +74,13 @@
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.accessNotes, label: 'Site Access & Delivery Notes', hint: "(e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", area: true, wide: true }) }}
                     {% if form.customDetails is defined %}
-                        {{ include('checkout/_field.html.twig', { child: form.customDetails, label: 'Custom Details', hint: "(Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)", area: true, wide: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.customDetails, label: 'Custom Details', hint: "(Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)", area: true, wide: true, attr: { 'data-remember-form-carried': carriedDetails } }) }}
+                    {% endif %}
+                    {# Reference photos (10 October 2026), with a Custom choice: the Bespoke Commissions file box and rules. #}
+                    {% if form.referencePhotos is defined %}
+                        <div class="col-[1/-1]">
+                            {{ include('commissions/_field.html.twig', { child: form.referencePhotos, label: 'Reference photos', hint: "A photo of anything that shows what you have in mind, whether a colour, a material, a finish or a bulb, helps us get it right. Colours and finishes vary between photos and screens, so we'll confirm the details with you before casting.", kind: 'files', drop: 'Choose photos or files — PDF, DWG, JPG, PNG or HEIC, up to 50MB each, 100MB in total' }) }}
+                        </div>
                     {% endif %}
                 </div>
                 {{ form_errors(form) }}

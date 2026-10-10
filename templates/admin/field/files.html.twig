@@ -1,0 +1,9 @@
+{# Customer files on an admin page (a commission enquiry's files, a request's reference photos): each name, its size and a download link (CommissionFileController; the route is the field's "route" option). #}
+{% for file in field.value %}
+    <div class="mb-1">
+        <a href="{{ path(field.customOptions.get('route'), { id: file.id }) }}">{{ file.originalName }}</a>
+        · {{ file.size >= 1048576 ? (file.size / 1048576)|number_format(1) ~ 'MB' : max(1, (file.size / 1024)|round) ~ 'KB' }}
+    </div>
+{% else %}
+    None
+{% endfor %}

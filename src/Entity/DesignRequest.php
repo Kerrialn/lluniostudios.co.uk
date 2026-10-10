@@ -119,6 +119,18 @@ class DesignRequest implements HasReferenceNumber
     private Collection $items;
 
     /**
+     * Reference photos sent with a Custom choice (10 October 2026), kept
+     * privately (CommissionFileStorage) and downloaded from admin.
+     *
+     * @var Collection<int, DesignRequestFile>
+     */
+    #[ORM\OneToMany(targetEntity: DesignRequestFile::class, mappedBy: 'designRequest', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy([
+        'position' => 'ASC',
+    ])]
+    private Collection $files;
+
+    /**
      * Where a request can be delivered, as on the Reserve page.
      */
     /**
@@ -142,6 +154,7 @@ class DesignRequest implements HasReferenceNumber
         $this->customDetails = $customDetails;
         $this->createdAt = new CarbonImmutable();
         $this->items = new ArrayCollection();
+        $this->files = new ArrayCollection();
         $this->requestNumber = ReferenceNumber::make('LR');
     }
 
@@ -366,6 +379,21 @@ class DesignRequest implements HasReferenceNumber
     public function getAccessNotes(): ?string
     {
         return $this->accessNotes;
+    }
+
+    /**
+     * @return Collection<int, DesignRequestFile>
+     */
+    public function getFiles(): Collection
+    {
+        return $this->files;
+    }
+
+    public function addFile(DesignRequestFile $file): void
+    {
+        $file->setDesignRequest($this);
+        $file->setPosition($this->files->count());
+        $this->files->add($file);
     }
 
     public function getCustomDetails(): ?string

@@ -121,6 +121,15 @@ final class ConfiguratorController extends AbstractController
             return $this->redirectToRoute('lighting_designs');
         }
 
+        // Every Custom choice needs its description (the page asks for it first).
+        foreach (LumenFormaConfigurator::customDescriptions($configuration, $data) as $description) {
+            if ('' === $description['text']) {
+                $this->addFlash('error', LumenFormaCatalogue::CUSTOM_PROMPTS[$description['option']]['warning'] ?? 'Please describe each custom choice to continue.');
+
+                return $this->redirectToRoute('lighting_designs');
+            }
+        }
+
         $cart = $this->cartResolver->getCart();
         $editing = $this->editableLine((string) $request->request->get('edit', ''));
         $refusal = $this->basketRules->refusalForAdd($cart, $configuration->product, $configuration->quantity, $configuration->values(), $editing);

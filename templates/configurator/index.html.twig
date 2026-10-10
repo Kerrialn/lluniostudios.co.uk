@@ -260,10 +260,24 @@
                                                         data-configurator-target="option" data-group="{{ group.name }}" data-value="{{ value.value }}" data-action="configurator#choose">{{ value.value }}</button>
                                             {% endfor %}
                                         </div>
-                                        <div class="text-[12px] text-ll-mute" role="alert" data-configurator-target="warning" data-group="{{ group.name }}" hidden>{{ group.warning }}</div>
-                                        {% if group.values|filter(v => v.request) is not empty %}
-                                            <div class="text-[12px] text-ll-mute" aria-live="polite" data-configurator-target="customNote" data-group="{{ group.name }}" hidden>{{ constant('App\\Service\\BasketRules::CUSTOM_CHOICE_NOTE') }}</div>
+                                        {# Under a Custom choice: its description (for the lamp being edited),
+                                           required while Custom is chosen ("Please describe ... to continue."
+                                           when moving on without it), carried into Reserve Your Design's
+                                           "Custom Details". Styled as the site's other fields
+                                           (checkout/_field.html.twig), with the label a little
+                                           smaller (12px) so it doesn't compete with the options. #}
+                                        {% if group.prompt %}
+                                            {% set describeId = groupId ~ '-describe' %}
+                                            <label class="flex flex-col gap-2" for="{{ describeId }}" data-configurator-target="describe" data-group="{{ group.name }}" hidden>
+                                                <span class="text-[12px] leading-[1.5]">{{ group.prompt.label }}</span>
+                                                <textarea id="{{ describeId }}" rows="3" maxlength="{{ constant('App\\Catalogue\\LumenFormaCatalogue::CUSTOM_DESCRIPTION_MAX') }}"
+                                                          class="min-h-24 py-3 resize-y w-full px-3.5 bg-transparent text-ll-ink placeholder:text-ll-mute [color-scheme:dark] border border-ll-mute rounded-none outline-none text-[15px] leading-[1.5] focus:border-ll-ink"
+                                                          data-group="{{ group.name }}" data-action="input->configurator#describe"></textarea>
+                                                <span class="text-[12px] text-ll-mute" role="alert" data-configurator-target="describeWarning" data-group="{{ group.name }}" hidden>{{ group.prompt.warning }}</span>
+                                                <span class="text-[12px] text-ll-mute">{{ constant('App\\Service\\BasketRules::CUSTOM_CHOICE_NOTE') }}</span>
+                                            </label>
                                         {% endif %}
+                                        <div class="text-[12px] text-ll-mute" role="alert" data-configurator-target="warning" data-group="{{ group.name }}" hidden>{{ group.warning }}</div>
                                     </div>
                                 {% endfor %}
                             {% endif %}

@@ -9,7 +9,8 @@
       hint    muted text after the label, e.g. "(optional)"
       kind    'input' (default), 'area', 'select', 'choice' or 'files'
       help    muted text under the control
-      drop    the text inside the file box (kind 'files')
+      drop    the text inside the file box (kind 'files'; checked and listed by
+              file_chooser_controller.js; also used by Reserve Your Design)
       phone   true for the phone field (its hint switches to * when the
               customer would like a call; commission_controller.js)
       phoneRequired  the phone is required to start with (Phone was chosen)
@@ -17,7 +18,11 @@
 {% set kind = kind|default('input') %}
 {% set hint = hint|default('') %}
 {% set box = 'w-full bg-transparent text-ll-ink border border-ll-mute rounded-none outline-none text-[15px] focus:border-ll-ink' %}
-<div class="flex flex-col gap-2" {% if kind == 'files' %}data-commission-target="fileField"{% endif %}>
+<div class="flex flex-col gap-2" {% if kind == 'files' %}{{ stimulus_controller('file-chooser', {
+        maxFileBytes: constant('App\\Form\\Form\\CommissionFields::MAX_FILE_BYTES'),
+        maxTotalBytes: constant('App\\Form\\Form\\CommissionFields::MAX_TOTAL_BYTES'),
+        extensions: constant('App\\Form\\Form\\CommissionFields::FILE_EXTENSIONS'),
+    }) }}{% endif %}>
     {% if kind == 'choice' %}
         <span id="{{ child.vars.id }}_label" class="text-[14px]">{{ label }} <span class="text-ll-mute text-[13px]"></span></span>
         <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="{{ child.vars.id }}_label">
@@ -29,10 +34,10 @@
         </div>
     {% elseif kind == 'files' %}
         <span class="text-[14px]">{{ label }} <span class="text-ll-mute text-[13px]">{{ hint }}</span></span>
-        {{ form_widget(child, { attr: { class: 'peer sr-only', 'data-action': 'commission#files', 'data-commission-target': 'fileInput' } }) }}
+        {{ form_widget(child, { attr: { class: 'peer sr-only', 'data-action': 'file-chooser#choose', 'data-file-chooser-target': 'input' } }) }}
         <label for="{{ child.vars.id }}" class="block border border-ll-mute px-4 py-7 text-center text-[13px] leading-[1.5] text-ll-mute cursor-pointer transition-colors hover:text-ll-ink peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink">{{ drop }}</label>
-        <ul class="flex flex-col gap-1 text-[13px] leading-[1.5] text-ll-mute empty:hidden" data-commission-target="fileList" aria-live="polite"></ul>
-        <span class="text-[12px] text-ll-ink" role="alert" hidden data-commission-target="fileError"></span>
+        <ul class="flex flex-col gap-1 text-[13px] leading-[1.5] text-ll-mute empty:hidden" data-file-chooser-target="list" aria-live="polite"></ul>
+        <span class="text-[12px] text-ll-ink" role="alert" hidden data-file-chooser-target="error"></span>
     {% else %}
         <label for="{{ child.vars.id }}" class="text-[14px]">{{ label }}
             {%- if phone|default(false) -%}

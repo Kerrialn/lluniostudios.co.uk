@@ -60,12 +60,7 @@
     </section>
 
     <section class="ll-reveal-body max-w-[760px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(40px,6vw,88px)] flex flex-col gap-8 text-[15px] leading-[1.5]"
-             {{ stimulus_controller('commission', {
-                 client: client,
-                 maxFileBytes: constant('App\\Form\\Form\\CommissionFields::MAX_FILE_BYTES'),
-                 maxTotalBytes: constant('App\\Form\\Form\\CommissionFields::MAX_TOTAL_BYTES'),
-                 extensions: constant('App\\Form\\Form\\CommissionFields::FILE_EXTENSIONS'),
-             }) }}>
+             {{ stimulus_controller('commission', { client: client }) }}>
         <div class="grid grid-cols-2 border border-ll-ink" role="group" aria-label="Who the commission is for">
             {% for key, label in { home: 'For Your Home', project: 'For Your Project' } %}
                 <button type="button" class="px-3 py-4 text-center text-[12px] leading-[1.5] uppercase tracking-[0.14em] transition-opacity hover:opacity-70 aria-pressed:bg-ll-ink aria-pressed:text-ll-bg aria-pressed:hover:opacity-85"

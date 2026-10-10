@@ -1,7 +1,7 @@
 // Removes the test data the browser checks leave on the local site:
 // - baskets with no account created since the given time (the checks' baskets,
 //   and any basket of your own made in that time);
-// - requests, Bespoke Commissions enquiries (with their stored files),
+// - requests and Bespoke Commissions enquiries (with their stored files),
 //   orders (with their addresses) and accounts of the test customer (any
 //   address @example.test);
 // - Mailpit emails to @example.test, the studio notifications for those
@@ -15,8 +15,13 @@ export async function cleanUp(since) {
     const at = (since instanceof Date ? since : new Date(since)).toISOString().replace('T', ' ').slice(0, 19);
 
     const baskets = sql(`with t as (select id from cart c where c.created_at >= '${at}' and not exists (select 1 from users u where u.cart_id = c.id)), o as (delete from cart_item_option where cart_item_id in (select id from cart_item where cart_id in (select id from t)) returning 1), i as (delete from cart_item where cart_id in (select id from t) returning 1) delete from cart where id in (select id from t)`);
+    const storedNames = (query) => [...sql(query).matchAll(/\b[0-9a-f]{32}(?:\.[a-z]+)?\b/g)].map((m) => m[0]);
+    // Requests' reference photos are kept in the same folder (10 October 2026).
+    const stored = [
+        ...storedNames(`select f.stored_name from design_request_file f join design_request r on r.id = f.design_request_id where r.email like '%@example.test'`),
+        ...storedNames(`select f.stored_name from commission_enquiry_file f join commission_enquiry e on e.id = f.enquiry_id where e.email like '%@example.test'`),
+    ];
     const requests = sql(`delete from design_request where email like '%@example.test'`);
-    const stored = [...sql(`select f.stored_name from commission_enquiry_file f join commission_enquiry e on e.id = f.enquiry_id where e.email like '%@example.test'`).matchAll(/\b[0-9a-f]{32}(?:\.[a-z]+)?\b/g)].map((m) => m[0]);
     stored.forEach((name) => rmSync(join(PROJECT_DIR, 'var', 'commission-uploads', name), { force: true }));
     const enquiries = sql(`delete from commission_enquiry where email like '%@example.test'`);
     const orderCount = Number(sql(`select count(*) from orders where email like '%@example.test'`).match(/\d+/g)?.pop() ?? 0);

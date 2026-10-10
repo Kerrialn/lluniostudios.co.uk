@@ -88,7 +88,8 @@ class CommissionEnquiryCrudController extends AbstractCrudController
             TextareaField::new('integration', 'Integration requirements')->setDisabled()->onlyOnDetail(),
             IntegerField::new('fileCount', 'Files')->setDisabled()->onlyOnIndex(),
             Field::new('files', 'Files')
-                ->setTemplatePath('admin/field/commission_files.html.twig')
+                ->setTemplatePath('admin/field/files.html.twig')
+                ->setCustomOption('route', 'admin_commission_file')
                 ->onlyOnDetail(),
         ];
     }

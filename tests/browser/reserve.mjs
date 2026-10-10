@@ -12,7 +12,9 @@ const reveal = async () => { await b.send('Input.dispatchKeyEvent', { type: 'key
 const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"][data-value="${v}"]').click()`);
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 const press = async () => { await ev(`document.querySelector('[data-configurator-target=cta]').click()`); await sleep(2200); };
-const fill = async (size, v) => { await go(BASE_URL + '/lighting-designs'); await reveal(); await pick('size', size); for (const [s, g] of [[1, 'The Pigment'], [2, 'Cable Colour'], [3, 'Footing Material'], [4, 'Bulb Style'], [4, 'Bulb Count']]) { if (v[g]) { await jump(s); await pick(g, v[g]); } } await jump(5); };
+// A Custom choice needs its description (10 October 2026).
+const describe = (g, text = 'A description.') => ev(`(() => { const t = document.querySelector('[data-configurator-target=describe][data-group="${g}"] textarea'); t.value = ${JSON.stringify(text)}; t.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+const fill = async (size, v) => { await go(BASE_URL + '/lighting-designs'); await reveal(); await pick('size', size); for (const [s, g] of [[1, 'The Pigment'], [2, 'Cable Colour'], [3, 'Footing Material'], [4, 'Bulb Style'], [4, 'Bulb Count']]) { if (v[g]) { await jump(s); await pick(g, v[g]); if (v[g].startsWith('Custom')) await describe(g); } } await jump(5); };
 const page = () => ev(`({ path: location.pathname, h1: document.querySelector('h1')?.textContent.trim(), text: document.querySelector('main').innerText, labels: [...document.querySelectorAll('form label > span:first-child')].map(l => l.textContent.replace(/\\s+/g, ' ').trim()), errors: [...document.querySelectorAll('form [role=alert]')].map(e => e.textContent.trim()), rows: [...document.querySelectorAll('aside .flex.justify-between')].map(r => r.children[0].textContent + '=' + r.children[1].textContent) })`);
 const setField = (name, value) => ev(`(() => { const e = document.querySelector('[name="reserve_form[${name}]"]'); e.value = ${JSON.stringify(value)}; })()`);
 const submit = async () => { await ev(`document.querySelector('form[name=reserve_form]').requestSubmit()`); await sleep(2500); };
@@ -45,7 +47,7 @@ check('the fields, the address in separate fields, with Custom Details for a Cus
 const look = await ev(`(() => {
     const css = (e) => getComputedStyle(e);
     // Boxes the gift's hidden fields don't count in (shown only for a gift); tick boxes and radio buttons aren't boxes.
-    const boxes = [...document.querySelectorAll('form[name=reserve_form] input:not([type=hidden]):not([type=checkbox]):not([type=radio]), form[name=reserve_form] select, form[name=reserve_form] textarea')].filter(e => e.getBoundingClientRect().height > 0);
+    const boxes = [...document.querySelectorAll('form[name=reserve_form] input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]), form[name=reserve_form] select, form[name=reserve_form] textarea')].filter(e => e.getBoundingClientRect().height > 0);
     const name = document.querySelector('[name="reserve_form[fullName]"]');
     name.placeholder = 'x';
     const placeholder = getComputedStyle(name, '::placeholder').color;

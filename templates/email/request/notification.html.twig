@@ -2,8 +2,9 @@
     To the studio: a new "Reserve Your Design" request (email rules, Step
     11.0). At the top: the lamps by size and quantity, any Custom choices,
     that no payment has been taken, a gift's "Needed by" date; then
-    everything the customer sent and the configuration. Replying answers
-    the customer.
+    everything the customer sent (the names of any reference photos, not
+    attached: they are downloaded from the request in admin) and the
+    configuration. Replying answers the customer.
 #}
 {% extends 'email/_studio.html.twig' %}
 {% import 'email/_studio.html.twig' as layout %}
@@ -17,6 +18,7 @@
     'Lamps': lamps|join(', '),
 } %}
 {% if customNames is not empty %}{% set summaryRows = summaryRows|merge({ 'Custom': customNames|join(', ')|capitalize }) %}{% endif %}
+{% if designRequest.files|length > 0 %}{% set summaryRows = summaryRows|merge({ 'Reference photos': designRequest.files|length ~ (designRequest.files|length == 1 ? ' file' : ' files') }) %}{% endif %}
 {% set summaryRows = summaryRows|merge({ 'Customer': designRequest.fullName }) %}
 {% if designRequest.directGift %}{% set summaryRows = summaryRows|merge({ 'Recipient': designRequest.giftRecipientName }) %}{% endif %}
 {% set summaryRows = summaryRows|merge({ 'Payment': 'None taken' }) %}
@@ -43,6 +45,14 @@
     {% endfor %}
     {% if designRequest.customDetails is not null %}
         <tr><td width="35%" style="{{ keyStyle }}">Custom details</td><td style="{{ valueStyle }}">{{ (designRequest.customDetails ?: '—')|nl2br }}</td></tr>
+        <tr><td width="35%" style="{{ keyStyle }}">Reference photos</td><td style="{{ valueStyle }}">
+            {% for file in designRequest.files %}
+                {{ file.originalName }} ({{ file.size >= 1048576 ? (file.size / 1048576)|number_format(1) ~ 'MB' : max(1, (file.size / 1024)|round) ~ 'KB' }}){% if not loop.last %}<br>{% endif %}
+            {% else %}
+                None
+            {% endfor %}
+            {% if designRequest.files|length > 0 %}<br><a href="{{ adminUrl }}" style="color:#ece3d3;">Download from the request in admin</a>{% endif %}
+        </td></tr>
     {% endif %}
 </table>
 {{ layout.section('Configuration') }}

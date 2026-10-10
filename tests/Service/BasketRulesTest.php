@@ -136,8 +136,8 @@ final class BasketRulesTest extends TestCase
 
     public function testCustomChoiceLine(): void
     {
-        // Shown in the configurator under a list as soon as a Custom value is chosen.
-        self::assertSame('Custom options are developed with you and quoted individually.', BasketRules::CUSTOM_CHOICE_NOTE);
+        // Shown in the configurator under a Custom choice's description box (one combined line, 10 October 2026).
+        self::assertSame('You can upload reference photos when you reserve your design, Custom options are developed with you and quoted individually.', BasketRules::CUSTOM_CHOICE_NOTE);
     }
 
     public function testRequestSizesAndCustomValuesAreRefusedOnAdd(): void

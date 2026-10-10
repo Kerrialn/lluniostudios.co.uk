@@ -13,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -33,9 +34,20 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  * at checkout) and "Send to me" or "Send directly to the recipient"; sent
  * directly, the recipient's name (the address is theirs), an optional gift
  * message (a card in the box) and the recipient's mobile.
+ *
+ * Reference photos (10 October 2026): with a Custom choice, optional files
+ * under "Custom Details" (e.g. a paint chip to match), with the Bespoke
+ * Commissions upload rules (CommissionFields: PDF, DWG, JPG, PNG or HEIC,
+ * 50MB each, 100MB in total).
  */
 final class ReserveForm extends AbstractType
 {
+    /**
+     * "Custom Details" limit; raised when descriptions are carried from the
+     * configurator (ReserveController), so they always fit.
+     */
+    public const CUSTOM_DETAILS_MAX = 2000;
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -141,11 +153,13 @@ final class ReserveForm extends AbstractType
         if ($options['custom_choices']) {
             $builder->add('customDetails', TextareaType::class, [
                 'required' => false,
-                'constraints' => [new Assert\Length(max: 2000)],
+                'constraints' => [new Assert\Length(max: $options['custom_details_max'])],
                 'attr' => [
                     'rows' => 3,
                 ],
             ]);
+            $builder->add('referencePhotos', FileType::class, CommissionFields::files());
+            CommissionFields::reportFailedUploads($builder->get('referencePhotos'));
         }
     }
 
@@ -186,6 +200,8 @@ final class ReserveForm extends AbstractType
         $resolver->setAllowedTypes('earliest', \DateTimeInterface::class);
         $resolver->setDefaults([
             'custom_choices' => false,
+            'custom_details_max' => self::CUSTOM_DETAILS_MAX,
+            'upload_max_size_message' => CommissionFields::tooLargeMessage(...),
             'constraints' => [
                 // A gift needs its date, where to send it and, sent directly, the recipient's name.
                 new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
@@ -231,5 +247,6 @@ final class ReserveForm extends AbstractType
             ],
         ]);
         $resolver->setAllowedTypes('custom_choices', 'bool');
+        $resolver->setAllowedTypes('custom_details_max', 'int');
     }
 }
