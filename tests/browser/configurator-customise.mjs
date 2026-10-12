@@ -4,7 +4,7 @@ const b = await open(1440, 900, 'cfgmodes');
 let ok = true;
 const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log(`${pass ? 'PASS' : 'FAIL'}  ${label}${detail ? '  (' + detail + ')' : ''}`); };
 await b.clearStorage(); await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(2000);
-await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1500);
+await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1500);
 const ev = b.ev;
 const st = () => ev(`({ num: document.querySelector('[data-configurator-target=stageNumber]').textContent.slice(0, 2),
   modes: !document.querySelector('[data-configurator-target=modes]').hidden,
@@ -69,7 +69,7 @@ check('down to one lamp: the choice disappears', !s.modes);
 
 // Choices made under Customise All carry into each lamp.
 await b.clearStorage(); await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(2000);
-await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1500);
+await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1500);
 await more(); await jump(1); await pick('The Pigment', 'Grey'); await jump(0); await mode('individual'); await jump(1); await tab(1); s = await st();
 check('a pigment chosen under Customise All is each lamp\'s starting choice', s.sel['The Pigment'] === 'Grey');
 console.log(ok ? 'ALL PASSED' : 'SOME CHECKS FAILED');

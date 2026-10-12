@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Special+Elite&display=swap');
 @import 'tailwindcss';
 @import 'tom-select/dist/css/tom-select.default.css';
 @plugin 'flowbite/plugin';
@@ -545,6 +545,351 @@
 .ll-cfg-unit.is-current {
     color: var(--color-ll-ink);
     border-bottom-color: var(--color-ll-ink);
+}
+
+/* ---- Lighting Designs introduction (Step 7b; lumen_story_controller.js) ----
+   The design's Lighting Designs page (formerly Range Test D, "All Special
+   Elite"): the hero over a tall section whose photo stays pinned while seven
+   stages fade in turn and the lamp brightens; the page snaps to each stage
+   (never held). Desktop and sideways phones: the lamp on the left, the text
+   from 54% across. Upright phones: the text in a dark band at the top, the
+   photo in the lower 54%. The text stays bulb amber throughout (decided
+   12 October 2026). Until the panel opens, the configurator is not shown;
+   once it opens, the introduction is gone. */
+[data-controller~="lumen-story"]:not(.is-revealed) .ll-cfg-row { display: none; }
+.is-revealed .ll-story { display: none; }
+.ll-story {
+    --story-amber: rgb(250, 179, 90);
+    position: relative;
+    height: 1220vh;
+    background: var(--color-ll-bg);
+    font-family: 'Special Elite', monospace;
+    font-weight: 400;
+}
+.ll-story-snap {
+    position: absolute;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+.ll-story-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: #080605;
+}
+.ll-story-photo {
+    position: absolute;
+    inset: 0;
+    container-type: size;
+    overflow: hidden;
+}
+/* The photo pair (4032×3024) covers the area with the lamp kept left of centre. */
+.ll-story-frame {
+    --w: max(100cqw, 133.42cqh);
+    --h: max(74.95cqw, 100cqh);
+    position: absolute;
+    width: var(--w);
+    height: var(--h);
+    left: clamp(calc(100cqw - var(--w)), calc(50cqw - 0.205 * var(--w)), 0px);
+    top: calc((100cqh - var(--h)) * 0.4);
+}
+.ll-story-frame img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    user-select: none;
+}
+.ll-story-lit {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s linear;
+}
+.ll-story-text {
+    position: absolute;
+    left: 54%;
+    right: clamp(24px, 5vw, 72px);
+    top: 12vh;
+    bottom: 12vh;
+    color: var(--story-amber);
+}
+.ll-story-stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    opacity: 0;
+    transition: opacity .7s ease;
+}
+.ll-story-stage:first-child { opacity: 1; }
+.ll-story-opening {
+    max-width: 640px;
+    font-size: clamp(22px, 2vw, 32px);
+    line-height: 1.35;
+    text-wrap: balance;
+}
+.ll-story-header {
+    position: relative;
+    align-self: flex-start;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+}
+/* Underlined as on a typewriter (decided 12 October 2026; not in the design):
+   a row of Special Elite underscores, so the line has the font's own inked
+   texture, in the header's colour, just below the text and as wide as it
+   (the header is only as wide as its text, at every size). Hidden from
+   screen readers (the empty alternative text). */
+.ll-story-header::after {
+    content: "________________________________________";
+    content: "________________________________________" / "";
+    position: absolute;
+    left: 0;
+    right: .14em;
+    top: .18em;
+    overflow: hidden;
+    white-space: nowrap;
+    letter-spacing: -.3em;
+    pointer-events: none;
+}
+.ll-story-body {
+    max-width: 560px;
+    font-size: clamp(15px, 1.15vw, 18px);
+    line-height: 1.6;
+    text-wrap: pretty;
+}
+.ll-story-link {
+    align-self: flex-start;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+}
+.ll-story-link span {
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 3px;
+}
+.ll-story-end {
+    font-size: clamp(26px, 2.4vw, 40px);
+    line-height: 1.15;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.ll-story-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+}
+.ll-story-button {
+    align-self: flex-start;
+    min-width: 320px;
+    min-height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 32px;
+    border: 1px solid currentColor;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    cursor: pointer;
+}
+.ll-story-button:hover {
+    background: #15120e;
+    color: var(--color-ll-ink);
+    border-color: #15120e;
+}
+.ll-story-marker {
+    position: absolute;
+    left: 54%;
+    bottom: 6vh;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--story-amber);
+    pointer-events: none;
+}
+/* The hero, over the pinned lamp until the first scroll (1.6s fade). */
+.ll-story-hero {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background: var(--color-ll-surface);
+    pointer-events: none;
+    transition: opacity 1.6s ease;
+}
+.is-story-scrolled .ll-story-hero { opacity: 0; }
+.ll-story-title {
+    font-size: clamp(28px, 2.6vw, 44px);
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+.ll-story-cue {
+    position: absolute;
+    right: clamp(20px, 4vw, 56px);
+    bottom: calc(var(--ll-nav-h) + clamp(20px, 3vw, 32px));
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    pointer-events: none;
+}
+/* Over the hero it follows the photo's title colour; once scrolled, amber
+   and below where the nav was. */
+.ll-story-skip {
+    position: absolute;
+    z-index: 3;
+    top: clamp(8px, 1.5vw, 16px);
+    right: clamp(12px, 4vw, 56px);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    opacity: .75;
+    cursor: pointer;
+    transition: color 1.6s ease, opacity .2s;
+}
+.ll-story-skip:hover { opacity: 1; }
+.is-story-scrolled .ll-story-skip {
+    top: calc(var(--ll-nav-h) + 8px);
+    color: var(--story-amber);
+}
+@media (max-width: 899px) and (orientation: landscape) {
+    .ll-story-cue { right: auto; left: clamp(20px, 4vw, 56px); }
+    .ll-story-text { top: 56px; bottom: 12vh; }
+    .is-story-scrolled .ll-story-skip { top: clamp(8px, 1.5vw, 16px); }
+    .ll-story-opening { font-size: 19px; }
+    .ll-story-header, .ll-story-button { font-size: 12px; }
+    .ll-story-body { font-size: 14px; }
+    .ll-story-body-long { font-size: 13px; line-height: 1.45; }
+    .ll-story-end { font-size: 24px; }
+}
+/* Sideways phones (above) use the desktop layout with the phone text sizes
+   (decided 12 October 2026). Upright phones (below). Intended differences
+   from the design (its faults at 390×844, decided 12 October 2026), also on
+   sideways phones: "Skip to configurator" stays at the top, above the text,
+   instead of over the headings; the text ends above the marker instead of
+   running into it. */
+@media (max-width: 899px) and (orientation: portrait) {
+    .ll-story-photo { top: 46%; }
+    .ll-story-text {
+        left: 20px;
+        right: 20px;
+        top: 84px;
+        bottom: calc(54% + 44px);
+        text-shadow: 0 0 16px rgba(0, 0, 0, .85);
+    }
+    .ll-story-stage { justify-content: flex-start; }
+    .ll-story-opening { font-size: 19px; }
+    .ll-story-header, .ll-story-button { font-size: 12px; }
+    .ll-story-body { font-size: 14px; }
+    .ll-story-body-long { font-size: 13px; line-height: 1.45; }
+    .ll-story-end { font-size: 24px; }
+    .ll-story-button { min-width: 100%; }
+    .is-story-scrolled .ll-story-skip { top: clamp(8px, 1.5vw, 16px); }
+}
+/* Phones, upright and sideways (decided 12 October 2026, replacing the
+   design's place just above the photo on upright phones and its place under
+   the text on sideways ones): "01 / 07" in the bottom-left corner of the
+   visible screen, measured from the small viewport height (svh) so it stays
+   above the browser's own bars when they show, and inside any notch or
+   home-indicator area; the text always ends above it. */
+@media (max-width: 899px) {
+    .ll-story-marker {
+        left: calc(20px + env(safe-area-inset-left, 0px));
+        bottom: auto;
+        line-height: 1;
+        top: calc(100vh - 31px - env(safe-area-inset-bottom, 0px));
+        top: calc(100svh - 31px - env(safe-area-inset-bottom, 0px));
+        text-shadow: 0 0 12px rgba(0, 0, 0, .85);
+    }
+}
+/* Phones, upright and sideways (decided 12 October 2026; not in the design):
+   the two closing buttons on the right (the same right margin as the text),
+   11px text, side padding 20.4px (the earlier 24px less 15%), never under
+   44px tall so they're easy to tap; both as wide as the longer label needs
+   on one line (about 253px). Upright, they sit 63.15px (a quarter of a
+   button's width; first half, 126.3px, which was too far) above the place
+   just over the lamp (12px above its top edge,
+   which is 15.2% down the photo, max(74.95vw, 54vh) tall from 46% down the
+   screen): the auto top margin pushes them down to there, but never higher
+   up than 18px under the heading, so on short screens they stop below it. */
+@media (max-width: 899px) {
+    .ll-story-actions {
+        display: grid;
+        align-self: flex-end;
+        justify-items: stretch;
+    }
+    .ll-story-button {
+        align-self: auto;
+        min-width: 0;
+        padding: 13.5px 20.4px;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+}
+@media (max-width: 899px) and (orientation: portrait) {
+    .ll-story-actions {
+        margin-top: auto;
+        margin-bottom: calc(63.15px - 32px - 0.152 * max(74.95vw, 54vh));
+    }
+}
+/* Reduced motion (decided 12 October 2026): a plain page, the hero then the
+   lit lamp and every section in order; no pinning, snapping or fades. */
+@media (prefers-reduced-motion: reduce) {
+    .ll-story { height: auto; }
+    .ll-story-snap, .ll-story-marker { display: none; }
+    .ll-story-pin {
+        position: static;
+        height: auto;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+    }
+    .ll-story-hero {
+        position: relative;
+        order: -1;
+        height: calc(100vh - var(--ll-nav-h));
+        transition: none;
+    }
+    .is-story-scrolled .ll-story-hero { opacity: 1; }
+    .ll-story-cue { bottom: clamp(20px, 3vw, 32px); }
+    .ll-story-photo { position: relative; inset: auto; height: 100vh; }
+    .ll-story-lit { opacity: 1; transition: none; }
+    .ll-story-text { position: static; padding-bottom: clamp(72px, 11vw, 160px); }
+    .ll-story-stage {
+        position: static;
+        opacity: 1;
+        transition: none;
+        padding: clamp(72px, 11vw, 160px) 0 0;
+    }
+    .ll-story-skip, .is-story-scrolled .ll-story-skip { top: clamp(8px, 1.5vw, 16px); transition: none; }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 900px), (prefers-reduced-motion: reduce) and (orientation: landscape) {
+    .ll-story-text { margin: 0 clamp(24px, 5vw, 72px) 0 54%; }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 899px) and (orientation: portrait) {
+    .ll-story-actions { margin: 0; }
+    .ll-story-text { margin: 0 20px; }
+    .ll-story-photo { top: auto; height: 75vw; }
 }
 
 /* Lock page scroll while the full-screen mobile menu is open. */

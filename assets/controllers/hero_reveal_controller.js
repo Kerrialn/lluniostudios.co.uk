@@ -8,12 +8,15 @@ import { Controller } from '@hotwired/stimulus';
  * restoration). Every visit starts unrevealed, unless the page asks to open
  * revealed (open value, e.g. editing a basket line) or another controller
  * calls reveal() (the configurator, for a returning visitor's finished design).
+ * With the manual value (Lighting Designs, where scrolling plays the
+ * introduction), only reveal() opens it, e.g. from a button
+ * (data-action="hero-reveal#reveal").
  * The visual states live in app.css (.ll-reveal-*).
  */
 const EVENTS = ['wheel', 'scroll', 'click', 'keydown', 'touchmove'];
 
 export default class extends Controller {
-    static values = { open: Boolean };
+    static values = { open: Boolean, manual: Boolean };
 
     connect() {
         this.arrivedAt = Date.now();
@@ -23,6 +26,7 @@ export default class extends Controller {
             requestAnimationFrame(() => this.reveal());
             return;
         }
+        if (this.manualValue) return;
         this.onInteract = () => {
             if (Date.now() - this.arrivedAt < 500) return;
             this.reveal();

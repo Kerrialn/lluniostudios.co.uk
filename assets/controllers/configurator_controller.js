@@ -4,7 +4,9 @@ import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
 /*
  * Lumen Forma configurator (Site v4 prototype), sub-step 7.1.
  *  - Before the reveal, the Gallery photos cross-fade behind the title every
- *    5s (1.6s fade). The title is drawn dark over light photos, cream with a
+ *    5s (1.6s fade), at the top of the introduction only (Step 7b: paused
+ *    once the visitor scrolls into it, lumen_story_controller.js, and not at
+ *    all with reduced motion). The title is drawn dark over light photos, cream with a
  *    soft shadow over dark ones, using each photo's precomputed brightness
  *    for desktop, upright phones and sideways phones.
  *    Only the first photo comes with the page; each later one is loaded
@@ -136,6 +138,7 @@ export default class extends Controller {
 
     advanceIdle() {
         if (this.revealedAlready || this.idleTargets.length < 2) return;
+        if (this.element.classList.contains('is-story-scrolled') || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         const nextIndex = (this.idleIndex + 1) % this.idleTargets.length;
         const nextPhoto = this.load(nextIndex);
         if (!nextPhoto.complete) return; // still downloading: try again next tick

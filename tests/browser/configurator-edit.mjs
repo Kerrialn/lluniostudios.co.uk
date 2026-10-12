@@ -7,7 +7,7 @@ const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log
 const ev = b.ev;
 await b.send('Network.enable'); await b.send('Network.clearBrowserCookies');
 const go = async (url, wait = 1800) => { await b.send('Page.navigate', { url }); await sleep(wait); };
-const reveal = async () => { await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1300); };
+const reveal = async () => { await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1300); };
 const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"][data-value="${v}"]').click()`);
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 const tab = (i) => ev(`document.querySelectorAll('.ll-cfg-unit')[${i}].click()`);

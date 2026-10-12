@@ -13,8 +13,8 @@ for (const [name, url] of Object.entries(pages)) {
     if (name === 'prototype') { await b.ev(`localStorage.setItem('llunio-site-v4', JSON.stringify({ v: 7, screen: 'product', basket: [] }))`); await b.send('Page.navigate', { url }); }
     await sleep(2500);
     await b.ev(`document.querySelectorAll('[id^=sfwdt]').forEach(e => e.remove())`);
-    await b.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: 5, y: H - 5, button: 'left', clickCount: 1 });
-    await b.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 5, y: H - 5, button: 'left', clickCount: 1 });
+    // Both open the panel from "Skip to configurator" (Step 7b: scrolling plays the introduction).
+    await b.ev("[...document.querySelectorAll('span,button')].find(e => e.textContent.trim() === 'Skip to configurator →')?.click()");
     await sleep(2500);
     res[name] = {};
     for (const st of stages) {

@@ -20,7 +20,7 @@ await b.ev(`localStorage.setItem('llunio-site-v4', JSON.stringify({ v: 7, screen
 const p = await b.ev(probe);
 await b.send('Network.enable'); await b.send('Network.clearBrowserCookies');
 await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800);
-await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1300);
+await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1300);
 const pick = (g, v) => b.ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"][data-value="${v}"]').click()`);
 const jump = (i) => b.ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 for (let i = 0; i < 2; i++) await b.ev(`document.querySelector('[aria-label="More lamps"]').click()`);

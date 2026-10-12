@@ -18,9 +18,9 @@ const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`
 const key = async (k) => { await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: k, code: k, windowsVirtualKeyCode: k === 'ArrowRight' ? 39 : 37 }); await b.send('Input.dispatchKeyEvent', { type: 'keyUp', key: k, code: k, windowsVirtualKeyCode: k === 'ArrowRight' ? 39 : 37 }); };
 
 check('before the reveal only photos 1 and 2 have loaded', reqs.filter(r => r.startsWith('gallery')).map(r => r.slice(0, 10)).filter((v, i, a) => a.indexOf(v) === i).join() === 'gallery-01,gallery-02', reqs.join());
-await key('ArrowRight'); await sleep(1500);
+await click('.ll-story-skip'); await sleep(1500);
 let p = await photo();
-check('the key press that reveals shows the Gallery gallery at 01 / 17 (and does not move it)', p.gallery === 'lumen-forma-gallery' && p.count === '01 / 17' && !p.idle && !p.soon, JSON.stringify(p));
+check('"Skip to configurator" opens on the Gallery gallery at 01 / 17', p.gallery === 'lumen-forma-gallery' && p.count === '01 / 17' && !p.idle && !p.soon, JSON.stringify(p));
 await key('ArrowRight'); await sleep(900); p = await photo();
 check('arrow key moves to 02 / 17', p.count === '02 / 17' && p.shift === 2, `${p.count} shift ${p.shift}`);
 await click('[aria-label="Previous photo"]'); await sleep(900);

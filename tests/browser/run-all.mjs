@@ -11,6 +11,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const CHECKS = [
     ['configurator-loads.mjs'],
     ['configurator-page.mjs'],
+    ['lighting-designs-story.mjs', '1440', '900'],
+    ['lighting-designs-story.mjs', '390', '844'],
+    ['lighting-designs-story.mjs', '844', '390'],
+    ['lighting-designs-story.mjs', '1440', '900', 'reduced'],
     ['configurator-stages.mjs'],
     ['configurator-customise.mjs'],
     ['configurator-photos.mjs', '1440', '900'],

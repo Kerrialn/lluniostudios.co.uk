@@ -26,10 +26,10 @@ try {
     check('title turns cream over the darker 4th photo', i3 === 3 && !d3, `photo ${i3 + 1}, dark=${d3}`);
     check('panel hidden before reveal', (await ev(`document.querySelector('.ll-cfg-panel').getBoundingClientRect().width`)) === 0);
 
-    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 });
+    await ev("document.querySelector('.ll-story-skip').click()");
     await sleep(2200);
     const panelW = await ev(`Math.round(document.querySelector('.ll-cfg-panel').getBoundingClientRect().width)`);
-    check('a key press reveals the panel at 25% (360px at 1440)', panelW === 360, `${panelW}px`);
+    check('"Skip to configurator" reveals the panel at 25% (360px at 1440)', panelW === 360, `${panelW}px`);
     const afterReveal = await ev(visibleIdle);
     await sleep(5400);
     check('cross-fade stops after reveal on the first photo', afterReveal === 0 && (await ev(visibleIdle)) === 0);

@@ -7,7 +7,7 @@ const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log
 const ev = b.ev;
 await b.send('Network.enable'); await b.send('Network.clearBrowserCookies');
 await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800);
-await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1500);
+await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1500);
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 // Headings
 const headings = await ev(`[...document.querySelectorAll('[data-configurator-target=group]')].map(g => g.dataset.group + '=' + (g.querySelector('[id^=cfg-group-]')?.textContent || '(none, aria-label ' + g.getAttribute('aria-label') + ')'))`);

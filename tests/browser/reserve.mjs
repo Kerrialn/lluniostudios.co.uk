@@ -8,7 +8,7 @@ const ev = b.ev;
 const mailpit = async (q) => (await (await fetch(MAILPIT_URL + '/api/v1/search?query=' + encodeURIComponent(q))).json()).messages || [];
 const mailBody = async (id) => (await (await fetch(MAILPIT_URL + '/api/v1/message/' + id)).json());
 const go = async (url, wait = 1800) => { await b.send('Page.navigate', { url }); await sleep(wait); };
-const reveal = async () => { await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1300); };
+const reveal = async () => { await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1300); };
 const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"][data-value="${v}"]').click()`);
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 const press = async () => { await ev(`document.querySelector('[data-configurator-target=cta]').click()`); await sleep(2200); };

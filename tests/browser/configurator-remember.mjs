@@ -15,7 +15,7 @@ const EMAIL = 'ada.remember@example.test';
 let phone = null;
 try {
     const go = async (path, wait = 2000) => { await send('Page.navigate', { url: BASE_URL + path }); await sleep(wait); };
-    const reveal = async () => { await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1500); };
+    const reveal = async () => { await ev("document.querySelector('.ll-story-skip').click()"); await sleep(1500); };
     const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"][data-value="${v}"]').click()`);
     const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
     const more = () => ev(`document.querySelector('[data-action="configurator#more"]').click()`);

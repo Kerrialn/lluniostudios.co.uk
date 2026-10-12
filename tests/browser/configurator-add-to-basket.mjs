@@ -10,7 +10,7 @@ const BOTH = 'Hand cast to order. Reserve now to secure your casting slot. Custo
 const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
 const note = () => ev(`document.querySelector('[data-configurator-target=routeNote]').textContent`);
 const fresh = async () => { await b.send('Network.enable'); await b.send('Network.clearBrowserCookies'); };
-const open_ = async () => { await b.clearStorage(); await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800); await b.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 }); await sleep(1300); };
+const open_ = async () => { await b.clearStorage(); await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800); await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1300); };
 const pick = (g, v) => ev(`document.querySelector('.ll-cfg-opt[data-group="${g}"][data-value="${v}"]').click()`);
 const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`);
 const tab = (i) => ev(`document.querySelectorAll('.ll-cfg-unit')[${i}].click()`);

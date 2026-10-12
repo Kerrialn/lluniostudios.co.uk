@@ -26,7 +26,8 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 | Check | What it covers |
 |---|---|
 | `configurator-loads.mjs` | The configurator starts with no script errors (normal visit, old session, unknown edit link). |
-| `configurator-page.mjs` | Nav link, no footer, the photo cross-fade and title colour, the reveal, panel width, moving between stages. |
+| `configurator-page.mjs` | Nav link, no footer, the photo cross-fade and title colour, the reveal (from "Skip to configurator"), panel width, moving between stages. |
+| `lighting-designs-story.mjs` | Step 7b.1, the introduction (desktop, upright and sideways phone, reduced motion): the hero, the first scroll, the seven stages snapping with the marker, the lamp brightening, amber Special Elite text, nothing overlapping, The Maker's link, the two buttons, opening the configurator from them and from "Skip to configurator"; with `reduced`, the plain page. |
 | `configurator-stages.mjs` | Sizes, specifications, quantity (1–10), every option required with its "Please choose…" message, Bulb Count rules. |
 | `configurator-customise.mjs` | Customise All / Individually, lamp tabs, a new stage opening on Lamp 1, per-lamp required choices. |
 | `configurator-photos.mjs` | The looping gallery (arrows, side zones, swipe, keys), "Image Coming Soon", photos loading only as needed. |
@@ -57,7 +58,7 @@ A full run takes about 15 minutes. A few checks take a size: `configurator-photo
 
 ### Comparing with the prototype
 
-`compare/` holds side-by-side measurements against the Claude Design prototype: the position, size and colour of each piece of text, with screenshots. They need the prototype unzipped (from `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip`; see `docs/merge-plan.md`):
+`compare/` holds side-by-side measurements against the Claude Design prototype: the position, size and colour of each piece of text, with screenshots. They need the prototype folder (since 12 October 2026, `/Users/theonewham/Downloads/# Website Wireframing Brief`, the latest download from Claude Design; see `docs/merge-plan.md`). The Lighting Designs sizes drawing only shows when the folder is served over http (not as a file://):
 
 ```bash
 PROTOTYPE_DIR="/path/to/unzipped/brief" node tests/browser/compare/stages.mjs 1440 900
