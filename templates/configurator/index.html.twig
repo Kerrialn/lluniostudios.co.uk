@@ -249,14 +249,19 @@
                         {% set stageKey = stageKeys[loop.index0] %}
                         <div class="flex flex-col gap-[clamp(28px,4vw,48px)]" data-configurator-target="stage" {{ loop.first ? '' : 'hidden' }}>
                             {% if stageKey == 'scale' %}
-                                {# No "Size" heading: the stage title says it. #}
+                                {# No "Size" heading: the stage title says it. Only the sizes bought
+                                   directly (Studio, Gallery) show (Step 7b.3); the larger ones stay in
+                                   the page, hidden, for designs remembered from before (until 7b.4),
+                                   and are reached by "Discuss a Larger Piece". #}
                                 <div class="flex flex-col gap-4" role="group" aria-label="Size">
                                     <div class="flex flex-col">
                                         {% for size in sizes %}
-                                            <button type="button" class="ll-cfg-opt" aria-pressed="false"
+                                            <button type="button" class="ll-cfg-opt" aria-pressed="false" {{ size.direct ? '' : 'hidden' }}
                                                     data-configurator-target="option" data-group="size" data-value="{{ size.slug }}" data-action="configurator#choose">{{ size.name }}</button>
                                         {% endfor %}
                                     </div>
+                                    {# Until 7b.4 (the larger-piece step) it opens Reserve Your Design. #}
+                                    <p class="text-[12px] text-ll-mute">Considering a larger piece? <a href="{{ path('basket_request') }}" class="text-ll-ink underline underline-offset-[3px] transition-opacity hover:opacity-70" data-configurator-target="larger">Discuss a Larger Piece</a></p>
                                     <div class="text-[12px] text-ll-mute" data-configurator-target="sizeNote"></div>
                                     <div class="flex flex-col gap-3 pt-4 border-t border-ll-line-soft w-full max-w-[521px]">
                                         <div class="flex justify-between items-baseline gap-4 flex-wrap">

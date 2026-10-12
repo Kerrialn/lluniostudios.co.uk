@@ -53,6 +53,8 @@ import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
  *    was typed on Reserve Your Design. Not while editing a basket line.
  *    On the review, the line under "Reserve Your Design" is not shown (the
  *    purchase route note says it); "Cast Your Lamp" keeps its line.
+ *  - Step 7b.3: The Scale shows only Studio and Gallery (template). However
+ *    it is opened, each size shows its own photos (never the introduction's).
  *  - Custom descriptions (10 October 2026): under a Custom choice, a box to
  *    describe it (up to 500 characters), for the lamp being edited (each
  *    lamp starts from the shared text, as with choices). Required while
@@ -77,7 +79,7 @@ export default class extends Controller {
     static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
         'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity',
         'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle', 'modes', 'mode', 'units',
-        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'describe', 'describeWarning', 'startAgain'];
+        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'describe', 'describeWarning', 'startAgain', 'larger'];
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         maxLamps: { type: Number, default: 10 }, basketLamps: Number, maxCheckout: { type: Number, default: 2 },

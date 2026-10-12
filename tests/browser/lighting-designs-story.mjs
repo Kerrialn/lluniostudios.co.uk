@@ -8,6 +8,9 @@
 // its 20 live labels; phones: in the photo's place, shown whole, panning
 // Studio to Monument one snap each), the headers underlined as on a
 // typewriter (a row of Special Elite underscores as wide as the text), the
+// configurator opened from them (7b.3: The Scale with only Studio and Gallery
+// and the line for larger pieces; Gallery's own photos in their order, never
+// the introduction's, however it is opened), the
 // two closing buttons on phones (on the right, 11px, at least 44px tall; upright
 // 75px above the lamp, or under the heading), and the
 // panel opening only from "Skip to configurator" or "Configure Studio or
@@ -138,9 +141,33 @@ try {
     check('"Configure Studio or Gallery" opens the configurator on The Scale, at the top, the snapping off, the introduction gone',
         (await opened()) && (await panelShown()) && (await ev('scrollY')) === 0 && (await snapType()) === '' && (await ev(`getComputedStyle(document.querySelector('.ll-story')).display`)) === 'none' && (await ev(`document.querySelector('[data-configurator-target=stageNumber]').textContent`)) === '01 / 06');
 
+    // 7b.3: The Scale shows Studio and Gallery only, with the line for larger pieces. However the
+    // configurator is opened, Gallery shows its own 17 photos in their order (as before 7b.3) and no
+    // size or stage shows the introduction's photos (decided 12 October 2026).
+    const GALLERY = Array.from({ length: 17 }, (_, i) => `gallery-${String(i + 1).padStart(2, '0')}`).join();
+    const photo = () => ev(`(() => { const pane = document.querySelector('.ll-cfg-photo'); const g = pane.querySelector('[data-configurator-target=gallery]:not([hidden])');
+        const files = g ? [...g.querySelectorAll('[data-gallery-track] img')].map(i => (i.getAttribute('src') || i.dataset.src || '').split('/').pop().replace(/-(1000|2000)\.jpg$/, '')) : [];
+        return { gallery: g?.dataset.size || null, order: files.slice(1, -1).join(), clones: [files[0], files[files.length - 1]].join(), count: g?.querySelector('[data-gallery-count]').textContent || null,
+            soon: !pane.querySelector('[data-configurator-target=soon]').hidden, story: pane.querySelectorAll('img[src*="story-"], img[data-src*="story-"]').length }; })()`);
+    const galleryOk = (ph) => ph.gallery === 'lumen-forma-gallery' && ph.order === GALLERY && ph.clones === 'gallery-17,gallery-01' && ph.count === '01 / 17' && !ph.soon && ph.story === 0;
+    const scale = await ev(`({ sizes: [...document.querySelectorAll('.ll-cfg-opt[data-group=size]')].filter(e => e.getClientRects().length).map(e => e.textContent.trim()).join(), line: document.querySelector('[data-configurator-target=larger]').parentElement.textContent.trim(), href: document.querySelector('[data-configurator-target=larger]').getAttribute('href') })`);
+    check('The Scale shows only Studio and Gallery, then "Considering a larger piece? Discuss a Larger Piece" (to Reserve Your Design until 7b.4)', scale.sizes === 'Studio,Gallery' && scale.line === 'Considering a larger piece? Discuss a Larger Piece' && scale.href === '/reserve', JSON.stringify(scale));
+    let ph = await photo();
+    check('"Configure Studio or Gallery": Gallery shows its own 17 photos in their order (gallery-01 … gallery-17), never the introduction\'s', galleryOk(ph), JSON.stringify(ph));
+    await ev(`document.querySelector('.ll-cfg-opt[data-value=lumen-forma-studio]').click()`); await sleep(400); ph = await photo();
+    check('Studio: "Image Coming Soon", as before', ph.soon && !ph.gallery && ph.story === 0, JSON.stringify(ph));
+    await ev(`document.querySelector('.ll-cfg-opt[data-value=lumen-forma-gallery]').click()`); await sleep(400);
+    const others = [];
+    for (let i = 1; i <= 5; i++) { await ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`); await sleep(300); others.push((await photo()).story); }
+    check('no other stage shows the introduction\'s photos', others.every((n) => n === 0), JSON.stringify(others));
+    await ev(`document.querySelectorAll('.ll-cfg-step')[0].click()`); await sleep(400); ph = await photo();
+    check('back on The Scale: the Gallery photos again', galleryOk(ph), JSON.stringify(ph));
+
     await go();
     await ev(`scrollTo(0, ${tops[3]})`); await sleep(1600);
     await ev(`document.querySelector('.ll-story-skip').click()`); await sleep(1500);
     check('"Skip to configurator" part-way through opens it the same way', (await opened()) && (await panelShown()) && (await ev('scrollY')) === 0 && (await snapType()) === '');
+    ph = await photo();
+    check('"Skip to configurator": the same Gallery photos in their order, never the introduction\'s', galleryOk(ph), JSON.stringify(ph));
     summary();
 } finally { b.close(); }
