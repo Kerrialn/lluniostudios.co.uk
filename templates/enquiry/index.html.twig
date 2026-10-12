@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{#
+    "Begin the Conversation" (Step 7c, decided 12 October 2026): the enquiry
+    for a larger piece (Atelier, Estate, Monument), reached from the larger-
+    piece step's button. At the top the size and quantity, "Finishes: To be
+    chosen together" and "Change" (back to the step). Then the contact
+    details, how and when to talk, the space and what they have in mind,
+    files (the Bespoke Commissions box and rules), a board link and the
+    postcode only (no "Needed by" or gift: removed 13 October 2026, talked
+    about in the conversation). Styled like the
+    Bespoke Commissions forms (commissions/_field.html.twig). What is typed is
+    remembered for the tab (remember_form_controller.js), as on Reserve.
+
+    All the wording here is DRAFT until the wording pass (11.5).
+#}
+{% block title %}Begin the Conversation | Llunio Studios{% endblock %}
+{% form_theme form 'form_div_layout.html.twig' %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
+{% block body %}
+    {% set section = 'text-[11px] uppercase tracking-[0.14em] text-ll-mute border-t border-ll-line pt-4' %}
+    {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-[13px]' %}
+    {% set uploadText = 'PDF, DWG, JPG, PNG or HEIC, up to 50MB each, 100MB in total' %}
+    <div class="max-w-[760px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8 text-[15px] leading-[1.5]">
+        <div class="flex flex-col gap-3.5">
+            <a href="{{ path('lighting_designs') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>
+            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Begin the Conversation</h1>
+            <p class="m-0 text-ll-mute [text-wrap:pretty]">Atelier, Estate and Monument are made in conversation with me. Tell me a little about your space and I'll be in touch to talk it through. No payment is taken.</p>
+        </div>
+
+        {# The piece: its size and quantity, the finishes to be chosen together. #}
+        <div class="flex flex-col p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line" aria-label="Your piece">
+            <div class="flex justify-between items-baseline gap-4 pb-2">
+                <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">Your piece</span>
+                <a href="{{ path('lighting_designs') }}" class="text-[13px] text-ll-ink underline underline-offset-[3px] transition-opacity hover:opacity-70" data-enquiry-change>Change</a>
+            </div>
+            <div class="{{ row }}"><span class="text-ll-mute">Size</span><span class="text-right">{{ item.sizeName }}</span></div>
+            <div class="{{ row }}"><span class="text-ll-mute">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_KEY') }}</span><span class="text-right">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_VALUE') }}</span></div>
+            <div class="{{ row }} border-b-0"><span class="text-ll-mute">Quantity</span><span class="text-right">{{ item.quantity }}</span></div>
+        </div>
+
+        {% if complete %}
+            {# 7c.1 only, until saving (7c.2) and the thank-you page (7c.3). #}
+            <p class="m-0 border border-ll-ink px-4 py-3 text-[13px]" role="status" data-enquiry-complete>Your enquiry is complete. (Under construction: it isn't saved or sent yet.)</p>
+        {% endif %}
+
+        {{ form_start(form, { attr: { class: 'flex flex-col gap-8', novalidate: 'novalidate',
+            'data-controller': 'enquiry remember-form', 'data-remember-form-name-value': 'enquiry', 'data-action': 'input->remember-form#save change->remember-form#save' } }) }}
+            <div class="{{ section }}">Contact</div>
+            <div class="flex flex-col gap-6">
+                {{ include('commissions/_field.html.twig', { child: form.fullName, label: 'Name *' }) }}
+                {{ include('commissions/_field.html.twig', { child: form.email, label: 'Email *' }) }}
+                {{ include('commissions/_field.html.twig', { child: form.phone, label: 'Phone', phone: true, phoneRequired: form.talk.vars.value in ['phone', 'video'], controller: 'enquiry' }) }}
+            </div>
+
+            <div class="{{ section }}">Getting in touch</div>
+            <div class="flex flex-col gap-6">
+                {{ include('commissions/_field.html.twig', { child: form.talk, label: 'How would you like to talk? *', kind: 'choice', controller: 'enquiry' }) }}
+                {{ include('commissions/_field.html.twig', { child: form.bestTime, label: 'Best time to reach you', hint: '(optional)' }) }}
+            </div>
+
+            <div class="{{ section }}">Your space</div>
+            <div class="flex flex-col gap-6">
+                {{ include('commissions/_field.html.twig', { child: form.description, label: 'Tell me about your space and what you have in mind *', kind: 'area', help: "Where the lamp will stand, roughly how high the ceiling is, and the colours or finishes you're drawn to." }) }}
+                {{ include('commissions/_field.html.twig', { child: form.files, label: 'Photos of your space, inspiration or a mood board', hint: '(optional)', kind: 'files', drop: 'Choose photos or files — ' ~ uploadText }) }}
+                {{ include('commissions/_field.html.twig', { child: form.boardLink, label: 'Pinterest, Instagram or Houzz board', hint: '(optional)' }) }}
+            </div>
+
+            <div class="{{ section }}">Delivery</div>
+            <div class="flex flex-col gap-6">
+                {{ include('commissions/_field.html.twig', { child: form.postcode, label: 'Postcode *', help: 'Where the lamp is going, so we can plan delivery.' }) }}
+            </div>
+
+            {{ include('commissions/_honeypot.html.twig', { child: form.website }) }}
+            {% for error in form.vars.errors %}
+                <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+            {% endfor %}
+            <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Send Enquiry</button>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

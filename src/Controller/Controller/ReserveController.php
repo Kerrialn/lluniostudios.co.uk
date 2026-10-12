@@ -176,9 +176,8 @@ final class ReserveController extends AbstractController
                 throw $exception;
             }
 
-            // What was typed is used, and the configurator's choices if its lamp was in the
-            // request (the larger-piece step's, for a larger piece: 7b.4).
-            $request->getSession()->set(ConfiguratorController::FORGET_CHOICES_KEY, $this->lamps->hasNewPending() ? ['reserve', $this->lamps->pendingIsLarger() ? 'larger' : 'configurator'] : ['reserve']);
+            // What was typed is used, and the configurator's choices if its lamp was in the request.
+            $request->getSession()->set(ConfiguratorController::FORGET_CHOICES_KEY, $this->lamps->hasNewPending() ? ['reserve', 'configurator'] : ['reserve']);
             $this->lamps->forgetPending();
 
             // The request is saved either way; a mail problem is logged, not shown.

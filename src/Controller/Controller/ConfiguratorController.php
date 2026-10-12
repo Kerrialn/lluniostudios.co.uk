@@ -114,12 +114,13 @@ final class ConfiguratorController extends AbstractController
             $data = null;
         }
 
-        // A larger piece (7b.4): a size only, always to Reserve Your Design.
+        // A larger piece (7b.4): a size only, always to "Begin the Conversation" (7c),
+        // never the basket.
         $larger = $this->configurator->readLarger($data);
         if ($larger instanceof LumenFormaConfiguration) {
-            $this->designRequestLamps->holdPending($data);
+            $this->designRequestLamps->holdLarger($data);
 
-            return $this->redirectToRoute('basket_request');
+            return $this->redirectToRoute('larger_enquiry');
         }
 
         $configuration = $this->configurator->read($data);

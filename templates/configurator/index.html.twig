@@ -365,9 +365,10 @@
 
                     {# "Discuss a Larger Piece" (Step 7b.4): the panel as a single step, The
                        Scale with only Atelier, Estate and Monument (none chosen at first) and
-                       the quantity; its button goes straight to Reserve Your Design with the
-                       size, its finishes to be chosen together (no pigment, cable, footing or
-                       light). The server sends it to Reserve only (readLarger). #}
+                       the quantity; its button, "Begin the Conversation", goes straight to the
+                       enquiry page (Step 7c) with the size, its finishes to be chosen together
+                       (no pigment, cable, footing or light). The server sends it there only
+                       (readLarger). #}
                     {% set largerSizes = sizes|filter(s => not s.direct) %}
                     <div class="ll-cfg-larger flex-col gap-[clamp(28px,4vw,48px)]">
                         <h2 class="font-light text-[15px] leading-[1.02] uppercase tracking-[0.03em]">{{ stages|first }}</h2>
@@ -415,7 +416,7 @@
                             <form method="post" action="{{ path('lighting_designs_add') }}" data-action="configurator#reserveLarger">
                                 <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('submit') }}">
                                 <input type="hidden" name="configuration" data-configurator-target="largerConfiguration">
-                                <button type="submit" class="ll-cta block w-full bg-ll-ink text-ll-bg p-[18px] text-center font-medium text-[12px] uppercase tracking-[0.16em]">Reserve Your Design</button>
+                                <button type="submit" class="ll-cta block w-full bg-ll-ink text-ll-bg p-[18px] text-center font-medium text-[12px] uppercase tracking-[0.16em]">Begin the Conversation</button>
                             </form>
                         </div>
                     </div>

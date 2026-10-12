@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 12 October 2026 (Step 7b done and committed: 7b.1 `1da513c`, 7b.2 `e0ce2d3`, 7b.3 `e1c38b0`, 7b.4 "Discuss a Larger Piece (7b.4)").
+Last updated: 13 October 2026 (Step 7b done; Step 7c: answers recorded, "Needed by" and the gift removed from the page, 7c.1 committed; Step 7d recorded).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Both branches were pushed to GitHub (`origin`, git@github.com:Kerrialn/lluniostudios.co.uk.git) as branches on 9 October 2026, at your request; push again with `git push origin symfony-7.4-upgrade design-foundation` when asked. Never push to `main` or merge anything unless asked.
-- **Next step (12 October 2026):** Step 7b is done (7b.1 `1da513c`, 7b.2 `e0ce2d3`, 7b.3 `e1c38b0`, 7b.4 see the commit "Discuss a Larger Piece (7b.4)"). Still waiting too: you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
+- **Next step (13 October 2026):** Step 7c ("Begin the Conversation"): 7c.1 (the page) is done and committed. **Next: 7c.2 (saving the enquiry as a request, its files, spam protection, admin with a Type column and filter; a migration).** Then 7c.3 (thank-you page and emails; the name to sign them with is needed), 7c.4 (quote and payment). Later 7d (the whole site in All Special Elite). The wording pass (11.5) waits until all the new pages are built. Still waiting too: you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
 - **The prototype (from 12 October 2026):** the folder `/Users/theonewham/Downloads/# Website Wireframing Brief` (the latest design, downloaded from Claude Design and unzipped by you on 12 October 2026; its Lighting Designs page is in Special Elite with the seven-stage story). Use it in place of the old copy, `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip` (5 October 2026), which is history now. Its Claude Design project is `896bd9c9-a4ee-4500-90b7-d3aa2b9e4b71`. In the folder:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Open it in Chrome. **Serve the folder rather than opening the file** to see the Lighting Designs sizes drawing (Chrome doesn't load its mask image from a file:// page): `cd "/Users/theonewham/Downloads/# Website Wireframing Brief" && python3 -m http.server 8765`, then http://localhost:8765/Llunio%20Site%20v4%20Unified.dc.html. `Llunio Site v4 Unified - Backup (before range page).dc.html` is the version before the new Lighting Designs page. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (all built, Steps 8, 9 and 11, with the email rules and wording decided since).
@@ -60,7 +60,9 @@ Last updated: 12 October 2026 (Step 7b done and committed: 7b.1 `1da513c`, 7b.2 
 | 10b | Quotes (10b.1 quote form, 10b.2 sending, 10b.3 paying, 10b.4 balance) | Done (10b.1–10b.4; 10b.3 and 10b.4 checked by hand 9 October 2026; full browser run 32 of 32 passed) | `482b26f` (10b.1), `a4f85fd` (10b.2), `3b2fe1c` (10b.3), `031e6bb` (10b.4) |
 | 11 | Order journey emails (11.0 email format, 11.1 email 01 and paid-order notifications, 11.2–11.4 stages and emails 04–06, 11.5 wording pass) | In progress (11.0–11.4 done; 11.4 still to be checked by hand; 11.5 review prepared, waiting for you) | `60499c2` (11.0), `1739f36` (11.1, 11.1b), `d09fc15` (11.2), `d66f803` (11.3), `f61bb32` (11.4) |
 | — | Configurator Custom descriptions (required) and Reserve Your Design Reference photos | Done (committed 10 October 2026 at your request; full browser run with `--clean`: 37 of 38, `configurator-remember.mjs` failing once on timing, then passing twice on its own) | see the commit "Custom descriptions and Reference photos" |
-| 7b | Lighting Designs introduction (Special Elite, seven-stage story), 7b.1–7b.4 | Done (12 October 2026) | `1da513c` (7b.1), `e0ce2d3` (7b.2), `e1c38b0` (7b.3), see the commit "Discuss a Larger Piece (7b.4)" |
+| 7b | Lighting Designs introduction (Special Elite, seven-stage story), 7b.1–7b.4 | Done (12 October 2026) | `1da513c` (7b.1), `e0ce2d3` (7b.2), `e1c38b0` (7b.3), `c10e5c5` (7b.4) |
+| 7c | "Begin the Conversation": an enquiry page for Atelier, Estate and Monument, 7c.1–7c.4 | In progress: 7c.1 done (committed 13 October 2026; wording DRAFT); 7c.2 next | see the commit "Begin the Conversation page (7c.1)" |
+| 7d | The whole site in "All Special Elite" | Later (after 7c; recorded 12 October 2026; not started) | — |
 | 11b | Advanced SEO | Later (nothing built; outline and questions first) | — |
 | 11c | Terms & Conditions (new text) | Waiting for your text | — |
 | 11d | Privacy Policy (new page) | Waiting for your text | — |
@@ -232,7 +234,7 @@ Asked for on 12 October 2026. A redesign of the Lighting Designs page (`/lightin
 - **7b.1 The story (done: checked by you and committed 12 October 2026, `1da513c`):** see below.
 - **7b.2 The Sizes drawing (done: checked by you and committed 12 October 2026, `e0ce2d3`):** see "7b.2 as built" below.
 - **7b.3 "Configure Studio or Gallery" (done: checked by you and committed 12 October 2026, `e1c38b0`):** see "7b.3 as built" below.
-- **7b.4 "Discuss a Larger Piece" (done: checked by you and committed 12 October 2026, "Discuss a Larger Piece (7b.4)"):** see "7b.4 as built" below.
+- **7b.4 "Discuss a Larger Piece" (done: checked by you and committed 12 October 2026, `c10e5c5`):** see "7b.4 as built" below.
 
 **7b.4 as built (12 October 2026; checked by you and committed):**
 - **The step:** "Discuss a Larger Piece" (the introduction's ending) and "Considering a larger piece? Discuss a Larger Piece" (under The Scale) open the configurator panel in the same layout as a single step:
@@ -372,6 +374,114 @@ Asked for on 12 October 2026. A redesign of the Lighting Designs page (`/lightin
 - No database or server changes. **To undo:** revert the commit once made (or, before then, the files above).
 - **Found (12 October 2026), fixed in 7b.2:** on small upright phones (320×568), the text of The Process and The Maker ran down over the top of the photo.
 - **Checks run (12 October 2026):** `lighting-designs-story.mjs` passing at all four sizes (and with reduced motion at 390×844), again after the counter moved and the headers were underlined (it now also checks the counter's corner on phones, the closing buttons' sizes and, on phones, their place (right margin, clear of the heading, skip link and counter, upright just above the lamp; also at 430×932, 360×780 and 320×568) and each header's underline: Special Elite underscores in its colour, as wide as its text, also at 1920×1080 and on the reduced-motion page); the 13 configurator and Reserve checks plus the page footers (18 runs) all passing; `composer test` (190 tests), phpstan, code style, Twig lint and `npm run build` clean. The updated comparison scripts weren't run, as the story was compared by screenshots. **Full browser run with `--clean` before committing (12 October 2026): 41 of 42 passed**; the one failure was Chrome not starting for `quote-send.mjs` (as on earlier runs), which then passed on its own.
+
+### Step 7c: "Begin the Conversation", the enquiry page for larger pieces (in progress: 7c.1 done)
+Asked for on 12 October 2026.
+
+**The brief:**
+- **Where it's used:** a separate enquiry page, "Begin the Conversation", replaces Reserve Your Design for Atelier, Estate and Monument only. "Discuss a Larger Piece" and the larger-piece step's button lead to it, the button reading "Send Enquiry". Reserve Your Design stays exactly as it is for Studio and Gallery requests (Custom options, 3 or more lamps, outside the UK mainland).
+- **The page:**
+  - the chosen size and quantity, with "Finishes: to be chosen together";
+  - Contact: name, email, phone;
+  - "How would you like to talk?": Email, Phone or Video call, plus "Best time to reach you" (optional); phone required for Phone or Video call;
+  - one text box, "Tell me about your space and what you have in mind", with the hint "Where the lamp will stand, roughly how high the ceiling is, and the colours or finishes you're drawn to.";
+  - an upload box for photos of the space, inspiration or a mood board, with the Commissions upload rules (PDF, DWG, JPG, PNG, HEIC; 50MB each, 100MB in total; private, downloaded in admin);
+  - "Pinterest, Instagram or Houzz board (optional)";
+  - postcode only (the full address is collected on the quote page);
+  - ~~an optional "Needed by" date with "This is a gift" alongside it~~ (removed 13 October 2026);
+  - styled like the Commissions forms, in British English.
+- **Afterwards:** it saves as a request, appears in admin with all of this, and sends the customer and studio emails worded for an enquiry. The quote and payment flow afterwards stays as it is.
+
+**Proposed sub-steps (each stops for your checks; a commit only when asked):**
+- **7c.1 The page:** the form, its fields, messages and styling, reached from the larger-piece step. Nothing saved yet (as 9.1 was).
+- **7c.2 Saving and admin:**
+  - the enquiry saved as a request marked as an enquiry: a migration adds its own details (how to talk, best time, the description, the board link) and lets the phone be empty;
+  - its files kept privately as the Reference photos are;
+  - spam protection as Commissions;
+  - admin's Requests list with a Type column and filter (Reservation / Enquiry), and the enquiry's page showing everything with its files to download;
+  - what's typed remembered as on Reserve.
+- **7c.3 The thank-you page and the two emails** (the customer's and yours), worded for an enquiry.
+- **7c.4 The quote and payment for an enquiry:**
+  - checked end to end: the delivery estimate from its postcode, the quote email and page, the full address asked on the quote page with the quoted postcode kept, the deposit and balance, the order;
+  - any small fixes needed so it works as it does for a reservation;
+  - the full browser run.
+
+**Defaults (say if any is wrong):**
+- Reference numbers stay LR-… (it's a request, in the same list and quotes).
+- The enquiry carries only the larger piece; the basket is left as it is.
+- Spam trap and rate limit as Commissions.
+- What's typed is remembered for the tab, as on Reserve.
+- A full larger design still sent to the server directly (no page offers it now) still goes to Reserve Your Design.
+
+**Answers (12 October 2026):**
+1. **Buttons:** "Begin the Conversation" on the larger-piece step; "Send Enquiry" on the page.
+2. **Route:** the step (size and quantity), then the page, with a "Change" link by the size.
+3. ~~**Gift:** the same gift questions as Reserve Your Design (send to me / directly to the recipient, the recipient's name, mobile and gift message).~~ **Removed 13 October 2026** (see below).
+4. ~~**"Needed by":** any date from tomorrow, labelled as a preferred date, not a guarantee.~~ **Removed 13 October 2026** (see below).
+
+**No "Needed by" or gift on the page (decided 13 October 2026):** the "Needed by" date, "This is a gift" and the gift's questions are removed, as the page looked cluttered; they can be discussed in the conversation instead. This replaces answers 3 and 4 and that part of the brief.
+5. **Postcode:** any full UK postcode, including the Highlands and Islands, Northern Ireland, the Isle of Man and the Channel Islands, the country worked out from it; anything outside the UK refused.
+6. **Required fields:** the description is required; the board link can be any web address, kept exactly as typed.
+7. **Voice:** "me" on the page **and in the enquiry emails to the customer, signed by you**. The studio notification stays plain. *Open:* the name to sign with (needed for 7c.3).
+8. **Wording: not approved yet.** Built with the proposals below as **placeholders (DRAFT)**; you come back to them in the wording pass (11.5).
+
+**7c.1 as built (12 October 2026; checked by you and committed 13 October 2026). All its wording is DRAFT until the wording pass (11.5):**
+- **The route:**
+  - The larger-piece step's button now reads **"Begin the Conversation"** and goes to the new page, `/begin-the-conversation` (`EnquiryController`, `templates/enquiry/index.html.twig`, `EnquiryForm`).
+  - The size and quantity are held in the session apart from Reserve Your Design's lamps (`DesignRequestLamps::holdLarger()` / `largerItem()` / `forgetLarger()`), so **Reserve Your Design is back exactly as before 7b.4**: it never carries the larger piece, and its forgetting rules are as they were.
+  - Without a piece from the step, the page goes back to Lighting Designs.
+  - A size-only lamp is still refused for Studio and Gallery, and never reaches the basket.
+- **The page** (styled as the Bespoke Commissions forms, with their field partial, one column):
+  - "← Lumen Forma", the heading "Begin the Conversation" and the intro;
+  - "Your piece" with Size, "Finishes: To be chosen together", Quantity and **"Change"**, which goes back to the step with the size and quantity kept;
+  - **Contact:** Name *, Email *, Phone (optional, becoming "*" for a phone or video call);
+  - **Getting in touch:** "How would you like to talk? *" (Email / Phone / Video call, as Commissions' choice buttons, three across), "Best time to reach you (optional)";
+  - **Your space:** "Tell me about your space and what you have in mind *" with its hint; the photos box (the Commissions box and rules, the file chosen checked at once); "Pinterest, Instagram or Houzz board (optional)";
+  - **Delivery:** "Postcode *" with its hint (no "Needed by" or gift: removed 13 October 2026);
+  - the "Send Enquiry" button.
+- **Rules:**
+  - the description is required;
+  - the board link can be any web address (something with a dot and no spaces), kept as typed;
+  - the postcode can be any full UK postcode, including the Channel Islands and the Isle of Man (anything else refused);
+  - a phone or video call needs the phone number;
+  - a spam-trap field as Commissions.
+- **Remembered for the tab** (as Reserve; `saved_choices.js` 'enquiry'); files aren't remembered (browsers don't allow it).
+- **7c.1 only:** a complete enquiry is accepted but **not saved or sent**. The page shows "Your enquiry is complete. (Under construction: it isn't saved or sent yet.)", to be replaced by saving (7c.2) and the thank-you page (7c.3).
+- **Shared Commissions field partial:** gains `controller` (its choice buttons and phone hint can talk to another script), three-across choices and `extra` classes for a control; Commissions is unchanged (its checks pass).
+- **Checks:**
+  - new `enquiry-page.mjs` (1440×900 and 390×844, added to `run-all.mjs`): no piece, the page and its DRAFT wording, the piece and "Change", the fields in order (and no "Needed by" or gift), styled as Commissions (boxes, heights, labels, button, compared with the Home form), every message, the file box, remembered, a complete enquiry with nothing saved;
+  - `larger-piece.mjs`: the button's label and the enquiry page in place of Reserve (its old Reserve, email and admin parts come back with 7c.2 and 7c.3 for the enquiry);
+  - unit tests for holding the larger piece apart.
+- **Checks run (12 October 2026):**
+  - `enquiry-page.mjs` passes at desktop and phone.
+  - With `larger-piece.mjs`, `reserve.mjs`, both Commissions checks, the story, the configurator page and remember: 16 of 16 (`configurator-remember.mjs` after Chrome failed to start once).
+  - After removing "Needed by" and the gift (13 October 2026): `enquiry-page.mjs` at both sizes, unit tests, phpstan, code style, Twig lint and the build: all passed.
+  - Unit tests (194), phpstan, code style, Twig lint and the build are clean.
+  - **Full browser run with `--clean` before committing (13 October 2026): 46 of 48 passed.**
+    - `configurator-edit.mjs 390 844` failed once ("saving updates the same line") and passed when run again.
+    - `quote-send.mjs` failed on a fault in the check, now fixed. It worked out "valid until" as 14 × 24 hours, which near midnight lands on the day before when the clocks go back in between (run at 00:36 on 13 October; the clocks go back on 25 October). It now counts 14 calendar days from the UK date, as the site does, and passed when run again.
+- No database changes yet (7c.2). **To undo:** revert the commit once made.
+- *Open, for 7c.3:* the name to sign the customer's enquiry emails with ("signed by me").
+
+**Questions asked 12 October 2026 (answered above; the wording in 8 is DRAFT):**
+1. **The buttons:** the larger-piece step's button only opens the page, so a "Send Enquiry" label there would promise more than it does. Proposed: the step's button **"Begin the Conversation"** and the page's own button **"Send Enquiry"**; or "Send Enquiry" on both?
+2. **The route:** "Discuss a Larger Piece" → the step (size and quantity) → the page, as now (proposed), with a "Change" link by the size on the page back to the step? Or straight to the page, choosing the size there?
+3. **Gift:** "This is a gift" only (as the brief), with "Send to me / Send directly to the recipient" and the recipient's details asked later on the quote page? Or, when ticked, the same gift questions as Reserve Your Design (recommended, so the quote and payment really stay as they are)?
+4. **"Needed by":** any date from tomorrow, labelled "a preferred date, not a guarantee" (proposed: larger pieces are made to a longer schedule)? Or the same earliest date as checkout and Reserve (today + 14 days + 2 working days)?
+5. **Postcode:** any full UK postcode, including the Highlands and Islands, Northern Ireland, the Isle of Man and the Channel Islands, with the country worked out from it (proposed, as these are quoted individually anyway)? Anything outside the UK refused?
+6. **Required or not:** the text box required (proposed); the board link any web address, kept as typed (proposed), or only Pinterest, Instagram or Houzz?
+7. **Voice:** the brief's text box speaks as "me" ("Tell me about…"), as The Sizes and The Maker do, while the site's forms and emails say "we". Page in "me" and emails in "we" (proposed), or all "me", or all "we"?
+8. **Wording (DRAFT, placeholders until the wording pass, 11.5):**
+   - **Page:** heading "Begin the Conversation"; under it, "Atelier, Estate and Monument are made in conversation with me. Tell me a little about your space and I'll be in touch to talk it through. No payment is taken."
+   - **Field labels:** "How would you like to talk? *" (Email / Phone / Video call), "Best time to reach you (optional)", "Postcode *" with the hint "Where the lamp is going, so we can plan delivery.", "Needed by (optional)".
+   - **Messages:** "Please choose how you'd like to talk.", "Please enter your phone number for a phone or video call.", "Please tell me a little about your space.", plus the Commissions upload messages.
+   - **Thank-you page:** "Enquiry Received", then "Thank you. I'll be in touch by email / by phone / to arrange a video call, to talk about your {Atelier}.", then "Confirmation has been sent to the email address provided."
+   - **Customer email** (layout as the others; subject "We have your enquiry, {name}"): "Dear Ada," / "Thank you for your enquiry about a Lumen Forma {Atelier}. We'll be in touch by email (by phone / to arrange a video call) to talk through your space and the finishes, then send you a quote." / "No payment has been taken.", then:
+     - 01 Your enquiry (reference);
+     - 02 Your piece (Size, Finishes: To be chosen together, Quantity, "Starting at £…");
+     - 03 What you told us (the description, the board link, "3 files received");
+     - 04 Getting in touch (how, best time).
+   - **Your notification:** subject "New enquiry · Atelier × 1 · Video call"; the summary first (what it is, size and quantity, how and when to reach them, phone, postcode), then the description, the board link, the files (names, with a link to the enquiry in admin) and the contact details.
 
 ### Step 8: Reserve Your Design (done, `44b4408`)
 - `/reserve` (`ReserveController`, `templates/reserve/`): the prototype's Reserve page. Carries every basket lamp plus the lamp being configured (held in the session by `DesignRequestLamps` when the configurator or the old product page sends someone to Reserve; an edited line is replaced, not duplicated). The basket's own link (`/reserve?basket=1`) sends just the basket.
@@ -601,7 +711,7 @@ Restyle email 01; new order stages In production / Dispatched / Delivered with a
   - **Email 06** (`templates/email/order/delivered.html.twig`), subject "Your Lumen Forma has arrived (LS-…)" (the design's title with the order number): "Dear {first name}," then (wording decided 9 October 2026, replacing the design's sentence and its Share section) "Your Lumen Forma {size} lamp has been delivered. We hope it's found the perfect place in your home." (several: "Your Lumen Forma Gallery and Studio lamps have been delivered. We hope they've found the perfect place in your home."; `Order::getDeliveredSentence()`), "Would you do us a small favour? We'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page." and "By sending us a photo, you're happy for us to share it.", then "View your order" and "Reply to this email with any questions.". **Open item:** the care instructions (question 18), to go in as a Care section when written.
   - Migration `Version20261009070000` (when delivered; undo with `doctrine:migrations:migrate prev`, which puts delivered orders back to Dispatched).
   - Checks: `order-stages.mjs` extended (Delivered, email 06, admin, the private page); unit tests in `tests/Entity/OrderDispatchTest.php`.
-- **11.5 Wording pass (review prepared 9 October 2026; no wording changed yet):** every automated email, customer and studio, rendered with made-up sample details (Ada Lovelace; Grace Hopper as a gift's recipient) in one page to read: **`var/email-review/emails.html`** (open it in a browser: `open var/email-review/emails.html`; it works on its own, pictures included). 17 emails, numbered, each with who it goes to and its subject: 1 sign-in; 2 email 01 (a basket order sent directly as a gift); 3 email 02 (a larger size with a Custom choice, a gift); 4 the quote (deposit, personal note); 5 email 01 (a quote paid by deposit); 6 balance request (personal note); 7 receipt; 8–10 emails 04–06; 11 email 03 (For Your Home); 12 newsletter confirmation (only from the old maintenance page; its wording still says "requesting access to our platform"); 13–17 the studio's: new request, new commission, new order, deposit paid, balance paid. Email 02's other seven openings are listed in Step 8. Rebuild the page after any change with `docker compose exec -T php php var/email-review/build.php` (the script is in the same folder; it renders the site's own templates without the database and sends nothing; `var/` isn't in git). **Next:** you mark up what to change; then each change, its checks, and a commit when you say.
+- **11.5 Wording pass (review prepared 9 October 2026; no wording changed yet). Waits (decided 12 October 2026) until all the new pages are built: Step 7c and anything that follows from separating the smaller and larger lamps. It then covers every email and page wording, including Step 7c's draft wording.** every automated email, customer and studio, rendered with made-up sample details (Ada Lovelace; Grace Hopper as a gift's recipient) in one page to read: **`var/email-review/emails.html`** (open it in a browser: `open var/email-review/emails.html`; it works on its own, pictures included). 17 emails, numbered, each with who it goes to and its subject: 1 sign-in; 2 email 01 (a basket order sent directly as a gift); 3 email 02 (a larger size with a Custom choice, a gift); 4 the quote (deposit, personal note); 5 email 01 (a quote paid by deposit); 6 balance request (personal note); 7 receipt; 8–10 emails 04–06; 11 email 03 (For Your Home); 12 newsletter confirmation (only from the old maintenance page; its wording still says "requesting access to our platform"); 13–17 the studio's: new request, new commission, new order, deposit paid, balance paid. Email 02's other seven openings are listed in Step 8. Rebuild the page after any change with `docker compose exec -T php php var/email-review/build.php` (the script is in the same folder; it renders the site's own templates without the database and sends nothing; `var/` isn't in git). **Next:** you mark up what to change; then each change, its checks, and a commit when you say.
 
 ### Configurator: Custom descriptions and Reference photos (done, committed 10 October 2026)
 Asked for on 10 October 2026, between the 11.4 hand checks and the 11.5 wording changes. First built with an optional box and bracketed examples; changed the same day to the labels below, required, plus Reference photos.
@@ -631,6 +741,14 @@ Asked for on 10 October 2026, between the 11.4 hand checks and the 11.5 wording 
 - `DesignRequestFile` (new table `design_request_file`), migration `Version20261010100000` (tested up, down and up again; **undo** with `doctrine:migrations:migrate prev`, which drops the table so requests forget their photos; the files stay in the folder).
 - Full browser run with `--clean` before committing: 37 of 38 passed; the one failure (`configurator-remember.mjs`, its last step: "on a phone: scrolled straight to the review", reading the page before the phone window had drawn it) passed twice on its own, as on 9 October. An earlier full run was stopped part-way (30 runs, all passing) when the combined line was asked for; its test data was cleaned up separately.
 - Checks: new `configurator-custom-describe.mjs` (desktop and phone) and `reserve-photos.mjs`; `BasketRulesTest` expects the combined line; `configurator-add-to-basket.mjs`, `configurator-custom-notes.mjs`, `reserve.mjs` and `quote-pay.mjs` now fill in the description when they choose Custom (`reserve.mjs` also leaves the hidden file input out of its field measurements); `commissions.mjs` follows the shared file box; `clean-up.mjs` also removes test requests' photos.
+
+### Step 7d (later, after 7c): the whole site in "All Special Elite" (not started)
+Recorded 12 October 2026; **don't start it yet.**
+- Change the whole site's typography to the style used on the Lighting Designs introduction: everything in Special Elite, with titles, headers and buttons uppercase and letter-spaced.
+- It also covers the text people type into form fields on every form (inputs, text boxes, dropdowns and their placeholders), so they match (added 12 October 2026).
+- It needs a check of every page's layout, especially the homepage text beside the lamp, the staggered intros (Commissions, Workshop) and the configurator.
+- The email fonts need updating, with suitable fallbacks for email apps (web fonts often don't load in email).
+- The prototype comparisons (`tests/browser/compare/`) need updating.
 
 ### Step 11b: Advanced SEO (later)
 Added 9 October 2026. Nothing is built for it yet. When we reach it: first outline in plain English what it covers, and ask any questions before building anything.
@@ -665,6 +783,7 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 ## Questions still open
 
 **Waiting for you (as of 9 October 2026)**
+- Step 7c: the name to sign the enquiry emails with (for 7c.3).
 - Hand checks of the Custom descriptions and Reference photos, if not done yet (committed 10 October 2026 at your request).
 - Hand checks of 11.4 (Delivered, email 06, the email 05 wording, "Llunio Studios" in full, Facebook in the footers): committed before your checks, at your request.
 - The email review (11.5): what to change in each email.

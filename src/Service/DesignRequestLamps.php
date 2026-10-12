@@ -24,6 +24,11 @@ final readonly class DesignRequestLamps
 {
     private const SESSION_KEY = 'reserve_pending';
 
+    /**
+     * The larger piece from the larger-piece step, for "Begin the Conversation" (7c), kept apart from Reserve's lamps.
+     */
+    private const LARGER_KEY = 'enquiry_pending';
+
     public function __construct(
         private RequestStack $requestStack,
         private LumenFormaConfigurator $configurator,
@@ -57,15 +62,30 @@ final readonly class DesignRequestLamps
     }
 
     /**
-     * Whether the lamp being reserved came from the larger-piece step (7b.4):
-     * then that step's remembered choices are forgotten once the request is
-     * sent, rather than the configurator's.
+     * Remember the larger piece (a size and quantity, see
+     * LumenFormaConfigurator::readLarger()) for "Begin the Conversation".
+     *
+     * @param array<string, mixed> $design
      */
-    public function pendingIsLarger(): bool
+    public function holdLarger(array $design): void
     {
-        $pending = $this->requestStack->getSession()->get(self::SESSION_KEY);
+        $this->requestStack->getSession()->set(self::LARGER_KEY, $design);
+    }
 
-        return \is_array($pending) && $this->configurator->readLarger($pending['design'] ?? null) instanceof LumenFormaConfiguration;
+    /**
+     * The larger piece waiting for "Begin the Conversation", as a request line
+     * (its finishes to be chosen together), or null.
+     */
+    public function largerItem(): ?DesignRequestItem
+    {
+        $configuration = $this->configurator->readLarger($this->requestStack->getSession()->get(self::LARGER_KEY));
+
+        return $configuration instanceof LumenFormaConfiguration ? $this->fromConfiguration($configuration) : null;
+    }
+
+    public function forgetLarger(): void
+    {
+        $this->requestStack->getSession()->remove(self::LARGER_KEY);
     }
 
     public function forgetPending(): void
@@ -82,8 +102,7 @@ final readonly class DesignRequestLamps
     public function items(?Cart $cart): array
     {
         $pending = $this->requestStack->getSession()->get(self::SESSION_KEY);
-        $design = \is_array($pending) ? ($pending['design'] ?? null) : null;
-        $configuration = $this->configurator->read($design) ?? $this->configurator->readLarger($design);
+        $configuration = \is_array($pending) ? $this->configurator->read($pending['design'] ?? null) : null;
         $replaces = \is_array($pending) && \is_string($pending['replaces'] ?? null) ? $pending['replaces'] : null;
 
         $items = [];

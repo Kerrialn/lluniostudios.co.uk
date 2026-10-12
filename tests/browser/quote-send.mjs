@@ -77,7 +77,10 @@ try {
     await ev(`document.querySelector('[name$="[castingDate]"]').value = '2026-11-16'`);
     await pressSend();
     const confirmed = await ev(`sessionStorage.getItem('confirmed')`);
-    const validUntil = ukDate(new Date(Date.now() + 14 * 86400000));
+    // 14 calendar days from today's UK date, as the site counts them (adding 14 × 24 hours
+    // lands on the day before when the clocks go back in between, near midnight).
+    const [ty, tm, td] = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }).split('-').map(Number);
+    const validUntil = ukDate(new Date(Date.UTC(ty, tm - 1, td + 14, 12)));
     check('sent once confirmed ("Send this quote to ada.send@example.test? It will be valid for 14 days.")', confirmed === 'Send this quote to ada.send@example.test? It will be valid for 14 days.', confirmed);
     check(`"Quote sent to … It is valid until ${validUntil}."`, (await flash()).includes(`Quote sent to ${EMAIL}. It is valid until ${validUntil}.`), await flash());
     check('the request is now Quoted', status() === 'quoted');

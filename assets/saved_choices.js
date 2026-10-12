@@ -17,6 +17,8 @@ const STORES = {
     // The larger-piece step's size and quantity (Step 7b.4), as the configurator's.
     larger: () => window.localStorage,
     reserve: () => window.sessionStorage,
+    // What is typed on "Begin the Conversation" (Step 7c), as on Reserve: until the tab is closed.
+    enquiry: () => window.sessionStorage,
 };
 const KEY = (name) => `llunio:${name}`;
 

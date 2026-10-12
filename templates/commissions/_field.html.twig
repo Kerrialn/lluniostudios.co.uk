@@ -14,9 +14,13 @@
       phone   true for the phone field (its hint switches to * when the
               customer would like a call; commission_controller.js)
       phoneRequired  the phone is required to start with (Phone was chosen)
+      controller  the script the choice and phone talk to: 'commission'
+              (default) or 'enquiry' ("Begin the Conversation", Step 7c)
+      extra   more classes for the control (e.g. a date's dark picker)
 #}
 {% set kind = kind|default('input') %}
 {% set hint = hint|default('') %}
+{% set controller = controller|default('commission') %}
 {% set box = 'w-full bg-transparent text-ll-ink border border-ll-mute rounded-none outline-none text-[15px] focus:border-ll-ink' %}
 <div class="flex flex-col gap-2" {% if kind == 'files' %}{{ stimulus_controller('file-chooser', {
         maxFileBytes: constant('App\\Form\\Form\\CommissionFields::MAX_FILE_BYTES'),
@@ -25,10 +29,10 @@
     }) }}{% endif %}>
     {% if kind == 'choice' %}
         <span id="{{ child.vars.id }}_label" class="text-[14px]">{{ label }} <span class="text-ll-mute text-[13px]"></span></span>
-        <div class="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby="{{ child.vars.id }}_label">
+        <div class="grid {{ child|length == 3 ? 'grid-cols-3' : 'grid-cols-2' }} gap-2" role="radiogroup" aria-labelledby="{{ child.vars.id }}_label">
             {% for option in child %}
                 <label class="h-12 flex items-center justify-center border border-ll-mute text-[14px] cursor-pointer transition-opacity hover:opacity-70 has-[:checked]:bg-ll-ink has-[:checked]:text-ll-bg has-[:checked]:border-ll-ink has-[:checked]:hover:opacity-85 has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ll-ink">
-                    {{ form_widget(option, { attr: { class: 'sr-only', 'data-action': 'commission#contact' } }) }}{{ option.vars.label }}
+                    {{ form_widget(option, { attr: { class: 'sr-only', 'data-action': controller ~ '#contact' } }) }}{{ option.vars.label }}
                 </label>
             {% endfor %}
         </div>
@@ -41,7 +45,7 @@
     {% else %}
         <label for="{{ child.vars.id }}" class="text-[14px]">{{ label }}
             {%- if phone|default(false) -%}
-                {{ ' ' }}<span class="text-ll-mute text-[13px]" data-commission-target="phoneOptional" {{ phoneRequired|default(false) ? 'hidden' }}>(optional)</span><span data-commission-target="phoneRequired" {{ phoneRequired|default(false) ? '' : 'hidden' }}>*</span>
+                {{ ' ' }}<span class="text-ll-mute text-[13px]" data-{{ controller }}-target="phoneOptional" {{ phoneRequired|default(false) ? 'hidden' }}>(optional)</span><span data-{{ controller }}-target="phoneRequired" {{ phoneRequired|default(false) ? '' : 'hidden' }}>*</span>
             {%- else -%}
                 {# Always present, as in the prototype (it sets the label's height). #}
                 {{ ' ' }}<span class="text-ll-mute text-[13px]">{{ hint }}</span>
@@ -52,7 +56,7 @@
         {% elseif kind == 'select' %}
             {{ form_widget(child, { attr: { class: box ~ ' h-12 px-3.5 leading-[normal] [&>option]:text-[#111]' } }) }}
         {% else %}
-            {{ form_widget(child, { attr: { class: box ~ ' h-12 px-3.5 leading-[1.5]' } }) }}
+            {{ form_widget(child, { attr: { class: box ~ ' h-12 px-3.5 leading-[1.5] ' ~ extra|default('') } }) }}
         {% endif %}
     {% endif %}
     {% if help|default('') %}

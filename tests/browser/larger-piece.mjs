@@ -5,26 +5,21 @@
 // specifications and the purchase route note, "Image Coming Soon" with its name,
 // the way back ("Considering Studio or Gallery?") and in again ("Considering a
 // larger piece?"), remembered (a reload opens on it), a design remembered from
-// before with a larger size moving here, then its button straight to Reserve
-// Your Design with the size and quantity and "Finishes: To be chosen together",
-// the request saved without options, emails 02 and the studio's showing the
-// finishes, the step's choices forgotten (the configurator's kept), and (on
-// desktop) admin's request and quote pages.
+// before with a larger size moving here, then its button, "Begin the
+// Conversation", straight to the enquiry page (Step 7c) with the size, quantity
+// and "Finishes: To be chosen together", and Reserve Your Design not carrying
+// it. (Saving the enquiry, its emails and admin: 7c.2 and 7c.3.)
 //   node tests/browser/larger-piece.mjs 1440 900
 //   node tests/browser/larger-piece.mjs 390 844
-import { open, sleep, checker, sql, BASE_URL, MAILPIT_URL } from './lib.mjs';
+import { open, sleep, checker, BASE_URL } from './lib.mjs';
 
 const [W, H] = [Number(process.argv[2] || 1440), Number(process.argv[3] || 900)];
 const phone = W < 900;
 const { check, summary } = checker();
 const b = await open(W, H, `larger${W}`, { mobile: phone });
 const { send, ev } = b;
-const EMAIL = `ada.larger${W}@example.test`;
-const ADMIN = 'lluniostudios@gmail.com';
 const SIZE = 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.';
 const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
-const mailpit = async (q) => (await (await fetch(MAILPIT_URL + '/api/v1/search?query=' + encodeURIComponent(q))).json()).messages || [];
-const mailBody = async (id) => (await (await fetch(MAILPIT_URL + '/api/v1/message/' + id)).json());
 try {
     const go = async (url, wait = 2500) => { await send('Page.navigate', { url }); await sleep(wait); await ev(`document.querySelectorAll('[id^=sfwdt]').forEach(e => e.remove())`); };
     const state = () => ev(`(() => { const root = document.querySelector('[data-controller~=configurator]'), p = document.querySelector('.ll-cfg-panel'), vis = (e) => !!e && e.getClientRects().length > 0;
@@ -69,34 +64,15 @@ try {
     await go(BASE_URL + '/lighting-designs', 3500); s = await state();
     check('coming back: straight onto the step (no introduction), Atelier and 3 lamps', s.revealed && s.larger && !s.story && s.sizes === 'Atelier*,Estate,Monument' && s.quantity === '3' && s.photo === 'soon:Atelier', JSON.stringify(s));
 
-    // Reserve Your Design.
+    // "Begin the Conversation" (Step 7c; the page itself: enquiry-page.mjs). Saving and the
+    // emails come in 7c.2 and 7c.3, with their checks.
+    check('the step\'s button reads "Begin the Conversation"', (await ev(`document.querySelector('[data-configurator-target=largerConfiguration]').closest('form').querySelector('button').textContent.trim()`)) === 'Begin the Conversation');
     await button(); await sleep(2500);
-    const reserve = await ev(`({ path: location.pathname, rows: [...document.querySelectorAll('aside .flex.justify-between')].map(r => [...r.children].map(c => c.textContent.trim()).join('=')),
-        labels: [...document.querySelectorAll('form label > span:first-child')].map(l => l.textContent.trim()) })`);
-    check('the button: Reserve Your Design with the Atelier, 3 lamps, "Finishes: To be chosen together" (no options, no Configuration, no Custom Details)',
-        reserve.path === '/reserve' && JSON.stringify(reserve.rows.filter(r => !/^(Subtotal|Delivery|Total)/.test(r))) === JSON.stringify(['Size=Atelier', 'Finishes=To be chosen together', 'Quantity=3'])
-        && !reserve.labels.some(l => /^Custom Details|^Reference photos/.test(l)), JSON.stringify(reserve));
-    const form = { fullName: 'Ada Larger', email: EMAIL, phone: '07700 900123', addressLine1: '1 High Street', town: 'Wimborne', county: 'Dorset', postcode: 'BH21 1AA' };
-    await ev(`(() => { for (const [k, v] of Object.entries(${JSON.stringify(form)})) document.querySelector('[name="reserve_form[' + k + ']"]').value = v; document.querySelector('form[name=reserve_form]').requestSubmit(); })()`); await sleep(3500);
-    const after = await ev(`({ path: location.pathname, larger: localStorage.getItem('llunio:larger'), configurator: localStorage.getItem('llunio:configurator') })`);
-    check('sent: "Reservation received"; the step\'s choices forgotten, the configurator\'s (Studio) kept', after.path === '/reserve/received' && after.larger === null && /lumen-forma-studio/.test(after.configurator ?? ''), JSON.stringify(after));
-    const number = sql(`select request_number from design_request where email = '${EMAIL}' order by created_at desc limit 1`).match(/LR-\d{6}-\d{4}/)?.[0];
-    const item = sql(`select size_name, quantity, options_snapshot from design_request_item i join design_request r on r.id = i.design_request_id where r.request_number = '${number}'`);
-    check('saved: one Atelier, 3 lamps, no options', /Atelier/.test(item) && /\b3\b/.test(item) && /\[\]/.test(item), item.replace(/\s+/g, ' '));
-
-    // The emails.
-    let customer, studio;
-    for (let i = 0; i < 20 && !(customer && studio); i++) {
-        customer ??= (await mailpit(`to:${EMAIL}`)).find(m => m.Subject === 'We have your request, Ada Larger');
-        for (const m of await mailpit('to:lluniostudios@gmail.com subject:"New request"')) if (!studio && (await mailBody(m.ID)).HTML.includes(number)) studio = m;
-        if (!(customer && studio)) await sleep(500);
-    }
-    const text = (html) => html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
-    const c = customer ? text((await mailBody(customer.ID)).HTML) : '';
-    check('email 02: the larger size and more than two lamps opening, Size Atelier, Finishes To be chosen together, Quantity 3, no options or "Same configuration"',
-        /Your order is for more than two lamps and includes one of our larger sizes/.test(c) && /Size Atelier Finishes To be chosen together Quantity 3/.test(c) && !/The Pigment|Same configuration/.test(c), c.slice(0, 600));
-    const t = studio ? text((await mailBody(studio.ID)).HTML) : '';
-    check('the studio\'s notification: "New request · Atelier × 3", the finishes to be chosen together', /Atelier × 3/.test(studio?.Subject ?? '') && /Finishes To be chosen together/.test(t) && !/The Pigment/.test(t), `${studio?.Subject} | ${t.slice(0, 300)}`);
+    const enquiry = await ev(`({ path: location.pathname, h1: document.querySelector('h1')?.textContent.trim(), rows: [...document.querySelectorAll('[aria-label="Your piece"] .flex.justify-between')].slice(1).map(r => [...r.children].map(c => c.textContent.trim()).join('=')) })`);
+    check('the button: "Begin the Conversation" with the Atelier, 3 lamps, "Finishes: To be chosen together" (not Reserve Your Design)',
+        enquiry.path === '/begin-the-conversation' && enquiry.h1 === 'Begin the Conversation' && JSON.stringify(enquiry.rows) === JSON.stringify(['Size=Atelier', 'Finishes=To be chosen together', 'Quantity=3']), JSON.stringify(enquiry));
+    await go(BASE_URL + '/reserve', 2000);
+    check('Reserve Your Design doesn\'t carry the larger piece (nothing to reserve: back to Lighting Designs)', (await ev('location.pathname')) === '/lighting-designs');
 
     // A design remembered from before 7b.4 with a larger size moves to the step.
     await go(BASE_URL + '/contact', 1500);
@@ -109,25 +85,7 @@ try {
     // The server: a size only is a larger piece only, and always goes to Reserve.
     const force = async (config) => { await go(BASE_URL + '/lighting-designs'); await ev(`document.querySelector('form[action$="/lighting-designs/add"]').removeAttribute('data-action')`); await sleep(100); await ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify(config))}; f.requestSubmit(); })()`); await sleep(2500); return ev('location.pathname'); };
     check('server: a Gallery with its size only is refused (back to the configurator, nothing in the basket)', (await force({ size: 'lumen-forma-gallery', quantity: 1, mode: 'all', lamps: [{}], finishes: 'together' })) === '/lighting-designs' && !/Basket \(\d/.test(await ev(`document.querySelector('#navbar').innerText`)));
-    check('server: an Estate with its size only goes to Reserve Your Design', (await force({ size: 'lumen-forma-estate', quantity: 1, mode: 'all', lamps: [{}], finishes: 'together' })) === '/reserve');
+    check('server: an Estate with its size only goes to "Begin the Conversation"', (await force({ size: 'lumen-forma-estate', quantity: 1, mode: 'all', lamps: [{}], finishes: 'together' })) === '/begin-the-conversation');
 
-    if (!phone) {
-        // Admin: the request's page and its quote show the finishes to be chosen together.
-        await go(BASE_URL + '/login');
-        await ev(`(() => { const i = document.querySelector('input[name=email]'); i.value = ${JSON.stringify(ADMIN)}; i.form.requestSubmit(); })()`); await sleep(2500);
-        let code;
-        for (let i = 0; i < 20 && !code; i++) {
-            const m = (await mailpit(`to:${ADMIN} subject:"Sign in to Llunio Studios"`))[0];
-            if (m) code = ((await mailBody(m.ID)).Text || '').match(/\b\d{6}\b/)?.[0];
-            if (!code) await sleep(500);
-        }
-        await ev(`(() => { const h = document.querySelector('[data-pin-code-target=hidden]'); h.value = '${code}'; h.form.requestSubmit(); })()`); await sleep(3000);
-        const id = sql(`select id from design_request where request_number = '${number}'`).match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)[0];
-        await go(`${BASE_URL}/admin/design-request/${id}`, 3000);
-        const detail = await ev(`document.body.innerText`);
-        check('admin, the request: "Lumen Forma Atelier · 3 lamps", "Finishes: to be chosen together", no "Customise All"', /Atelier/.test(detail) && /3 lamps/.test(detail) && /Finishes: to be chosen together/.test(detail) && !/Customise All/.test(detail), detail.slice(0, 400));
-        await go(`${BASE_URL}/admin/design-request/${id}/quote`, 3000);
-        check('admin, its quote: the design with "Finishes: to be chosen together"', /Finishes: to be chosen together/.test(await ev(`document.body.innerText`)));
-    }
     summary();
 } finally { b.close(); }

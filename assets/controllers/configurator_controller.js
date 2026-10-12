@@ -58,8 +58,9 @@ import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
  *  - Step 7b.4, "Discuss a Larger Piece" (openLarger; .is-larger): the panel
  *    as a single step, The Scale with Atelier, Estate and Monument (none
  *    chosen at first) and the quantity, its photo "Image Coming Soon" with
- *    the size's name. Its button sends the size and quantity straight to
- *    Reserve Your Design, the finishes to be chosen together; without a size,
+ *    the size's name. Its button, "Begin the Conversation", sends the size and
+ *    quantity straight to the enquiry page (Step 7c), the finishes to be
+ *    chosen together; without a size,
  *    "Please choose a size to continue.". "Prefer a smaller piece?"
  *    goes back (openMain), as do "Configure Studio or Gallery" and "Skip to
  *    configurator". Remembered separately ('larger'): a visitor who left on
@@ -667,7 +668,7 @@ export default class extends Controller {
         if (this.hasLargerRouteNoteTarget) this.largerRouteNoteTarget.textContent = reasons.join(' ');
     }
 
-    // The button: straight to Reserve Your Design with the size (and quantity).
+    // The button: straight to "Begin the Conversation" with the size (and quantity).
     reserveLarger(event) {
         if (!this.largerSize) {
             event.preventDefault();

@@ -157,8 +157,9 @@ final class LumenFormaConfigurator
      * isn't bought directly (Atelier, Estate, Monument) and a quantity, with
      * no options ("Finishes: to be chosen together"), as sent by the
      * configurator: {size, quantity, mode: 'all', lamps: [{}], finishes:
-     * 'together'}. Anything else is null. It only ever goes to the Reserve
-     * route; the basket's rules are unchanged.
+     * 'together'}. Anything else is null. It only ever goes to "Begin the
+     * Conversation" (Step 7c; Reserve Your Design until then); the basket's
+     * rules are unchanged.
      */
     public function readLarger(mixed $data): ?LumenFormaConfiguration
     {

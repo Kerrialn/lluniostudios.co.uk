@@ -197,11 +197,11 @@ final class DesignRequestLampsTest extends TestCase
         self::assertSame([], $this->lamps->items(null));
     }
 
-    public function testALargerPieceIsCarriedWithItsFinishesToBeChosen(): void
+    public function testALargerPieceIsHeldApartForTheEnquiryWithItsFinishesToBeChosen(): void
     {
         $cart = new Cart();
         $cart->addCartItem($this->line('lumen-forma-gallery', 1, self::LAMP));
-        $this->lamps->holdPending([
+        $this->lamps->holdLarger([
             'size' => 'lumen-forma-monument',
             'quantity' => 2,
             'mode' => 'all',
@@ -209,33 +209,33 @@ final class DesignRequestLampsTest extends TestCase
             'finishes' => 'together',
         ]);
 
-        $items = $this->lamps->items($cart);
-
-        self::assertCount(2, $items);
-        self::assertSame('Monument', $items[1]->getSizeName());
-        self::assertSame(2, $items[1]->getQuantity());
-        self::assertTrue($items[1]->isFinishesToBeChosen());
+        $item = $this->lamps->largerItem();
+        self::assertNotNull($item);
+        self::assertSame('Monument', $item->getSizeName());
+        self::assertSame(2, $item->getQuantity());
+        self::assertTrue($item->isFinishesToBeChosen());
         self::assertSame([[
             'label' => null,
             'options' => [],
-        ]], $items[1]->getLampConfigurations());
-        self::assertFalse($items[0]->isFinishesToBeChosen());
-        self::assertFalse(DesignRequestLamps::hasCustomChoice($items));
-        self::assertTrue($this->lamps->pendingIsLarger());
-        self::assertSame('', $this->lamps->pendingCustomDetails());
+        ]], $item->getLampConfigurations());
+        // Reserve Your Design doesn't carry it: just the basket.
+        self::assertCount(1, $this->lamps->items($cart));
+        self::assertFalse($this->lamps->hasNewPending());
+
+        $this->lamps->forgetLarger();
+        self::assertNull($this->lamps->largerItem());
     }
 
     public function testADesignFromTheConfiguratorIsNotALargerPiece(): void
     {
-        $this->lamps->holdPending([
+        $this->lamps->holdLarger([
             'size' => 'lumen-forma-gallery',
             'quantity' => 3,
             'mode' => 'all',
             'lamps' => [self::LAMP],
         ]);
 
-        self::assertFalse($this->lamps->pendingIsLarger());
-        self::assertFalse($this->lamps->items(null)[0]->isFinishesToBeChosen());
+        self::assertNull($this->lamps->largerItem());
     }
 
     public function testRequestNumberAndLampCount(): void

@@ -32,6 +32,8 @@ const CHECKS = [
     ['configurator-remember.mjs'],
     ['larger-piece.mjs', '1440', '900'],
     ['larger-piece.mjs', '390', '844'],
+    ['enquiry-page.mjs', '1440', '900'],
+    ['enquiry-page.mjs', '390', '844'],
     ['reserve.mjs'],
     ['reserve-photos.mjs'],
     ['old-shop-redirects.mjs'],
