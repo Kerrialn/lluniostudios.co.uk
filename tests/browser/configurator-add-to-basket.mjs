@@ -4,9 +4,7 @@ const b = await open(1440, 900, 'cfgcast');
 let ok = true;
 const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log(`${pass ? 'PASS' : 'FAIL'}  ${label}${detail ? '  (' + detail + ')' : ''}`); };
 const ev = b.ev;
-const SIZE = 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.';
 const CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
-const BOTH = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery quoted individually.';
 const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
 const note = () => ev(`document.querySelector('[data-configurator-target=routeNote]').textContent`);
 const fresh = async () => { await b.send('Network.enable'); await b.send('Network.clearBrowserCookies'); };
@@ -67,20 +65,14 @@ check('2 lamps in an empty basket: Cast Your Lamp', r.cta === 'Cast Your Lamp');
 await submit(); k = await basket();
 check('added as one line with Lamp 1 and Lamp 2 configurations', k.url === '/basket' && /Lamp 1/.test(k.text) && /Lamp 2/.test(k.text) && /Raw Jute/.test(k.text) && /Black/.test(k.text), k.text.slice(0, 300).replace(/\n/g, ' | '));
 
-// 4. Request size and Custom values
-await fresh(); await open_(); await pick('size', 'lumen-forma-atelier'); r = await route();
-check('Atelier: the Request size note', r.note === SIZE, r.note);
-await jump(0); await pick('size', 'lumen-forma-studio'); await fill(1, { 'Footing Material': 'Custom Metal Finish' }); r = await route();
+// 4. Custom values and quantities (the Request size notes are on the larger-piece
+// step since 7b.4: larger-piece.mjs)
+await fresh(); await open_(); await pick('size', 'lumen-forma-studio'); await fill(1, { 'Footing Material': 'Custom Metal Finish' }); r = await route();
 check('a Custom value: Reserve with the custom note', r.cta === 'Reserve Your Design' && (await note()) === CUSTOM, await note());
-await jump(0); await pick('size', 'lumen-forma-atelier');
-check('a Request size and a Custom value: the single combined note', (await note()) === BOTH, await note());
-await pick('size', 'lumen-forma-studio'); await more(); await more();
+await jump(0); await more(); await more();
 check('a Custom value and 3 lamps: the custom note, then the 3-or-more note', (await note()) === CUSTOM + ' ' + LIMIT, await note());
-await ev(`document.querySelector('[data-action="configurator#fewer"]').click()`); await ev(`document.querySelector('[data-action="configurator#fewer"]').click()`);
-await jump(0); for (let i = 0; i < 2; i++) await more(); await pick('size', 'lumen-forma-estate');
-check('Request size, Custom and 3 lamps: the combined note, then the 3-or-more note (nothing repeated)', (await note()) === BOTH + ' ' + LIMIT, await note());
 await jump(3); await pick('Footing Material', 'Brushed Copper'); await jump(0);
-check('Request size and 3 lamps: the size note, then the 3-or-more note', (await note()) === SIZE + ' ' + LIMIT, await note());
+check('3 lamps, no Custom value: the 3-or-more note', (await note()) === LIMIT, await note());
 
 // 5. The server checks again (page rules bypassed)
 const force = async (config, token = true) => { await ev(`document.querySelector('form[action$="/lighting-designs/add"]').removeAttribute('data-action')`); await sleep(100); await ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); ${token ? '' : "f.querySelector('[name=_csrf_token]').remove();"} f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify(config))}; f.requestSubmit(); })()`); await sleep(2000); return basket(); };

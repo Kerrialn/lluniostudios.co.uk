@@ -95,7 +95,7 @@
                             <strong>{{ line.label }}</strong>
                             {% if item %}
                                 {% for group in item.lampConfigurations %}
-                                    <div class="small text-muted">{% if group.label %}<em>{{ group.label }}:</em> {% endif %}{% for option in group.options %}{{ option.value }}{{ loop.last ? '' : ' · ' }}{% endfor %}</div>
+                                    <div class="small text-muted">{% if group.label %}<em>{{ group.label }}:</em> {% endif %}{% for option in group.options %}{{ option.value }}{{ loop.last ? '' : ' · ' }}{% endfor %}{% if item.finishesToBeChosen %}{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_KEY') }}: {{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_VALUE')|lower }}{% endif %}</div>
                                 {% endfor %}
                                 {% if item.product and not item.product.directOrder %}<div class="small text-muted">Size price shown on the site: from {{ m.money(item.unitPrice) }}</div>{% endif %}
                             {% endif %}

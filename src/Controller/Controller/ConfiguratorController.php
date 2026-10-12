@@ -114,6 +114,14 @@ final class ConfiguratorController extends AbstractController
             $data = null;
         }
 
+        // A larger piece (7b.4): a size only, always to Reserve Your Design.
+        $larger = $this->configurator->readLarger($data);
+        if ($larger instanceof LumenFormaConfiguration) {
+            $this->designRequestLamps->holdPending($data);
+
+            return $this->redirectToRoute('basket_request');
+        }
+
         $configuration = $this->configurator->read($data);
         if (! $configuration instanceof LumenFormaConfiguration) {
             $this->addFlash('error', 'Please complete every choice for your lamp before adding it to your basket.');

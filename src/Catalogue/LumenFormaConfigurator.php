@@ -18,6 +18,11 @@ use App\Repository\ProductRepository;
  */
 final class LumenFormaConfigurator
 {
+    /**
+     * The larger-piece step's marker: its finishes are chosen with the studio.
+     */
+    public const FINISHES_TOGETHER = 'together';
+
     public function __construct(
         private readonly ProductRepository $productRepository,
     ) {
@@ -145,6 +150,39 @@ final class LumenFormaConfigurator
         }
 
         return new LumenFormaConfiguration($product, $quantity, $individually, $lamps);
+    }
+
+    /**
+     * A larger piece from "Discuss a Larger Piece" (Step 7b.4): a size that
+     * isn't bought directly (Atelier, Estate, Monument) and a quantity, with
+     * no options ("Finishes: to be chosen together"), as sent by the
+     * configurator: {size, quantity, mode: 'all', lamps: [{}], finishes:
+     * 'together'}. Anything else is null. It only ever goes to the Reserve
+     * route; the basket's rules are unchanged.
+     */
+    public function readLarger(mixed $data): ?LumenFormaConfiguration
+    {
+        if (! \is_array($data) || ($data['finishes'] ?? null) !== self::FINISHES_TOGETHER || ! \is_string($data['size'] ?? null) || ! \is_int($data['quantity'] ?? null)) {
+            return null;
+        }
+
+        $lamps = $data['lamps'] ?? [[]];
+        if (! \is_array($lamps) || [[]] !== array_values($lamps) || 'all' !== ($data['mode'] ?? 'all')) {
+            return null;
+        }
+
+        $quantity = $data['quantity'];
+        if ($quantity < 1 || $quantity > LumenFormaCatalogue::MAX_LAMPS_PER_CONFIGURATION) {
+            return null;
+        }
+
+        foreach ($this->products() as $product) {
+            if ($product->getSlug() === $data['size'] && ! $product->isDirectOrder()) {
+                return new LumenFormaConfiguration($product, $quantity, false, [[]]);
+            }
+        }
+
+        return null;
     }
 
     /**

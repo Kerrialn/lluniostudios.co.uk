@@ -64,9 +64,12 @@ await jump(1); await pick('The Pigment', 'Grey'); await jump(2); await pick('Cab
 await cast(); k = await basket();
 check('saved back as one configuration for 1 lamp', lineCount(k.text) === 1 && !/Lamp 2/.test(k.text) && /Orange/i.test(k.text) && /Smoked Glass LED/i.test(k.text));
 
-// Edit into a Request size: Reserve, line untouched
-await go(editUrl, 2500); await jump(0); await pick('size', 'lumen-forma-atelier'); await jump(4); await pick('Bulb Count', 'Single Array'); await jump(5); s = await state();
-check('editing into Atelier: Reserve Your Design', s.cta === 'Reserve Your Design');
+// Edit into a Custom choice: Reserve, line untouched (since 7b.4 a line can't become a
+// larger size here; the larger sizes have their own step)
+await go(editUrl, 2500); await jump(1); await pick('The Pigment', 'Custom');
+await ev(`(() => { const t = document.querySelector('[data-configurator-target=describe][data-group="The Pigment"] textarea'); t.value = 'Warm grey.'; t.dispatchEvent(new Event('input', { bubbles: true })); })()`);
+await jump(5); s = await state();
+check('editing into a Custom pigment: Reserve Your Design', s.cta === 'Reserve Your Design');
 await cast();
 check('goes to the request route', (await ev('location.pathname')) === '/reserve');
 await go(BASE_URL + '/basket'); k = await basket();

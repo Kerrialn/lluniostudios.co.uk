@@ -197,6 +197,47 @@ final class DesignRequestLampsTest extends TestCase
         self::assertSame([], $this->lamps->items(null));
     }
 
+    public function testALargerPieceIsCarriedWithItsFinishesToBeChosen(): void
+    {
+        $cart = new Cart();
+        $cart->addCartItem($this->line('lumen-forma-gallery', 1, self::LAMP));
+        $this->lamps->holdPending([
+            'size' => 'lumen-forma-monument',
+            'quantity' => 2,
+            'mode' => 'all',
+            'lamps' => [[]],
+            'finishes' => 'together',
+        ]);
+
+        $items = $this->lamps->items($cart);
+
+        self::assertCount(2, $items);
+        self::assertSame('Monument', $items[1]->getSizeName());
+        self::assertSame(2, $items[1]->getQuantity());
+        self::assertTrue($items[1]->isFinishesToBeChosen());
+        self::assertSame([[
+            'label' => null,
+            'options' => [],
+        ]], $items[1]->getLampConfigurations());
+        self::assertFalse($items[0]->isFinishesToBeChosen());
+        self::assertFalse(DesignRequestLamps::hasCustomChoice($items));
+        self::assertTrue($this->lamps->pendingIsLarger());
+        self::assertSame('', $this->lamps->pendingCustomDetails());
+    }
+
+    public function testADesignFromTheConfiguratorIsNotALargerPiece(): void
+    {
+        $this->lamps->holdPending([
+            'size' => 'lumen-forma-gallery',
+            'quantity' => 3,
+            'mode' => 'all',
+            'lamps' => [self::LAMP],
+        ]);
+
+        self::assertFalse($this->lamps->pendingIsLarger());
+        self::assertFalse($this->lamps->items(null)[0]->isFinishesToBeChosen());
+    }
+
     public function testRequestNumberAndLampCount(): void
     {
         $request = new DesignRequest('Ada Test', 'ada@example.test', '07700 900123');

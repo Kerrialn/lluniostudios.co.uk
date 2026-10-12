@@ -457,6 +457,11 @@
 @media (max-width: 899px) and (orientation: landscape) {
     .ll-cfg-img { object-fit: var(--fit-side); object-position: var(--pos-side); }
 }
+/* "Discuss a Larger Piece" (7b.4): the panel as a single step (.is-larger on
+   the configurator); the main stages, their numbers and Back / Next hidden. */
+.ll-cfg-larger { display: none; }
+.is-larger .ll-cfg-larger { display: flex; }
+.is-larger .ll-cfg-main { display: none !important; }
 /* Title and "Scroll to begin" over the photo: cream with a soft shadow, or
    dark over a light photo; fade out on reveal (.ll-reveal-cue). */
 .ll-cfg-hero {

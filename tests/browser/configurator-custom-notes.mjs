@@ -8,9 +8,7 @@ let ok = true;
 const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log(`${pass ? 'PASS' : 'FAIL'}  ${label}${detail ? '  (' + detail + ')' : ''}`); };
 const ev = b.ev;
 const LINE = 'You can upload reference photos when you reserve your design, Custom options are developed with you and quoted individually.';
-const SIZE = 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.';
 const CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
-const BOTH = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery quoted individually.';
 const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
 await b.send('Network.enable'); await b.send('Network.clearBrowserCookies');
 await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800);
@@ -55,12 +53,11 @@ await jump(5); let r = await reviewNote();
 check('review: "Direct order and checkout." directly under Cast Your Lamp', r.cta === 'Cast Your Lamp' && r.note === 'Direct order and checkout.' && r.visible && r.underButton, JSON.stringify(r));
 await jump(1); await pick('The Pigment', 'Custom'); await describe('The Pigment'); await jump(5); r = await reviewNote();
 check('review with a Custom choice: Reserve and the custom note, rule in cream', r.cta === 'Reserve Your Design' && r.note === CUSTOM && r.rule === 'rgb(236, 227, 211)', JSON.stringify(r));
-await jump(0); await pick('size', 'lumen-forma-atelier'); await jump(4); await pick('Bulb Count', 'Dual Array'); await jump(5); r = await reviewNote();
-check('review, Atelier with a Custom choice: the combined note', r.note === BOTH, r.note);
+// Since 7b.4 the larger sizes have their own step (larger-piece.mjs checks its size note).
 await jump(0); await more(); await more(); await jump(5); r = await reviewNote();
-check('review, Atelier, Custom, 3 lamps: combined note then the 3-or-more note', r.note === BOTH + ' ' + LIMIT, r.note);
+check('review, Custom, 3 lamps: the custom note, then the 3-or-more note', r.note === CUSTOM + ' ' + LIMIT, r.note);
 await jump(1); await pick('The Pigment', 'White'); await jump(5); r = await reviewNote();
-check('review, Atelier, 3 lamps: size note then the 3-or-more note', r.note === SIZE + ' ' + LIMIT, r.note);
+check('review, 3 lamps: the 3-or-more note', r.note === LIMIT, r.note);
 const both = await notes();
 check('The Scale shows the same note', both.length === 2 && both[0] === both[1], JSON.stringify(both));
 // screenshots

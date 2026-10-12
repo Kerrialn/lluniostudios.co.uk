@@ -135,13 +135,30 @@ class DesignRequestItem
     }
 
     /**
+     * A larger piece reserved with its size only (Step 7b.4): no options, its
+     * finishes to be chosen with the studio ("Finishes: to be chosen together").
+     */
+    public function isFinishesToBeChosen(): bool
+    {
+        return [] === $this->optionsSnapshot;
+    }
+
+    /**
      * The snapshot grouped for display: one group (label null), or one per
-     * lamp ("Lamp 1", ...) when the lamps were configured individually.
+     * lamp ("Lamp 1", ...) when the lamps were configured individually. A
+     * larger piece without options still has its one group (no options).
      *
      * @return list<array{label: ?string, options: list<array{option: string, value: string}>}>
      */
     public function getLampConfigurations(): array
     {
+        if ($this->isFinishesToBeChosen()) {
+            return [[
+                'label' => null,
+                'options' => [],
+            ]];
+        }
+
         $groups = [];
         foreach ($this->optionsSnapshot as $entry) {
             $lamp = (int) ($entry['lamp'] ?? 0);

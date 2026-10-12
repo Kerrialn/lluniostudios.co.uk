@@ -177,6 +177,75 @@ final class LumenFormaConfiguratorReadTest extends TestCase
         self::assertNull($this->configurator()->read($data));
     }
 
+    public function testReadsALargerPieceWithItsSizeOnly(): void
+    {
+        $design = $this->configurator()->readLarger([
+            'size' => 'lumen-forma-estate',
+            'quantity' => 3,
+            'mode' => 'all',
+            'lamps' => [[]],
+            'finishes' => LumenFormaConfigurator::FINISHES_TOGETHER,
+        ]);
+
+        self::assertInstanceOf(LumenFormaConfiguration::class, $design);
+        self::assertSame('lumen-forma-estate', $design->product->getSlug());
+        self::assertSame(3, $design->quantity);
+        self::assertFalse($design->individually);
+        self::assertSame([], $design->values());
+    }
+
+    public function testALargerPieceIsOnlyForTheSizesNotBoughtDirectly(): void
+    {
+        $larger = static fn (array $change): array => $change + [
+            'size' => 'lumen-forma-atelier',
+            'quantity' => 1,
+            'mode' => 'all',
+            'lamps' => [[]],
+            'finishes' => LumenFormaConfigurator::FINISHES_TOGETHER,
+        ];
+        $configurator = $this->configurator();
+
+        self::assertInstanceOf(LumenFormaConfiguration::class, $configurator->readLarger($larger([])));
+        self::assertInstanceOf(LumenFormaConfiguration::class, $configurator->readLarger($larger([
+            'size' => 'lumen-forma-monument',
+        ])));
+        // Studio and Gallery are configured in full and bought directly.
+        self::assertNull($configurator->readLarger($larger([
+            'size' => 'lumen-forma-gallery',
+        ])));
+        self::assertNull($configurator->readLarger($larger([
+            'size' => 'lumen-forma-studio',
+        ])));
+        // Quantities 1 to 10, as the configurator.
+        self::assertNull($configurator->readLarger($larger([
+            'quantity' => 0,
+        ])));
+        self::assertNull($configurator->readLarger($larger([
+            'quantity' => 11,
+        ])));
+        // No options, no marker, or customised individually: not a larger piece.
+        self::assertNull($configurator->readLarger($larger([
+            'lamps' => [self::LAMP],
+        ])));
+        self::assertNull($configurator->readLarger($larger([
+            'finishes' => null,
+        ])));
+        self::assertNull($configurator->readLarger($larger([
+            'mode' => 'individual',
+        ])));
+        // And a complete design isn't read as one (nor a larger piece as a design).
+        self::assertNull($configurator->readLarger([
+            'size' => 'lumen-forma-atelier',
+            'quantity' => 1,
+            'mode' => 'all',
+            'lamps' => [
+                self::LAMP + [
+                    'Bulb Count' => 'Dual Array',
+                ]],
+        ]));
+        self::assertNull($configurator->read($larger([])));
+    }
+
     private function configurator(): LumenFormaConfigurator
     {
         $products = [];

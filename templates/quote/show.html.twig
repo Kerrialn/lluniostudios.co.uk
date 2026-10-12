@@ -59,9 +59,12 @@
                 {% for lamp in quote.lamps %}
                     {% set item = lamp.item %}
                     <div class="flex flex-col" data-quote-design>
-                        <div class="{{ row }}"><span class="text-ll-mute">Edition</span><span class="text-right">{{ item ? item.sizeName : lamp.label }}</span></div>
+                        <div class="{{ row }}"><span class="text-ll-mute">Size</span><span class="text-right">{{ item ? item.sizeName : lamp.label }}</span></div>
                         {% if item %}
-                            {% if item.customisedIndividually %}
+                            {% if item.finishesToBeChosen %}
+                                {# A larger piece reserved with its size only (7b.4). #}
+                                <div class="{{ row }}"><span class="text-ll-mute">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_KEY') }}</span><span class="text-right">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_VALUE') }}</span></div>
+                            {% elseif item.customisedIndividually %}
                                 {% for group in item.lampConfigurations %}
                                     {% set n = loop.index %}
                                     {% set bulb = item.value('Bulb Style', n) ~ (item.value('Bulb Count', n) ? ' / ' ~ item.value('Bulb Count', n) : '') %}

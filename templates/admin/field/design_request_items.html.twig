@@ -5,11 +5,12 @@
         <strong>{{ item.productTitle }}</strong>
         · {{ item.quantity }} {{ item.quantity == 1 ? 'lamp' : 'lamps' }}
         · {{ direct ? '' : 'Starting at ' }}{{ (item.unitPrice / 100)|format_currency('GBP', {fraction_digit: 0}) }}{{ item.quantity > 1 ? ' each' : '' }}
-        {% if item.quantity > 1 %}· {{ item.customisedIndividually ? 'Customise Individually' : 'Customise All' }}{% endif %}
+        {% if item.quantity > 1 and not item.finishesToBeChosen %}· {{ item.customisedIndividually ? 'Customise Individually' : 'Customise All' }}{% endif %}
         {% for group in item.lampConfigurations %}
             <div class="mt-1">
                 {% if group.label %}<em>{{ group.label }}:</em> {% endif %}
                 {% for option in group.options %}{{ option.option }}: {{ option.value }}{{ loop.last ? '' : ' · ' }}{% endfor %}
+                {% if item.finishesToBeChosen %}{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_KEY') }}: {{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_VALUE')|lower }}{% endif %}
             </div>
         {% endfor %}
     </div>

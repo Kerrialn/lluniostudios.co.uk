@@ -56,6 +56,18 @@ final readonly class DesignRequestLamps
         return \is_array($pending) && ($pending['replaces'] ?? null) === null;
     }
 
+    /**
+     * Whether the lamp being reserved came from the larger-piece step (7b.4):
+     * then that step's remembered choices are forgotten once the request is
+     * sent, rather than the configurator's.
+     */
+    public function pendingIsLarger(): bool
+    {
+        $pending = $this->requestStack->getSession()->get(self::SESSION_KEY);
+
+        return \is_array($pending) && $this->configurator->readLarger($pending['design'] ?? null) instanceof LumenFormaConfiguration;
+    }
+
     public function forgetPending(): void
     {
         $this->requestStack->getSession()->remove(self::SESSION_KEY);
@@ -70,7 +82,8 @@ final readonly class DesignRequestLamps
     public function items(?Cart $cart): array
     {
         $pending = $this->requestStack->getSession()->get(self::SESSION_KEY);
-        $configuration = \is_array($pending) ? $this->configurator->read($pending['design'] ?? null) : null;
+        $design = \is_array($pending) ? ($pending['design'] ?? null) : null;
+        $configuration = $this->configurator->read($design) ?? $this->configurator->readLarger($design);
         $replaces = \is_array($pending) && \is_string($pending['replaces'] ?? null) ? $pending['replaces'] : null;
 
         $items = [];

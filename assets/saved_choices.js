@@ -14,6 +14,8 @@
  */
 const STORES = {
     configurator: () => window.localStorage,
+    // The larger-piece step's size and quantity (Step 7b.4), as the configurator's.
+    larger: () => window.localStorage,
     reserve: () => window.sessionStorage,
 };
 const KEY = (name) => `llunio:${name}`;

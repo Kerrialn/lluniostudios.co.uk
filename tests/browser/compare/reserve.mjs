@@ -12,7 +12,7 @@ const probe = `(() => { const r = (e) => { if (!e) return null; const q = e.getB
   labels.forEach((l, i) => { const ctl = l.querySelector('input,textarea') || document.getElementById(l.htmlFor); out['label' + i] = r(l.querySelector('span') || l); out['field' + i] = r(ctl); });
   const btn = [...document.querySelectorAll('div,button')].filter(e => e.textContent.trim() === 'Reserve Your Design' && e.getBoundingClientRect().height > 30).pop(); out.button = r(btn); out.sub = r(btn.parentElement.tagName === 'FORM' ? btn.nextElementSibling : btn.nextElementSibling);
   const yc = [...document.querySelectorAll('div')].find(e => e.textContent.trim() === 'Your configuration'); out.card = r(yc.parentElement); out.img = r(yc.parentElement.querySelector('img')); out.yourConfig = r(yc);
-  const rows = [...yc.parentElement.querySelectorAll('span')].filter(s => s.textContent.trim() === 'Edition'); out.rowEdition = r(rows[0]?.parentElement);
+  const rows = [...yc.parentElement.querySelectorAll('span')].filter(s => ['Edition', 'Size'].includes(s.textContent.trim())) /* the design's "Edition" is "Size" here (12 October 2026) */; out.rowEdition = r(rows[0]?.parentElement);
   return out; })()`;
 const proto = prototypeUrl();
 await b.send('Page.navigate', { url: proto }); await sleep(1500);

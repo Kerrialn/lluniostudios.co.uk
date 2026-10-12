@@ -55,6 +55,17 @@ import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
  *    purchase route note says it); "Cast Your Lamp" keeps its line.
  *  - Step 7b.3: The Scale shows only Studio and Gallery (template). However
  *    it is opened, each size shows its own photos (never the introduction's).
+ *  - Step 7b.4, "Discuss a Larger Piece" (openLarger; .is-larger): the panel
+ *    as a single step, The Scale with Atelier, Estate and Monument (none
+ *    chosen at first) and the quantity, its photo "Image Coming Soon" with
+ *    the size's name. Its button sends the size and quantity straight to
+ *    Reserve Your Design, the finishes to be chosen together; without a size,
+ *    "Please choose a size to continue.". "Prefer a smaller piece?"
+ *    goes back (openMain), as do "Configure Studio or Gallery" and "Skip to
+ *    configurator". Remembered separately ('larger'): a visitor who left on
+ *    this step with a size chosen comes back to it, already open. A design
+ *    remembered from before with a larger size moves here (size and
+ *    quantity; the configurator starts from Gallery, its choices kept).
  *  - Custom descriptions (10 October 2026): under a Custom choice, a box to
  *    describe it (up to 500 characters), for the lamp being edited (each
  *    lamp starts from the shared text, as with choices). Required while
@@ -79,7 +90,8 @@ export default class extends Controller {
     static targets = ['idle', 'hero', 'stage', 'step', 'stageNumber', 'stageTitle', 'intro', 'back', 'backTitle', 'next', 'nextTitle',
         'option', 'group', 'warning', 'sizeNote', 'spec', 'dimension', 'quantity',
         'idleLayer', 'gallery', 'optionPhoto', 'soon', 'soonTitle', 'modes', 'mode', 'units',
-        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'describe', 'describeWarning', 'startAgain', 'larger'];
+        'route', 'routeNote', 'review', 'configuration', 'cta', 'ctaSub', 'describe', 'describeWarning', 'startAgain', 'larger', 'smaller',
+        'largerOption', 'largerWarning', 'largerSpecs', 'largerSizeNote', 'largerSpec', 'largerDimension', 'largerQuantity', 'largerRouteNote', 'largerConfiguration'];
     static values = {
         stages: Array, stageKeys: Array, sizes: Array, groups: Array, size: String,
         maxLamps: { type: Number, default: 10 }, basketLamps: Number, maxCheckout: { type: Number, default: 2 },
@@ -100,8 +112,18 @@ export default class extends Controller {
         this.lampDetails = [];
         this.unit = 0;
         this.startSize = this.sizeValue;
+        this.larger = false;
+        this.largerSize = null;
+        this.largerQuantity = MIN_LAMPS;
+        this.largerActive = false;
+        this.largerWarned = false;
         if (this.editValue?.id) this.loadDesign(this.editValue);
-        else if (this.restore() && this.isFinished()) this.openOnReview();
+        else {
+            const restored = this.restore();
+            this.restoreLarger();
+            if (this.largerActive && this.largerSize) this.openLargerOnLoad();
+            else if (restored && this.isFinished()) this.openOnReview();
+        }
         this.photoIndex = 0;
         this.slot = null;
         this.dragX = 0;
@@ -115,6 +137,7 @@ export default class extends Controller {
         this.renderIdle();
         this.renderStage();
         this.renderChoices();
+        this.renderLarger();
         this.load(1);
         this.timer = setInterval(() => this.advanceIdle(), this.intervalValue);
     }
@@ -400,7 +423,15 @@ export default class extends Controller {
     restore() {
         const saved = readChoices('configurator');
         if (!saved || saved.version !== 1) return false;
-        if (this.sizesValue.some((s) => s.slug === saved.size)) this.sizeValue = saved.size;
+        const savedSize = this.sizesValue.find((s) => s.slug === saved.size);
+        if (savedSize?.direct) this.sizeValue = saved.size;
+        // From before 7b.4, a larger size: it moves to the larger-piece step.
+        if (savedSize && !savedSize.direct) {
+            this.largerSize = savedSize.slug;
+            this.largerQuantity = Math.max(MIN_LAMPS, Math.min(this.maxLampsValue, Number(saved.quantity) || MIN_LAMPS));
+            this.largerActive = true;
+            this.saveLarger();
+        }
         // Only choices that still exist for the size (the catalogue may have changed).
         const valid = (lamp) => Object.fromEntries(Object.entries(lamp && typeof lamp === 'object' ? lamp : {})
             .filter(([name, value]) => this.groupsValue.some((group) => group.name === name && this.available(group)
@@ -434,13 +465,27 @@ export default class extends Controller {
     openOnReview() {
         this.step = this.stageKeysValue.indexOf('review');
         requestAnimationFrame(() => {
-            this.application.getControllerForElementAndIdentifier(this.element, 'hero-reveal')?.reveal();
+            this.revealPanel();
             if (this.wide.matches) return;
             this.scrollTimer = setTimeout(() => {
                 const panel = this.element.querySelector('.ll-cfg-panel');
                 if (panel) window.scrollTo({ top: panel.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
             }, 1150);
         });
+    }
+
+    // Opens the panel through the hero's own controller (on this element). The
+    // controllers load on demand, so on a direct visit it may not be ready
+    // yet: then it is tried again on the next frames (found 12 October 2026;
+    // the likely cause of the occasional "timing" failures of the remembered-
+    // design checks since 9 October).
+    revealPanel(tries = 120) {
+        const hero = this.application.getControllerForElementAndIdentifier(this.element, 'hero-reveal');
+        if (typeof hero?.reveal === 'function') {
+            hero.reveal();
+            return;
+        }
+        if (tries > 0) requestAnimationFrame(() => this.revealPanel(tries - 1));
     }
 
     hasChoices() {
@@ -464,7 +509,12 @@ export default class extends Controller {
     // "Start again": every choice cleared, back to the first stage.
     startAgain(event) {
         event.preventDefault();
-        forgetChoices('configurator', 'reserve');
+        forgetChoices('configurator', 'reserve', 'larger');
+        this.largerSize = null;
+        this.largerQuantity = MIN_LAMPS;
+        this.largerActive = false;
+        this.largerWarned = false;
+        this.renderLarger();
         this.sizeValue = this.startSize;
         this.quantity = MIN_LAMPS;
         this.mode = 'all';
@@ -535,6 +585,117 @@ export default class extends Controller {
         // starting point if the customer switches to Customise All.
         this.choices = { ...(this.lampChoices[0] || {}), ...(design.choices || {}) };
         this.step = this.stageKeysValue.indexOf('review');
+    }
+
+    // The larger-piece step (7b.4) -------------------------------------------
+
+    openLarger(event) {
+        event?.preventDefault?.();
+        this.switchTo(true);
+    }
+
+    openMain(event) {
+        event?.preventDefault?.();
+        this.switchTo(false);
+    }
+
+    switchTo(larger) {
+        this.larger = larger;
+        this.largerActive = larger;
+        this.element.classList.toggle('is-larger', larger);
+        this.renderLarger();
+        this.saveLarger();
+        if (!this.revealedAlready) return;
+        this.renderPhoto();
+        if (this.wide.matches) return;
+        // On phones the panel is below the photo: back to its top.
+        const panel = this.element.querySelector('.ll-cfg-panel');
+        if (panel) window.scrollTo({ top: panel.getBoundingClientRect().top + window.scrollY });
+    }
+
+    // A visitor who left on the larger-piece step with a size chosen: back on it, open.
+    openLargerOnLoad() {
+        this.larger = true;
+        this.element.classList.add('is-larger');
+        requestAnimationFrame(() => {
+            this.revealPanel();
+            if (this.wide.matches) return;
+            this.scrollTimer = setTimeout(() => {
+                const panel = this.element.querySelector('.ll-cfg-panel');
+                if (panel) window.scrollTo({ top: panel.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+            }, 1150);
+        });
+    }
+
+    chooseLarger(event) {
+        this.largerSize = event.currentTarget.dataset.value;
+        this.renderLarger();
+        this.renderPhoto();
+        this.saveLarger();
+    }
+
+    largerFewer() {
+        this.largerQuantity = Math.max(MIN_LAMPS, this.largerQuantity - 1);
+        this.renderLarger();
+        this.saveLarger();
+    }
+
+    largerMore() {
+        this.largerQuantity = Math.min(this.maxLampsValue, this.largerQuantity + 1);
+        this.renderLarger();
+        this.saveLarger();
+    }
+
+    renderLarger() {
+        const size = this.sizesValue.find((s) => s.slug === this.largerSize) || null;
+        this.largerOptionTargets.forEach((el) => {
+            const selected = el.dataset.value === this.largerSize;
+            el.classList.toggle('is-selected', selected);
+            el.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        });
+        if (this.hasLargerWarningTarget) this.largerWarningTarget.hidden = !(this.largerWarned && !size);
+        if (this.hasLargerSpecsTarget) this.largerSpecsTarget.hidden = !size;
+        if (size) {
+            if (this.hasLargerSizeNoteTarget) this.largerSizeNoteTarget.textContent = size.note;
+            if (this.hasLargerSpecTarget) this.largerSpecTarget.textContent = `${size.name} · ${size.price}`;
+            this.largerDimensionTargets.forEach((el) => { el.textContent = size[el.dataset.dimension] ?? '—'; });
+        }
+        if (this.hasLargerQuantityTarget) this.largerQuantityTarget.textContent = String(this.largerQuantity);
+        // As BasketRules::routeNote(): the size note, then the 3-or-more note.
+        const reasons = [this.notesValue.size];
+        if (this.basketLampsValue + this.largerQuantity > this.maxCheckoutValue) reasons.push(this.notesValue.quantity);
+        if (this.hasLargerRouteNoteTarget) this.largerRouteNoteTarget.textContent = reasons.join(' ');
+    }
+
+    // The button: straight to Reserve Your Design with the size (and quantity).
+    reserveLarger(event) {
+        if (!this.largerSize) {
+            event.preventDefault();
+            this.largerWarned = true;
+            this.renderLarger();
+            return;
+        }
+        this.largerConfigurationTarget.value = JSON.stringify({
+            size: this.largerSize, quantity: this.largerQuantity, mode: 'all', lamps: [{}], finishes: 'together',
+        });
+    }
+
+    restoreLarger() {
+        const saved = readChoices('larger');
+        if (!saved || saved.version !== 1) return;
+        const size = this.sizesValue.find((s) => s.slug === saved.size && !s.direct);
+        if (size) this.largerSize = size.slug;
+        this.largerQuantity = Math.max(MIN_LAMPS, Math.min(this.maxLampsValue, Number(saved.quantity) || MIN_LAMPS));
+        this.largerActive = saved.active === true;
+    }
+
+    saveLarger() {
+        if (this.editValue?.id) return;
+        if (this.largerSize || this.largerQuantity > MIN_LAMPS) {
+            saveChoices('larger', { version: 1, size: this.largerSize, quantity: this.largerQuantity, active: this.largerActive });
+        } else {
+            forgetChoices('larger');
+        }
     }
 
     // Review and purchase route -----------------------------------------
@@ -645,6 +806,17 @@ export default class extends Controller {
 
     renderPhoto() {
         if (!this.revealedAlready) return;
+        if (this.larger) {
+            // No photos of the larger sizes yet: "Image Coming Soon" with the size's name.
+            const name = (this.sizesValue.find((s) => s.slug === this.largerSize) || {}).name || '';
+            this.galleryTargets.forEach((el) => { el.hidden = true; });
+            this.optionPhotoTargets.forEach((el) => { el.hidden = true; });
+            this.soonTarget.hidden = false;
+            this.soonTitleTarget.textContent = name;
+            this.soonTitleTarget.hidden = !name;
+            this.soonTarget.setAttribute('aria-label', name ? `Image coming soon: ${name}` : 'Image coming soon');
+            return;
+        }
         const stageKey = this.stageKeysValue[this.step];
         const showGallery = stageKey === 'scale' || stageKey === 'review';
         const gallery = showGallery ? this.currentGallery() : null;

@@ -110,8 +110,8 @@
                     <div class="ll-story-stage" data-lumen-story-target="stage">
                         <h2 class="ll-story-end">Begin your Lumen Forma.</h2>
                         <div class="ll-story-actions">
-                            <button type="button" class="ll-story-button" data-action="hero-reveal#reveal">Configure Studio or Gallery</button>
-                            <a href="{{ path('basket_request') }}" class="ll-story-button">Discuss a Larger Piece</a>
+                            <button type="button" class="ll-story-button" data-action="configurator#openMain hero-reveal#reveal">Configure Studio or Gallery</button>
+                            <button type="button" class="ll-story-button" data-action="configurator#openLarger hero-reveal#reveal">Discuss a Larger Piece</button>
                         </div>
                     </div>
                 </div>
@@ -156,7 +156,7 @@
                     <div class="ll-cfg-hero ll-story-cue" aria-hidden="true" data-configurator-target="hero">Scroll to begin</div>
                 </div>
 
-                <button type="button" class="ll-cfg-hero ll-story-skip" data-configurator-target="hero" data-action="hero-reveal#reveal">Skip to configurator →</button>
+                <button type="button" class="ll-cfg-hero ll-story-skip" data-configurator-target="hero" data-action="configurator#openMain hero-reveal#reveal">Skip to configurator →</button>
             </div>
         </section>
 
@@ -215,7 +215,7 @@
                             {% endif %}
                             <p class="text-[13px] leading-[1.55] text-ll-mute max-w-[400px] [text-wrap:pretty]" data-configurator-target="intro">Hand-cast liquid stone lighting series. Individually poured, cured, and hand-finished to order in our Dorset Studio.</p>
                         </div>
-                        <ol class="flex gap-1.5" aria-label="Stages">
+                        <ol class="ll-cfg-main flex gap-1.5" aria-label="Stages">
                             {% for stage in stages %}
                                 <li>
                                     <button type="button" class="ll-cfg-step" title="{{ stage }}" aria-label="{{ stage }}"
@@ -228,7 +228,7 @@
                         </ol>
                     </div>
 
-                    <div class="flex flex-col gap-3.5">
+                    <div class="ll-cfg-main flex flex-col gap-3.5">
                         <div class="flex justify-between items-baseline gap-4">
                             <span class="text-[11px] uppercase tracking-[0.2em] text-ll-mute" data-configurator-target="stageNumber">01 / {{ pad|format(stages|length) }}</span>
                             {# Clears the remembered choices (shown once something is chosen; not when editing a basket line). #}
@@ -239,7 +239,7 @@
 
                     {# Customise Individually: which lamp the option stages are editing
                        (Lamp 1, Lamp 2, ...; built by the controller). #}
-                    <div class="flex flex-wrap gap-x-[22px] gap-y-1.5 border-b border-ll-line-soft" role="group" aria-label="Lamp being configured"
+                    <div class="ll-cfg-main flex flex-wrap gap-x-[22px] gap-y-1.5 border-b border-ll-line-soft" role="group" aria-label="Lamp being configured"
                          data-configurator-target="units" hidden></div>
 
                     {# Stages. Options are plain lists, all starting empty (Gallery is the
@@ -247,21 +247,20 @@
                        those sizes only. #}
                     {% for stage in stages %}
                         {% set stageKey = stageKeys[loop.index0] %}
-                        <div class="flex flex-col gap-[clamp(28px,4vw,48px)]" data-configurator-target="stage" {{ loop.first ? '' : 'hidden' }}>
+                        <div class="ll-cfg-main flex flex-col gap-[clamp(28px,4vw,48px)]" data-configurator-target="stage" {{ loop.first ? '' : 'hidden' }}>
                             {% if stageKey == 'scale' %}
                                 {# No "Size" heading: the stage title says it. Only the sizes bought
-                                   directly (Studio, Gallery) show (Step 7b.3); the larger ones stay in
-                                   the page, hidden, for designs remembered from before (until 7b.4),
-                                   and are reached by "Discuss a Larger Piece". #}
+                                   directly (Studio, Gallery) (Step 7b.3); the larger ones have their
+                                   own step, "Discuss a Larger Piece" (7b.4, below). #}
                                 <div class="flex flex-col gap-4" role="group" aria-label="Size">
                                     <div class="flex flex-col">
-                                        {% for size in sizes %}
-                                            <button type="button" class="ll-cfg-opt" aria-pressed="false" {{ size.direct ? '' : 'hidden' }}
+                                        {% for size in sizes|filter(s => s.direct) %}
+                                            <button type="button" class="ll-cfg-opt" aria-pressed="false"
                                                     data-configurator-target="option" data-group="size" data-value="{{ size.slug }}" data-action="configurator#choose">{{ size.name }}</button>
                                         {% endfor %}
                                     </div>
-                                    {# Until 7b.4 (the larger-piece step) it opens Reserve Your Design. #}
-                                    <p class="text-[12px] text-ll-mute">Considering a larger piece? <a href="{{ path('basket_request') }}" class="text-ll-ink underline underline-offset-[3px] transition-opacity hover:opacity-70" data-configurator-target="larger">Discuss a Larger Piece</a></p>
+                                    {# Opens the larger-piece step (7b.4), in place (a button: a link would be followed by the page transitions). #}
+                                    <p class="text-[12px] text-ll-mute">Considering a larger piece? <button type="button" class="text-ll-ink underline underline-offset-[3px] transition-opacity hover:opacity-70" data-configurator-target="larger" data-action="configurator#openLarger">Discuss a Larger Piece</button></p>
                                     <div class="text-[12px] text-ll-mute" data-configurator-target="sizeNote"></div>
                                     <div class="flex flex-col gap-3 pt-4 border-t border-ll-line-soft w-full max-w-[521px]">
                                         <div class="flex justify-between items-baseline gap-4 flex-wrap">
@@ -364,8 +363,65 @@
                         </div>
                     {% endfor %}
 
+                    {# "Discuss a Larger Piece" (Step 7b.4): the panel as a single step, The
+                       Scale with only Atelier, Estate and Monument (none chosen at first) and
+                       the quantity; its button goes straight to Reserve Your Design with the
+                       size, its finishes to be chosen together (no pigment, cable, footing or
+                       light). The server sends it to Reserve only (readLarger). #}
+                    {% set largerSizes = sizes|filter(s => not s.direct) %}
+                    <div class="ll-cfg-larger flex-col gap-[clamp(28px,4vw,48px)]">
+                        <h2 class="font-light text-[15px] leading-[1.02] uppercase tracking-[0.03em]">{{ stages|first }}</h2>
+                        <div class="flex flex-col gap-4" role="group" aria-label="Size">
+                            <div class="flex flex-col">
+                                {% for size in largerSizes %}
+                                    <button type="button" class="ll-cfg-opt" aria-pressed="false"
+                                            data-configurator-target="largerOption" data-value="{{ size.slug }}" data-action="configurator#chooseLarger">{{ size.name }}</button>
+                                {% endfor %}
+                            </div>
+                            <div class="text-[12px] text-ll-mute" role="alert" data-configurator-target="largerWarning" hidden>Please choose a size to continue.</div>
+                            <p class="text-[12px] text-ll-mute">Prefer a smaller piece? <button type="button" class="text-ll-ink underline underline-offset-[3px] transition-opacity hover:opacity-70" data-configurator-target="smaller" data-action="configurator#openMain">Configure Studio or Gallery</button></p>
+                            <div class="flex flex-col gap-4" data-configurator-target="largerSpecs" hidden>
+                                <div class="text-[12px] text-ll-mute" data-configurator-target="largerSizeNote"></div>
+                                <div class="flex flex-col gap-3 pt-4 border-t border-ll-line-soft w-full max-w-[521px]">
+                                    <div class="flex justify-between items-baseline gap-4 flex-wrap">
+                                        <span class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Specifications</span>
+                                        <span class="text-[13px]" data-configurator-target="largerSpec"></span>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2.5">
+                                        {% for dimension in ['Length', 'Width', 'Height'] %}
+                                            <div class="flex flex-col gap-1 border-l border-ll-line py-px pl-3">
+                                                <span class="text-[10.5px] uppercase tracking-[0.16em] text-ll-mute">{{ dimension }}</span>
+                                                <span class="text-base leading-[1.2] tabular-nums"><span data-configurator-target="largerDimension" data-dimension="{{ dimension|lower }}"></span><span class="text-xs text-ll-mute ml-[3px]">cm</span></span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    <span class="text-[11px] text-ll-mute">Measurements may vary slightly due to the handmade nature</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-[18px] pt-[22px] border-t border-ll-line-soft">
+                            <div class="flex justify-between items-center gap-4 flex-wrap">
+                                <span id="cfg-larger-quantity" class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Quantity</span>
+                                <div class="flex border border-[rgba(236,227,211,.3)] text-[15px]" role="group" aria-labelledby="cfg-larger-quantity">
+                                    <button type="button" class="px-4 py-2 transition-opacity hover:opacity-70" aria-label="Fewer lamps" data-action="configurator#largerFewer">−</button>
+                                    <span class="px-3.5 py-2 min-w-10 text-center tabular-nums" aria-live="polite" data-configurator-target="largerQuantity">1</span>
+                                    <button type="button" class="px-4 py-2 transition-opacity hover:opacity-70" aria-label="More lamps" data-action="configurator#largerMore">+</button>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1.5 border-l border-ll-ink py-0.5 pl-3.5">
+                                <span class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">Purchase route</span>
+                                <span class="text-xs leading-[1.45] text-ll-mute" data-configurator-target="largerRouteNote">{{ constant('App\\Service\\BasketRules::ROUTE_NOTES')[constant('App\\Service\\BasketRules::REQUEST_SIZE_MESSAGE')] }}</span>
+                            </div>
+                            <form method="post" action="{{ path('lighting_designs_add') }}" data-action="configurator#reserveLarger">
+                                <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('submit') }}">
+                                <input type="hidden" name="configuration" data-configurator-target="largerConfiguration">
+                                <button type="submit" class="ll-cta block w-full bg-ll-ink text-ll-bg p-[18px] text-center font-medium text-[12px] uppercase tracking-[0.16em]">Reserve Your Design</button>
+                            </form>
+                        </div>
+                    </div>
+
                     <div class="flex-1"></div>
-                    <div class="flex flex-wrap justify-between items-center gap-x-4 gap-y-3 border-t border-ll-line pt-[18px]">
+                    <div class="ll-cfg-main flex flex-wrap justify-between items-center gap-x-4 gap-y-3 border-t border-ll-line pt-[18px]">
                         <button type="button" class="text-[12px] uppercase tracking-[0.14em] text-ll-mute opacity-0 transition-colors hover:text-ll-ink" disabled
                                 data-configurator-target="back" data-action="configurator#back">← <span data-configurator-target="backTitle"></span></button>
                         <button type="button" class="ml-auto text-right max-w-full transition-opacity hover:opacity-70 text-[12px] uppercase tracking-[0.14em] min-[900px]:tracking-[0.03em] min-[900px]:whitespace-nowrap border-b border-ll-ink pb-[3px]"

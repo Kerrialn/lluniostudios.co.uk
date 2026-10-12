@@ -98,8 +98,11 @@
                 {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-[13px]' %}
                 {% for item in items %}
                     <div class="flex flex-col {{ loop.first ? '' : 'mt-4' }}">
-                        <div class="{{ row }}"><span class="text-ll-mute">Edition</span><span class="text-right">{{ item.sizeName }}</span></div>
-                        {% if item.customisedIndividually %}
+                        <div class="{{ row }}"><span class="text-ll-mute">Size</span><span class="text-right">{{ item.sizeName }}</span></div>
+                        {% if item.finishesToBeChosen %}
+                            {# A larger piece reserved with its size only (7b.4). #}
+                            <div class="{{ row }}"><span class="text-ll-mute">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_KEY') }}</span><span class="text-right">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_VALUE') }}</span></div>
+                        {% elseif item.customisedIndividually %}
                             {% for group in item.lampConfigurations %}
                                 {% set lamp = loop.index %}
                                 {% set bulb = item.value('Bulb Style', lamp) ~ (item.value('Bulb Count', lamp) ? ' / ' ~ item.value('Bulb Count', lamp) : '') %}
@@ -116,7 +119,7 @@
                             {% endif %}
                         {% endif %}
                         <div class="{{ row }}"><span class="text-ll-mute">Quantity</span><span class="text-right">{{ item.quantity }}</span></div>
-                        {% if item.quantity >= 2 %}
+                        {% if item.quantity >= 2 and not item.finishesToBeChosen %}
                             <div class="{{ row }}"><span class="text-ll-mute">Configuration</span><span class="text-right">{{ item.customisedIndividually ? 'Customise Individually' : 'Customise All' }}</span></div>
                         {% endif %}
                     </div>

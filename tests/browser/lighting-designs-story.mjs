@@ -124,7 +124,7 @@ try {
         if (n === 6) check('The Maker: "Read the full story →" goes to The Workshop', (await ev(`document.querySelectorAll('.ll-story-stage')[5].querySelector('a').getAttribute('href')`)) === '/workshop');
     }
     const ends = await ev(`[...document.querySelectorAll('.ll-story-stage')[6].querySelectorAll('.ll-story-button')].map(e => [e.textContent.trim(), e.getAttribute('href') || e.tagName])`);
-    check('the ending: "Configure Studio or Gallery" and "Discuss a Larger Piece" (to Reserve Your Design)', JSON.stringify(ends) === JSON.stringify([['Configure Studio or Gallery', 'BUTTON'], ['Discuss a Larger Piece', '/reserve']]), JSON.stringify(ends));
+    check('the ending: "Configure Studio or Gallery" and "Discuss a Larger Piece" (the larger-piece step, 7b.4: larger-piece.mjs)', JSON.stringify(ends) === JSON.stringify([['Configure Studio or Gallery', 'BUTTON'], ['Discuss a Larger Piece', 'BUTTON']]), JSON.stringify(ends));
     const sizes = await ev(`[...document.querySelectorAll('.ll-story-stage')[6].querySelectorAll('.ll-story-button')].map(e => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return [Math.round(r.width), Math.round(r.height), c.fontSize, c.padding].join(' '); })`);
     if (W >= 900) check('the two buttons as the design (320 × 58, 13px)', sizes.every((x) => x === '320 58 13px 18px 32px'), JSON.stringify(sizes));
     else {
@@ -150,8 +150,8 @@ try {
         return { gallery: g?.dataset.size || null, order: files.slice(1, -1).join(), clones: [files[0], files[files.length - 1]].join(), count: g?.querySelector('[data-gallery-count]').textContent || null,
             soon: !pane.querySelector('[data-configurator-target=soon]').hidden, story: pane.querySelectorAll('img[src*="story-"], img[data-src*="story-"]').length }; })()`);
     const galleryOk = (ph) => ph.gallery === 'lumen-forma-gallery' && ph.order === GALLERY && ph.clones === 'gallery-17,gallery-01' && ph.count === '01 / 17' && !ph.soon && ph.story === 0;
-    const scale = await ev(`({ sizes: [...document.querySelectorAll('.ll-cfg-opt[data-group=size]')].filter(e => e.getClientRects().length).map(e => e.textContent.trim()).join(), line: document.querySelector('[data-configurator-target=larger]').parentElement.textContent.trim(), href: document.querySelector('[data-configurator-target=larger]').getAttribute('href') })`);
-    check('The Scale shows only Studio and Gallery, then "Considering a larger piece? Discuss a Larger Piece" (to Reserve Your Design until 7b.4)', scale.sizes === 'Studio,Gallery' && scale.line === 'Considering a larger piece? Discuss a Larger Piece' && scale.href === '/reserve', JSON.stringify(scale));
+    const scale = await ev(`({ sizes: [...document.querySelectorAll('.ll-cfg-opt[data-group=size]')].filter(e => e.getClientRects().length).map(e => e.textContent.trim()).join(), line: document.querySelector('[data-configurator-target=larger]').parentElement.textContent.trim(), href: document.querySelector('[data-configurator-target=larger]').tagName })`);
+    check('The Scale shows only Studio and Gallery, then "Considering a larger piece? Discuss a Larger Piece" (opening the larger-piece step in place)', scale.sizes === 'Studio,Gallery' && scale.line === 'Considering a larger piece? Discuss a Larger Piece' && scale.href === 'BUTTON', JSON.stringify(scale));
     let ph = await photo();
     check('"Configure Studio or Gallery": Gallery shows its own 17 photos in their order (gallery-01 … gallery-17), never the introduction\'s', galleryOk(ph), JSON.stringify(ph));
     await ev(`document.querySelector('.ll-cfg-opt[data-value=lumen-forma-studio]').click()`); await sleep(400); ph = await photo();

@@ -56,12 +56,7 @@ await jump(0); await more(); await jump(5); s = await st();
 check('a third lamp starts without a pigment: moving on opens Lamp 3 on 02', s.num === '02' && s.tabs === 'Lamp 1,Lamp 2,Lamp 3*', JSON.stringify(s));
 await jump(0); await fewer(); await jump(1); s = await st();
 check('back to two lamps, then a new stage: opens on Lamp 1', s.tabs === 'Lamp 1*,Lamp 2', s.tabs);
-await jump(0); await pick('size', 'lumen-forma-atelier');
-for (const i of [0, 1]) { await jump(3); await tab(i); await pick('Footing Material', 'Polished Aluminium'); await jump(4); await tab(i); await pick('Bulb Style', 'Smoked Glass LED'); }
-await tab(0); await pick('Bulb Count', 'Dual Array'); await jump(5); s = await st();
-check('Atelier individually: a missing bulb count on Lamp 2 opens Lamp 2 on 05', s.num === '05' && s.tabs === 'Lamp 1,Lamp 2*' && s.warn === 'Please choose a bulb count to continue.', JSON.stringify(s));
-await jump(0); await pick('size', 'lumen-forma-studio'); await pick('size', 'lumen-forma-atelier'); await jump(4); await tab(0); s = await st();
-check('switching to Studio cleared every lamp\'s bulb count', !s.sel['Bulb Count']);
+// (A per-lamp Bulb Count needs a larger size, which since 7b.4 has its own step without options.)
 await jump(0); await mode('all'); await jump(1); s = await st();
 check('back to Customise All: no tabs, the shared choices show again (empty)', s.tabs === null && !s.sel['The Pigment']);
 await fewer(); s = await st();

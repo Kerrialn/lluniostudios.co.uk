@@ -39,13 +39,14 @@ try {
     let s = await state();
     check('a first visit: unrevealed, Gallery, 1 lamp, no "Start again", nothing saved', !s.revealed && s.size === 'lumen-forma-gallery' && s.quantity === '1' && !s.startAgain && s.saved === null, JSON.stringify(s));
 
-    // Atelier ×2, customised individually, each lamp its own choices.
+    // Gallery ×3, customised individually, each lamp its own choices (three lamps go to
+    // Reserve Your Design; since 7b.4 the larger sizes have their own step).
     await reveal();
-    await pick('size', 'lumen-forma-atelier'); await more(); await mode('individual');
-    await jump(1); await tab(0); await pick('The Pigment', 'Grey'); await tab(1); await pick('The Pigment', 'Black');
-    await jump(2); await tab(0); await pick('Cable Colour', 'Raw Jute'); await tab(1); await pick('Cable Colour', 'Orange');
-    await jump(3); await tab(0); await pick('Footing Material', 'Polished Copper'); await tab(1); await pick('Footing Material', 'Brushed Aluminium');
-    await jump(4); await tab(0); await pick('Bulb Style', 'Smoked Glass LED'); await pick('Bulb Count', 'Dual Array'); await tab(1); await pick('Bulb Style', 'Crown Gold LED'); await pick('Bulb Count', 'Single Array');
+    await more(); await more(); await mode('individual');
+    await jump(1); await tab(0); await pick('The Pigment', 'Grey'); await tab(1); await pick('The Pigment', 'Black'); await tab(2); await pick('The Pigment', 'White');
+    await jump(2); await tab(0); await pick('Cable Colour', 'Raw Jute'); await tab(1); await pick('Cable Colour', 'Orange'); await tab(2); await pick('Cable Colour', 'Slate Grey');
+    await jump(3); await tab(0); await pick('Footing Material', 'Polished Copper'); await tab(1); await pick('Footing Material', 'Brushed Aluminium'); await tab(2); await pick('Footing Material', 'Brushed Copper');
+    await jump(4); await tab(0); await pick('Bulb Style', 'Smoked Glass LED'); await tab(1); await pick('Bulb Style', 'Crown Gold LED'); await tab(2); await pick('Bulb Style', 'Tubular Amber LED');
     await jump(5);
     const before = (await state()).review;
     check('"Start again" appears once something is chosen', (await state()).startAgain);
@@ -56,15 +57,15 @@ try {
     await go('/lighting-designs'); await revealedSoon();
     s = await state();
     check('coming back with a finished design: no hero, the panel revealed on the review (06)', s.revealed && s.stage === '06' && (await ev(`document.querySelector('[data-configurator-target=cta]').offsetParent !== null`)), JSON.stringify([s.revealed, s.stage]));
-    check('and the choices are still there: Atelier, 2 lamps, Customise Individually', s.size === 'lumen-forma-atelier' && s.quantity === '2' && s.mode === 'individual', JSON.stringify(s));
-    check("each lamp's own choices kept (the review is the same)", JSON.stringify(s.review) === JSON.stringify(before) && before.some(r => r === 'Lamp 1=Grey · Raw Jute · Polished Copper · Smoked Glass LED · Dual Array') && before.some(r => r === 'Lamp 2=Black · Orange · Brushed Aluminium · Crown Gold LED · Single Array'), JSON.stringify(before));
+    check('and the choices are still there: Gallery, 3 lamps, Customise Individually', s.size === 'lumen-forma-gallery' && s.quantity === '3' && s.mode === 'individual', JSON.stringify(s));
+    check("each lamp's own choices kept (the review is the same)", JSON.stringify(s.review) === JSON.stringify(before) && before.some(r => r === 'Lamp 1=Grey · Raw Jute · Polished Copper · Smoked Glass LED') && before.some(r => r === 'Lamp 2=Black · Orange · Brushed Aluminium · Crown Gold LED') && before.some(r => r === 'Lamp 3=White · Slate Grey · Brushed Copper · Tubular Amber LED'), JSON.stringify(before));
     await ev(`(() => { const a = document.createElement('a'); a.href = '/contact'; document.querySelector('#main').append(a); a.click(); })()`); await sleep(2300);
     await ev(`(() => { const a = document.createElement('a'); a.href = '/lighting-designs'; document.querySelector('#main').append(a); a.click(); })()`); await sleep(2300); await revealedSoon();
     s = await state();
     check('the same after moving between pages without reloading (Swup)', JSON.stringify(s.review) === JSON.stringify(before) && s.revealed && s.stage === '06', JSON.stringify([s.stage, s.review]));
     await jump(1); await ev(`document.querySelectorAll('.ll-cfg-unit')[1].click()`); await pick('The Pigment', 'White');
     s = await state();
-    check('any stage can still be opened and changed from there', s.stage === '02' && s.review.includes('Lamp 2=White · Orange · Brushed Aluminium · Crown Gold LED · Single Array'), JSON.stringify(s.review));
+    check('any stage can still be opened and changed from there', s.stage === '02' && s.review.includes('Lamp 2=White · Orange · Brushed Aluminium · Crown Gold LED'), JSON.stringify(s.review));
     await jump(1); await ev(`document.querySelectorAll('.ll-cfg-unit')[1].click()`); await pick('The Pigment', 'Black');
 
     // The review: no line under "Reserve Your Design".
@@ -74,19 +75,19 @@ try {
 
     // Reserve Your Design: what is typed is remembered too.
     await press();
-    check('Reserve Your Design opens with both lamps', (await ev('location.pathname')) === '/reserve' && /Small-batch studio capacity/.test(await ev(`document.querySelector('main').innerText`)), 'and the line stays on the Reserve page');
+    check('Reserve Your Design opens with the three lamps', (await ev('location.pathname')) === '/reserve' && /Small-batch studio capacity/.test(await ev(`document.querySelector('main').innerText`)), 'and the line stays on the Reserve page');
     const typed = { fullName: 'Ada Remember', email: EMAIL, phone: '07700 900123', addressLine1: '1 High Street', town: 'Wimborne', county: 'Dorset', postcode: 'BH21 1AA', accessNotes: 'Narrow gate.' };
     await ev(`(() => { for (const [k, v] of Object.entries(${JSON.stringify(typed)})) { const f = document.querySelector('[name="reserve_form[' + k + ']"]'); f.value = v; f.dispatchEvent(new Event('input', { bubbles: true })); } })()`);
     await go('/lighting-designs');
     s = await state();
-    check('back in the configurator from Reserve: the choices are still there', s.size === 'lumen-forma-atelier' && JSON.stringify(s.review) === JSON.stringify(before));
+    check('back in the configurator from Reserve: the choices are still there', s.size === 'lumen-forma-gallery' && JSON.stringify(s.review) === JSON.stringify(before));
     await go('/reserve');
     const form = await ev(`Object.fromEntries(${JSON.stringify(Object.keys(typed))}.map(k => [k, document.querySelector('[name="reserve_form[' + k + ']"]').value]))`);
     check('back on Reserve Your Design: what was typed is still there', JSON.stringify(form) === JSON.stringify(typed), JSON.stringify(form));
     await ev(`document.querySelector('form[name=reserve_form]').requestSubmit()`); await sleep(3000);
     const sent = await ev(`({ path: location.pathname, configurator: localStorage.getItem('llunio:configurator'), reserve: sessionStorage.getItem('llunio:reserve') })`);
     check('once the reservation is sent, both are forgotten', sent.path === '/reserve/received' && sent.configurator === null && sent.reserve === null, JSON.stringify(sent));
-    check('the request has both lamps', /\b2\b/.test(sql(`select sum(quantity) from design_request_item i where i.design_request_id = (select id from design_request where email = '${EMAIL}' order by created_at desc limit 1)`).match(/\d+/g).pop()));
+    check('the request has the three lamps', /\b3\b/.test(sql(`select sum(quantity) from design_request_item i where i.design_request_id = (select id from design_request where email = '${EMAIL}' order by created_at desc limit 1)`).match(/\d+/g).pop()));
     await go('/lighting-designs');
     s = await state();
     check('the configurator starts empty again', s.size === 'lumen-forma-gallery' && s.quantity === '1' && !s.startAgain && s.saved === null, JSON.stringify(s));

@@ -29,6 +29,7 @@
                                 {% for option in group.options %}
                                     <div class="{{ row }}"><span class="{{ rowKey }}">{{ option.option }}</span><span class="text-right">{{ option.value }}</span></div>
                                 {% endfor %}
+                                {% if item.finishesToBeChosen %}<div class="{{ row }}"><span class="{{ rowKey }}">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_KEY') }}</span><span class="text-right">{{ constant('App\\Catalogue\\LumenFormaCatalogue::FINISHES_VALUE') }}</span></div>{% endif %}
                             </div>
                         {% endfor %}
                     </div>

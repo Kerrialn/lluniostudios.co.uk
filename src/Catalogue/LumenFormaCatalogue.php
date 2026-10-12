@@ -18,6 +18,15 @@ namespace App\Catalogue;
  */
 final class LumenFormaCatalogue
 {
+    /**
+     * Shown in place of a lamp's options for a larger piece reserved with its
+     * size only (Step 7b.4, decided 12 October 2026): "Finishes: to be chosen
+     * together" (as a row: Finishes / To be chosen together).
+     */
+    public const FINISHES_KEY = 'Finishes';
+
+    public const FINISHES_VALUE = 'To be chosen together';
+
     public const COLLECTION_NAME = 'Lumen Forma';
 
     public const COLLECTION_SLUG = 'lumen-forma';

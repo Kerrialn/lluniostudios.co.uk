@@ -21,7 +21,7 @@ const next = () => ev(`document.querySelector('[data-configurator-target=next]')
 let s = await st();
 check('starts on Gallery with nothing else selected', JSON.stringify(s.sel) === JSON.stringify({ size: 'Gallery' }) && s.pressed === 1, JSON.stringify(s.sel));
 check('Gallery spec and note', s.spec === 'Gallery · £799' && s.dims === '22x22x60' && s.note === 'Direct Order | 7–14 Day Dispatch', `${s.spec} ${s.dims} ${s.note}`);
-check('sizes listed by name only', (await ev(`[...document.querySelectorAll('[data-group=size]')].map(e => e.textContent.trim()).join(',')`)) === 'Studio,Gallery,Atelier,Estate,Monument');
+check('sizes listed by name only (Studio and Gallery; the larger sizes have their own step, 7b.4)', (await ev(`[...document.querySelectorAll('[data-group=size]')].map(e => e.textContent.trim()).join(',')`)) === 'Studio,Gallery');
 check('no Bulb Count for Gallery', !s.countShown);
 await next(); s = await st();
 check('Next from The Scale goes to 02 with no message yet', s.num === '02' && s.warn === '');
@@ -47,15 +47,10 @@ await next(); s = await st();
 check('Next without a bulb style: stays on 05, bulb style message', s.num === '05' && s.warn === 'Please choose a bulb style to continue.', s.warn);
 await pick('Bulb Style', 'Tubular Amber LED'); await next(); s = await st();
 check('with every choice made, Next reaches 06', s.num === '06');
-await jump(0); await pick('size', 'lumen-forma-atelier'); s = await st();
-check('Atelier: quote note, from price, 30x30x90, Bulb Count shown empty', s.note === 'Delivery Quote Required' && s.spec === 'Atelier · Starting at £1,699' && s.dims === '30x30x90' && s.countShown && !s.sel['Bulb Count'], `${s.spec} ${s.dims}`);
-check('other choices kept when changing size', s.sel['The Pigment'] === 'White' && s.sel['Cable Colour'] === 'Slate Grey' && s.sel['Bulb Style'] === 'Tubular Amber LED');
-await jump(5); s = await st();
-check('Atelier review without a bulb count: back to 05, bulb count message only', s.num === '05' && s.warn === 'Please choose a bulb count to continue.', `${s.num} ${s.warn}`);
-await pick('Bulb Count', 'Dual Array'); await next(); s = await st();
-check('with a bulb count, Next reaches 06', s.num === '06');
-await jump(0); await pick('size', 'lumen-forma-studio'); await pick('size', 'lumen-forma-monument'); s = await st();
-check('switching down to Studio clears the bulb count', s.countShown && !s.sel['Bulb Count'] && s.spec === 'Monument · Starting at £7,999');
+// Step 7b.4: The Scale offers Studio and Gallery only (the larger sizes have their own
+// step, larger-piece.mjs), so Bulb Count (larger sizes only) never shows here.
+await jump(0); s = await st();
+check('The Scale lists only Studio and Gallery', (await ev(`[...document.querySelectorAll('.ll-cfg-opt[data-group=size]')].map(e => e.textContent.trim()).join()`)) === 'Studio,Gallery' && !s.countShown);
 await pick('size', 'lumen-forma-studio'); s = await st();
 check('Studio: £399, 15x15x40, no Bulb Count', s.spec === 'Studio · £399' && s.dims === '15x15x40' && !s.countShown);
 await ev(`document.querySelector('[data-action="configurator#fewer"]').click()`); s = await st();
@@ -64,10 +59,5 @@ for (let i = 0; i < 15; i++) await ev(`document.querySelector('[data-action="con
 s = await st();
 check('quantity stops at 10; the Customise choice shows from 2 lamps', s.qty === '10' && s.modes, s.qty);
 
-await reveal();
-await pick('size', 'lumen-forma-estate'); await jump(1); await pick('The Pigment', 'Grey'); await jump(2); await pick('Cable Colour', 'Raw Jute'); await jump(3); await pick('Footing Material', 'Polished Copper'); await jump(5); s = await st();
-check('Estate with bulb style and count both missing: 05 shows both messages', s.num === '05' && s.warn === 'Please choose a bulb style to continue. | Please choose a bulb count to continue.', s.warn);
-await pick('Bulb Style', 'Crown Gold LED'); s = await st();
-check('choosing the style leaves only the count message', s.warn === 'Please choose a bulb count to continue.');
 console.log(ok ? 'ALL PASSED' : 'SOME CHECKS FAILED');
 b.close();

@@ -15,6 +15,11 @@ const press = async () => { await ev(`document.querySelector('[data-configurator
 // A Custom choice needs its description (10 October 2026).
 const describe = (g, text = 'A description.') => ev(`(() => { const t = document.querySelector('[data-configurator-target=describe][data-group="${g}"] textarea'); t.value = ${JSON.stringify(text)}; t.dispatchEvent(new Event('input', { bubbles: true })); })()`);
 const fill = async (size, v) => { await go(BASE_URL + '/lighting-designs'); await reveal(); await pick('size', size); for (const [s, g] of [[1, 'The Pigment'], [2, 'Cable Colour'], [3, 'Footing Material'], [4, 'Bulb Style'], [4, 'Bulb Count']]) { if (v[g]) { await jump(s); await pick(g, v[g]); if (v[g].startsWith('Custom')) await describe(g); } } await jump(5); };
+// Since 7b.4 the larger sizes aren't configured on the page (their own step sends the
+// size only, larger-piece.mjs); a full larger design is sent to the server directly, as
+// the configurator's form would (the server's rules are unchanged). On an edit page the
+// form carries the line being edited.
+const send = async (design, url = BASE_URL + '/lighting-designs') => { await go(url, 2200); await ev(`document.querySelector('form[action$="/lighting-designs/add"]').removeAttribute('data-action')`); await sleep(100); await ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify(design))}; f.requestSubmit(); })()`); await sleep(2500); };
 const page = () => ev(`({ path: location.pathname, h1: document.querySelector('h1')?.textContent.trim(), text: document.querySelector('main').innerText, labels: [...document.querySelectorAll('form label > span:first-child')].map(l => l.textContent.replace(/\\s+/g, ' ').trim()), errors: [...document.querySelectorAll('form [role=alert]')].map(e => e.textContent.trim()), rows: [...document.querySelectorAll('aside .flex.justify-between')].map(r => r.children[0].textContent + '=' + r.children[1].textContent) })`);
 const setField = (name, value) => ev(`(() => { const e = document.querySelector('[name="reserve_form[${name}]"]'); e.value = ${JSON.stringify(value)}; })()`);
 const submit = async () => { await ev(`document.querySelector('form[name=reserve_form]').requestSubmit()`); await sleep(2500); };
@@ -32,13 +37,11 @@ check('/reserve with nothing to reserve goes to Lighting Designs', (await ev('lo
 await fill('lumen-forma-gallery', { 'The Pigment': 'White', 'Cable Colour': 'Slate Grey', 'Footing Material': 'Brushed Copper', 'Bulb Style': 'Crown Gold LED' });
 await press();
 check('Gallery lamp added to the basket', (await ev('location.pathname')) === '/basket');
-await fill('lumen-forma-atelier', { 'The Pigment': 'Custom', 'Cable Colour': 'Raw Jute', 'Footing Material': 'Polished Copper', 'Bulb Style': 'Smoked Glass LED', 'Bulb Count': 'Dual Array' });
-check('the button reads Reserve Your Design', (await ev(`document.querySelector('[data-configurator-target=cta]').textContent`)) === 'Reserve Your Design');
-await press();
+await send({ size: 'lumen-forma-atelier', quantity: 1, mode: 'all', lamps: [{ 'The Pigment': 'Custom', 'Cable Colour': 'Raw Jute', 'Footing Material': 'Polished Copper', 'Bulb Style': 'Smoked Glass LED', 'Bulb Count': 'Dual Array' }], details: [{ 'The Pigment': 'A description.' }] });
 let p = await page();
 check('Reserve Your Design opens the request form', p.path === '/reserve' && p.h1 === 'Reserve Your Design' && !/Casting Slot/.test(p.text), p.path + ' ' + p.h1);
 check('it says no payment is taken', /No payment is taken today/.test(p.text));
-check('it carries the basket lamp and the lamp being configured, each in full', JSON.stringify(p.rows) === JSON.stringify(['Edition=Gallery', 'The Pigment=White', 'Cable Colour=Slate Grey', 'Footing Material=Brushed Copper', 'Bulb Style=Crown Gold LED', 'Quantity=1', 'Edition=Atelier', 'The Pigment=Custom', 'Cable Colour=Raw Jute', 'Footing Material=Polished Copper', 'Bulb Style / Count=Smoked Glass LED / Dual Array', 'Quantity=1']), JSON.stringify(p.rows));
+check('it carries the basket lamp and the lamp being configured, each in full', JSON.stringify(p.rows) === JSON.stringify(['Size=Gallery', 'The Pigment=White', 'Cable Colour=Slate Grey', 'Footing Material=Brushed Copper', 'Bulb Style=Crown Gold LED', 'Quantity=1', 'Size=Atelier', 'The Pigment=Custom', 'Cable Colour=Raw Jute', 'Footing Material=Polished Copper', 'Bulb Style / Count=Smoked Glass LED / Dual Array', 'Quantity=1']), JSON.stringify(p.rows));
 // The gift's fields (Step 11.1b) are checked by gift-options.mjs.
 const giftLabel = (l) => /^(Needed by|Recipient's|Gift message|This is a gift|Send to me|Send directly)/.test(l);
 check('the fields, the address in separate fields, with Custom Details for a Custom choice', JSON.stringify(p.labels.filter((l) => !giftLabel(l))) === JSON.stringify(['Full Name *', 'Email Address * (For sending the invoice and build schedule)', 'Phone Number * (Required by carriers for heavy-goods delivery scheduling)', 'Address line 1 *', 'Address line 2', 'Town/City *', 'County', 'Postcode *', 'Country *', "Site Access & Delivery Notes (e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", "Custom Details (Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)"]), JSON.stringify(p.labels));
@@ -141,21 +144,20 @@ check('a Custom cable alone shows the Custom Details box', (await page()).labels
 await b.send('Network.clearBrowserCookies');
 await fill('lumen-forma-studio', { 'The Pigment': 'Grey', 'Cable Colour': 'Orange', 'Footing Material': 'Brushed Aluminium', 'Bulb Style': 'Tubular Amber LED' });
 await press();
-await fill('lumen-forma-estate', { 'The Pigment': 'Black', 'Cable Colour': 'Orange', 'Footing Material': 'Brushed Aluminium', 'Bulb Style': 'Tubular Amber LED', 'Bulb Count': 'Single Array' });
-await press();
-check('Estate reserved: form shows the basket Studio and the Estate', JSON.stringify((await page()).rows.filter(r => r.startsWith('Edition'))) === JSON.stringify(['Edition=Studio', 'Edition=Estate']));
+await send({ size: 'lumen-forma-estate', quantity: 1, mode: 'all', lamps: [{ 'The Pigment': 'Black', 'Cable Colour': 'Orange', 'Footing Material': 'Brushed Aluminium', 'Bulb Style': 'Tubular Amber LED', 'Bulb Count': 'Single Array' }] });
+check('Estate reserved: form shows the basket Studio and the Estate', JSON.stringify((await page()).rows.filter(r => r.startsWith('Size'))) === JSON.stringify(['Size=Studio', 'Size=Estate']));
 sql("update cart_item set quantity = 3 where id = (select id from cart_item order by created_at desc limit 1)");
 await go(BASE_URL + '/basket');
 const link = await ev(`[...document.querySelectorAll('main a')].find(a => a.textContent.trim() === 'Reserve Your Design')?.getAttribute('href')`);
 check('the basket\'s Reserve Your Design link sends just the basket', link === '/reserve?basket=1', link);
 await go(BASE_URL + '' + link); p = await page();
-check('from the basket: only the basket\'s lamps', JSON.stringify(p.rows.filter(r => r.startsWith('Edition') || r.startsWith('Quantity'))) === JSON.stringify(['Edition=Studio', 'Quantity=3']), JSON.stringify(p.rows));
+check('from the basket: only the basket\'s lamps', JSON.stringify(p.rows.filter(r => r.startsWith('Size') || r.startsWith('Quantity'))) === JSON.stringify(['Size=Studio', 'Quantity=3']), JSON.stringify(p.rows));
 check('no Custom choice: no Custom Details box', !p.labels.some(l => l.startsWith('Custom Details')));
 
 // Editing a basket line into a Request size: the edited version replaces the line
 const edit = await ev(`[...document.querySelectorAll('a')].find(a => a.textContent.trim() === 'Edit configuration')?.getAttribute('href')`) || (await (async () => { await go(BASE_URL + '/basket'); return ev(`[...document.querySelectorAll('a')].find(a => a.textContent.trim() === 'Edit configuration')?.getAttribute('href')`); })());
-await go(BASE_URL + '' + edit, 2500); await jump(0); await pick('size', 'lumen-forma-monument'); await jump(4); await pick('Bulb Count', 'Triple Array'); await jump(5); await press(); p = await page();
-check('editing a line into Monument: the request shows the edited lamp in place of the line', JSON.stringify(p.rows.filter(r => r.startsWith('Edition') || r.startsWith('Quantity'))) === JSON.stringify(['Edition=Monument', 'Quantity=3']), JSON.stringify(p.rows));
+await send({ size: 'lumen-forma-monument', quantity: 3, mode: 'all', lamps: [{ 'The Pigment': 'Grey', 'Cable Colour': 'Orange', 'Footing Material': 'Brushed Aluminium', 'Bulb Style': 'Tubular Amber LED', 'Bulb Count': 'Triple Array' }] }, BASE_URL + edit); p = await page();
+check('editing a line into Monument: the request shows the edited lamp in place of the line', JSON.stringify(p.rows.filter(r => r.startsWith('Size') || r.startsWith('Quantity'))) === JSON.stringify(['Size=Monument', 'Quantity=3']), JSON.stringify(p.rows));
 await go(BASE_URL + '/basket');
 check('the basket line is unchanged until the request is sent', /Size\s+Studio/i.test(await ev(`document.querySelector('main').innerText`)));
 
