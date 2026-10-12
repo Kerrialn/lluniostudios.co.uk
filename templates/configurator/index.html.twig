@@ -52,13 +52,19 @@
            "Skip to configurator" or "Configure Studio or Gallery". With
            reduced motion: the sections in order, no pinning or snapping. #}
         <section class="ll-story" aria-label="Lumen Forma" data-lumen-story-target="sequence">
-            {# Snap points: the page top, the middle of stages 1 to 6, the end. #}
+            {# Snap points: the page top, the middle of stages 1 to 6, the end.
+               Phones (7b.2): the section is 1,673 screens tall and The Sizes
+               holds for four more, so its drawing pans Studio, Gallery,
+               Atelier, Estate, Monument, one snap each (lumen_story_controller.js). #}
             <span class="ll-story-snap" style="top: calc(-1 * var(--ll-nav-h))" aria-hidden="true"></span>
             {% for at in [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 7] %}
-                <span class="ll-story-snap" style="top: {{ at / 7 * 1120 }}vh" aria-hidden="true"></span>
+                <span class="ll-story-snap ll-story-snap-wide" style="top: {{ at / 7 * 1120 }}vh" aria-hidden="true"></span>
+            {% endfor %}
+            {% for at in [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 11] %}
+                <span class="ll-story-snap ll-story-snap-phone" style="top: {{ (at / 11 * 1573)|round(2) }}vh" aria-hidden="true"></span>
             {% endfor %}
             <div class="ll-story-pin">
-                <div class="ll-story-photo">
+                <div class="ll-story-photo" data-lumen-story-target="photo">
                     <div class="ll-story-frame">
                         <img src="{{ asset('images/lumen-forma/story-dim-2000.jpg') }}" srcset="{{ asset('images/lumen-forma/story-dim-1000.jpg') }} 1000w, {{ asset('images/lumen-forma/story-dim-2000.jpg') }} 2000w"
                              sizes="(max-width: 899px) and (orientation: portrait) 180vw, 134vh" loading="lazy" alt="Lumen Forma lamp, its bulb brightening as you scroll" draggable="false">
@@ -66,6 +72,12 @@
                              sizes="(max-width: 899px) and (orientation: portrait) 180vw, 134vh" loading="lazy" alt="" aria-hidden="true" draggable="false"
                              class="ll-story-lit" data-lumen-story-target="lit">
                     </div>
+                </div>
+
+                {# Phones (7b.2): during The Sizes the drawing takes the photo's place,
+                   shown whole and panning. #}
+                <div class="ll-story-plan" data-lumen-story-target="plan">
+                    {{ include('configurator/_sizes_drawing.html.twig', { class: 'll-story-drawing-pan', attrs: ' data-lumen-story-target="pan"' }) }}
                 </div>
 
                 <div class="ll-story-text">
@@ -82,7 +94,8 @@
                     </div>
                     <div class="ll-story-stage" data-lumen-story-target="stage">
                         <h2 class="ll-story-header">The Sizes</h2>
-                        {# The sizes drawing comes in 7b.2. #}
+                        {# Desktop: the drawing under the header (phones: in the photo's place). #}
+                        <div class="ll-story-drawing-scroll">{{ include('configurator/_sizes_drawing.html.twig', { class: 'll-story-drawing-inline' }) }}</div>
                         <p class="ll-story-body">Five sizes, one form. Studio and Gallery can be configured and ordered here. Atelier, Estate and Monument are made in conversation with me, so together we'll choose the finishes that suit your space.</p>
                     </div>
                     <div class="ll-story-stage" data-lumen-story-target="stage">

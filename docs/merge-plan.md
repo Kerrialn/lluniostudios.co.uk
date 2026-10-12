@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 12 October 2026 (the prototype is now the download of 12 October 2026 in Downloads; Step 7b, the new Lighting Designs introduction: answers, the two closing routes, proposals (a) and (b), and 7b.1 built, not committed).
+Last updated: 12 October 2026 (Step 7b: 7b.1 committed, `1da513c`; 7b.2, The Sizes drawing and the small-phone text fix, built, not committed).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Both branches were pushed to GitHub (`origin`, git@github.com:Kerrialn/lluniostudios.co.uk.git) as branches on 9 October 2026, at your request; push again with `git push origin symfony-7.4-upgrade design-foundation` when asked. Never push to `main` or merge anything unless asked.
-- **Next step (12 October 2026):** Step 7b. 7b.1 is done (committed); **7b.2 (the sizes drawing and the small-phone text fix) is being built**, then 7b.3 and 7b.4 (the two closing routes, (a) and (b) agreed). Still waiting too: you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
+- **Next step (12 October 2026):** Step 7b. 7b.1 is done (`1da513c`). **7b.2 (the sizes drawing and the small-phone text fix) is built, not committed: you check it** (https://localhost/lighting-designs, The Sizes on desktop and on a phone, upright and sideways, and a small phone). Then, when you say, the full browser run and the commit; then 7b.3 and 7b.4 (the two closing routes, (a) and (b) agreed). Still waiting too: you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
 - **The prototype (from 12 October 2026):** the folder `/Users/theonewham/Downloads/# Website Wireframing Brief` (the latest design, downloaded from Claude Design and unzipped by you on 12 October 2026; its Lighting Designs page is in Special Elite with the seven-stage story). Use it in place of the old copy, `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip` (5 October 2026), which is history now. Its Claude Design project is `896bd9c9-a4ee-4500-90b7-d3aa2b9e4b71`. In the folder:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Open it in Chrome. **Serve the folder rather than opening the file** to see the Lighting Designs sizes drawing (Chrome doesn't load its mask image from a file:// page): `cd "/Users/theonewham/Downloads/# Website Wireframing Brief" && python3 -m http.server 8765`, then http://localhost:8765/Llunio%20Site%20v4%20Unified.dc.html. `Llunio Site v4 Unified - Backup (before range page).dc.html` is the version before the new Lighting Designs page. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (all built, Steps 8, 9 and 11, with the email rules and wording decided since).
@@ -60,7 +60,7 @@ Last updated: 12 October 2026 (the prototype is now the download of 12 October 2
 | 10b | Quotes (10b.1 quote form, 10b.2 sending, 10b.3 paying, 10b.4 balance) | Done (10b.1–10b.4; 10b.3 and 10b.4 checked by hand 9 October 2026; full browser run 32 of 32 passed) | `482b26f` (10b.1), `a4f85fd` (10b.2), `3b2fe1c` (10b.3), `031e6bb` (10b.4) |
 | 11 | Order journey emails (11.0 email format, 11.1 email 01 and paid-order notifications, 11.2–11.4 stages and emails 04–06, 11.5 wording pass) | In progress (11.0–11.4 done; 11.4 still to be checked by hand; 11.5 review prepared, waiting for you) | `60499c2` (11.0), `1739f36` (11.1, 11.1b), `d09fc15` (11.2), `d66f803` (11.3), `f61bb32` (11.4) |
 | — | Configurator Custom descriptions (required) and Reserve Your Design Reference photos | Done (committed 10 October 2026 at your request; full browser run with `--clean`: 37 of 38, `configurator-remember.mjs` failing once on timing, then passing twice on its own) | see the commit "Custom descriptions and Reference photos" |
-| 7b | Lighting Designs introduction (Special Elite, seven-stage story), 7b.1–7b.4 | In progress: 7b.1 done (committed 12 October 2026); 7b.2 next; (a) and (b) agreed | see the commit "Lighting Designs introduction (7b.1)" |
+| 7b | Lighting Designs introduction (Special Elite, seven-stage story), 7b.1–7b.4 | In progress: 7b.1 and 7b.2 done (committed 12 October 2026); 7b.3 next; (a) and (b) agreed | `1da513c` (7b.1), see the commit "The Sizes drawing (7b.2)" |
 | 11b | Advanced SEO | Later (nothing built; outline and questions first) | — |
 | 11c | Terms & Conditions (new text) | Waiting for your text | — |
 | 11d | Privacy Policy (new page) | Waiting for your text | — |
@@ -158,10 +158,10 @@ One line per Add to Basket (no merging), per-lamp configurations (`cart_item_opt
 - 7.5 review, "Cast Your Lamp" (adds to the basket via `lighting_designs_add`, which re-checks everything on the server) / "Reserve Your Design".
 - 7.6 "Edit configuration" from the basket opens the configurator with the line loaded and updates it in place; shop links moved to the configurator; hover feedback; banners removed; stage headings removed except on The Light.
 
-### Step 7b: Lighting Designs introduction (in progress: 7b.1 done)
+### Step 7b: Lighting Designs introduction (in progress: 7b.1 and 7b.2 done)
 Asked for on 12 October 2026. A redesign of the Lighting Designs page (`/lighting-designs`) made in Claude Design: project `896bd9c9-a4ee-4500-90b7-d3aa2b9e4b71`, file `Llunio Site v4 Unified.dc.html` in the prototype folder (see Start here; its handover note imports `assets/logo-mark-light.png`, `support.js`, `uploads/APC_0041.jpg`, `uploads/APC_0261-24693d94.jpg`, `uploads/APC_0261.jpg`, `uploads/APC_0262.jpg`, `uploads/APC_0264.jpg`). **Build only the version that shows on its Lighting Designs page (formerly Range Test D)**; the file's unused code for older test versions (Current, Range A, B and C) is ignored. (`APC_0041` and the `APC_0261`–`0264` photos are the existing hero photos and the homepage pair; the story itself uses the pair below.) In the file, the page is the block marked `RANGE TEST A / B … RANGE TEST END` and its `rt:` logic, fixed to Range Test D with "All Special Elite" (`rdFont: 8`) and the deeper sand drawing (`rdInk: 2`); the font, drawing-colour and test bars are switched off and aren't built.
 
-**Status:** confirmed 12 October 2026 as the latest version (Special Elite throughout the introduction, seven stages with the "01 / 07" marker) and compared with what's built (below). Questions answered on 12 October 2026 (below). **7b.1 done (checked by you and committed 12 October 2026).** Proposals (a) and (b) agreed on 12 October 2026 (below).
+**Status:** confirmed 12 October 2026 as the latest version (Special Elite throughout the introduction, seven stages with the "01 / 07" marker) and compared with what's built (below). Questions answered on 12 October 2026 (below). **7b.1 done (checked by you and committed 12 October 2026, `1da513c`). 7b.2 done (checked by you and committed 12 October 2026). 7b.3 being built.** Proposals (a) and (b) agreed on 12 October 2026 (below).
 
 **Decisions (12 October 2026):**
 1. **Hero:** the slideshow shows only the "Lumen Forma" title, the "Scroll to begin" cue and a "Skip to configurator" link.
@@ -229,10 +229,45 @@ Asked for on 12 October 2026. A redesign of the Lighting Designs page (`/lightin
   - Reserve Your Design, email 02, your notification, admin and the quote then show that lamp with its size and quantity and no options. **Agreed:** where the options would be listed, **"Finishes: to be chosen together"**.
 
 **Sub-steps (each stops for your checks; a commit only when asked):**
-- **7b.1 The story (done: checked by you and committed 12 October 2026, "Lighting Designs introduction (7b.1)"):** see below.
-- **7b.2 The Sizes drawing:** the drawing in #CDB98F with its 20 live labels on desktop; on phones the enlarged drawing, shown whole, panning Studio → Monument with one snap per size. This makes the phone introduction taller, as the design (1,673 screen heights).
+- **7b.1 The story (done: checked by you and committed 12 October 2026, `1da513c`):** see below.
+- **7b.2 The Sizes drawing (done: checked by you and committed 12 October 2026, "The Sizes drawing (7b.2)"):** see "7b.2 as built" below.
 - **7b.3 "Configure Studio or Gallery":** The Scale with only Studio and Gallery; the lit lamp as the configurator's photo until a size is picked or the stage moves; "Skip to configurator" as decided in (a).
 - **7b.4 "Discuss a Larger Piece":** the single-step panel (Atelier, Estate, Monument, and the quantity if (b) is agreed) going straight to Reserve Your Design with the size carried over, and the server and the pages it reaches as in (b). Then the full browser run.
+
+**7b.2: decisions (12 October 2026, your answers):**
+- **Phones: the drawing takes the photo's place during The Sizes.** At the design's phone size the drawing is about 397px tall, while only about 90px was free above the photo. So on upright and sideways phones it crossfades in where the photo was (upright, the lower part of the screen; sideways, the left side), shown whole and panning Studio → Monument, one snap per size. The header and text stay in the text band, and the lamp comes back at The Signature.
+- **Short phones: the photo starts just below the longest stage text** (measured on load, resize and once the font has loaded), instead of at 46% down. The lamp sits lower and is cropped at the bottom on very short phones; text sizes stay as the design. Typical phones (360×780 and up) are unchanged.
+
+**7b.2 as built (12 October 2026; checked by you and committed):**
+- **The drawing:** `public/images/lumen-forma/sizes-drawing.png`, the design's `assets/lumen-forma-sizes-d.png` (1536×1024, no text), re-encoded with its metadata removed and its transparency kept. It's used as a mask, so its lines and hatching take #CDB98F.
+  - The 20 labels are live Special Elite text in #CDB98F, at the design's measured positions and sizes (relative to the drawing's width): for each size its width ("15 cm"), name ("STUDIO"), size ("15 × 40 cm") and height turned on its side ("40 cm").
+  - It's one partial, `templates/configurator/_sizes_drawing.html.twig`, used twice: under The Sizes header, and in the photo's place on phones. The one not in use is hidden, also from screen readers. It reads as one image: "Drawing of the five Lumen Forma sizes with dimensions: …".
+- **Desktop and wider:** under the header, as the design: up to 52% of the screen's height (620px wide at 1440×900, the text column's width). Matched to the design by screenshot.
+- **Phones:**
+  - The introduction is 1,673 screen heights, with 12 snap points as the design: the same positions at 390×844 (692, 1899 … 13365px).
+  - The Sizes holds ("04 / 07") for five snaps while the drawing pans to Studio, Gallery, Atelier, Estate, then Monument (each centred, unless the drawing is already at one of its ends, as the design). The lamp's brightness holds too.
+  - The photo fades out as The Sizes comes in and back as it goes (0.7s).
+  - The drawing is shown whole: at the design's size (707px wide) where it fits, otherwise smaller, 12px below the top of its area to 38px above the bottom, clear of the counter. It is 707px at 390×844, 604px at 844×390 and 414px at 320×568, with the labels never touching.
+  - Upright, its area starts 12px below The Sizes' own text (or where the photo starts, if higher), so it's as large as the screen allows.
+- **Short phones (the small-phone fix):** `--story-photo-top` is set by `lumen_story_controller.js` only when the longest stage text would reach the photo. At 320×568 the photo starts at 363px instead of 261px, and The Process and The Maker now end above it. The closing buttons follow the lamp there too: the formula now includes the photo's top and its frame's offset, so they stay 75px above it.
+- **Reduced motion:** The Sizes shows the drawing under its header (desktop size; on phones 707px wide in a box swiped sideways); no pan, nothing in the photo's place.
+- **Intended differences:**
+  - the drawing in the photo's place on phones, shown whole (the design keeps it in the text band, cut to its bottom strip);
+  - the photo starting below the text on short phones;
+  - the reduced-motion drawing.
+- **Checks:** `lighting-designs-story.mjs` extended:
+  - the drawing on desktop: its size, the 20 labels and their text, colour, font, the mask, the labels inside it, its place between the header and the text;
+  - on phones: 12 snaps, and at each of the five pan snaps "04", the drawing in the photo's place, the size centred or the drawing at its end, shown whole, the labels clear of each other and the counter, and below the text upright;
+  - the text above the photo on every phone size;
+  - on the reduced-motion page, the drawing.
+
+  New runs in `run-all.mjs`: 320×568, and reduced motion at 390×844.
+- **Checks run (12 October 2026):**
+  - `lighting-designs-story.mjs` passes at 1440×900, 1920×1080, 390×844, 360×780, 430×932, 844×390 and 320×568 (the small phone now passes everything), and with reduced motion at 1440×900 and 390×844.
+  - The configurator page, remember, photos and edit checks and the page footers: 8 of 8.
+  - `composer test` (190), phpstan, code style, Twig lint and the build are clean.
+  - **Full browser run with `--clean` before committing (12 October 2026): 44 of 44 passed.**
+- No database or server changes. **To undo:** revert the commit once made (or, before then, the files above).
 
 **7b.1 as built (12 October 2026; checked by you and committed):**
 - **Page:** `templates/configurator/index.html.twig`. The introduction (`<section class="ll-story">`) comes before the configurator, which isn't shown until it is opened. Once open, the introduction is gone and the page is at the top.
@@ -266,7 +301,7 @@ Asked for on 12 October 2026. A redesign of the Lighting Designs page (`/lightin
   - **Reduced motion:** the hero (the first photo, no cross-fade), then the lamp fully lit, then the seven sections one after another (spaced as the design's earlier sections), with no marker, pinning, snapping or fades. Sideways phones and desktop place the text from 54% across.
 - **Checks:** new `lighting-designs-story.mjs` (1440×900, 390×844, 844×390, and 1440×900 with reduced motion; added to `run-all.mjs`). The checks that opened the configurator with a key press (configurator page, stages, customise, photos, add to basket, Custom notes and descriptions, edit, hover and headings, remember, Reserve) now press "Skip to configurator". The comparison scripts (`compare/stages`, `review`, `customise`, `reserve`) do the same on both the prototype and ours.
 - No database or server changes. **To undo:** revert the commit once made (or, before then, the files above).
-- **Found, not changed (12 October 2026):** on small upright phones (320×568), the text of The Process and The Maker runs down over the top of the photo (still clear of the counter and the skip link; the check's "text above the photo" fails there for stages 3 and 6; the ending is now clear, its buttons sitting above the lamp). The same before the counter moved. To fix with 7b.2, which has to fit the drawing into the same text band.
+- **Found (12 October 2026), fixed in 7b.2:** on small upright phones (320×568), the text of The Process and The Maker ran down over the top of the photo.
 - **Checks run (12 October 2026):** `lighting-designs-story.mjs` passing at all four sizes (and with reduced motion at 390×844), again after the counter moved and the headers were underlined (it now also checks the counter's corner on phones, the closing buttons' sizes and, on phones, their place (right margin, clear of the heading, skip link and counter, upright just above the lamp; also at 430×932, 360×780 and 320×568) and each header's underline: Special Elite underscores in its colour, as wide as its text, also at 1920×1080 and on the reduced-motion page); the 13 configurator and Reserve checks plus the page footers (18 runs) all passing; `composer test` (190 tests), phpstan, code style, Twig lint and `npm run build` clean. The updated comparison scripts weren't run, as the story was compared by screenshots. **Full browser run with `--clean` before committing (12 October 2026): 41 of 42 passed**; the one failure was Chrome not starting for `quote-send.mjs` (as on earlier runs), which then passed on its own.
 
 ### Step 8: Reserve Your Design (done, `44b4408`)

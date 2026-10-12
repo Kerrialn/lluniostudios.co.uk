@@ -14,6 +14,8 @@ const CHECKS = [
     ['lighting-designs-story.mjs', '1440', '900'],
     ['lighting-designs-story.mjs', '390', '844'],
     ['lighting-designs-story.mjs', '844', '390'],
+    ['lighting-designs-story.mjs', '320', '568'],
+    ['lighting-designs-story.mjs', '390', '844', 'reduced'],
     ['lighting-designs-story.mjs', '1440', '900', 'reduced'],
     ['configurator-stages.mjs'],
     ['configurator-customise.mjs'],

@@ -1,0 +1,23 @@
+{#
+    The Sizes drawing (Step 7b.2), as the design: the text-free drawing
+    (public/images/lumen-forma/sizes-drawing.png, 1536×1024) used as a mask so
+    its lines and hatching take the deeper sand colour, with its 20 labels as
+    live Special Elite text at the design's measured positions (percentages
+    of the image). Sizes in app.css (.ll-story-drawing). `class` places it.
+#}
+{% set columns = [
+    { name: 'Studio', size: '15 × 40 cm', width: '15 cm', height: '40 cm', x: 186, hx: 106, top: 620 },
+    { name: 'Gallery', size: '22 × 60 cm', width: '22 cm', height: '60 cm', x: 424, hx: 322, top: 550 },
+    { name: 'Atelier', size: '30 × 90 cm', width: '30 cm', height: '90 cm', x: 702, hx: 584, top: 456 },
+    { name: 'Estate', size: '38 × 140 cm', width: '38 cm', height: '140 cm', x: 1010, hx: 882, top: 292 },
+    { name: 'Monument', size: '45 × 200 cm', width: '45 cm', height: '200 cm', x: 1331, hx: 1200, top: 88 },
+] %}
+<div class="ll-story-drawing {{ class|default('') }}" role="img" aria-label="Drawing of the five Lumen Forma sizes with dimensions: Studio 15 × 40 cm, Gallery 22 × 60 cm, Atelier 30 × 90 cm, Estate 38 × 140 cm, Monument 45 × 200 cm"{{ attrs|default('')|raw }}>
+    <div class="ll-story-drawing-art" aria-hidden="true" style="--drawing: url('{{ asset('images/lumen-forma/sizes-drawing.png') }}')"></div>
+    {% for c in columns %}
+        <span class="ll-story-label ll-story-label-width" aria-hidden="true" style="left: {{ (c.x / 15.36)|round(2) }}%; top: 80.66%">{{ c.width }}</span>
+        <span class="ll-story-label ll-story-label-name" aria-hidden="true" style="left: {{ (c.x / 15.36)|round(2) }}%; top: 85.16%">{{ c.name|upper }}</span>
+        <span class="ll-story-label ll-story-label-size" aria-hidden="true" style="left: {{ (c.x / 15.36)|round(2) }}%; top: 89.06%">{{ c.size }}</span>
+        <span class="ll-story-label ll-story-label-height" aria-hidden="true" style="left: {{ ((c.hx - 20) / 15.36)|round(2) }}%; top: {{ ((c.top + 773) / 20.48)|round(2) }}%">{{ c.height }}</span>
+    {% endfor %}
+</div>

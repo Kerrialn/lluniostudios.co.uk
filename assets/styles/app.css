@@ -724,6 +724,40 @@
     color: var(--story-amber);
     pointer-events: none;
 }
+/* The Sizes drawing (7b.2; configurator/_sizes_drawing.html.twig): the
+   text-free drawing as a mask in the deeper sand colour, its labels live
+   text at the design's sizes (relative to the drawing's width). Desktop:
+   under the header, up to 52% of the screen's height. Phones: in the photo's
+   place, shown whole and panning (below). */
+.ll-story-drawing {
+    position: relative;
+    container-type: inline-size;
+    color: #cdb98f;
+}
+.ll-story-drawing-art {
+    width: 100%;
+    aspect-ratio: 1536 / 1024;
+    background-color: currentColor;
+    -webkit-mask: var(--drawing) center / 100% 100% no-repeat;
+    mask: var(--drawing) center / 100% 100% no-repeat;
+}
+.ll-story-label {
+    position: absolute;
+    white-space: nowrap;
+    line-height: 1;
+    text-shadow: 0 1px 3px rgba(8, 6, 5, .55);
+    transform: translateX(-50%);
+}
+.ll-story-label-width { font-size: max(10.5px, 2cqw); letter-spacing: .02em; }
+.ll-story-label-name { font-size: max(11px, 2.4cqw); letter-spacing: min(.14em, .25cqw); }
+.ll-story-label-size { font-size: max(10px, 2.1cqw); letter-spacing: 0; }
+.ll-story-label-height {
+    font-size: max(10.5px, 2cqw);
+    letter-spacing: .02em;
+    transform: translate(-50%, -50%) rotate(-90deg);
+}
+.ll-story-drawing-inline { width: min(100%, calc(52vh * 1.5)); }
+.ll-story-plan, .ll-story-snap-phone { display: none; }
 /* The hero, over the pinned lamp until the first scroll (1.6s fade). */
 .ll-story-hero {
     position: absolute;
@@ -789,12 +823,15 @@
    instead of over the headings; the text ends above the marker instead of
    running into it. */
 @media (max-width: 899px) and (orientation: portrait) {
-    .ll-story-photo { top: 46%; }
+    /* --story-photo-top: set only on short screens, where the longest stage
+       text doesn't fit above 46%; then the photo starts 16px below the text
+       (7b.2, decided 12 October 2026). */
+    .ll-story-photo { top: var(--story-photo-top, 46%); }
     .ll-story-text {
         left: 20px;
         right: 20px;
         top: 84px;
-        bottom: calc(54% + 44px);
+        bottom: calc(100% - var(--story-photo-top, 46%) + 44px);
         text-shadow: 0 0 16px rgba(0, 0, 0, .85);
     }
     .ll-story-stage { justify-content: flex-start; }
@@ -846,10 +883,53 @@
         white-space: nowrap;
     }
 }
+/* Phones, upright and sideways (7b.2, decided 12 October 2026): the section
+   is taller (1,673 screens) for the pan; during The Sizes the drawing takes
+   the photo's place (the photo fades out and back, lumen_story_controller.js),
+   at the design's phone size (0.46, 707px wide) or smaller so that it's shown
+   whole: from 12px below the top of its area to 38px above the bottom (clear
+   of the counter). Upright, its area starts just below The Sizes' own text
+   (--story-plan-top, set by the script) or where the photo starts, whichever
+   is higher, so it's as large as the screen allows. --pan is the drawing's point to centre (a fraction of its
+   width), from Studio to Monument; it never pans past either end. */
+@media (max-width: 899px) {
+    .ll-story { height: 1673vh; }
+    .ll-story-snap-wide, .ll-story-drawing-inline { display: none; }
+    .ll-story-snap-phone { display: block; }
+    .ll-story-plan {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 46%;
+        bottom: 0;
+        container-type: size;
+        overflow: hidden;
+        background: #080605;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .7s ease;
+    }
+    .ll-story-photo { transition: opacity .7s ease; }
+    .ll-story-drawing-pan {
+        --pw: min(707px, calc((100cqh - 50px) * 1.7778));
+        position: absolute;
+        width: var(--pw);
+        bottom: calc(38px - var(--pw) / 1.5 * 0.078);
+        left: clamp(min(0px, calc(100% - var(--pw))), calc(50% - var(--pan, 0.121) * var(--pw)), max(0px, calc(100% - var(--pw))));
+    }
+}
+@media (max-width: 899px) and (orientation: portrait) {
+    .ll-story-plan { top: var(--story-plan-top, var(--story-photo-top, 46%)); right: 0; }
+}
 @media (max-width: 899px) and (orientation: portrait) {
     .ll-story-actions {
+        /* The lamp's top: 15.2% down the photo frame (h), which sits 40% of
+           any overflow above the photo area (c) (.ll-story-frame). */
+        --c: calc(100vh - var(--story-photo-top, 46vh));
+        --h: max(74.95vw, var(--c));
         margin-top: auto;
-        margin-bottom: calc(63.15px - 32px - 0.152 * max(74.95vw, 54vh));
+        margin-bottom: calc(63.15px - 32px - 0.152 * var(--h) - 0.4 * (var(--c) - var(--h)));
     }
 }
 /* Reduced motion (decided 12 October 2026): a plain page, the hero then the
@@ -885,6 +965,13 @@
 }
 @media (prefers-reduced-motion: reduce) and (min-width: 900px), (prefers-reduced-motion: reduce) and (orientation: landscape) {
     .ll-story-text { margin: 0 clamp(24px, 5vw, 72px) 0 54%; }
+}
+@media (prefers-reduced-motion: reduce) and (max-width: 899px) {
+    .ll-story { height: auto; }
+    .ll-story-snap-phone, .ll-story-plan { display: none; }
+    .ll-story-photo { opacity: 1; }
+    .ll-story-drawing-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
+    .ll-story-drawing-inline { display: block; width: 707px; }
 }
 @media (prefers-reduced-motion: reduce) and (max-width: 899px) and (orientation: portrait) {
     .ll-story-actions { margin: 0; }
