@@ -27,7 +27,7 @@
 {% block preview_image %}images/lumen-forma/story-lit-2000.jpg{% endblock %}
 {% block preview_alt %}A Lumen Forma lamp, fully lit, hand cast in liquid stone{% endblock %}
 {% block structured_data %}<script type="application/ld+json">{{ seo_products()|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}</script>{% endblock %}
-{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 {% block footer %}{% endblock %}
 
 {% block body %}
@@ -91,7 +91,7 @@
                        Commissions intro (as on the Workshop page). #}
                     <div class="ll-cfg-hero absolute inset-x-0 top-[18%] min-[900px]:top-[22%] flex flex-col items-center min-[900px]:items-end gap-[18px] px-[clamp(20px,5vw,88px)] pointer-events-none" data-configurator-target="hero">
                         <div class="w-max max-w-full flex flex-col gap-[18px]">
-                            <div aria-hidden="true" class="h-0 overflow-hidden invisible flex flex-col items-start font-archivo font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
+                            <div aria-hidden="true" class="h-0 overflow-hidden invisible flex flex-col items-start font-elite font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
                                 <span class="block whitespace-nowrap text-[30.3px] pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Your bespoke design</span>
                                 <span class="block whitespace-nowrap text-[30.3px]">in our signature brutalist style,</span>
                                 <span class="block whitespace-nowrap text-[30.3px] pl-[calc(2.8*30.3px)] min-[900px]:pl-[calc(7*30.3px)]">custom‑built for you.</span>
@@ -279,7 +279,7 @@
                                         <div class="grid grid-cols-3 gap-2.5">
                                             {% for dimension in ['Length', 'Width', 'Height'] %}
                                                 <div class="flex flex-col gap-1 border-l border-ll-line py-px pl-3">
-                                                    <span class="text-[10.5px] uppercase tracking-[0.16em] text-ll-mute">{{ dimension }}</span>
+                                                    <span class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">{{ dimension }}</span>
                                                     <span class="text-base leading-[1.2] tabular-nums"><span data-configurator-target="dimension" data-dimension="{{ dimension|lower }}"></span><span class="text-xs text-ll-mute ml-[3px]">cm</span></span>
                                                 </div>
                                             {% endfor %}
@@ -400,7 +400,7 @@
                                     <div class="grid grid-cols-3 gap-2.5">
                                         {% for dimension in ['Length', 'Width', 'Height'] %}
                                             <div class="flex flex-col gap-1 border-l border-ll-line py-px pl-3">
-                                                <span class="text-[10.5px] uppercase tracking-[0.16em] text-ll-mute">{{ dimension }}</span>
+                                                <span class="text-[11px] uppercase tracking-[0.16em] text-ll-mute">{{ dimension }}</span>
                                                 <span class="text-base leading-[1.2] tabular-nums"><span data-configurator-target="largerDimension" data-dimension="{{ dimension|lower }}"></span><span class="text-xs text-ll-mute ml-[3px]">cm</span></span>
                                             </div>
                                         {% endfor %}

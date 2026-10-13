@@ -51,7 +51,7 @@
         {{ vite_entry_script_tags('app') }}
     {% endblock %}
 </head>
-<body class="min-h-full flex flex-col bg-ll-bg text-ll-ink antialiased font-sans"
+<body class="min-h-full flex flex-col bg-ll-bg text-ll-ink antialiased font-elite"
       {{ stimulus_controller('symfony/ux-swup/swup', {
           containers: ['#main', '#navbar', '#flashes', '#footer'],
           theme: 'slide',
@@ -65,7 +65,7 @@
 <div id="flashes">{{ include('partials/_flashes.html.twig') }}</div>
 
 {# Pages not yet restyled keep the original light content area. Restyled pages
-   override `main_class` with the dark design, e.g. 'bg-ll-bg text-ll-ink font-archivo'. #}
+   override `main_class` with the dark design, e.g. 'bg-ll-bg text-ll-ink font-elite'. #}
 <main class="min-h-[70vh] flex-1 {% block main_class %}bg-white text-gray-900{% endblock %}" id="main">
     {# Remembered choices that have been used (a lamp added, a reservation
        sent): the browser forgets them (forget_choices_controller.js). #}

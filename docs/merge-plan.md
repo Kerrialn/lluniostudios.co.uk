@@ -843,7 +843,24 @@ Asked for on 10 October 2026, between the 11.4 hand checks and the 11.5 wording 
 - Full browser run with `--clean` before committing: 37 of 38 passed; the one failure (`configurator-remember.mjs`, its last step: "on a phone: scrolled straight to the review", reading the page before the phone window had drawn it) passed twice on its own, as on 9 October. An earlier full run was stopped part-way (30 runs, all passing) when the combined line was asked for; its test data was cleaned up separately.
 - Checks: new `configurator-custom-describe.mjs` (desktop and phone) and `reserve-photos.mjs`; `BasketRulesTest` expects the combined line; `configurator-add-to-basket.mjs`, `configurator-custom-notes.mjs`, `reserve.mjs` and `quote-pay.mjs` now fill in the description when they choose Custom (`reserve.mjs` also leaves the hidden file input out of its field measurements); `commissions.mjs` follows the shared file box; `clean-up.mjs` also removes test requests' photos.
 
-### Step 7d (later, after 7c): the whole site in "All Special Elite" (not started)
+### Step 7d: the whole site in "All Special Elite" (built 13 October 2026 while you were out)
+**13 October 2026: asked to do all of it now** (7d.1 to 7d.4) without stopping between sub-steps; your decisions were taken provisionally (marked "decided provisionally, Theo to confirm"). The reference is the Lighting Designs introduction.
+
+**The brief (13 October 2026):** every page, the navigation and footer, buttons and labels in Special Elite: titles, headings, navigation, buttons and small labels uppercase and letter-spaced, body text in normal case; form fields (labels, typed text, placeholders, dropdowns); text never smaller than about 11px; all emails in Special Elite where email apps support it, with a typewriter fallback. Consistent page headings: the feature pages (homepage, Lighting Designs, Bespoke Commissions, The Workshop) keep their full-screen photo intros; every other page uses one identical heading style (size, letter spacing, position, gap and the thin rule under it), based on Contact, Terms & Conditions and the Basket; section headings in one consistent style too. Layouts, colours and behaviour kept, sizes and spacing adjusted so everything fits.
+
+**7d.1 Site-wide fonts (13 October 2026):**
+- The site's font is now **Special Elite** with a typewriter fallback (`'Special Elite', 'Courier New', Courier, monospace`): the `font-archivo` class is renamed `font-elite` (every page, the navigation and footer), the body's base font too (`base.html.twig`, `simple.base.html.twig`), and `--font-sans` points to it.
+- **Archivo and Nunito are no longer loaded** (two fewer font downloads on every page); Boldonse stays only for the switched-off Revolut payment page and the old simple menu.
+- Headings (`.ll-heading`): uppercase, letter-spaced 0.06em as the introduction's title (was 0.03em, light weight). Small labels (`.ll-label`: the navigation, buttons, field section labels) were already uppercase at 0.14em, as the introduction's headers.
+- **Buttons take their surroundings' case** (Tailwind's base reset it), so buttons inside uppercase labels are uppercase (e.g. the Workshop's "← BACK / NEXT →").
+- **Form fields** (typed text, placeholders, dropdowns) inherit the page's font (Tailwind's base sets `font: inherit`), so they are Special Elite too. A dropdown's open list is drawn by the browser or phone itself and may use the system font.
+- **Minimum size:** the two 10.5px texts are now 11px; nothing on the site is smaller than 11px.
+- *Decided provisionally, Theo to confirm:*
+  - **no synthesised bold or light** (`font-synthesis-weight: none`): Special Elite has one weight, so text that was medium or bold (e.g. totals) is drawn at its normal weight rather than smeared, as on the introduction;
+  - **form-field labels stay in normal case** ("Email", "Tell me about your space and what you have in mind"): many are sentences and would be hard to read uppercase in a typewriter face; the small section labels above groups of fields are uppercase.
+- **Checks (13 October 2026):** the menus and footers, sign-in, the basket's gift, Card Payment, Reserve Your Design, the enquiry page and Commissions: 12 of 12 after `reserve.mjs` was updated (it expected the old light heading weight, 300; headings are now Special Elite's one weight, 400); unit tests, PHPStan, code style and Twig lint clean. Committed as "All Special Elite: site-wide fonts (7d.1)". The page-by-page fit comes in 7d.2 and 7d.3.
+
+**Recorded earlier:**
 Recorded 12 October 2026; **don't start it yet.** **13 October 2026: still not to be started: you are trying the font change in Claude Design first.**
 - Change the whole site's typography to the style used on the Lighting Designs introduction: everything in Special Elite, with titles, headers and buttons uppercase and letter-spaced.
 - It also covers the text people type into form fields on every form (inputs, text boxes, dropdowns and their placeholders), so they match (added 12 October 2026).

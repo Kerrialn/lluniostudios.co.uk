@@ -19,7 +19,7 @@
     { label: basketCount > 0 ? 'Basket (' ~ basketCount ~ ')' : 'Basket', route: 'cart', active: currentRoute starts with 'cart' },
 ] %}
 <nav id="navbar" aria-label="Main"
-     class="relative z-40 font-archivo {{ overlay ? 'nav-overlay' : '' }} {{ overlay == 'hero' ? 'nav-ink-hero' : '' }}"
+     class="relative z-40 font-elite {{ overlay ? 'nav-overlay' : '' }} {{ overlay == 'hero' ? 'nav-ink-hero' : '' }}"
      {{ stimulus_controller('mobile-menu') }}>
     <div class="flex items-center justify-between gap-7 py-[22px] px-[clamp(20px,4vw,56px)]">
         <a href="{{ path('landing') }}" class="shrink-0 nav-glow {{ overlay == 'hero' ? 'll-sw-logo' : '' }}">

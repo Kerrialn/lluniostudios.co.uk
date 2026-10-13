@@ -10,7 +10,7 @@
 #}
 {% set pinned = pinned|default(false) %}
 {% set iconLink = 'w-11 h-11 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity' %}
-<footer class="font-archivo {{ pinned ? 'll-footer-pinned ll-sw-footer' : 'bg-ll-bg text-ll-ink' }}">
+<footer class="font-elite {{ pinned ? 'll-footer-pinned ll-sw-footer' : 'bg-ll-bg text-ll-ink' }}">
     <div class="flex flex-wrap items-center justify-between gap-4 {{ pinned ? '' : 'py-[clamp(20px,3vw,32px)] px-[calc(clamp(20px,4vw,56px)-11px)]' }}">
         <div class="flex items-center gap-0.5">
             <a href="{{ path('contact') }}" aria-label="Contact" title="Contact" class="{{ iconLink }}">

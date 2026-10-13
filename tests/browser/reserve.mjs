@@ -70,7 +70,7 @@ const look = await ev(`(() => {
         h1: css(document.querySelector('h1')).fontSize + ' ' + css(document.querySelector('h1')).fontWeight,
     };
 })()`);
-check('fields as the Card Payment page: boxed, 48px, 15px text, 14px labels; heading as Card Payment', JSON.stringify(look.borders) === JSON.stringify(['solid 1px solid']) && JSON.stringify(look.heights) === JSON.stringify(['48px']) && JSON.stringify(look.fonts) === JSON.stringify(['15px']) && JSON.stringify(look.labels) === JSON.stringify(['14px']) && look.h1 === '28.8px 300', JSON.stringify(look));
+check('fields as the Card Payment page: boxed, 48px, 15px text, 14px labels; heading as Card Payment', JSON.stringify(look.borders) === JSON.stringify(['solid 1px solid']) && JSON.stringify(look.heights) === JSON.stringify(['48px']) && JSON.stringify(look.fonts) === JSON.stringify(['15px']) && JSON.stringify(look.labels) === JSON.stringify(['14px']) && look.h1 === '28.8px 400', JSON.stringify(look));
 check('typed text, placeholders and the dropdown in the light colour', JSON.stringify(look.colours) === JSON.stringify(['rgb(236, 227, 211)']) && look.placeholder !== 'rgb(0, 0, 0)' && look.option === 'rgb(236, 227, 211) on rgb(21, 18, 14)', JSON.stringify([look.colours, look.placeholder, look.option]));
 check('Country: United Kingdom by default, or the Isle of Man, Guernsey or Jersey', look.country === 'GB' && JSON.stringify(look.countries) === JSON.stringify(['GB=United Kingdom', 'IM=Isle of Man', 'GG=Guernsey', 'JE=Jersey']), JSON.stringify(look.countries));
 check('the same character limits as Card Payment (35, postcode 8)', JSON.stringify(look.max) === JSON.stringify([35, 35, 35, 35, 8]), JSON.stringify(look.max));

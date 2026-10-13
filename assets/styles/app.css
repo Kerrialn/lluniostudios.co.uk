@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600&family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Special+Elite&display=swap');
+/* Special Elite for the whole site (Step 7d); Boldonse only for the switched-off
+   Revolut payment page and the old simple menu. Archivo and Nunito are no
+   longer loaded. */
+@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Special+Elite&display=swap');
 @import 'tailwindcss';
 @import 'tom-select/dist/css/tom-select.default.css';
 @plugin 'flowbite/plugin';
@@ -11,14 +14,17 @@
 
 @theme {
     --font-display: 'Boldonse', system-ui, sans-serif;
-    --font-sans: 'Nunito', system-ui, sans-serif;
+    --font-sans: 'Special Elite', 'Courier New', Courier, monospace;
 
     /* Flowbite drawers/modals use `bg-dark-backdrop/70`; the token isn't provided
        by the plugin under Tailwind v4, so define it (matches the app's gray-900). */
     --color-dark-backdrop: #111827;
 
     /* Llunio design system (Site v4 Unified). Use as bg-ll-bg, text-ll-ink, border-ll-line, ... */
-    --font-archivo: 'Archivo', sans-serif; /* as the prototype: glyphs Archivo lacks (← → − ·) fall back to the same font */
+    /* "All Special Elite" (Step 7d, 13 October 2026): the whole site in the
+       typewriter face of the Lighting Designs introduction, with a typewriter
+       fallback while it loads or where it can't. */
+    --font-elite: 'Special Elite', 'Courier New', Courier, monospace;
     --color-ll-bg: #15120e;
     --color-ll-surface: #1c1813;
     --color-ll-ink: #ece3d3;
@@ -37,6 +43,15 @@
     :root { --ll-nav-h: 79px; }
 }
 
+/* Special Elite has a single weight: no synthesised bold or light, so the
+   typewriter texture stays as on the Lighting Designs introduction (Step 7d;
+   decided provisionally, Theo to confirm). */
+body { font-synthesis-weight: none; }
+
+/* Buttons take their surroundings' case (Tailwind's base resets it), so a
+   button inside an uppercase label is uppercase too (Step 7d). */
+button { text-transform: inherit; }
+
 /* Small uppercase labels: nav, buttons, field labels. */
 .ll-label {
     font-size: 12px;
@@ -44,11 +59,12 @@
     letter-spacing: 0.14em;
 }
 
-/* Light, uppercase headings. */
+/* Uppercase headings, letter-spaced as the Lighting Designs introduction's
+   title (Step 7d). */
 .ll-heading {
-    font-weight: 300;
+    font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.06em;
     line-height: 1.1;
 }
 
