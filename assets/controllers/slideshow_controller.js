@@ -8,6 +8,8 @@ import { Controller } from '@hotwired/stimulus';
  * "01 / 08" counter, swipe (50px, mostly sideways) and a sound toggle that
  * shows only while a video is actually playing.
  * Autoplay is off for visitors who prefer reduced motion.
+ * Photos given as data-src / data-srcset (with their WebP <source>) are
+ * loaded only for the slide shown and the next one (the speed pass).
  */
 export default class extends Controller {
     static targets = ['slide', 'counter', 'sound', 'soundOn', 'soundOff'];
@@ -94,6 +96,7 @@ export default class extends Controller {
         clearTimeout(this.guard);
         this.index = ((index % count) + count) % count;
 
+        [this.index, (this.index + 1) % count, (this.index - 1 + count) % count].forEach((i) => this.load(this.slideTargets[i]));
         this.slideTargets.forEach((slide, i) => {
             const active = i === this.index;
             slide.classList.toggle('opacity-100', active);
@@ -145,6 +148,20 @@ export default class extends Controller {
                 if (this.index === index) this.next();
             }, Math.max(1000, remaining * 1000));
         }, 6000);
+    }
+
+    // Loads a slide's photo if it was waiting (data-src), WebP source first.
+    load(slide) {
+        slide?.querySelectorAll('source[data-srcset]').forEach((source) => {
+            source.srcset = source.dataset.srcset;
+            delete source.dataset.srcset;
+        });
+        slide?.querySelectorAll('img[data-src]').forEach((img) => {
+            if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+            img.src = img.dataset.src;
+            delete img.dataset.src;
+            delete img.dataset.srcset;
+        });
     }
 
     renderSound() {

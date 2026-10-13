@@ -91,7 +91,8 @@
 
             <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-3.5 p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
                 {% if photo %}
-                    <img src="{{ asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') }}" alt="A Lumen Forma {{ (items|first).sizeName }} lamp hand cast in liquid stone" class="w-full aspect-[4/3] object-cover" style="object-position: {{ photo.position }}">
+                    <picture>{{ include('partials/_webp_source.html.twig', { srcset: asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') }) }}
+                    <img src="{{ asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') }}" alt="A Lumen Forma {{ (items|first).sizeName }} lamp hand cast in liquid stone" class="w-full aspect-[4/3] object-cover" style="object-position: {{ photo.position }}"></picture>
                 {% else %}
                     <div class="relative w-full aspect-[4/3]">{{ include('partials/_image_coming_soon.html.twig', { title: items|length == 1 ? items[0].sizeName : '' }) }}</div>
                 {% endif %}

@@ -180,6 +180,11 @@ export default class extends Controller {
 
     loadImage(photo) {
         if (photo && photo.dataset.src) {
+            // Its WebP twin first (the speed pass), so the browser picks it.
+            photo.closest('picture')?.querySelectorAll('source[data-srcset]').forEach((source) => {
+                source.srcset = source.dataset.srcset;
+                delete source.dataset.srcset;
+            });
             photo.srcset = photo.dataset.srcset;
             photo.src = photo.dataset.src;
             delete photo.dataset.src;
@@ -866,7 +871,7 @@ export default class extends Controller {
         const pad = (v) => String(v).padStart(2, '0');
         gallery.querySelector('[data-gallery-count]').textContent = `${pad(this.photoIndex + 1)} / ${pad(n)}`;
 
-        const imgs = track.children;
+        const imgs = track.querySelectorAll('img');
         [this.slot - 1, this.slot, this.slot + 1].forEach((k) => this.loadImage(imgs[k]));
     }
 

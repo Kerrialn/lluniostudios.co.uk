@@ -5,8 +5,9 @@
 #}
 {% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
 {% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
+<picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, sizes: '100vw', lazy: not eager|default(false) }) }}
 <img {% if eager|default(false) %}src="{{ src }}" srcset="{{ srcset }}"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
      sizes="100vw" alt="{{ alt }}" draggable="false"
      class="ll-cfg-img select-none {{ class|default('') }}"
      style="--pos: {{ photo.position }}; --fit-up: {{ photo.upright.fit }}; --pos-up: {{ photo.upright.position }}; --fit-side: {{ photo.sideways.fit }}; --pos-side: {{ photo.sideways.position }}"
-     {{ attrs|default('')|raw }}>
+     {{ attrs|default('')|raw }}></picture>

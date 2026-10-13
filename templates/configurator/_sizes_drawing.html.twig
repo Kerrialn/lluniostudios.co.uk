@@ -13,7 +13,7 @@
     { name: 'Monument', size: '45 × 200 cm', width: '45 cm', height: '200 cm', x: 1331, hx: 1200, top: 88 },
 ] %}
 <div class="ll-story-drawing {{ class|default('') }}" role="img" aria-label="Drawing of the five Lumen Forma sizes with dimensions: Studio 15 × 40 cm, Gallery 22 × 60 cm, Atelier 30 × 90 cm, Estate 38 × 140 cm, Monument 45 × 200 cm"{{ attrs|default('')|raw }}>
-    <div class="ll-story-drawing-art" aria-hidden="true" style="--drawing: url('{{ asset('images/lumen-forma/sizes-drawing.png') }}')"></div>
+    <div class="ll-story-drawing-art" aria-hidden="true" style="--drawing: url('{{ asset('images/lumen-forma/sizes-drawing.png') }}'); --drawing-webp: url('{{ asset('images/lumen-forma/sizes-drawing.webp') }}')"></div>
     {% for c in columns %}
         <span class="ll-story-label ll-story-label-width" aria-hidden="true" style="left: {{ (c.x / 15.36)|round(2) }}%; top: 80.66%">{{ c.width }}</span>
         <span class="ll-story-label ll-story-label-name" aria-hidden="true" style="left: {{ (c.x / 15.36)|round(2) }}%; top: 85.16%">{{ c.name|upper }}</span>

@@ -154,6 +154,11 @@
     transition: color .3s ease, filter .3s ease, text-shadow .3s ease;
 }
 
+/* The speed pass (13 October 2026): images are wrapped in <picture> to offer
+   WebP with the JPEG as fallback; the wrapper takes no part in layout, so each
+   image lays out exactly as it did without it. */
+picture { display: contents; }
+
 /* The logo is drawn in the current text colour through a mask of the logo. */
 .nav-logo-mask {
     display: inline-flex;
@@ -752,6 +757,12 @@
     background-color: currentColor;
     -webkit-mask: var(--drawing) center / 100% 100% no-repeat;
     mask: var(--drawing) center / 100% 100% no-repeat;
+}
+/* The same drawing as lossless WebP (a third of the size, identical
+   transparency) where the browser understands the modern syntax; older ones
+   keep the PNG above (the speed pass, 13 October 2026). */
+@supports (mask-image: image-set(url("a.webp") type("image/webp"))) {
+    .ll-story-drawing-art { -webkit-mask-image: var(--drawing-webp); mask-image: var(--drawing-webp); }
 }
 .ll-story-label {
     position: absolute;

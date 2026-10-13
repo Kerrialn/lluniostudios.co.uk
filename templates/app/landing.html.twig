@@ -52,6 +52,7 @@
                     srcset="{{ asset('images/home/hero-' ~ name ~ '-portrait-1080.jpg') }} 1080w, {{ asset('images/home/hero-' ~ name ~ '-portrait-2160.jpg') }} 2160w"
                     sizes="100vw">
         {% endif %}
+        {{ include('partials/_webp_source.html.twig', { srcset: asset('images/home/hero-' ~ name ~ '-1280.jpg') ~ ' 1280w, ' ~ asset('images/home/hero-' ~ name ~ '-2560.jpg') ~ ' 2560w', sizes: 'min(100vw, 134vh)' }) }}
         <img src="{{ asset('images/home/hero-' ~ name ~ '-2560.jpg') }}"
              srcset="{{ asset('images/home/hero-' ~ name ~ '-1280.jpg') }} 1280w, {{ asset('images/home/hero-' ~ name ~ '-2560.jpg') }} 2560w"
              sizes="min(100vw, 134vh)" alt="{{ alt }}" {{ alt ? '' : 'aria-hidden="true"' }} draggable="false"

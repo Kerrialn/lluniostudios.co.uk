@@ -19,15 +19,17 @@
     {# Origin story slideshow: real photos and videos of making the first lamp.
        TODO: swap origin-06.mp4 for the clean version without the "link in bio"
        caption once supplied. #}
+    {# Each photo at its full size (1600px tall) and a 1000px version, each also
+       as WebP (the speed pass, 13 October 2026); widths in pixels for srcset. #}
     {% set originMedia = [
-        { src: 'images/workshop/origin-01.jpg' },
-        { src: 'images/workshop/origin-02.jpg' },
-        { src: 'images/workshop/origin-03.jpg' },
-        { src: 'images/workshop/origin-04.jpg' },
-        { src: 'images/workshop/origin-05.jpg' },
+        { src: 'images/workshop/origin-01.jpg', small: 'images/workshop/origin-01-1000.jpg', width: 900, smallWidth: 562 },
+        { src: 'images/workshop/origin-02.jpg', small: 'images/workshop/origin-02-1000.jpg', width: 1200, smallWidth: 750 },
+        { src: 'images/workshop/origin-03.jpg', small: 'images/workshop/origin-03-1000.jpg', width: 1200, smallWidth: 750 },
+        { src: 'images/workshop/origin-04.jpg', small: 'images/workshop/origin-04-1000.jpg', width: 1200, smallWidth: 750 },
+        { src: 'images/workshop/origin-05.jpg', small: 'images/workshop/origin-05-1000.jpg', width: 1200, smallWidth: 750 },
         { src: 'videos/workshop/origin-06.mp4', video: true },
         { src: 'videos/workshop/origin-07.mp4', video: true },
-        { src: 'images/workshop/origin-08.jpg' },
+        { src: 'images/workshop/origin-08.jpg', small: 'images/workshop/origin-08-1000.jpg', width: 1200, smallWidth: 750 },
     ] %}
 
     {#
@@ -84,8 +86,14 @@
                             <video src="{{ asset(item.src) }}" muted playsinline preload="metadata" class="w-full h-full object-contain"
                                    aria-label="The first lamp being made, {{ loop.index }} of {{ loop.length }}"></video>
                         {% else %}
-                            <img src="{{ asset(item.src) }}" alt="The first lamp being made, {{ loop.index }} of {{ loop.length }}"
-                                 class="w-full h-full object-contain" draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
+                            {# The first photo loads when it comes into view; the slideshow loads
+                               each of the others one slide ahead (the speed pass). #}
+                            {% set srcset = asset(item.small) ~ ' ' ~ item.smallWidth ~ 'w, ' ~ asset(item.src) ~ ' ' ~ item.width ~ 'w' %}
+                            {% set sizes = '(min-width: 1300px) 600px, (min-width: 700px) 50vw, 100vw' %}
+                            <picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, sizes: sizes, lazy: not loop.first }) }}
+                            <img {% if loop.first %}src="{{ asset(item.small) }}" srcset="{{ srcset }}" loading="lazy"{% else %}data-src="{{ asset(item.small) }}" data-srcset="{{ srcset }}"{% endif %}
+                                 sizes="{{ sizes }}" alt="The first lamp being made, {{ loop.index }} of {{ loop.length }}"
+                                 class="w-full h-full object-contain" draggable="false"></picture>
                         {% endif %}
                     </div>
                 {% endfor %}

@@ -79,11 +79,12 @@
                     {% for photo in idlePhotos %}
                         {% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
                         {% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
+                        <picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, sizes: '100vw', lazy: not loop.first }) }}
                         <img {% if loop.first %}src="{{ src }}" srcset="{{ srcset }}" fetchpriority="high"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
                              sizes="100vw" alt="A Lumen Forma Gallery lamp hand cast in liquid stone, photo {{ loop.index }} of {{ loop.length }}" draggable="false"
                              class="ll-cfg-img absolute inset-0 w-full h-full select-none transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}"
                              style="--pos: {{ photo.position }}; --fit-up: {{ photo.upright.fit }}; --pos-up: {{ photo.upright.position }}; --fit-side: {{ photo.sideways.fit }}; --pos-side: {{ photo.sideways.position }}"
-                             data-configurator-target="idle" data-light-wide="{{ photo.lightWide ? 1 : 0 }}" data-light-narrow="{{ photo.lightNarrow ? 1 : 0 }}" data-light-sideways="{{ photo.lightSideways ? 1 : 0 }}">
+                             data-configurator-target="idle" data-light-wide="{{ photo.lightWide ? 1 : 0 }}" data-light-narrow="{{ photo.lightNarrow ? 1 : 0 }}" data-light-sideways="{{ photo.lightSideways ? 1 : 0 }}"></picture>
                     {% endfor %}
                     </div>
                     {# The hidden lines give the title the same left edge and indent as the
@@ -106,11 +107,13 @@
 
                 <div class="ll-story-photo" data-lumen-story-target="photo">
                     <div class="ll-story-frame">
+                        <picture>{{ include('partials/_webp_source.html.twig', { srcset: asset('images/lumen-forma/story-dim-1000.jpg') ~ ' 1000w, ' ~ asset('images/lumen-forma/story-dim-2000.jpg') ~ ' 2000w', sizes: '(max-width: 899px) and (orientation: portrait) 180vw, 134vh' }) }}
                         <img src="{{ asset('images/lumen-forma/story-dim-2000.jpg') }}" srcset="{{ asset('images/lumen-forma/story-dim-1000.jpg') }} 1000w, {{ asset('images/lumen-forma/story-dim-2000.jpg') }} 2000w"
-                             sizes="(max-width: 899px) and (orientation: portrait) 180vw, 134vh" loading="lazy" alt="Lumen Forma lamp, its bulb brightening as you scroll" draggable="false">
+                             sizes="(max-width: 899px) and (orientation: portrait) 180vw, 134vh" loading="lazy" alt="Lumen Forma lamp, its bulb brightening as you scroll" draggable="false"></picture>
+                        <picture>{{ include('partials/_webp_source.html.twig', { srcset: asset('images/lumen-forma/story-lit-1000.jpg') ~ ' 1000w, ' ~ asset('images/lumen-forma/story-lit-2000.jpg') ~ ' 2000w', sizes: '(max-width: 899px) and (orientation: portrait) 180vw, 134vh' }) }}
                         <img src="{{ asset('images/lumen-forma/story-lit-2000.jpg') }}" srcset="{{ asset('images/lumen-forma/story-lit-1000.jpg') }} 1000w, {{ asset('images/lumen-forma/story-lit-2000.jpg') }} 2000w"
                              sizes="(max-width: 899px) and (orientation: portrait) 180vw, 134vh" loading="lazy" alt="" aria-hidden="true" draggable="false"
-                             class="ll-story-lit" data-lumen-story-target="lit">
+                             class="ll-story-lit" data-lumen-story-target="lit"></picture>
                     </div>
                 </div>
 

@@ -42,10 +42,14 @@
     <section class="ll-reveal-hero relative overflow-hidden bg-[#1c1813]" {{ stimulus_controller('slideshow') }}>
         {% for photo in heroPhotos %}
             <div class="absolute inset-0 transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}" data-slideshow-target="slide">
-                <img src="{{ asset('images/commissions/' ~ photo.file ~ '-1000.jpg') }}"
-                     srcset="{{ asset('images/commissions/' ~ photo.file ~ '-1000.jpg') }} 1000w, {{ asset('images/commissions/' ~ photo.file ~ '-2000.jpg') }} 2000w"
+                {# The first photo loads with the page; the slideshow loads each of the
+                   others one slide ahead (slideshow_controller.js; the speed pass). #}
+                {% set src = asset('images/commissions/' ~ photo.file ~ '-1000.jpg') %}
+                {% set srcset = src ~ ' 1000w, ' ~ asset('images/commissions/' ~ photo.file ~ '-2000.jpg') ~ ' 2000w' %}
+                <picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, sizes: '100vw', lazy: not loop.first }) }}
+                <img {% if loop.first %}src="{{ src }}" srcset="{{ srcset }}" fetchpriority="high"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
                      sizes="100vw" alt="A lamp hand cast in liquid stone by Llunio Studios, photo {{ loop.index }} of {{ loop.length }}" class="w-full h-full object-cover select-none" style="object-position: {{ photo.position }}"
-                     draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
+                     draggable="false"></picture>
             </div>
         {% endfor %}
 

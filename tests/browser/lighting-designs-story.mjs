@@ -96,7 +96,7 @@ try {
         if (n === 4 && !phone) {
             const d = await ev(`(() => { const d = document.querySelector('.ll-story-drawing-inline'); const r = d.getBoundingClientRect(); const labels = [...d.querySelectorAll('.ll-story-label')]; const art = getComputedStyle(d.querySelector('.ll-story-drawing-art'));
                 return { width: Math.round(r.width), want: Math.round(Math.min(d.parentElement.getBoundingClientRect().width, innerHeight * 0.52 * 1.5)), labels: labels.length, colours: [...new Set([art.backgroundColor, ...labels.map(l => getComputedStyle(l).color)])].join(),
-                    font: labels.every(l => /Special Elite/.test(getComputedStyle(l).fontFamily)), mask: /sizes-drawing\.png/.test(art.maskImage || art.webkitMaskImage),
+                    font: labels.every(l => /Special Elite/.test(getComputedStyle(l).fontFamily)), mask: /sizes-drawing\.(png|webp)/.test(art.maskImage || art.webkitMaskImage),
                     inside: labels.every(l => { const q = l.getBoundingClientRect(); return q.left >= r.left - 2 && q.right <= r.right + 2 && q.top >= r.top && q.bottom <= r.bottom + 2; }), text: labels.map(l => l.textContent).join('|'),
                     order: [...d.parentElement.parentElement.children].map(c => c.tagName).join() }; })()`);
             check(`The Sizes: the drawing under the header (${d.width}px, up to 52% of the screen's height), lines and its 20 Special Elite labels in #CDB98F, the labels inside it`,

@@ -1,0 +1,9 @@
+{#
+    The WebP twin of an image, for a <picture> (the speed pass, 13 October
+    2026): placed before its <img>, with the same srcset and sizes; nothing
+    when any WebP file is missing. lazy: the srcset as data-srcset, set by the
+    script that loads the photo when it is needed (configurator_controller.js,
+    slideshow_controller.js).
+#}
+{% set webp = webp_srcset(srcset) %}
+{% if webp %}<source type="image/webp" {{ lazy|default(false) ? 'data-srcset' : 'srcset' }}="{{ webp }}"{% if sizes|default(null) %} sizes="{{ sizes }}"{% endif %}>{% endif %}

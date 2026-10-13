@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, branch pushed at 7c.1 with GitHub's checks passing; 7c.4 committed, Step 7c done; working through Steps 11b, the speed pass and the Step 12 checklist while you're out; Step 7d not started, at your request).
+Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, branch pushed at 7c.1 with GitHub's checks passing; 7c.4 committed, Step 7c done; Step 11b groundwork and the speed pass done and pushed, Step 12 checklist gathered, all while you were out; Step 7d not started, at your request).
 
 ---
 
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Both branches were pushed to GitHub (`origin`, git@github.com:Kerrialn/lluniostudios.co.uk.git) as branches on 9 October 2026, at your request; `design-foundation` pushed again on 13 October 2026 at your request (up to `b75b483`, 7c.1), and again the same day (up to `ddf440b`, 7c.3): GitHub's checks passed again (tests, PHPStan, code style; Rector advisory): GitHub's checks passed (tests, PHPStan and code style; Rector reported suggestions, advisory as decided). The `gh` tool isn't installed here; the checks were read from GitHub's public API; push again with `git push origin symfony-7.4-upgrade design-foundation` when asked. Never push to `main` or merge anything unless asked.
-- **Next step (13 October 2026):** Step 7c ("Begin the Conversation"): 7c.1 (the page) is done and committed. 7c.2 (saving the enquiry as a request, its files, spam protection, admin with a Type column and filter; a migration) is done and committed. 7c.3 (the thank-you page and the two emails, signed "All the best, / Theo / @LlunioStuidos") is done and committed. 7c.4 (the quote and payment for an enquiry) is done and committed (before your hand checks, at your request). **Step 7c is done.** Then 7c.4 (quote and payment). Later 7d (the whole site in All Special Elite). The wording pass (11.5) waits until all the new pages are built. Still waiting too: you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
+- **Next step (13 October 2026, after the work done while you were out):** Step 7c is done (7c.4 committed before your hand checks). Step 11b's technical SEO groundwork and the speed pass are done and pushed; their provisional decisions are waiting for you to confirm (listed under each, and in the handover). Step 12's launch checklist is gathered (see Step 12). Step 7d waits for your trial in Claude Design. **Waiting for you:** the hand checks (7c.4, 11.4, the Custom descriptions, 11b and the speed pass), the provisional decisions, the email review (11.5) and then the wording pass, and the content in Step 12's group 1. Nothing is being built until you say what's next.
 - **The prototype (from 12 October 2026):** the folder `/Users/theonewham/Downloads/# Website Wireframing Brief` (the latest design, downloaded from Claude Design and unzipped by you on 12 October 2026; its Lighting Designs page is in Special Elite with the seven-stage story). Use it in place of the old copy, `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip` (5 October 2026), which is history now. Its Claude Design project is `896bd9c9-a4ee-4500-90b7-d3aa2b9e4b71`. In the folder:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Open it in Chrome. **Serve the folder rather than opening the file** to see the Lighting Designs sizes drawing (Chrome doesn't load its mask image from a file:// page): `cd "/Users/theonewham/Downloads/# Website Wireframing Brief" && python3 -m http.server 8765`, then http://localhost:8765/Llunio%20Site%20v4%20Unified.dc.html. `Llunio Site v4 Unified - Backup (before range page).dc.html` is the version before the new Lighting Designs page. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (all built, Steps 8, 9 and 11, with the email rules and wording decided since).
@@ -66,7 +66,8 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, bra
 | 11b | Advanced SEO: technical groundwork | Done (13 October 2026, built while you were out; provisional decisions to confirm; wording DRAFT) | see the commit "Search and link-preview groundwork (11b)" |
 | 11c | Terms & Conditions (new text) | Waiting for your text | — |
 | 11d | Privacy Policy (new page) | Waiting for your text | — |
-| 12 | Launch checks | Not started | — |
+| — | Speed pass (WebP, loading only when needed, smaller Workshop photos and menu logo) | Done (13 October 2026, built while you were out; one provisional decision) | see the commit "Speed pass" |
+| 12 | Launch checks | Checklist gathered (13 October 2026); nothing launched | — |
 
 ---
 
@@ -873,6 +874,25 @@ Added 9 October 2026. On 13 October 2026 you asked for the technical groundwork 
 - **For launch (Step 12):** the absolute addresses (canonical, previews, sitemap) come from the address the site is served on, so the live server must pass the real https domain to Symfony (trusted proxies, if behind one); submit `sitemap.xml` in Google Search Console once live.
 - No database changes. **To undo:** revert the commit.
 
+### Speed pass (done 13 October 2026, built while you were out)
+Asked for on 13 October 2026: every image resized and compressed for the web, loaded only when needed, in modern formats where supported, without changing how anything looks.
+- **WebP for every photo** (homepage, Lighting Designs, Commissions, The Workshop): each JPEG also exists as WebP, the same size, re-encoded with `cwebp` (quality 82, or 90 where needed) with all metadata removed. Pages offer it through `<picture><source type="image/webp">` with the JPEG as the fallback (`templates/partials/_webp_source.html.twig`, Twig `webp_srcset()` in `src/Twig/ImageExtension.php`, which offers WebP only when the file exists). `picture { display: contents }` keeps the wrapper out of layout, so every image lays out exactly as before; the scripts that load photos on demand also fill in the WebP source (`configurator_controller.js`, `slideshow_controller.js`).
+  - **Looks unchanged, measured:** every WebP against its JPEG, pixel by pixel in Chrome: at least 40 dB everywhere (visually indistinguishable). The 18 photos that first measured 37–40 dB were re-encoded at quality 90.
+  - **AVIF not used** (decided provisionally, Theo to confirm): at a quality that keeps the photos looking the same it was no smaller than WebP (e.g. 38 KB against 35 KB), so it would add files for no gain. Every current browser supports WebP.
+- **The sizes drawing:** a lossless WebP (627 KB → 198 KB) with exactly the same transparency (checked in every pixel; the page uses it only as a mask), offered where the browser understands the modern CSS syntax (`@supports`, `app.css`); older browsers keep the PNG.
+- **Loaded only when needed:** the Commissions hero and the Workshop origin story now load only the photo shown and the next one, as the Lighting Designs hero already did (before, all eight Commissions photos downloaded at once). The Workshop's first origin photo waits until it comes into view.
+- **Resized:** the Workshop origin photos also as 1000px-tall versions (phones get those; desktop the full 1600px); the menu logo as an 89 × 102px PNG (6 KB, three times its 34px display height, so still sharp on phones) in place of the 386 × 440px one (42 KB). Both re-saved with all metadata removed (`sips` adds a small Exif/XMP block; stripped).
+- **Measured** (`tests/browser/speed.mjs`: 390 × 844, Lighthouse's throttled mobile connection and slower processor, empty cache, first 15 seconds). Images downloaded, before → after:
+  - homepage 228 KB → 75 KB (all files 389 → 237 KB);
+  - Lighting Designs 1,021 KB → 372 KB (1,250 → 603 KB; loaded in 3.2 s, was 5.9 s);
+  - Bespoke Commissions 629 KB → 140 KB (796 → 307 KB; 2.0 s, was 4.3 s);
+  - The Workshop 1,735 KB → 700 KB (1,898 → 863 KB; 5.3 s, was 11.7 s).
+  The largest content appears in about 1.4 s on all four, as before. Screenshots at 390 × 844 and 1440 × 900 checked by eye: unchanged.
+- **Noted, not changed:** the Workshop's origin slideshow keeps cycling (and loading one photo ahead) while still hidden before the page is revealed, as before; starting it only when seen would change which photo shows first.
+- **For launch (Step 12):** the live server should send long cache lifetimes for `/images/` and `/build/` (the build files are versioned), and compress text (Caddy's `encode zstd gzip` already does).
+- Check: new `speed.mjs` (added to `run-all.mjs` with `--check`); `lighting-designs-story.mjs` accepts the drawing's mask as PNG or WebP. **Full browser run with `--clean` before committing (13 October 2026): 51 of 53 at first** (the story check still expected the PNG mask, fixed in the check; Chrome didn't start once), **then 53 of 53 passed.**
+- No database changes. **To undo:** revert the commit (the WebP files and the smaller versions can stay; nothing else uses them).
+
 ### Step 11c: Terms & Conditions (waiting for your text)
 Added 9 October 2026. Replace the current Terms & Conditions page (`/terms-and-conditions`) with the new Terms & Conditions you have drafted separately; you will provide the full text. Use it word for word (British English, "Dorset Studio", "Llunio Studios" in full), laid out as the current page. It should cover the deposit and cancellation terms for quoted orders (question 23). Nothing is built until the text arrives.
 
@@ -883,7 +903,68 @@ Added 9 October 2026. A new Privacy Policy page; you will provide the full text.
 - **Lumen Forma Technical File and Declaration of Conformity:** drafted by you (product safety paperwork for the lamps; not part of the site). To be finalised before launch: see Step 12.
 
 ### Step 12: Launch checks
-Live server upload limits matched to commissions (as `docker/php/zz-uploads.ini`: 50MB a file, 110MB a request) and the commission files folder (`var/commission-uploads/`, which also holds requests' reference photos since 10 October 2026) kept between deploys and backed up; ~~info@lluniostudios.co.uk set up and `STUDIO_EMAIL` switched back to it~~ **done 10 October 2026** (info@ forwards to lluniostudios@gmail.com; `STUDIO_EMAIL` in `.env` is info@lluniostudios.co.uk; checked in the browser checks that read it and by you on 10 October 2026; studio notifications stay with lluniostudios@gmail.com, confirmed the same day); Apple Pay and Google Pay tested by hand on the live site (Apple Pay in Safari on your iPhone, once the domain is registered with Stripe; neither can be tried locally, as Chrome marks https://localhost "Not secure" so Google Pay doesn't show, see "Testing Apple Pay and Google Pay"); T&Cs reviewed (including the deposit and cancellation terms for quoted orders); VAT revisited if registered; British English copy pass; photo audit (replace with the finely edited photos, see `CLAUDE.md`); real packed-box sizes and weights; Apple Pay domain registered in Stripe; Stripe live keys; DPD's tracking link address confirmed (Step 11.3); confirm the live server runs PHP 8.4, the same as local Docker and the GitHub checks (10 October 2026); give the live server its own APP_SECRET (never the old dev one from the repository's history); register with the ICO (needed for the Privacy Policy, Step 11d); finalise the Lumen Forma Technical File and Declaration of Conformity (drafted; product safety paperwork, not part of the site); create the Facebook page and set its link (`FACEBOOK_URL` in `.env`, a placeholder to Facebook's home page until then; the footer icon and the Contact page use it, 9 October 2026); update `CLAUDE.md` (its Authentication section describes passwords, but sign-in uses emailed codes).
+Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) from every launch item recorded in this plan and in `CLAUDE.md`. **[x]** done; **[ ]** to do, with who it's waiting for: **Theo** (you), **Kerrial** (your brother, the live server and code), or **both**. Items marked *(added 13 October 2026)* were not recorded before and are suggested.
+
+**1. Your answers and content (Theo)**
+- [ ] Care instructions for email 06 and a studio phone number for the email footers (question 18).
+- [ ] The Facebook page: create it and give its address (`FACEBOOK_URL` in `.env`; the footer, Contact page and email footers use a placeholder until then; the structured data leaves Facebook out until then).
+- [ ] The new Terms & Conditions text (Step 11c), including the deposit and cancellation terms for quoted orders (questions 17 and 23).
+- [ ] The Privacy Policy text (Step 11d).
+- [ ] Atelier weight, and packed sizes and weights for every size (questions 8 and 26), so delivery estimates are real (an Estate is currently priced as a weightless parcel).
+- [ ] Whether a Palletways account exists (question 25).
+- [ ] Photos: the finely edited replacements (Lumen Forma, Commissions hero, the story pair), photos for Studio, Atelier, Estate, Monument and the options, the two parked cable photos, real workshop photos, and the portrait homepage pair for upright phones (question 21; `CLAUDE.md`, Pending content). Each needs its WebP twin made as in the speed pass.
+- [ ] The newsletter sign-up: keep, move or remove (question 20).
+- [ ] A launch date or gift-season deadline (question 24).
+- [ ] The origin-story video without the "link in bio" caption (`origin-06.mp4`, a TODO in the Workshop template).
+- [ ] Step 7d (the whole site in All Special Elite): your trial in Claude Design first; then the decision.
+
+**2. Your checks by hand (Theo)**
+- [ ] 7c.4: an enquiry's quote, gift, payment and balance (committed before your checks, 13 October 2026).
+- [ ] 11.4: Delivered and email 06, email 05's wording, "Llunio Studios" in full, Facebook in the footers (committed before your checks).
+- [ ] The Custom descriptions and Reference photos (committed 10 October 2026), if not done yet.
+- [ ] Step 11b and the speed pass (13 October 2026): the provisional decisions listed under each.
+- [ ] The email review (11.5, `var/email-review/emails.html`), then the wording pass for every email and page, including Step 7c's and Step 11b's DRAFT wording (titles, descriptions, photo descriptions).
+
+**3. Accounts and outside services (Theo, with Kerrial where noted)**
+- [x] info@lluniostudios.co.uk set up, forwarding to lluniostudios@gmail.com; `STUDIO_EMAIL` uses it (10 October 2026).
+- [ ] Stripe: live keys on the live server (both); the live domain registered for Apple Pay (Payment method domains); a live webhook endpoint for `/webhook/stripe` with its signing secret on the server *(added 13 October 2026)* (both).
+- [ ] DPD business account: API credentials, character limits and pricing confirmed, `DpdProvider` checked against the real API, `SHIPPING_MODE=live` (see "Later, when the DPD account exists"); the Highlands and Islands postcode list confirmed; DPD's tracking link address confirmed (`https://track.dpd.co.uk/search?reference=…`, Step 11.3).
+- [ ] Register with the ICO (needed for the Privacy Policy).
+- [ ] Google Search Console: verify the domain and submit `sitemap.xml` *(added 13 October 2026)*.
+
+**4. The live server (Kerrial)**
+- [ ] PHP 8.4, as local Docker and the GitHub checks (10 October 2026).
+- [ ] Its own `APP_SECRET` (never the old development one in the repository's history).
+- [ ] Upload limits as `docker/php/zz-uploads.ini`: 50MB a file, 110MB a request, 20 files.
+- [ ] The private files folder `var/commission-uploads/` (commission files, reference photos, enquiry files) kept between deploys and backed up.
+- [ ] Database backups *(added 13 October 2026)*.
+- [ ] Sending email: a real mail service in `MAILER_DSN`, and the sender `notifications@lluniostudios.co.uk` allowed by the domain's mail records (SPF, DKIM) so emails aren't marked as spam *(added 13 October 2026)*.
+- [ ] Symfony told the real https address (trusted proxies, if behind one), so links in emails, canonical links, previews and the sitemap use the live domain (Step 11b).
+- [ ] Long cache lifetimes for `/images/` and `/build/`; text compression (Caddy's `encode zstd gzip` already does) (speed pass).
+- [ ] `APP_ENV=prod` (no debug toolbar; the live site has no blanket "noindex", the page-by-page rule applies).
+
+**5. Payments and orders, tested on the live site (both)**
+- [ ] A real card payment end to end (then refunded), a quote with a deposit and its balance.
+- [ ] Apple Pay in Safari on your iPhone and Google Pay (neither can be tried locally).
+- [ ] Every customer email arriving (inbox, not spam) with its pictures, and the studio's notifications.
+
+**6. Legal and paperwork (Theo)**
+- [ ] The Terms & Conditions reviewed (consumer law; deposit and cancellation terms for quoted orders).
+- [ ] VAT revisited if you register (quotes, order emails, receipts and the Terms would need VAT shown).
+- [ ] The Lumen Forma Technical File and Declaration of Conformity finalised (drafted; product safety).
+
+**7. Code and housekeeping (Kerrial)**
+- [x] GitHub checks on PHP 8.4, Rector advisory (10 October 2026); passing on `design-foundation` (13 October 2026).
+- [x] The repository's history checked for secrets: nothing to remove (10 October 2026).
+- [ ] Rector's suggestions (54 files on 10 October 2026): apply or not (`CLAUDE.md`, For my brother).
+- [ ] `Product::$price` typed `?int` throughout (the mapping is reported invalid; `CLAUDE.md`, For my brother).
+- [ ] `CLAUDE.md`'s Authentication section rewritten (it describes passwords; sign-in uses emailed codes).
+- [ ] Merge `design-foundation` (and `symfony-7.4-upgrade`) into `main` when you both say so.
+
+**8. Last checks before going live (both)**
+- [ ] A British English copy pass over every page and email (with the wording pass).
+- [ ] The photo audit: real photos only, the edited versions in place, nothing without its WebP twin.
+- [ ] The full browser run with `--clean` on the final code, and a click-through on a phone and a desktop.
 
 ### Later, when the DPD account exists
 Enter the DPD API credentials, confirm the character limits and pricing, check `DpdProvider` against the real API, switch `SHIPPING_MODE=live`.
