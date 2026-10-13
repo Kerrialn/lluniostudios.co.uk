@@ -11,7 +11,7 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, bra
 ## Start here (for a new session)
 
 - **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Both branches were pushed to GitHub (`origin`, git@github.com:Kerrialn/lluniostudios.co.uk.git) as branches on 9 October 2026, at your request; `design-foundation` pushed again on 13 October 2026 at your request (up to `b75b483`, 7c.1), and again the same day (up to `ddf440b`, 7c.3): GitHub's checks passed again (tests, PHPStan, code style; Rector advisory): GitHub's checks passed (tests, PHPStan and code style; Rector reported suggestions, advisory as decided). The `gh` tool isn't installed here; the checks were read from GitHub's public API; push again with `git push origin symfony-7.4-upgrade design-foundation` when asked. Never push to `main` or merge anything unless asked.
-- **Next step (13 October 2026, after the work done while you were out):** Step 7c is done (7c.4 committed before your hand checks). Step 11b's technical SEO groundwork and the speed pass are done and pushed; their provisional decisions were answered on 13 October 2026 (robots.txt blocks admin only; the full address in the structured data; the rest confirmed). Step 12's launch checklist is gathered (see Step 12). Step 7d (the whole site in All Special Elite) is built and pushed (13 October 2026); its six provisional decisions were confirmed the same day; your hand checks are waiting. **Waiting for you:** the hand checks (7c.4, 11.4, the Custom descriptions, 11b and the speed pass), the email review (11.5) and then the wording pass, and the content in Step 12's group 1. Nothing is being built until you say what's next.
+- **Next step (13 October 2026, after the work done while you were out):** Step 7c is done (7c.4 committed before your hand checks). Step 11b's technical SEO groundwork and the speed pass are done and pushed; their provisional decisions were answered on 13 October 2026 (robots.txt blocks admin only; the full address in the structured data; the rest confirmed). Step 12's launch checklist is gathered (see Step 12). Step 7d (the whole site in All Special Elite) is built and pushed (13 October 2026); its six provisional decisions were confirmed the same day; your hand checks are waiting. **Waiting for you:** the hand checks (one checklist, page by page, just before Step 12), the email review (11.5) and then the wording pass, and the content in Step 12's group 1. Nothing is being built until you say what's next.
 - **The prototype (from 12 October 2026):** the folder `/Users/theonewham/Downloads/# Website Wireframing Brief` (the latest design, downloaded from Claude Design and unzipped by you on 12 October 2026; its Lighting Designs page is in Special Elite with the seven-stage story). Use it in place of the old copy, `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip` (5 October 2026), which is history now. Its Claude Design project is `896bd9c9-a4ee-4500-90b7-d3aa2b9e4b71`. In the folder:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Open it in Chrome. **Serve the folder rather than opening the file** to see the Lighting Designs sizes drawing (Chrome doesn't load its mask image from a file:// page): `cd "/Users/theonewham/Downloads/# Website Wireframing Brief" && python3 -m http.server 8765`, then http://localhost:8765/Llunio%20Site%20v4%20Unified.dc.html. `Llunio Site v4 Unified - Backup (before range page).dc.html` is the version before the new Lighting Designs page. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (all built, Steps 8, 9 and 11, with the email rules and wording decided since).
@@ -953,6 +953,101 @@ Added 9 October 2026. A new Privacy Policy page; you will provide the full text.
 ### Outside the site (recorded 9 October 2026)
 - **Lumen Forma Technical File and Declaration of Conformity:** drafted by you (product safety paperwork for the lamps; not part of the site). To be finalised before launch: see Step 12.
 
+### Hand checks: one checklist, page by page (gathered 13 October 2026)
+Everything still waiting for your checks by hand, from Step 7d (All Special Elite), 7c.4 (an enquiry's quote and payment), 11.4 (Delivered and email 06), the Custom descriptions and Reference photos, Step 11b (search groundwork) and the speed pass, **grouped by page** with duplicates removed. Left out because later changes replaced them: the speed pass's "the four main pages look the same" (7d changed every page's font since; the photos are checked under each page instead) and 11b's provisional decisions (answered 13 October 2026). Link previews can only be tried on the live site, so they are in Step 12.
+
+Tick each box as you go. "Desktop" means a window about 1440px wide; "phone" means your phone, or Chrome's phone view (about 390 × 844). The site is at https://localhost; emails arrive in Mailpit, http://localhost:52374.
+
+**Before you start**
+- [ ] `docker compose up -d`, then open https://localhost.
+- [ ] For admin, sign in at https://localhost/admin as lluniostudios@gmail.com (the code arrives in Mailpit).
+- [ ] For payments, use Stripe's test card 4242 4242 4242 4242, any future date, any three digits.
+
+**1. Homepage: https://localhost/**
+- [ ] Desktop: "HAND CAST INDIVIDUALLY UNIQUE LIQUID STONE SCULPTURES" in the typewriter face, uppercase and letter-spaced, beside the lamp; both buttons uppercase; the photo sharp; the bulb dimmer still works (scroll over the bulb).
+- [ ] Phone: the heading and both buttons easy to read (nothing tiny), all of the text above the bulb, nothing cut off at the right.
+- [ ] A tablet-width window (about 760px): the heading on five lines is fine.
+
+**2. Lighting Designs, the introduction: https://localhost/lighting-designs**
+- [ ] Desktop and phone: the introduction looks as it did (it was already in Special Elite); scroll through all seven stages; the photos are sharp.
+- [ ] Press "Skip to configurator →": the configurator opens.
+
+**3. Lighting Designs, the configurator (same address, after "Skip to configurator")**
+- [ ] Desktop and phone: go through all six stages to the review. Nothing is cut off in the panel; the stage numbers, option names and labels are readable; "← BACK" and "NEXT →" are uppercase; the photos are sharp.
+- [ ] **Custom descriptions:** on The Pigment choose "Custom": a box appears under the list, "Describe the colour you have in mind", with the line "You can upload reference photos when you reserve your design, …" under it. Press Next with the box empty: "Please describe the colour you have in mind to continue." Type a description, press Next: it moves on. The same on The Cable, The Footing and The Light with their own wording.
+- [ ] **Customise individually** with two lamps, a Custom choice on Lamp 2 only: Lamp 2's box keeps its own text.
+- [ ] **The review** (stage 06): each description shows under its Custom choice; the button is "Reserve Your Design".
+
+**4. Lighting Designs, "Discuss a Larger Piece" (from the end of the introduction, or the line under The Scale)**
+- [ ] Desktop and phone: Atelier, Estate and Monument; choose Estate and quantity 3: the note under it is only "Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually." (no 3-or-more line); on the phone the panel reaches the top of the screen.
+- [ ] Press "Begin the Conversation" (next section).
+
+**5. Begin the Conversation: https://localhost/begin-the-conversation (reached from the larger-piece step) and "Enquiry Received"**
+- [ ] Desktop: the heading "BEGIN THE CONVERSATION" in the same place as Contact's (section 9), "← Lumen Forma" on its right, the intro under the thin line, the form in a narrow column on the left; "EMAIL / PHONE / VIDEO CALL" uppercase.
+- [ ] Phone: "← Lumen Forma" under the title, then the line, then the intro.
+- [ ] Send an enquiry: "Enquiry Received" with "Thank you. I'll be in touch …"; its heading in the same place as the other pages'.
+- [ ] Press the browser's Back button: the form is empty.
+
+**6. Reserve Your Design: https://localhost/reserve (from the configurator's review with a Custom choice) and "Reservation Received"**
+- [ ] Desktop and phone: the heading in the same place as Contact's, "← Lumen Forma" on its right (under it on a phone), the intro under the line; typed text and placeholders in the typewriter face.
+- [ ] **Custom Details** starts filled in with your descriptions ("The Pigment: …"); you can add to it.
+- [ ] **Reference photos** box under it, with its hint; choose two photos: they are listed with their sizes; a file of another type (e.g. a .docx) is refused with a message.
+- [ ] Send: "Reservation Received", its heading in the same place.
+
+**7. Bespoke Commissions: https://localhost/bespoke-commissions**
+- [ ] Desktop and phone: the staggered intro ("YOUR BESPOKE DESIGN …") fits; scroll: the tabs "FOR YOUR HOME / FOR YOUR PROJECT" uppercase; both forms; "Preferred contact" choices uppercase; the hero photos change every few seconds and are sharp.
+- [ ] Send a Home enquiry: "Commission Submitted", its heading in the same place as the other pages'.
+
+**8. The Workshop: https://localhost/workshop**
+- [ ] Desktop and phone: the intro; scroll: the story text and the origin slideshow, "← BACK / NEXT →" uppercase; the photos sharp; the videos play.
+
+**9. Contact, Terms & Conditions, Sign In: https://localhost/contact, https://localhost/terms-and-conditions, https://localhost/login**
+- [ ] Desktop and phone: flip between the three: the heading doesn't move (same size, place and gap to the thin line).
+- [ ] Contact: the Facebook link before Instagram (Facebook goes to a placeholder until the page exists).
+- [ ] Terms: the section headings small, uppercase and in the muted colour.
+
+**10. Basket, Card Payment, Order Confirmed: https://localhost/basket, https://localhost/checkout**
+- [ ] Add a Gallery lamp from the configurator ("Cast Your Lamp"). Basket on desktop and phone: the heading in the same place as Contact's, "1 LAMP" on its right, the same gap to the line.
+- [ ] Card Payment on desktop and phone: the heading in the same place; type in the fields: typed text and placeholders in the typewriter face; dropdowns readable.
+- [ ] Pay with the test card: "Order & Slot Confirmed", its heading in the same place.
+
+**11. Your Orders, an order's page, the private order page: https://localhost/account/orders, https://localhost/account/orders/LS-… (from the list), https://localhost/order/… (from "View your order" in an order email)**
+- [ ] Sign in (the "Your orders" link on Contact). Your Orders: the heading in the same place, "Sign out" on its right.
+- [ ] An order's page: the heading in the same place, the status and date and "← Your Orders" on its right.
+- [ ] The private order page (from email 06, section 13): "Delivered" with its date.
+
+**12. The quote page for an enquiry: https://localhost/quote/… (the "Pay now" link in the quote email)**
+- [ ] Set up first (section 13, admin): quote an enquiry with a gift sent directly, a 50% deposit, a casting date and a personal note, and send it.
+- [ ] Desktop and phone: "YOUR QUOTE" in the same place as the other headings, "Enquiry LR-…" on its right; under the line "Dear Ada, here is my quote for your Lumen Forma enquiry. It is valid until …", your note, then "All the best, / Theo / @LlunioStuidos".
+- [ ] The delivery name is the recipient's, her mobile and the gift message filled in, the address lines empty, the postcode filled in; another postcode is refused.
+- [ ] Pay the deposit with the test card. Later, after "Request balance" (section 13), the page offers "Pay balance £…"; pay it.
+
+**13. Admin: https://localhost/admin**
+- [ ] **Requests** (https://localhost/admin/design-request): the Type column (Reservation / Enquiry) and the Type filter.
+- [ ] **A reservation with Reference photos:** its page lists them as download links; each downloads under its own name.
+- [ ] **An enquiry's page:** "Enquiry LR-…", every detail, the board link opens in a new tab, its files download.
+- [ ] **Quote an enquiry** ("Quote" on its page): "Quote for enquiry LR-…", the Enquiry card (how to talk, their space), the **Gift** section. Tick "This is a gift" and press Save draft: "Please choose a date to continue." and "Please choose where to send it."; fill in a gift sent directly, then send the quote. After the customer pays (section 12) the Gift section is gone and the gift shows in the card.
+- [ ] **Request balance** on the enquiry's order, with a personal note.
+- [ ] **Orders** (https://localhost/admin/order), on the paid basket order from section 10: "Mark In Production", then "Mark Dispatched" (courier DPD, any tracking number), then **"Mark Delivered"**: each asks to confirm and emails the customer; the stage shows Delivered with its date.
+
+**14. Emails: Mailpit, http://localhost:52374 (and your own phone)**
+- [ ] Every email in the typewriter face; "Llunio Studios" always in full; the footers with the Facebook, Instagram and YouTube icons.
+- [ ] **The enquiry email** ("Your Lumen Forma enquiry, Ada"): the opening, then the signature "All the best, / Theo / @LlunioStuidos", then sections 01–04.
+- [ ] **The enquiry's quote email:** "Here is my quote for your Lumen Forma enquiry LR-…", your note, the signature, the gift ("Needed by … / Send directly to the recipient").
+- [ ] **The balance request:** "Here is the balance for your Lumen Forma order LS-…, from your enquiry LR-….", your note, the signature.
+- [ ] **Email 05** ("Your Lumen Forma is on its way"): "Your Lumen Forma Gallery lamp has left the studio and is on its way to you." and "Track your delivery".
+- [ ] **Email 06** ("Your Lumen Forma has arrived"): "Your Lumen Forma Gallery lamp has been delivered. We hope it's found the perfect place in your home.", the photo-sharing paragraph, "View your order".
+- [ ] **Your notifications** ("New order", "New request", "New enquiry"): the summary first; on a phone, no sideways scrolling.
+- [ ] **On real email apps:** forward or send one customer email to your iPhone (Apple Mail shows Special Elite) and one to Gmail (Courier New): both read well and fit the screen.
+
+**15. Search basics (Step 11b)**
+- [ ] Each page's browser-tab title reads well ("Llunio Studios | Sculptural lamps hand cast in liquid stone" on the homepage; "Contact | Llunio Studios" and so on). The titles and descriptions are DRAFT for the wording pass.
+- [ ] https://localhost/robots.txt shows only "Disallow: /admin" and the sitemap; https://localhost/sitemap.xml lists the six pages (homepage, Lighting Designs, Bespoke Commissions, The Workshop, Contact, Terms & Conditions).
+
+**16. Everywhere**
+- [ ] The menu at a narrow desktop width (about 900px): all four items on one line, uppercase, the current page underlined.
+- [ ] No text anywhere that looks too small to read comfortably.
+
 ### Step 12: Launch checks
 Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) from every launch item recorded in this plan and in `CLAUDE.md`. **[x]** done; **[ ]** to do, with who it's waiting for: **Theo** (you), **Kerrial** (your brother, the live server and code), or **both**. Items marked *(added 13 October 2026)* were not recorded before and are suggested.
 
@@ -970,11 +1065,9 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] Step 7d (the whole site in All Special Elite): built 13 October 2026, decisions confirmed; your hand checks.
 
 **2. Your checks by hand (Theo)**
-- [ ] 7c.4: an enquiry's quote, gift, payment and balance (committed before your checks, 13 October 2026).
-- [ ] 11.4: Delivered and email 06, email 05's wording, "Llunio Studios" in full, Facebook in the footers (committed before your checks).
-- [ ] The Custom descriptions and Reference photos (committed 10 October 2026), if not done yet.
-- [x] Step 11b and the speed pass: the provisional decisions answered (13 October 2026: robots.txt blocks admin only; the full address in the structured data; the rest confirmed).
-- [ ] Step 11b and the speed pass: the pages by hand (titles and descriptions are DRAFT; the four main pages look the same).
+- [ ] Every outstanding hand check, page by page: see "Hand checks: one checklist, page by page" just above (Step 7d, 7c.4, 11.4, the Custom descriptions and Reference photos, 11b and the speed pass; gathered 13 October 2026).
+- [x] Step 11b and the speed pass: the provisional decisions answered (13 October 2026).
+- [x] Step 7d: the six provisional decisions confirmed (13 October 2026).
 - [ ] The email review (11.5, `var/email-review/emails.html`), then the wording pass for every email and page, including Step 7c's and Step 11b's DRAFT wording (titles, descriptions, photo descriptions).
 
 **3. Accounts and outside services (Theo, with Kerrial where noted)**
@@ -1017,6 +1110,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] A British English copy pass over every page and email (with the wording pass).
 - [ ] The photo audit: real photos only, the edited versions in place, nothing without its WebP twin.
 - [ ] The full browser run with `--clean` on the final code, and a click-through on a phone and a desktop.
+- [ ] Link previews (Step 11b): paste a few page links (homepage, Lighting Designs, Bespoke Commissions, The Workshop) into WhatsApp or iMessage, and Facebook's Sharing Debugger: each shows its photo, title and description; and Google's Rich Results Test on the homepage and Lighting Designs (the business and the five sizes).
 
 ### After launch (recorded 13 October 2026; don't build yet)
 - **Simple Analytics:** add it. It's cookieless, so no consent banner should be needed, but the Privacy Policy must mention it (draft wording is ready in your Privacy Policy document).
@@ -1040,8 +1134,7 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 ## Questions still open
 
 **Waiting for you (as of 9 October 2026)**
-- Hand checks of the Custom descriptions and Reference photos, if not done yet (committed 10 October 2026 at your request).
-- Hand checks of 11.4 (Delivered, email 06, the email 05 wording, "Llunio Studios" in full, Facebook in the footers): committed before your checks, at your request.
+- The hand checks, page by page: see "Hand checks: one checklist, page by page" (gathered 13 October 2026; Step 7d, 7c.4, 11.4, the Custom descriptions and Reference photos, 11b and the speed pass).
 - The email review (11.5): what to change in each email.
 - The new Terms & Conditions text (11c) and the Privacy Policy text (11d).
 - Care instructions for email 06 and a studio phone number (question 18).
