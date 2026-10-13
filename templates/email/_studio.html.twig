@@ -14,9 +14,9 @@
 #}
 {% set f = "font-family:'Special Elite','Courier New',Courier,monospace;" %}
 {% set keyStyle = 'padding:8px 12px 8px 0;border-bottom:1px solid #3a342b;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
-{% set valueStyle = 'padding:8px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:15px;line-height:24px;color:#ece3d3;' %}
+{% set valueStyle = 'padding:8px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:15px;line-height:24px;color:#ece3d3;word-break:break-word;overflow-wrap:anywhere;' %}
 {% set summaryKey = 'padding:6px 12px 6px 0;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
-{% set summaryValue = 'padding:6px 0;' ~ f ~ 'font-weight:500;font-size:15px;line-height:24px;color:#ece3d3;' %}
+{% set summaryValue = 'padding:6px 0;' ~ f ~ 'font-weight:500;font-size:15px;line-height:24px;color:#ece3d3;word-break:break-word;overflow-wrap:anywhere;' %}
 {% macro section(name) %}
 <div style="height:32px;line-height:32px;font-size:1px;">&nbsp;</div>
 <p style="margin:0 0 8px 0;padding:12px 0 0 0;border-top:1px solid #ece3d3;font-family:'Special Elite','Courier New',Courier,monospace;font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">{{ name }}</p>
@@ -31,7 +31,8 @@
 <body style="margin:0;padding:0;background:#15120e;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#15120e" style="background:#15120e;">
 <tr><td align="center" style="padding:32px 16px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;">
+{# Full width up to 600px, so it fits a phone without scrolling sideways (13 October 2026). #}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;">
 <tr><td>
 <p style="margin:0 0 16px 0;{{ f }}font-weight:500;font-size:15px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#ece3d3;" data-studio-kind>{% block kind %}{% endblock %}</p>
 {% if neededBy|default(null) %}
