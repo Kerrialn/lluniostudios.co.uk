@@ -187,6 +187,17 @@ final class LumenFormaConfigurator
     }
 
     /**
+     * The size products in the configurator's order (for the Lighting Designs
+     * page's Product data, Step 11b).
+     *
+     * @return list<Product>
+     */
+    public function sizeProducts(): array
+    {
+        return $this->products();
+    }
+
+    /**
      * The size products in catalogue order (published or not: the
      * configurator is how they are sold).
      *

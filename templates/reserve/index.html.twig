@@ -17,6 +17,7 @@
     aren't remembered if the visitor leaves the page).
 #}
 {% block title %}Reserve Your Design | Llunio Studios{% endblock %}
+{% block description %}Reserve your Lumen Forma design with Llunio Studios. No payment is taken: the studio reviews every request and sends a quote.{% endblock %}
 {% form_theme form 'form_div_layout.html.twig' %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
@@ -90,7 +91,7 @@
 
             <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-3.5 p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
                 {% if photo %}
-                    <img src="{{ asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') }}" alt="Lumen Forma" class="w-full aspect-[4/3] object-cover" style="object-position: {{ photo.position }}">
+                    <img src="{{ asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') }}" alt="A Lumen Forma {{ (items|first).sizeName }} lamp hand cast in liquid stone" class="w-full aspect-[4/3] object-cover" style="object-position: {{ photo.position }}">
                 {% else %}
                     <div class="relative w-full aspect-[4/3]">{{ include('partials/_image_coming_soon.html.twig', { title: items|length == 1 ? items[0].sizeName : '' }) }}</div>
                 {% endif %}

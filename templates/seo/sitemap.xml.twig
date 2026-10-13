@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{# The indexable pages (SearchPages::INDEXABLE), for search engines (Step 11b). #}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{% for url in urls %}
+    <url><loc>{{ url }}</loc></url>
+{% endfor %}
+</urlset>

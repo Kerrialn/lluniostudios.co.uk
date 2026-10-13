@@ -7,6 +7,9 @@
     Choosing a tab shows its form (commission_controller.js).
 #}
 {% block title %}Bespoke Commissions | Llunio Studios{% endblock %}
+{% block description %}Bespoke lighting commissions from Llunio Studios: your own design in our signature brutalist style, hand cast in liquid stone for your home or your project.{% endblock %}
+{% block preview_image %}images/commissions/hero-01-2000.jpg{% endblock %}
+{% block preview_alt %}A lamp hand cast in liquid stone by Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
 {# Plain widgets: the page styles every field itself (the site theme's
@@ -41,7 +44,7 @@
             <div class="absolute inset-0 transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}" data-slideshow-target="slide">
                 <img src="{{ asset('images/commissions/' ~ photo.file ~ '-1000.jpg') }}"
                      srcset="{{ asset('images/commissions/' ~ photo.file ~ '-1000.jpg') }} 1000w, {{ asset('images/commissions/' ~ photo.file ~ '-2000.jpg') }} 2000w"
-                     sizes="100vw" alt="" class="w-full h-full object-cover select-none" style="object-position: {{ photo.position }}"
+                     sizes="100vw" alt="A lamp hand cast in liquid stone by Llunio Studios, photo {{ loop.index }} of {{ loop.length }}" class="w-full h-full object-cover select-none" style="object-position: {{ photo.position }}"
                      draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
             </div>
         {% endfor %}

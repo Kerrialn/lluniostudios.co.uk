@@ -63,7 +63,7 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, bra
 | 7b | Lighting Designs introduction (Special Elite, seven-stage story), 7b.1–7b.4 | Done (12 October 2026) | `1da513c` (7b.1), `e0ce2d3` (7b.2), `e1c38b0` (7b.3), `c10e5c5` (7b.4) |
 | 7c | "Begin the Conversation": an enquiry page for Atelier, Estate and Monument, 7c.1–7c.4 | Done (13 October 2026; wording DRAFT until 11.5; 7c.4 committed before your hand checks) | `b75b483` (7c.1), `d7fd5f1` (7c.2), `ddf440b` (7c.3), see the commit "Quote and pay an enquiry (7c.4)" |
 | 7d | The whole site in "All Special Elite" | Later (after 7c; recorded 12 October 2026; not started) | — |
-| 11b | Advanced SEO | Later (nothing built; outline and questions first) | — |
+| 11b | Advanced SEO: technical groundwork | Done (13 October 2026, built while you were out; provisional decisions to confirm; wording DRAFT) | see the commit "Search and link-preview groundwork (11b)" |
 | 11c | Terms & Conditions (new text) | Waiting for your text | — |
 | 11d | Privacy Policy (new page) | Waiting for your text | — |
 | 12 | Launch checks | Not started | — |
@@ -841,15 +841,37 @@ Asked for on 10 October 2026, between the 11.4 hand checks and the 11.5 wording 
 - Checks: new `configurator-custom-describe.mjs` (desktop and phone) and `reserve-photos.mjs`; `BasketRulesTest` expects the combined line; `configurator-add-to-basket.mjs`, `configurator-custom-notes.mjs`, `reserve.mjs` and `quote-pay.mjs` now fill in the description when they choose Custom (`reserve.mjs` also leaves the hidden file input out of its field measurements); `commissions.mjs` follows the shared file box; `clean-up.mjs` also removes test requests' photos.
 
 ### Step 7d (later, after 7c): the whole site in "All Special Elite" (not started)
-Recorded 12 October 2026; **don't start it yet.**
+Recorded 12 October 2026; **don't start it yet.** **13 October 2026: still not to be started: you are trying the font change in Claude Design first.**
 - Change the whole site's typography to the style used on the Lighting Designs introduction: everything in Special Elite, with titles, headers and buttons uppercase and letter-spaced.
 - It also covers the text people type into form fields on every form (inputs, text boxes, dropdowns and their placeholders), so they match (added 12 October 2026).
 - It needs a check of every page's layout, especially the homepage text beside the lamp, the staggered intros (Commissions, Workshop) and the configurator.
 - The email fonts need updating, with suitable fallbacks for email apps (web fonts often don't load in email).
 - The prototype comparisons (`tests/browser/compare/`) need updating.
 
-### Step 11b: Advanced SEO (later)
-Added 9 October 2026. Nothing is built for it yet. When we reach it: first outline in plain English what it covers, and ask any questions before building anything.
+### Step 11b: Advanced SEO: technical groundwork (built 13 October 2026 while you were out)
+Added 9 October 2026. On 13 October 2026 you asked for the technical groundwork only, built without you; your decisions were taken provisionally (marked below). **All titles, descriptions and photo descriptions are DRAFT for the wording pass (11.5).**
+
+**As built:**
+- **Which pages search engines may show** (`src/Seo/SearchPages.php`): the homepage, Lighting Designs, Bespoke Commissions, The Workshop, Contact and Terms & Conditions. Only these have a canonical link (their own address, no query) and the business data, and only these are in `sitemap.xml`. *Decided provisionally, Theo to confirm:* Reserve Your Design and "Begin the Conversation" are kept out too (they need a lamp or a piece first, and redirect without one).
+- **Every other page is kept out of search results:** `<meta name="robots" content="noindex, nofollow">` (base template) and an `X-Robots-Tag: noindex, nofollow` header (`SearchIndexingListener`) on admin, the basket, checkout, quotes, orders, the account, sign-in, the forms, every thank-you page and error pages. Pages that already sent their own header (quotes, private order pages) keep it.
+  - Symfony's own blanket "noindex" in debug mode is switched off (`disallow_search_engine_index: false` in `config/packages/framework.php`), so the local site behaves as the live one and the page-by-page rule decides.
+- **`robots.txt`** (`SeoController`): `Disallow` for /admin, /basket, /cart, /checkout, /quote/, /order/, /account, /login, /reserve, /begin-the-conversation and /bespoke-commissions/received; `Sitemap:` with the site's own address. *Decided provisionally, Theo to confirm:* those areas are both disallowed and "noindex", as you asked; search engines that obey robots.txt won't fetch them to see the "noindex", but none of them is meant to be found (the basket is linked from the menu, so it may be listed by address only, with no content).
+- **`sitemap.xml`**: the six indexable pages, with the site's own address (works on any domain).
+- **Every public page** has a unique title (the homepage's is new: "Llunio Studios | Sculptural lamps hand cast in liquid stone") and a description (DRAFT), and Open Graph and Twitter link previews (site name, en_GB, title, description, a large image card) with **a real photo** and its description (`og:image:width` / `height` from the file):
+  - homepage and every other page: the homepage's bright photo (`images/home/hero-bright-2560.jpg`);
+  - Lighting Designs: the story's lit lamp (`story-lit-2000.jpg`);
+  - Bespoke Commissions: its first hero photo (`hero-01-2000.jpg`);
+  - The Workshop: the first origin-story photo (`origin-01.jpg`).
+  *Decided provisionally, Theo to confirm:* these choices of photo (resized versions already on the site; nothing new made).
+- **Structured data** (JSON-LD, `src/Twig/SeoExtension.php`):
+  - on the six indexable pages, Llunio Studios as a **LocalBusiness**: name, description (DRAFT), the site's address, logo, a photo, email info@lluniostudios.co.uk, address Wimborne, Dorset, GB, and Instagram and YouTube (`sameAs`); **no Facebook until the page exists**. *Decided provisionally, Theo to confirm:* the address as you gave it (Wimborne, Dorset), without the street and postcode, even though the Contact page shows the full studio address.
+  - on Lighting Designs, a **Product** for each size: "Lumen Forma Studio" … "Lumen Forma Monument", brand Llunio Studios, a description with its dimensions (DRAFT), the prices read from the products: Studio £399 and Gallery £799 as an Offer, Atelier from £1,699, Estate from £3,499 and Monument from £7,999 as an AggregateOffer with that lowest price; all "made to order". **A photo only for Gallery** (real photos only; the other sizes have none yet).
+- **Alt text** on every image (DRAFT): the Gallery hero photos ("A Lumen Forma Gallery lamp hand cast in liquid stone, photo 3 of 17"), each size's configurator photos, the Commissions hero photos, Reserve's size photo and the (future) workshop photos; the story's lit lamp, layered exactly over the dim one, stays hidden from screen readers as a duplicate.
+- **Headings:** on Lighting Designs the hero's "Lumen Forma" heading (h1) came after the story's headings in the page's code; its markup now comes first (it stays on top by its stacking order, and the reduced-motion page already showed it first), so nothing looks different. Every public page: one h1, first, no skipped levels.
+- **lang="en-GB"** on every page (the maintenance page's base template said "en").
+- **Check:** new `seo.mjs` (added to `run-all.mjs`). **Full browser run with `--clean` before committing (13 October 2026): 52 of 52 passed** (the story, configurator, Commissions and Reserve checks included, after the hero's markup moved).
+- **For launch (Step 12):** the absolute addresses (canonical, previews, sitemap) come from the address the site is served on, so the live server must pass the real https domain to Symfony (trusted proxies, if behind one); submit `sitemap.xml` in Google Search Console once live.
+- No database changes. **To undo:** revert the commit.
 
 ### Step 11c: Terms & Conditions (waiting for your text)
 Added 9 October 2026. Replace the current Terms & Conditions page (`/terms-and-conditions`) with the new Terms & Conditions you have drafted separately; you will provide the full text. Use it word for word (British English, "Dorset Studio", "Llunio Studios" in full), laid out as the current page. It should cover the deposit and cancellation terms for quoted orders (question 23). Nothing is built until the text arrives.

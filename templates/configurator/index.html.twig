@@ -23,6 +23,10 @@
     No footer on this page, as in the prototype.
 #}
 {% block title %}Lighting Designs | Llunio Studios{% endblock %}
+{% block description %}Configure a Lumen Forma lamp, hand cast in liquid stone in our Dorset Studio. Five sizes, from Studio to Monument: Studio and Gallery to order here, larger pieces made in conversation.{% endblock %}
+{% block preview_image %}images/lumen-forma/story-lit-2000.jpg{% endblock %}
+{% block preview_alt %}A Lumen Forma lamp, fully lit, hand cast in liquid stone{% endblock %}
+{% block structured_data %}<script type="application/ld+json">{{ seo_products()|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}</script>{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 {% block footer %}{% endblock %}
 
@@ -64,6 +68,42 @@
                 <span class="ll-story-snap ll-story-snap-phone" style="top: {{ (at / 11 * 1573)|round(2) }}vh" aria-hidden="true"></span>
             {% endfor %}
             <div class="ll-story-pin">
+                {# The hero (first, so its "Lumen Forma" heading comes before the story's
+                   headings, Step 11b; it stays on top by its z-index): the Gallery photos cross-fading behind the title (the
+                   configurator's idle photos and title colours), until the first
+                   scroll; then it fades onto the pinned lamp. #}
+                <div class="ll-story-hero">
+                    {# Only the first photo loads with the page; the controller loads each
+                       of the others one photo ahead of the cross-fade. #}
+                    <div class="absolute inset-0" data-configurator-target="idleLayer">
+                    {% for photo in idlePhotos %}
+                        {% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
+                        {% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
+                        <img {% if loop.first %}src="{{ src }}" srcset="{{ srcset }}" fetchpriority="high"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
+                             sizes="100vw" alt="A Lumen Forma Gallery lamp hand cast in liquid stone, photo {{ loop.index }} of {{ loop.length }}" draggable="false"
+                             class="ll-cfg-img absolute inset-0 w-full h-full select-none transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}"
+                             style="--pos: {{ photo.position }}; --fit-up: {{ photo.upright.fit }}; --pos-up: {{ photo.upright.position }}; --fit-side: {{ photo.sideways.fit }}; --pos-side: {{ photo.sideways.position }}"
+                             data-configurator-target="idle" data-light-wide="{{ photo.lightWide ? 1 : 0 }}" data-light-narrow="{{ photo.lightNarrow ? 1 : 0 }}" data-light-sideways="{{ photo.lightSideways ? 1 : 0 }}">
+                    {% endfor %}
+                    </div>
+                    {# The hidden lines give the title the same left edge and indent as the
+                       Commissions intro (as on the Workshop page). #}
+                    <div class="ll-cfg-hero absolute inset-x-0 top-[18%] min-[900px]:top-[22%] flex flex-col items-center min-[900px]:items-end gap-[18px] px-[clamp(20px,5vw,88px)] pointer-events-none" data-configurator-target="hero">
+                        <div class="w-max max-w-full flex flex-col gap-[18px]">
+                            <div aria-hidden="true" class="h-0 overflow-hidden invisible flex flex-col items-start font-archivo font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
+                                <span class="block whitespace-nowrap text-[30.3px] pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Your bespoke design</span>
+                                <span class="block whitespace-nowrap text-[30.3px]">in our signature brutalist style,</span>
+                                <span class="block whitespace-nowrap text-[30.3px] pl-[calc(2.8*30.3px)] min-[900px]:pl-[calc(7*30.3px)]">custom‑built for you.</span>
+                            </div>
+                            <h1 class="ll-story-title -mt-[18px] flex flex-col items-start">
+                                <span class="block whitespace-nowrap pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Lumen Forma</span>
+                            </h1>
+                        </div>
+                    </div>
+                    {# Sideways phones: bottom-left, over the dark surround of the whole-lamp photos. #}
+                    <div class="ll-cfg-hero ll-story-cue" aria-hidden="true" data-configurator-target="hero">Scroll to begin</div>
+                </div>
+
                 <div class="ll-story-photo" data-lumen-story-target="photo">
                     <div class="ll-story-frame">
                         <img src="{{ asset('images/lumen-forma/story-dim-2000.jpg') }}" srcset="{{ asset('images/lumen-forma/story-dim-1000.jpg') }} 1000w, {{ asset('images/lumen-forma/story-dim-2000.jpg') }} 2000w"
@@ -121,40 +161,6 @@
                     <span class="opacity-50">/ 07</span>
                 </div>
 
-                {# The hero: the Gallery photos cross-fading behind the title (the
-                   configurator's idle photos and title colours), until the first
-                   scroll; then it fades onto the pinned lamp. #}
-                <div class="ll-story-hero">
-                    {# Only the first photo loads with the page; the controller loads each
-                       of the others one photo ahead of the cross-fade. #}
-                    <div class="absolute inset-0" data-configurator-target="idleLayer">
-                    {% for photo in idlePhotos %}
-                        {% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
-                        {% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
-                        <img {% if loop.first %}src="{{ src }}" srcset="{{ srcset }}" fetchpriority="high"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
-                             sizes="100vw" alt="Lumen Forma" draggable="false"
-                             class="ll-cfg-img absolute inset-0 w-full h-full select-none transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}"
-                             style="--pos: {{ photo.position }}; --fit-up: {{ photo.upright.fit }}; --pos-up: {{ photo.upright.position }}; --fit-side: {{ photo.sideways.fit }}; --pos-side: {{ photo.sideways.position }}"
-                             data-configurator-target="idle" data-light-wide="{{ photo.lightWide ? 1 : 0 }}" data-light-narrow="{{ photo.lightNarrow ? 1 : 0 }}" data-light-sideways="{{ photo.lightSideways ? 1 : 0 }}">
-                    {% endfor %}
-                    </div>
-                    {# The hidden lines give the title the same left edge and indent as the
-                       Commissions intro (as on the Workshop page). #}
-                    <div class="ll-cfg-hero absolute inset-x-0 top-[18%] min-[900px]:top-[22%] flex flex-col items-center min-[900px]:items-end gap-[18px] px-[clamp(20px,5vw,88px)] pointer-events-none" data-configurator-target="hero">
-                        <div class="w-max max-w-full flex flex-col gap-[18px]">
-                            <div aria-hidden="true" class="h-0 overflow-hidden invisible flex flex-col items-start font-archivo font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
-                                <span class="block whitespace-nowrap text-[30.3px] pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Your bespoke design</span>
-                                <span class="block whitespace-nowrap text-[30.3px]">in our signature brutalist style,</span>
-                                <span class="block whitespace-nowrap text-[30.3px] pl-[calc(2.8*30.3px)] min-[900px]:pl-[calc(7*30.3px)]">custom‑built for you.</span>
-                            </div>
-                            <h1 class="ll-story-title -mt-[18px] flex flex-col items-start">
-                                <span class="block whitespace-nowrap pl-[calc(1.4*30.3px)] min-[900px]:pl-[calc(4*30.3px)]">Lumen Forma</span>
-                            </h1>
-                        </div>
-                    </div>
-                    {# Sideways phones: bottom-left, over the dark surround of the whole-lamp photos. #}
-                    <div class="ll-cfg-hero ll-story-cue" aria-hidden="true" data-configurator-target="hero">Scroll to begin</div>
-                </div>
 
                 <button type="button" class="ll-cfg-hero ll-story-skip" data-configurator-target="hero" data-action="configurator#openMain hero-reveal#reveal">Skip to configurator →</button>
             </div>
@@ -176,7 +182,7 @@
                          data-action="touchstart->configurator#swipeStart touchmove->configurator#swipeMove touchend->configurator#swipeEnd touchcancel->configurator#swipeEnd">
                         <div class="flex h-full" data-gallery-track>
                             {% for photo in loopPhotos %}
-                                {{ include('configurator/_photo.html.twig', { photo: photo, alt: 'Lumen Forma, ' ~ sizeName, class: 'flex-none w-full h-full' }) }}
+                                {{ include('configurator/_photo.html.twig', { photo: photo, alt: 'A Lumen Forma ' ~ sizeName ~ ' lamp hand cast in liquid stone', class: 'flex-none w-full h-full' }) }}
                             {% endfor %}
                         </div>
                         <div aria-hidden="true" class="absolute left-0 inset-y-0 w-[26%] cursor-w-resize" data-action="click->configurator#previousPhoto"></div>

@@ -1,6 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}The Workshop | Llunio Studios{% endblock %}
+{% block description %}The story of Llunio Studios: from a birthday present and a bag of cement to Lumen Forma lamps hand cast in liquid stone in our Dorset Studio.{% endblock %}
+{% block preview_image %}images/workshop/origin-01.jpg{% endblock %}
+{% block preview_alt %}The first Llunio Studios lamp being made{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
 {% block body %}
@@ -39,7 +42,7 @@
         {% if workshopPhotos is not empty %}
             {% for photo in workshopPhotos %}
                 <div class="absolute inset-0 transition-opacity duration-[1600ms] {{ loop.first ? 'opacity-100' : 'opacity-0' }}" data-slideshow-target="slide">
-                    <img src="{{ asset(photo.src) }}" alt="" class="w-full h-full object-cover grayscale select-none" draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
+                    <img src="{{ asset(photo.src) }}" alt="The Llunio Studios workshop, photo {{ loop.index }} of {{ loop.length }}" class="w-full h-full object-cover grayscale select-none" draggable="false" {{ loop.first ? '' : 'loading="lazy"' }}>
                 </div>
             {% endfor %}
         {% else %}

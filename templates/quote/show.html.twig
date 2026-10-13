@@ -17,6 +17,7 @@
 #}
 {% form_theme form 'form_div_layout.html.twig' %}
 {% block title %}Your Quote | Llunio Studios{% endblock %}
+{% block description %}Your quote from Llunio Studios for your Lumen Forma lamp.{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
 {% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}

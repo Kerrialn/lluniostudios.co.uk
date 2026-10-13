@@ -8,6 +8,7 @@
 {% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
 {% import _self as m %}
 {% block title %}Payment Received | Llunio Studios{% endblock %}
+{% block description %}Your balance payment to Llunio Studios has been received.{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
 
 {% block body %}
