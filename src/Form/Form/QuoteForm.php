@@ -5,23 +5,34 @@ declare(strict_types=1);
 namespace App\Form\Form;
 
 use App\Entity\Quote;
+use App\Enum\GiftSendTo;
 use App\Enum\QuotePayment;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
+use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
  * The quote form in admin (Step 10b.1): a price for each lamp in each
  * design, extra named lines, delivery, full payment or deposit, the
  * estimated casting date and a note. Prices in pounds, stored in pence.
+ *
+ * For an enquiry ("Begin the Conversation", Step 7c.4: the 'gift' option),
+ * a gift section, as the page no longer asks (decided 13 October 2026):
+ * the needed-by date, send to the customer or directly to the recipient,
+ * and for a direct gift the recipient's name, mobile and message. Saved on
+ * the enquiry (DesignRequest::setGift()), so it carries through the quote,
+ * the order and the emails exactly as a reservation's gift.
  */
 final class QuoteForm extends AbstractType
 {
@@ -80,6 +91,44 @@ final class QuoteForm extends AbstractType
                     'rows' => 4,
                 ],
             ]);
+
+        if ($options['gift']) {
+            $builder
+                ->add('gift', CheckboxType::class, [
+                    'required' => false,
+                ])
+                ->add('giftNeededBy', DateType::class, [
+                    'required' => false,
+                    'widget' => 'single_text',
+                    'input' => 'datetime_immutable',
+                    'invalid_message' => BasketProceedForm::NO_DATE,
+                ])
+                ->add('giftSendTo', EnumType::class, [
+                    'class' => GiftSendTo::class,
+                    'expanded' => true,
+                    'required' => false,
+                    'placeholder' => false,
+                    'choice_label' => static fn (GiftSendTo $choice): string => $choice->label(),
+                ])
+                ->add('giftRecipientName', TextType::class, [
+                    'required' => false,
+                    'constraints' => [new Assert\Length(max: CardPaymentForm::MAX['name'], maxMessage: 'Please use {{ limit }} characters or fewer.')],
+                ])
+                ->add('giftRecipientPhone', TelType::class, [
+                    'required' => false,
+                    'constraints' => [
+                        new Assert\Regex(pattern: '/^\+?[\d\s()-]{7,15}$/', message: 'Please enter a valid phone number.'),
+                    ],
+                ])
+                ->add('giftMessage', TextareaType::class, [
+                    'required' => false,
+                    'constraints' => [new Assert\Length(max: CardPaymentForm::GIFT_MESSAGE_MAX, maxMessage: 'Please use {{ limit }} characters or fewer.')],
+                    'attr' => [
+                        'rows' => 3,
+                        'maxlength' => CardPaymentForm::GIFT_MESSAGE_MAX,
+                    ],
+                ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -89,7 +138,32 @@ final class QuoteForm extends AbstractType
         // doesn't load (it was refused once a public form had been used).
         $resolver->setDefaults([
             'csrf_token_id' => 'admin_quote',
+            // An enquiry's quote: the gift section (Step 7c.4).
+            'gift' => false,
+            'constraints' => [
+                // A gift needs its date (not in the past), where to send it and, sent directly, the recipient's name.
+                new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
+                    if (! \is_array($data) || ! ($data['gift'] ?? false)) {
+                        return;
+                    }
+
+                    $neededBy = $data['giftNeededBy'] ?? null;
+                    if (! $neededBy instanceof \DateTimeInterface) {
+                        $context->buildViolation(BasketProceedForm::NO_DATE)->atPath('[giftNeededBy]')->addViolation();
+                    } elseif ($neededBy->format('Y-m-d') < (new \DateTimeImmutable('now', new \DateTimeZone('Europe/London')))->format('Y-m-d')) {
+                        $context->buildViolation("The needed-by date can't be in the past.")->atPath('[giftNeededBy]')->addViolation();
+                    }
+
+                    $sendTo = $data['giftSendTo'] ?? null;
+                    if (! $sendTo instanceof GiftSendTo) {
+                        $context->buildViolation(BasketProceedForm::NO_SEND_TO)->atPath('[giftSendTo]')->addViolation();
+                    } elseif ($sendTo->isDirect() && trim((string) ($data['giftRecipientName'] ?? '')) === '') {
+                        $context->buildViolation("Please enter the recipient's full name.")->atPath('[giftRecipientName]')->addViolation();
+                    }
+                }),
+            ],
         ]);
+        $resolver->setAllowedTypes('gift', 'bool');
     }
 
     /**
@@ -111,6 +185,13 @@ final class QuoteForm extends AbstractType
             'depositPercent' => $quote->getDepositPercent(),
             'castingDate' => $quote->getCastingDate(),
             'note' => $quote->getNote(),
+            // An enquiry's gift (Step 7c.4), from the enquiry.
+            'gift' => ($request = $quote->getDesignRequest())->isGift(),
+            'giftNeededBy' => $request->getGiftNeededBy(),
+            'giftSendTo' => $request->getGiftSendTo(),
+            'giftRecipientName' => $request->getGiftRecipientName(),
+            'giftRecipientPhone' => $request->getGiftRecipientPhone(),
+            'giftMessage' => $request->getGiftMessage(),
         ];
     }
 }

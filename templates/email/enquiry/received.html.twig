@@ -20,11 +20,7 @@
 
 {% block content %}
 <p style="{{ body }}" data-email-opening>Thank you for your enquiry about {{ piece }}. I'll be in touch {{ designRequest.talk.reachPhrase }} to talk through your space and the finishes, then send you a quote.</p>
-<div data-email-signature>
-{% for paragraph in constant('App\\Service\\EmailService::ENQUIRY_SIGNATURE')|split("\n\n") %}
-<p style="{{ body }}">{{ paragraph|nl2br }}</p>
-{% endfor %}
-</div>
+{{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Your enquiry') }}
 <p style="{{ label }}">Enquiry number</p>
 <p style="{{ body }}">{{ designRequest.requestNumber }}</p>

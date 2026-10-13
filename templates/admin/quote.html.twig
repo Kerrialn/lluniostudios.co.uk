@@ -13,10 +13,10 @@
 {% macro money(pence) %}{{ (pence / 100)|format_currency('GBP') }}{% endmacro %}
 {% import _self as m %}
 
-{% block content_title %}Quote for request {{ designRequest.requestNumber }}{% endblock %}
+{% block content_title %}Quote for {{ designRequest.isEnquiry ? 'enquiry' : 'request' }} {{ designRequest.requestNumber }}{% endblock %}
 
 {% block page_actions %}
-    <a class="btn btn-secondary" href="{{ backUrl }}">Back to the request</a>
+    <a class="btn btn-secondary" href="{{ backUrl }}">Back to the {{ designRequest.isEnquiry ? 'enquiry' : 'request' }}</a>
 {% endblock %}
 
 {% block main %}
@@ -43,7 +43,7 @@
 
     <div class="card mb-4">
         <div class="card-body">
-            <h2 class="h6 text-uppercase text-muted">Request</h2>
+            <h2 class="h6 text-uppercase text-muted">{{ designRequest.isEnquiry ? 'Enquiry' : 'Request' }}</h2>
             <div class="row">
                 <div class="col-md-6">
                     <strong>{{ designRequest.fullName }}</strong><br>
@@ -75,6 +75,11 @@
                 <div class="col-md-6">
                     {% if designRequest.accessNotes %}<p class="mb-1"><em>Site access and delivery notes:</em> {{ designRequest.accessNotes }}</p>{% endif %}
                     {% if designRequest.customDetails %}<p class="mb-1"><em>Custom details:</em> {{ designRequest.customDetails }}</p>{% endif %}
+                    {% if designRequest.isEnquiry %}
+                        {# "Begin the Conversation" (Step 7c.4): what they told you. #}
+                        <p class="mb-1" data-quote-enquiry><em>How to talk:</em> {{ designRequest.talkLabel }}{% if designRequest.bestTime %} · {{ designRequest.bestTime }}{% endif %}</p>
+                        <p class="mb-1"><em>Their space:</em> <span style="white-space: pre-line">{{ designRequest.description }}</span></p>
+                    {% endif %}
                     <p class="mb-0 text-muted">Received {{ designRequest.createdAt|date('j F Y, H:i', 'Europe/London') }}</p>
                 </div>
             </div>
@@ -142,6 +147,21 @@
             <div class="col-md-6">{{ form_row(form.payment, { label: 'The customer pays' }) }}</div>
             <div class="col-md-3">{{ form_row(form.depositPercent, { label: 'Deposit (%)', attr: { 'data-quote-deposit': '', min: 1, max: 99 } }) }}</div>
         </div>
+
+        {% if giftSection %}
+            {# An enquiry's gift (Step 7c.4): the page doesn't ask, so it is set here; carried through as a reservation's. #}
+            <h2 class="h5 mt-4">Gift</h2>
+            <div data-quote-gift-section>
+                {{ form_row(form.gift, { label: 'This is a gift' }) }}
+                <div class="row g-3">
+                    <div class="col-md-4">{{ form_row(form.giftNeededBy, { label: 'Needed by', help: 'A preferred date, not a guarantee.' }) }}</div>
+                    <div class="col-md-8">{{ form_row(form.giftSendTo, { label: 'Where to send it' }) }}</div>
+                    <div class="col-md-6">{{ form_row(form.giftRecipientName, { label: "Recipient's full name (sent directly)" }) }}</div>
+                    <div class="col-md-6">{{ form_row(form.giftRecipientPhone, { label: "Recipient's mobile (optional)" }) }}</div>
+                    <div class="col-md-12">{{ form_row(form.giftMessage, { label: 'Gift message for the card (optional)', help: 'Sent directly only. Up to 250 characters.' }) }}</div>
+                </div>
+            </div>
+        {% endif %}
 
         <h2 class="h5 mt-4">Casting and note</h2>
         <div class="row g-3">

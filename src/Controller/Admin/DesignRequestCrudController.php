@@ -7,6 +7,7 @@ namespace App\Controller\Admin;
 use App\Entity\DesignRequest;
 use App\Enum\DesignRequestStatus;
 use App\Enum\DesignRequestType;
+use App\Enum\GiftSendTo;
 use App\Enum\QuotePayment;
 use App\Form\Form\QuoteForm;
 use App\Service\QuoteDelivery;
@@ -220,11 +221,23 @@ class DesignRequestCrudController extends AbstractCrudController
         }
 
         $quote = $quotes->draftFor($designRequest);
-        $form = $this->createForm(QuoteForm::class, QuoteForm::dataFrom($quote));
+        // An enquiry's gift is set here (Step 7c.4), until the quote is paid
+        // (the order keeps the gift it was paid with).
+        $giftSection = $designRequest->isEnquiry() && $payments->paidOrder($designRequest) === null;
+        $form = $this->createForm(QuoteForm::class, QuoteForm::dataFrom($quote), [
+            'gift' => $giftSection,
+        ]);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var array{lamps: array<int, int>, extras: array<int, array{label: string, price: int}>, delivery: int, deliveryLabel: string, payment: QuotePayment, depositPercent: int, castingDate: ?\DateTimeImmutable, note: ?string} $data */
+            /** @var array{lamps: array<int, int>, extras: array<int, array{label: string, price: int}>, delivery: int, deliveryLabel: string, payment: QuotePayment, depositPercent: int, castingDate: ?\DateTimeImmutable, note: ?string, gift?: bool, giftNeededBy?: ?\DateTimeImmutable, giftSendTo?: ?GiftSendTo, giftRecipientName?: ?string, giftRecipientPhone?: ?string, giftMessage?: ?string} $data */
             $data = $form->getData();
+            if ($giftSection) {
+                $optional = static fn (?string $value): ?string => ($value = trim((string) $value)) === '' ? null : $value;
+                ($data['gift'] ?? false)
+                    ? $designRequest->setGift($data['giftNeededBy'] ?? null, $data['giftSendTo'] ?? null, $optional($data['giftRecipientName'] ?? null), $optional($data['giftMessage'] ?? null), $optional($data['giftRecipientPhone'] ?? null))
+                    : $designRequest->setGift(null);
+            }
+
             $quotes->save($quote, $data);
             if (! $request->request->has('send')) {
                 $this->addFlash('success', $quote->isSent()
@@ -262,6 +275,7 @@ class DesignRequestCrudController extends AbstractCrudController
                 'token' => $quote->getToken(),
             ]),
             'form' => $form,
+            'giftSection' => $giftSection,
             'estimate' => $delivery->estimate($designRequest),
             'backUrl' => $urls->setController(self::class)->setAction(Action::DETAIL)->setEntityId($designRequest->getId())->generateUrl(),
         ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));

@@ -31,7 +31,7 @@
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
         <div class="flex flex-col gap-3.5 max-w-[640px]">
             <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Quote</h1>
-            <p class="m-0 text-[13px] text-ll-mute">Request {{ designRequest.requestNumber }}</p>
+            <p class="m-0 text-[13px] text-ll-mute">{{ designRequest.isEnquiry ? 'Enquiry' : 'Request' }} {{ designRequest.requestNumber }}</p>
             {% if paidOrder and paidOrder.balancePaidAt %}
                 <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you. Your order {{ paidOrder.orderNumber }} is paid in full.</p>
             {% elseif paidOrder and balanceForm %}
@@ -41,9 +41,15 @@
             {% elseif expired %}
                 <p class="m-0 text-[15px] leading-[1.5]" role="alert">This quote expired on {{ validUntil|date('j F Y', 'Europe/London') }}. Please <a href="{{ path('contact') }}" class="ll-link">contact us</a> or reply to the quote email, and we'll send you an updated quote.</p>
             {% else %}
-                <p class="m-0 text-[15px] leading-[1.5] text-ll-mute">Dear {{ designRequest.firstName }}, here is our quote for your Lumen Forma request. It is valid until {{ validUntil|date('j F Y', 'Europe/London') }}.</p>
+                {# An enquiry's quote speaks as "me" and is signed (Step 7c.4, decided 13 October 2026). #}
+                <p class="m-0 text-[15px] leading-[1.5] text-ll-mute" data-quote-greeting>Dear {{ designRequest.firstName }}, here is {{ designRequest.isEnquiry ? 'my quote for your Lumen Forma enquiry' : 'our quote for your Lumen Forma request' }}. It is valid until {{ validUntil|date('j F Y', 'Europe/London') }}.</p>
             {% endif %}
             {% if quote.note and not expired %}<p class="m-0 text-[15px] leading-[1.5] whitespace-pre-line">{{ quote.note }}</p>{% endif %}
+            {% if designRequest.isEnquiry and not paidOrder and not expired %}
+                <div class="flex flex-col gap-3.5 text-[15px] leading-[1.5]" data-quote-signature>
+                    {% for paragraph in constant('App\\Service\\EmailService::ENQUIRY_SIGNATURE')|split("\n\n") %}<p class="m-0 whitespace-pre-line">{{ paragraph }}</p>{% endfor %}
+                </div>
+            {% endif %}
         </div>
 
         {% if balanceForm %}

@@ -1,0 +1,11 @@
+{#
+    The signature on the emails that speak as "me" (EmailService::ENQUIRY_SIGNATURE,
+    exactly as confirmed 13 October 2026): the enquiry email, and for an enquiry the
+    quote and the balance request (Step 7c.4). Straight after the opening (and any
+    personal note), before the numbered sections. Needs the layout's body style.
+#}
+<div data-email-signature>
+{% for paragraph in constant('App\\Service\\EmailService::ENQUIRY_SIGNATURE')|split("\n\n") %}
+<p style="{{ body }}">{{ paragraph|nl2br }}</p>
+{% endfor %}
+</div>

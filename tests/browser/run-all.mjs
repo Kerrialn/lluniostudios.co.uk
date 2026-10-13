@@ -56,6 +56,7 @@ const CHECKS = [
     ['quote-send.mjs'],
     ['quote-pay.mjs'],
     ['quote-balance.mjs'],
+    ['quote-enquiry.mjs'],
     ['order-emails.mjs'],
     ['gift-options.mjs'],
     ['order-stages.mjs'],
