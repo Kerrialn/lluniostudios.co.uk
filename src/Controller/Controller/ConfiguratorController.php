@@ -180,7 +180,7 @@ final class ConfiguratorController extends AbstractController
     private function editableLine(string $id): ?CartItem
     {
         $cart = $this->cartResolver->peekCart();
-        if ('' === $id || !$cart instanceof \App\Entity\Cart) {
+        if ('' === $id || ! $cart instanceof \App\Entity\Cart) {
             return null;
         }
 

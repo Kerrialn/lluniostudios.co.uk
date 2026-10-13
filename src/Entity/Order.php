@@ -257,7 +257,7 @@ class Order implements HasReferenceNumber
      */
     public function canStartProduction(): bool
     {
-        return $this->isPlaced() && !$this->stage instanceof \App\Enum\OrderStage;
+        return $this->isPlaced() && ! $this->stage instanceof \App\Enum\OrderStage;
     }
 
     public function markInProduction(\DateTimeImmutable $expectedDispatch, CarbonImmutable $now): void
@@ -273,7 +273,7 @@ class Order implements HasReferenceNumber
      */
     public function canDispatch(): bool
     {
-        return $this->isPlaced() && (!$this->stage instanceof \App\Enum\OrderStage || $this->stage === OrderStage::IN_PRODUCTION);
+        return $this->isPlaced() && (! $this->stage instanceof \App\Enum\OrderStage || $this->stage === OrderStage::IN_PRODUCTION);
     }
 
     /**

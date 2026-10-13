@@ -167,7 +167,7 @@ class OrderItem
      */
     public function isExtra(): bool
     {
-        return !$this->product instanceof \App\Entity\Product && $this->optionsSnapshot === [];
+        return ! $this->product instanceof \App\Entity\Product && $this->optionsSnapshot === [];
     }
 
     public function getLineTotal(): int

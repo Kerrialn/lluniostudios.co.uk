@@ -96,7 +96,7 @@ class DesignRequestCrudController extends AbstractCrudController
         }
 
         $order = $payments->paidOrder($designRequest);
-        if (!$order instanceof \App\Entity\Order || ! $order->canRequestBalance()) {
+        if (! $order instanceof \App\Entity\Order || ! $order->canRequestBalance()) {
             $this->addFlash('warning', 'There is no balance to request for this request.');
 
             return $this->redirect($urls->setController(self::class)->setAction(Action::DETAIL)->setEntityId($designRequest->getId())->generateUrl());
@@ -223,7 +223,7 @@ class DesignRequestCrudController extends AbstractCrudController
         $quote = $quotes->draftFor($designRequest);
         // An enquiry's gift is set here (Step 7c.4), until the quote is paid
         // (the order keeps the gift it was paid with).
-        $giftSection = $designRequest->isEnquiry() && !$payments->paidOrder($designRequest) instanceof \App\Entity\Order;
+        $giftSection = $designRequest->isEnquiry() && ! $payments->paidOrder($designRequest) instanceof \App\Entity\Order;
         $form = $this->createForm(QuoteForm::class, QuoteForm::dataFrom($quote), [
             'gift' => $giftSection,
         ]);

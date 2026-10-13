@@ -29,7 +29,7 @@ final readonly class OrderDates
     public function castingDate(Order $order): ?\DateTimeImmutable
     {
         $request = $order->getDesignRequest();
-        if (!$request instanceof \App\Entity\DesignRequest) {
+        if (! $request instanceof \App\Entity\DesignRequest) {
             return null;
         }
 

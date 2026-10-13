@@ -42,7 +42,7 @@ final readonly class Quotes
     public function sendingProblem(Quote $quote): ?string
     {
         return match (true) {
-            !$quote->getCastingDate() instanceof \DateTimeImmutable => 'Please add the estimated casting date before sending.',
+            ! $quote->getCastingDate() instanceof \DateTimeImmutable => 'Please add the estimated casting date before sending.',
             $quote->getTotal() <= 0 => 'The total must be more than £0 before sending.',
             default => null,
         };

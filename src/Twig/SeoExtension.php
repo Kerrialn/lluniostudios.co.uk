@@ -183,6 +183,6 @@ final class SeoExtension extends AbstractExtension
     {
         $request = $this->requestStack->getMainRequest();
 
-        return !$request instanceof \Symfony\Component\HttpFoundation\Request || str_starts_with($path, 'http') ? $path : $request->getSchemeAndHttpHost() . $path;
+        return ! $request instanceof \Symfony\Component\HttpFoundation\Request || str_starts_with($path, 'http') ? $path : $request->getSchemeAndHttpHost() . $path;
     }
 }

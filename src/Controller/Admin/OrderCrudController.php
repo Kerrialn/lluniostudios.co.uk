@@ -253,7 +253,7 @@ class OrderCrudController extends AbstractCrudController
             }
 
             $typed = OrderDates::day((string) $request->request->get('expectedDispatch'));
-            if (!$typed instanceof \DateTimeImmutable) {
+            if (! $typed instanceof \DateTimeImmutable) {
                 $problem = 'Please enter the expected dispatch date.';
             } elseif ($typed < $today) {
                 $problem = 'The expected dispatch date can\'t be in the past.';

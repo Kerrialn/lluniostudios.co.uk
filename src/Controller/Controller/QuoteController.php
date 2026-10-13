@@ -244,7 +244,7 @@ final class QuoteController extends AbstractController
 
         $quote = $this->sentQuote($token);
         $order = $this->payments->paidOrder($quote->getDesignRequest());
-        if (! $order instanceof Order || ! $order->canRequestBalance() || !$order->getBalanceRequestedAt() instanceof \Carbon\CarbonImmutable) {
+        if (! $order instanceof Order || ! $order->canRequestBalance() || ! $order->getBalanceRequestedAt() instanceof \Carbon\CarbonImmutable) {
             return new JsonResponse([
                 'status' => 'redirect',
                 'url' => $this->generateUrl('quote_show', [

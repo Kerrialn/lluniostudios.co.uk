@@ -24,11 +24,13 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, bra
   - Admin sign-in is by emailed 6-digit code; the local admin is `lluniostudios@gmail.com` (the code arrives in Mailpit). Promote others with `php bin/console app:user:promote <email>`.
   - The Lumen Forma sizes are created by `php bin/console app:lumen-forma:setup` (only what is missing). They are deliberately **unpublished**: the configurator doesn't need publishing; the old product pages do, and those pages are being retired.
 - **Checks after every step:** `composer test`, `composer phpstan`, `composer check-cs` (`composer fix-cs` to fix), `php bin/console lint:twig templates`, `npm run build`. Then click through at desktop (1440) and phone (390) widths against the matching prototype screen.
-  - **Browser checks:** `node tests/browser/run-all.mjs` runs every end-to-end check (35 runs, Steps 6–11) against the local site in headless Chrome (about 25 minutes; `--clean` removes the test baskets, requests and emails afterwards). `tests/browser/compare/` measures our pages against the prototype (set `PROTOTYPE_DIR` to the unzipped brief). See `tests/browser/README.md`; add a check there for each new step.
+  - **Browser checks:** `node tests/browser/run-all.mjs` runs every end-to-end check (53 runs as of 13 October 2026) against the local site in headless Chrome (about 35 minutes; `--clean` removes the test baskets, requests and emails afterwards). `tests/browser/compare/` measures our pages against the prototype (set `PROTOTYPE_DIR` to the unzipped brief). See `tests/browser/README.md`; add a check there for each new step.
 
 ### How the work is done (standing rules)
 
 - Small steps: build one step (or sub-step), stop, say what to check, and **commit only when asked**.
+- **Which checks to run (decided 13 October 2026, replacing "the full browser run before every commit"):** for **small changes** (wording, styling, single fixes), run only the checks related to the change (with the unit tests, PHPStan and code style when code changes). Run the **full browser run with `--clean`** only after **larger changes** (new features, anything touching payments, or changes across many pages), or **at the end of a day's work**.
+- **Before committing, check `git status` and stage only this session's files** (decided 13 October 2026, after an unexpected Rector run was swept into `9237a7d`); ask about any changes that aren't ours.
 - **Never move or discard uncommitted work without asking first**: no `git stash`, `git reset`, `git checkout` / `git restore` of files, `git clean`, or any other command that sets aside, overwrites or deletes uncommitted changes. Ask before each use, even to compare against the last commit (use `git diff` or `git show` instead). Decided 7 October 2026.
 - **Match the prototype exactly**, comparing against it (screenshots and measured positions), not working from memory. Report any intended differences.
 - **Real product photography only**: never generated, mocked up or substituted, and never another size's photos. Anything without a real photo shows "Image Coming Soon" (`templates/partials/_image_coming_soon.html.twig`). No filler or stretched edges across photos. Resizing and stripping metadata (including GPS) for the web is fine; the photo list and how to replace photos are in `CLAUDE.md` (Pending content).
@@ -870,6 +872,7 @@ Added 9 October 2026. On 13 October 2026 you asked for the technical groundwork 
 - **Alt text** on every image (DRAFT): the Gallery hero photos ("A Lumen Forma Gallery lamp hand cast in liquid stone, photo 3 of 17"), each size's configurator photos, the Commissions hero photos, Reserve's size photo and the (future) workshop photos; the story's lit lamp, layered exactly over the dim one, stays hidden from screen readers as a duplicate.
 - **Headings:** on Lighting Designs the hero's "Lumen Forma" heading (h1) came after the story's headings in the page's code; its markup now comes first (it stays on top by its stacking order, and the reduced-motion page already showed it first), so nothing looks different. Every public page: one h1, first, no skipped levels.
 - **lang="en-GB"** on every page (the maintenance page's base template said "en").
+- **Rector (13 October 2026):** the 55 files changed by Rector that went into `9237a7d` were **your own Rector run, at your brother's direction, so intended** (it answers the "Rector suggestions" item in `CLAUDE.md`, For my brother). That commit failed GitHub's code-style job (Rector writes `!$x`, the house style is `! $x`); `composer fix-cs` fixed the 10 files, then the unit tests (199), PHPStan, code style, Twig lint and the key journeys' browser checks passed: checkout and card payment (page and paying, both sizes; wallets), quote paying and the balance, the configurator (page, stages, adding to the basket), the larger piece and an enquiry (page, saving, emails, its quote): **17 of 17** (13 October 2026, without the full run, at your request). See the commit "House style for the Rector run".
 - **Your answers (13 October 2026):** robots.txt blocks admin only; the structured data has the full studio address; the rest confirmed. Changed, `seo.mjs` updated (robots.txt has only `Disallow: /admin`; the address's street and postcode), full browser run with `--clean`: **53 of 53 passed**; committed as "SEO: robots.txt blocks admin only; full business address".
 - **Check:** new `seo.mjs` (added to `run-all.mjs`). **Full browser run with `--clean` before committing (13 October 2026): 52 of 52 passed** (the story, configurator, Commissions and Reserve checks included, after the hero's markup moved).
 - **For launch (Step 12):** the absolute addresses (canonical, previews, sitemap) come from the address the site is served on, so the live server must pass the real https domain to Symfony (trusted proxies, if behind one); submit `sitemap.xml` in Google Search Console once live.
@@ -895,9 +898,11 @@ Asked for on 13 October 2026: every image resized and compressed for the web, lo
 - No database changes. **To undo:** revert the commit (the WebP files and the smaller versions can stay; nothing else uses them).
 
 ### Step 11c: Terms & Conditions (waiting for your text)
+**13 October 2026:** the updated draft is ready in your documents; you will paste the text once you've reviewed it. It doesn't depend on Step 7d or the wording pass (11.5), so it can be done whenever the text arrives. Not built yet.
 Added 9 October 2026. Replace the current Terms & Conditions page (`/terms-and-conditions`) with the new Terms & Conditions you have drafted separately; you will provide the full text. Use it word for word (British English, "Dorset Studio", "Llunio Studios" in full), laid out as the current page. It should cover the deposit and cancellation terms for quoted orders (question 23). Nothing is built until the text arrives.
 
 ### Step 11d: Privacy Policy (waiting for your text)
+**13 October 2026:** the updated draft is ready in your documents (including draft wording for Simple Analytics, see "After launch"); you will paste the text once you've reviewed it. It doesn't depend on Step 7d or the wording pass (11.5). Not built yet.
 Added 9 October 2026. A new Privacy Policy page; you will provide the full text. Link it from: the site footer, the Contact page, Card Payment (checkout), the quote page, and every form that collects personal data (Reserve Your Design, both Bespoke Commissions forms, Sign In, the newsletter sign-up on the maintenance page). The Privacy Policy requires **registering with the ICO** (Information Commissioner's Office) before launch: see Step 12. Nothing is built until the text arrives.
 
 ### Outside the site (recorded 9 October 2026)
@@ -932,7 +937,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] Stripe: live keys on the live server (both); the live domain registered for Apple Pay (Payment method domains); a live webhook endpoint for `/webhook/stripe` with its signing secret on the server *(added 13 October 2026)* (both).
 - [ ] DPD business account: API credentials, character limits and pricing confirmed, `DpdProvider` checked against the real API, `SHIPPING_MODE=live` (see "Later, when the DPD account exists"); the Highlands and Islands postcode list confirmed; DPD's tracking link address confirmed (`https://track.dpd.co.uk/search?reference=…`, Step 11.3).
 - [ ] Register with the ICO (needed for the Privacy Policy).
-- [ ] Google Search Console: verify the domain and submit `sitemap.xml` *(added 13 October 2026)*.
+- [ ] **Google Search Console for lluniostudios.co.uk** (asked for 13 October 2026): set it up, verify the domain, and submit the sitemap (`https://lluniostudios.co.uk/sitemap.xml`).
 
 **4. The live server (Kerrial)**
 - [ ] PHP 8.4, as local Docker and the GitHub checks (10 October 2026).
@@ -958,7 +963,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 **7. Code and housekeeping (Kerrial)**
 - [x] GitHub checks on PHP 8.4, Rector advisory (10 October 2026); passing on `design-foundation` (13 October 2026).
 - [x] The repository's history checked for secrets: nothing to remove (10 October 2026).
-- [ ] Rector's suggestions (54 files on 10 October 2026): apply or not (`CLAUDE.md`, For my brother).
+- [x] Rector's suggestions: applied by you at your brother's direction (13 October 2026; in `9237a7d`, with the house-style fixes after it).
 - [ ] `Product::$price` typed `?int` throughout (the mapping is reported invalid; `CLAUDE.md`, For my brother).
 - [ ] `CLAUDE.md`'s Authentication section rewritten (it describes passwords; sign-in uses emailed codes).
 - [ ] Merge `design-foundation` (and `symfony-7.4-upgrade`) into `main` when you both say so.
@@ -967,6 +972,10 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] A British English copy pass over every page and email (with the wording pass).
 - [ ] The photo audit: real photos only, the edited versions in place, nothing without its WebP twin.
 - [ ] The full browser run with `--clean` on the final code, and a click-through on a phone and a desktop.
+
+### After launch (recorded 13 October 2026; don't build yet)
+- **Simple Analytics:** add it. It's cookieless, so no consent banner should be needed, but the Privacy Policy must mention it (draft wording is ready in your Privacy Policy document).
+- **Mixpanel:** add it. It uses cookies or identifiers, so it needs a **cookie consent banner** (Mixpanel runs only after the visitor agrees) and a **Privacy Policy update** before it goes live.
 
 ### Later, when the DPD account exists
 Enter the DPD API credentials, confirm the character limits and pricing, check `DpdProvider` against the real API, switch `SHIPPING_MODE=live`.
