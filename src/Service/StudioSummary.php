@@ -125,6 +125,19 @@ final class StudioSummary
     }
 
     /**
+     * A "Begin the Conversation" enquiry (Step 7c.3): "New enquiry · Atelier ×
+     * 1 · Video call".
+     */
+    public static function enquirySubject(DesignRequest $request): string
+    {
+        return implode(' · ', array_filter([
+            'New enquiry',
+            implode(', ', self::lamps($request)),
+            $request->getTalk()?->label(),
+        ]));
+    }
+
+    /**
      * "New commission · For Your Home · Ada Test · 2 files".
      */
     public static function commissionSubject(CommissionEnquiry $enquiry): string

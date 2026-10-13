@@ -107,17 +107,17 @@ try {
     await toPage();
     check('what was typed is remembered on coming back', (await ev(`document.querySelector('[name="enquiry_form[fullName]"]').value`)) === 'Ada Enquiry' && (await ev(`document.querySelector('[name="enquiry_form[description]"]').value`)) === 'A tall hallway with a north-facing window.');
 
-    // Complete: accepted and saved (7c.2; the thank-you page comes in 7c.3).
+    // Complete: accepted and saved (7c.2), then "Enquiry Received" (7c.3; enquiry-received.mjs checks it and the emails).
     await set('phone', '07700 900123'); await set('postcode', 'je2 3ab'); await set('boardLink', 'pinterest.com/ada/hallway');
     await tick('[name="enquiry_form[talk]"][value=video]');
     await submit();
-    let done = await ev(`({ path: location.pathname, saved: !!document.querySelector('[data-enquiry-saved]') })`);
-    check('a Jersey postcode, a board link and a video call: accepted and saved (until 7c.3, the placeholder page)', done.path === '/begin-the-conversation/received' && done.saved && requests() === before + 1, JSON.stringify(done));
+    let done = await ev(`({ path: location.pathname, saved: document.querySelector('main h1')?.textContent.trim() === 'Enquiry Received' })`);
+    check('a Jersey postcode, a board link and a video call: accepted and saved, then "Enquiry Received"', done.path === '/begin-the-conversation/received' && done.saved && requests() === before + 1, JSON.stringify(done));
     await toPage();
     await set('fullName', 'Ada Enquiry'); await set('email', 'ada.enquiry@example.test'); await set('description', 'A tall hallway with a north-facing window.');
     await tick('[name="enquiry_form[talk]"][value=email]'); await set('postcode', 'BH21 3EG');
     await submit();
-    done = await ev(`({ path: location.pathname, saved: !!document.querySelector('[data-enquiry-saved]') })`);
+    done = await ev(`({ path: location.pathname, saved: document.querySelector('main h1')?.textContent.trim() === 'Enquiry Received' })`);
     check('an email enquiry with no phone: accepted and saved', done.path === '/begin-the-conversation/received' && done.saved && requests() === before + 2, JSON.stringify(done));
     summary();
 } finally { b.close(); }

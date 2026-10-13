@@ -35,6 +35,7 @@ const CHECKS = [
     ['enquiry-page.mjs', '1440', '900'],
     ['enquiry-page.mjs', '390', '844'],
     ['enquiry-saving.mjs'],
+    ['enquiry-received.mjs'],
     ['reserve.mjs'],
     ['reserve-photos.mjs'],
     ['old-shop-redirects.mjs'],

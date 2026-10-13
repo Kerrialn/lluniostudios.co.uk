@@ -134,7 +134,8 @@ export function customerEmailProblems(html, firstName, opening = null) {
     if (sizes.size > 0) problems.push(`text sizes ${[...sizes].join(', ')}px`);
     // The studio's name always in full (decided 9 October 2026), in the text and the images' alt text.
     const words = html.replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]*\balt="([^"]*)"[^>]*>/g, ' $1 ').replace(/<[^>]+>/g, ' ');
-    const shortened = words.match(/Llunio(?! Studios)\S*/g);
+    // The one exception: the enquiry emails' signature handle, "@LlunioStuidos", exactly as confirmed (13 October 2026).
+    const shortened = words.replace(/@LlunioStuidos\b/g, ' ').match(/Llunio(?! Studios)\S*/g);
     if (shortened) problems.push(`"Llunio" without "Studios": ${shortened.join(', ')}`);
     return problems;
 }

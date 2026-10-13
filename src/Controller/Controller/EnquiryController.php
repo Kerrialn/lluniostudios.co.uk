@@ -13,8 +13,10 @@ use App\Form\Form\EnquiryForm;
 use App\Form\Form\ReserveForm;
 use App\Service\CommissionFileStorage;
 use App\Service\DesignRequestLamps;
+use App\Service\EmailService;
 use App\Shipping\DeliveryArea;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\FormError;
@@ -36,8 +38,11 @@ use Symfony\Component\Routing\Attribute\Route;
  * 7c.2: a complete enquiry is saved as a request marked as an enquiry (an
  * LR- number, in admin's Requests with the reservations), its files kept
  * privately as Reserve's reference photos; spam protection as Bespoke
- * Commissions. The basket is left as it is. The thank-you page and the
- * emails come in 7c.3.
+ * Commissions. The basket is left as it is.
+ *
+ * 7c.3: then "Enquiry Received" (the thank-you page), the customer's email
+ * (in the "me" voice, signed) and the studio's notification. A mail problem
+ * is logged and never stops the enquiry being saved.
  */
 final class EnquiryController extends AbstractController
 {
@@ -47,6 +52,8 @@ final class EnquiryController extends AbstractController
         private readonly DesignRequestLamps $lamps,
         private readonly EntityManagerInterface $entityManager,
         private readonly CommissionFileStorage $storage,
+        private readonly EmailService $emailService,
+        private readonly LoggerInterface $logger,
         #[Autowire(service: 'limiter.larger_enquiry')]
         private readonly RateLimiterFactoryInterface $limiter,
         // The studio's public email (STUDIO_EMAIL in .env).
@@ -78,19 +85,28 @@ final class EnquiryController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             // Spam bots fill in the hidden field: thank them, save nothing.
+            $talk = $form->get('talk')->getData();
+            \assert($talk instanceof EnquiryTalk);
+            // For the thank-you page: how they'll be contacted and their piece.
+            $received = [
+                'talk' => $talk->value,
+                'size' => $item->getSizeName(),
+                'quantity' => $item->getQuantity(),
+            ];
             if (trim((string) $form->get(CommissionFields::HONEYPOT)->getData()) !== '') {
-                $request->getSession()->set(self::RECEIVED_KEY, true);
+                $request->getSession()->set(self::RECEIVED_KEY, $received);
 
                 return $this->redirectToRoute('larger_enquiry_received');
             }
 
             if ($this->limiter->create($request->getClientIp() ?? 'unknown')->consume()->isAccepted()) {
-                $this->save($form, $item);
+                $enquiry = $this->save($form, $item);
+                $this->sendEmails($enquiry);
 
                 // The piece and what was typed are used; a Studio or Gallery design in progress is kept.
                 $this->lamps->forgetLarger();
                 $request->getSession()->set(ConfiguratorController::FORGET_CHOICES_KEY, ['enquiry', 'larger']);
-                $request->getSession()->set(self::RECEIVED_KEY, true);
+                $request->getSession()->set(self::RECEIVED_KEY, $received);
 
                 return $this->redirectToRoute('larger_enquiry_received');
             }
@@ -106,23 +122,49 @@ final class EnquiryController extends AbstractController
     }
 
     /**
-     * 7c.2 only: a placeholder until the thank-you page (7c.3).
+     * "Enquiry Received": how they'll be contacted, about their piece. The
+     * reference number is in the customer's email.
      */
     #[Route(path: '/begin-the-conversation/received', name: 'larger_enquiry_received', methods: ['GET'])]
     public function received(Request $request): Response
     {
-        if ($request->getSession()->get(self::RECEIVED_KEY) !== true) {
+        $received = $request->getSession()->get(self::RECEIVED_KEY);
+        $talk = \is_array($received) ? EnquiryTalk::tryFrom((string) ($received['talk'] ?? '')) : null;
+        if (! \is_array($received) || ! $talk instanceof EnquiryTalk) {
             return $this->redirectToRoute('lighting_designs');
         }
 
-        return $this->render('enquiry/received.html.twig');
+        return $this->render('enquiry/received.html.twig', [
+            'talk' => $talk,
+            'size' => (string) ($received['size'] ?? ''),
+            'quantity' => (int) ($received['quantity'] ?? 1),
+        ]);
+    }
+
+    /**
+     * The customer's email and the studio's notification. The enquiry is
+     * saved either way; a mail problem is logged, not shown.
+     */
+    private function sendEmails(DesignRequest $enquiry): void
+    {
+        foreach (['sendEnquiryReceivedEmail', 'sendEnquiryNotificationEmail'] as $send) {
+            try {
+                $this->emailService->{$send}($enquiry);
+            } catch (\Throwable $exception) {
+                $this->logger->error('Enquiry email failed', [
+                    'request' => $enquiry->getRequestNumber(),
+                    'email' => $send,
+                    'exception' => $exception,
+                ]);
+            }
+        }
     }
 
     /**
      * Save the enquiry with its piece and files. If saving fails, files
      * already moved into storage are removed again.
      */
-    private function save(FormInterface $form, DesignRequestItem $item): void
+    private function save(FormInterface $form, DesignRequestItem $item): DesignRequest
     {
         $text = static fn (string $field): ?string => ($value = trim((string) $form->get($field)->getData())) === '' ? null : $value;
         $talk = $form->get('talk')->getData();
@@ -154,6 +196,8 @@ final class EnquiryController extends AbstractController
 
             $this->entityManager->persist($enquiry);
             $this->entityManager->flush();
+
+            return $enquiry;
         } catch (\Throwable $exception) {
             foreach ($stored as $file) {
                 $this->storage->remove($file);

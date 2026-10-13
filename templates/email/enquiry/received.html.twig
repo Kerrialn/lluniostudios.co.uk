@@ -1,0 +1,49 @@
+{#
+    "Begin the Conversation" (Step 7c.3): the customer's confirmation of an
+    enquiry for a larger piece, in the "me" voice (decided 12 October 2026)
+    and signed as EmailService::ENQUIRY_SIGNATURE, straight after the opening
+    paragraph and before the enquiry's details (decided 13 October 2026). No design template exists
+    for it, so it follows email 02 on the shared layout (the email rules of
+    Step 11.0). Replies go to the studio.
+
+    All the wording is DRAFT until the wording pass (11.5).
+#}
+{% extends 'email/_customer.html.twig' %}
+{% import 'email/_customer.html.twig' as layout %}
+{% set firstName = designRequest.firstName %}
+{% set item = designRequest.items|first %}
+{% set piece = item.quantity > 1 ? item.quantity ~ ' Lumen Forma ' ~ item.sizeName ~ ' lamps' : 'a Lumen Forma ' ~ item.sizeName %}
+{% set files = designRequest.files|length %}
+
+{% block title %}{{ constant('App\\Service\\EmailService::ENQUIRY_SUBJECT') }}, {{ firstName ?: designRequest.fullName }}{% endblock %}
+{% block preheader %}Your enquiry {{ designRequest.requestNumber }} has reached the studio. I'll be in touch.{% endblock %}
+
+{% block content %}
+<p style="{{ body }}" data-email-opening>Thank you for your enquiry about {{ piece }}. I'll be in touch {{ designRequest.talk.reachPhrase }} to talk through your space and the finishes, then send you a quote.</p>
+<div data-email-signature>
+{% for paragraph in constant('App\\Service\\EmailService::ENQUIRY_SIGNATURE')|split("\n\n") %}
+<p style="{{ body }}">{{ paragraph|nl2br }}</p>
+{% endfor %}
+</div>
+{{ layout.section('01', 'Your enquiry') }}
+<p style="{{ label }}">Enquiry number</p>
+<p style="{{ body }}">{{ designRequest.requestNumber }}</p>
+{{ layout.section('02', 'Your piece') }}
+{{ include('email/request/_lamps.html.twig') }}
+{{ layout.section('03', 'What you told me') }}
+<p style="{{ label }}">Your space and what you have in mind</p>
+<p style="{{ body }}" data-email-description>{{ designRequest.description|nl2br }}</p>
+{% if designRequest.boardLink %}
+    <p style="{{ label }}">Your board</p>
+    <p style="{{ body }}" data-email-board>{{ designRequest.boardLink }}</p>
+{% endif %}
+<p style="{{ label }}">Photos and files</p>
+<p style="{{ body }}" data-email-files>{{ files == 0 ? 'None' : files ~ (files == 1 ? ' file' : ' files') ~ ' received' }}</p>
+{{ layout.section('04', 'Getting in touch') }}
+<p style="{{ label }}">How you'd like to talk</p>
+<p style="{{ body }}" data-email-talk>{{ designRequest.talk.label }}{% if designRequest.talk.needsPhone and designRequest.phone %} · {{ designRequest.phone }}{% endif %}</p>
+{% if designRequest.bestTime %}
+    <p style="{{ label }}">Best time to reach you</p>
+    <p style="{{ body }}" data-email-best-time>{{ designRequest.bestTime }}</p>
+{% endif %}
+{% endblock %}

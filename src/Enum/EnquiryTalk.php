@@ -25,6 +25,19 @@ enum EnquiryTalk: string
         };
     }
 
+    /**
+     * How the studio will be in touch, for the thank-you page and the
+     * customer's email: "by email", "by phone", "to arrange a video call".
+     */
+    public function reachPhrase(): string
+    {
+        return match ($this) {
+            self::EMAIL => 'by email',
+            self::PHONE => 'by phone',
+            self::VIDEO => 'to arrange a video call',
+        };
+    }
+
     public function needsPhone(): bool
     {
         return $this !== self::EMAIL;

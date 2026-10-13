@@ -38,6 +38,17 @@ final readonly class EmailService
 
     public const DELIVERED_SUBJECT = 'Your Lumen Forma has arrived';
 
+    /**
+     * "Begin the Conversation" (Step 7c.3; DRAFT wording until 11.5).
+     */
+    public const ENQUIRY_SUBJECT = 'Your Lumen Forma enquiry';
+
+    /**
+     * How the enquiry emails to the customer are signed, exactly as given
+     * (13 October 2026), line breaks and spelling included.
+     */
+    public const ENQUIRY_SIGNATURE = "All the best,\n\nTheo\n@LlunioStuidos";
+
     public function __construct(
         private MailerInterface $mailer,
         #[Autowire('%env(STUDIO_NOTIFICATION_EMAIL)%')]
@@ -161,6 +172,50 @@ final readonly class EmailService
             ],
         );
         $email->replyTo(new Address($designRequest->getEmail(), $designRequest->getFullName()));
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * "Begin the Conversation" (Step 7c.3): the customer's confirmation, in
+     * the "me" voice and signed (ENQUIRY_SIGNATURE). Replies go to the studio.
+     */
+    public function sendEnquiryReceivedEmail(DesignRequest $enquiry): void
+    {
+        $email = $this->compose(
+            // The first name, as in the greeting (13 October 2026); the whole name when none is usable.
+            subject: self::ENQUIRY_SUBJECT . ', ' . ($enquiry->getFirstName() ?? $enquiry->getFullName()),
+            template: '/email/enquiry/received.html.twig',
+            email: $enquiry->getEmail(),
+            name: $enquiry->getFullName(),
+            context: [
+                'designRequest' => $enquiry,
+            ],
+        );
+        $email->replyTo(new Address($this->studioEmail, 'Llunio Studios'));
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * Tells the studio an enquiry has arrived (Step 7c.3): the summary first,
+     * then everything sent; files listed, not attached. Replies go to the
+     * customer.
+     */
+    public function sendEnquiryNotificationEmail(DesignRequest $enquiry): void
+    {
+        $email = $this->compose(
+            subject: $subject = StudioSummary::enquirySubject($enquiry),
+            template: '/email/enquiry/notification.html.twig',
+            email: $this->studioNotificationEmail,
+            name: 'Llunio Studios',
+            context: [
+                'designRequest' => $enquiry,
+                'subject' => $subject,
+                'lamps' => StudioSummary::lamps($enquiry),
+            ],
+        );
+        $email->replyTo(new Address($enquiry->getEmail(), $enquiry->getFullName()));
 
         $this->mailer->send($email);
     }

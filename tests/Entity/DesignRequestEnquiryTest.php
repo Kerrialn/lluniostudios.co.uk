@@ -49,4 +49,11 @@ final class DesignRequestEnquiryTest extends TestCase
         self::assertTrue(EnquiryTalk::VIDEO->needsPhone());
         self::assertSame('Video call', EnquiryTalk::VIDEO->label());
     }
+
+    public function testHowTheStudioWillBeInTouch(): void
+    {
+        self::assertSame('by email', EnquiryTalk::EMAIL->reachPhrase());
+        self::assertSame('by phone', EnquiryTalk::PHONE->reachPhrase());
+        self::assertSame('to arrange a video call', EnquiryTalk::VIDEO->reachPhrase());
+    }
 }

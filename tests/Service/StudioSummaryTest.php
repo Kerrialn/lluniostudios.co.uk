@@ -8,6 +8,7 @@ use App\Entity\DesignRequest;
 use App\Entity\DesignRequestItem;
 use App\Entity\Order;
 use App\Entity\OrderItem;
+use App\Enum\EnquiryTalk;
 use App\Service\StudioSummary;
 use PHPUnit\Framework\TestCase;
 
@@ -103,6 +104,14 @@ final class StudioSummaryTest extends TestCase
         self::assertSame('Deposit paid · Atelier × 2 · £1,564 of £3,910', StudioSummary::orderSubject($quote, 'deposit', 156400));
         self::assertSame('Balance paid · Atelier × 2 · £2,346 · paid in full', StudioSummary::orderSubject($quote, 'balance', 234600));
         self::assertSame('£811.95', StudioSummary::money(81195));
+    }
+
+    public function testAnEnquirysSubject(): void
+    {
+        $enquiry = DesignRequest::enquiry('Ada Test', 'ada.test@example.test', '07700900000', EnquiryTalk::VIDEO, null, 'A hallway.', null, 'BH21 3EG', 'GB');
+        $enquiry->addItem($this->item('Atelier', 1, []));
+
+        self::assertSame('New enquiry · Atelier × 1 · Video call', StudioSummary::enquirySubject($enquiry));
     }
 
     /**

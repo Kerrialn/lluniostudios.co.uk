@@ -38,6 +38,8 @@ export async function cleanUp(since) {
         ...(await search('subject:"New request LR-"')).filter((m) => after(m) && /Ada Test/.test(m.Subject)),
         ...(await search('subject:"New commission enquiry LC-"')).filter((m) => after(m) && /Ada Test|Test Architects Ltd/.test(m.Subject)),
         ...(await search('subject:"Sign in to Llunio Studios"')).filter(after),
+        // Enquiry notifications (Step 7c.3) carry no name in the subject: found by the test customer they reply to.
+        ...(await search('subject:"New enquiry"')).filter((m) => after(m) && (m.ReplyTo || []).some((r) => /@example\.test$/.test(r.Address))),
     ].map((m) => m.ID);
     if (ids.length) {
         await fetch(`${MAILPIT_URL}/api/v1/messages`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ IDs: ids }) });

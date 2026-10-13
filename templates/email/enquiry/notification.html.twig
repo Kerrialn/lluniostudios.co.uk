@@ -1,0 +1,57 @@
+{#
+    To the studio: a new "Begin the Conversation" enquiry (Step 7c.3; email
+    rules, Step 11.0). Plain (no signature). At the top: the piece by size
+    and quantity, how and when to reach them, their phone and postcode, the
+    number of files and that no payment has been taken; then everything they
+    sent (the file names, not attached: they are downloaded from the enquiry
+    in admin) and the piece. Replying answers the customer.
+#}
+{% extends 'email/_studio.html.twig' %}
+{% import 'email/_studio.html.twig' as layout %}
+{% set adminUrl = url('admin_design_request_detail', {entityId: designRequest.id}) %}
+{% set adminLabel = 'Open the enquiry in admin' %}
+{% set files = designRequest.files|length %}
+{% set summaryRows = {
+    'Enquiry': designRequest.requestNumber ~ ' · ' ~ designRequest.createdAt|date('j F Y, H:i', 'Europe/London'),
+    'Lamps': lamps|join(', '),
+    'Talk by': designRequest.talk.label,
+    'Best time': designRequest.bestTime ?: '—',
+    'Phone': designRequest.phone ?: '—',
+    'Postcode': designRequest.postcode ~ (designRequest.country != 'GB' ? ' · ' ~ designRequest.countryName : ''),
+    'Files': files == 0 ? 'None' : files ~ (files == 1 ? ' file' : ' files'),
+    'Customer': designRequest.fullName,
+    'Payment': 'None taken',
+} %}
+
+{% block title %}{{ subject }}{% endblock %}
+{% block kind %}New enquiry{% endblock %}
+
+{% block details %}
+{{ layout.section('Their space and what they have in mind') }}
+<p style="margin:0;{{ valueStyle }}border-bottom:0;" data-studio-description>{{ designRequest.description|nl2br }}</p>
+{{ layout.section('Details') }}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    {% for key, value in {
+        'Name': designRequest.fullName,
+        'Email': designRequest.email,
+        'Phone': designRequest.phone ?: '—',
+        'How to talk': designRequest.talk.label,
+        'Best time to reach them': designRequest.bestTime ?: '—',
+        'Board link': designRequest.boardLink ?: '—',
+        'Postcode': designRequest.postcode,
+        'Country': designRequest.countryName,
+    } %}
+        <tr><td width="35%" style="{{ keyStyle }}">{{ key }}</td><td style="{{ valueStyle }}">{{ value|nl2br }}</td></tr>
+    {% endfor %}
+    <tr><td width="35%" style="{{ keyStyle }}">Files</td><td style="{{ valueStyle }}">
+        {% for file in designRequest.files %}
+            {{ file.originalName }} ({{ file.size >= 1048576 ? (file.size / 1048576)|number_format(1) ~ 'MB' : max(1, (file.size / 1024)|round) ~ 'KB' }}){% if not loop.last %}<br>{% endif %}
+        {% else %}
+            None
+        {% endfor %}
+        {% if files > 0 %}<br><a href="{{ adminUrl }}" style="color:#ece3d3;">Download from the enquiry in admin</a>{% endif %}
+    </td></tr>
+</table>
+{{ layout.section('The piece') }}
+{{ include('email/request/_lamps.html.twig') }}
+{% endblock %}

@@ -8,7 +8,7 @@
 // of 5 an hour; admin: the Requests list's Type column and filter, the
 // enquiry's page with everything and its files to download, its quote page
 // opening, a reservation's page unchanged, deleting an enquiry deleting its
-// files. Until 7c.3 a placeholder page follows (no thank-you page or emails).
+// files. The thank-you page and emails are enquiry-received.mjs's.
 // Signs in to admin as lluniostudios@gmail.com (code from Mailpit) and clears
 // the enquiry limit before and after.
 //   node tests/browser/enquiry-saving.mjs
@@ -73,8 +73,8 @@ try {
     await talk('video');
     await attach([make('Hallway.jpg', 2), make('Mood board.pdf', 1)]);
     await submit(4500);
-    const after = await ev(`({ path: location.pathname, h1: document.querySelector('h1')?.textContent.trim(), saved: !!document.querySelector('[data-enquiry-saved]'), enquiry: sessionStorage.getItem('llunio:enquiry'), larger: localStorage.getItem('llunio:larger'), configurator: localStorage.getItem('llunio:configurator') })`);
-    check('sent: the placeholder page until 7c.3 ("Enquiry Saved")', after.path === '/begin-the-conversation/received' && after.h1 === 'Enquiry Saved' && after.saved, JSON.stringify(after));
+    const after = await ev(`({ path: location.pathname, h1: document.querySelector('h1')?.textContent.trim(), enquiry: sessionStorage.getItem('llunio:enquiry'), larger: localStorage.getItem('llunio:larger'), configurator: localStorage.getItem('llunio:configurator') })`);
+    check('sent: "Enquiry Received"', after.path === '/begin-the-conversation/received' && after.h1 === 'Enquiry Received', JSON.stringify(after));
     check('one enquiry saved', count() === 1, String(count()));
     const row = sql(`select request_number, type, status, full_name, phone, talk, best_time, board_link, postcode, country, coalesce(address_line1, town, delivery_address, access_notes, custom_details, 'none') as address, gift::text from design_request where email = '${EMAIL}'`);
     const number = row.match(/LR-\d{6}-\d{4}/)?.[0];
@@ -98,7 +98,7 @@ try {
     check('the basket is left as it was', (await basket()) === basketBefore && basketBefore === '1', `${basketBefore} → ${await basket()}`);
     await go(BASE_URL + '/begin-the-conversation');
     check('the piece is forgotten: the page goes back to Lighting Designs', (await ev('location.pathname')) === '/lighting-designs');
-    check('no emails yet (7c.3)', (await mailpit(`to:${EMAIL}`)).length === 0);
+    check('the customer is emailed (its contents: enquiry-received.mjs)', (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma enquiry"`)).length >= 1);
 
     // The fewest details: email, no phone; nothing optional saved.
     await piece('atelier', 1);
