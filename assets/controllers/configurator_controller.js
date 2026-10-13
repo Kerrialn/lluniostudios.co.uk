@@ -662,10 +662,9 @@ export default class extends Controller {
             this.largerDimensionTargets.forEach((el) => { el.textContent = size[el.dataset.dimension] ?? '—'; });
         }
         if (this.hasLargerQuantityTarget) this.largerQuantityTarget.textContent = String(this.largerQuantity);
-        // As BasketRules::routeNote(): the size note, then the 3-or-more note.
-        const reasons = [this.notesValue.size];
-        if (this.basketLampsValue + this.largerQuantity > this.maxCheckoutValue) reasons.push(this.notesValue.quantity);
-        if (this.hasLargerRouteNoteTarget) this.largerRouteNoteTarget.textContent = reasons.join(' ');
+        // The size note only: no 3-or-more note, as every larger piece is an
+        // enquiry whatever the quantity (decided 13 October 2026).
+        if (this.hasLargerRouteNoteTarget) this.largerRouteNoteTarget.textContent = this.notesValue.size;
     }
 
     // The button: straight to "Begin the Conversation" with the size (and quantity).

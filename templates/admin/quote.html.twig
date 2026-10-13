@@ -47,7 +47,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <strong>{{ designRequest.fullName }}</strong><br>
-                    {{ designRequest.email }} · {{ designRequest.phone }}
+                    {{ designRequest.email }}{% if designRequest.phone %} · {{ designRequest.phone }}{% endif %}
                     {% if designRequest.addressLine1 %}
                         <dl class="row small mb-0 mt-2" data-quote-address>
                             <dt class="col-4 fw-normal text-muted">Address line 1</dt><dd class="col-8 mb-0">{{ designRequest.addressLine1 }}</dd>

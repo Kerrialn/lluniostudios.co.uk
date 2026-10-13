@@ -31,7 +31,7 @@ try {
             spec: vis(p.querySelector('[data-configurator-target=largerSpecs]')) ? p.querySelector('[data-configurator-target=largerSpec]').textContent + ' ' + [...p.querySelectorAll('[data-configurator-target=largerDimension]')].map(e => e.textContent).join('x') : null,
             quantity: p.querySelector('[data-configurator-target=largerQuantity]').textContent, main: vis(p.querySelector('[data-configurator-target=next]')) || vis(p.querySelector('ol[aria-label=Stages]')),
             photo: !document.querySelector('[data-configurator-target=soon]').hidden ? 'soon:' + document.querySelector('[data-configurator-target=soonTitle]').textContent : 'gallery',
-            panelTop: Math.round(p.getBoundingClientRect().top), saved: localStorage.getItem('llunio:larger') }; })()`);
+            panelTop: Math.round(p.getBoundingClientRect().top), atEnd: Math.ceil(scrollY + innerHeight) >= document.documentElement.scrollHeight - 1, scroll: [Math.round(scrollY), innerHeight, document.documentElement.scrollHeight], saved: localStorage.getItem('llunio:larger') }; })()`);
     const button = () => ev(`document.querySelector('[data-configurator-target=largerConfiguration]').closest('form').querySelector('button').click()`);
 
     // From the introduction's ending.
@@ -48,7 +48,11 @@ try {
     check('Atelier chosen: the message goes, its specifications, "Image Coming Soon: Atelier"', !s.warn && s.sizes === 'Atelier*,Estate,Monument' && s.spec === 'Atelier · Starting at £1,699 30x30x90' && s.photo === 'soon:Atelier', JSON.stringify(s));
     for (let i = 0; i < 2; i++) await ev(`document.querySelector('[data-action="configurator#largerMore"]').click()`);
     s = await state();
-    check('3 lamps: the size note, then the 3-or-more note', s.quantity === '3' && s.route === `${SIZE} ${LIMIT}`, s.route);
+    check('3 lamps: the size note only, no 3-or-more note (every larger piece is an enquiry; 13 October 2026)', s.quantity === '3' && s.route === SIZE && !s.route.includes(LIMIT), s.route);
+    for (let i = 0; i < 8; i++) await ev(`document.querySelector('[data-action="configurator#largerMore"]').click()`);
+    s = await state();
+    check('10 lamps: still the size note only', s.quantity === '10' && s.route === SIZE, s.route);
+    for (let i = 0; i < 7; i++) await ev(`document.querySelector('[data-action="configurator#largerFewer"]').click()`);
 
     // Out and back in, in place (no page load).
     check('the way back reads "Prefer a smaller piece? Configure Studio or Gallery"', (await ev(`document.querySelector('[data-configurator-target=smaller]').parentElement.textContent.trim()`)) === 'Prefer a smaller piece? Configure Studio or Gallery');
@@ -58,7 +62,8 @@ try {
     await ev(`document.querySelector('.ll-cfg-opt[data-group=size][data-value=lumen-forma-studio]').click()`);
     await ev(`document.querySelector('[data-configurator-target=larger]').click()`); await sleep(600); s = await state();
     check('"Considering a larger piece? Discuss a Larger Piece": back on the step, Atelier and 3 lamps kept, without leaving the page', s.larger && s.sizes === 'Atelier*,Estate,Monument' && s.quantity === '3' && (await ev('window.stayed === true')), JSON.stringify(s));
-    if (phone) check('on phones, back at the top of the panel', Math.abs(s.panelTop) <= 2, String(s.panelTop));
+    // The step is given the screen's full height on phones, so its panel reaches the top as the other stages do (13 October 2026).
+    if (phone) check('on phones, back at the top of the panel', Math.abs(s.panelTop) <= 2, JSON.stringify([s.panelTop, s.atEnd, s.scroll]));
 
     // Remembered: a reload opens on the step.
     await go(BASE_URL + '/lighting-designs', 3500); s = await state();

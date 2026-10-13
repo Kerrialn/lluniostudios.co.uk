@@ -4,14 +4,14 @@ The design made in Claude Design ("Llunio Site v4 Unified") is the visual and UX
 
 This file is the single source for the merge: decisions, step statuses, open questions and how to continue. Read it with `CLAUDE.md` (project conventions, pending content, notes for Kerrial).
 
-Last updated: 13 October 2026 (Step 7b done; Step 7c: answers recorded, "Needed by" and the gift removed from the page, 7c.1 committed; Step 7d recorded).
+Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1 and 7c.2 committed, branch pushed at 7c.1 with GitHub's checks passing; 7c.3 being built; Step 7d recorded).
 
 ---
 
 ## Start here (for a new session)
 
-- **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Both branches were pushed to GitHub (`origin`, git@github.com:Kerrialn/lluniostudios.co.uk.git) as branches on 9 October 2026, at your request; push again with `git push origin symfony-7.4-upgrade design-foundation` when asked. Never push to `main` or merge anything unless asked.
-- **Next step (13 October 2026):** Step 7c ("Begin the Conversation"): 7c.1 (the page) is done and committed. **Next: 7c.2 (saving the enquiry as a request, its files, spam protection, admin with a Type column and filter; a migration).** Then 7c.3 (thank-you page and emails; the name to sign them with is needed), 7c.4 (quote and payment). Later 7d (the whole site in All Special Elite). The wording pass (11.5) waits until all the new pages are built. Still waiting too: you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
+- **Branch:** all design work is on `design-foundation`, made from `symfony-7.4-upgrade` (which is made from `main`). Both branches were pushed to GitHub (`origin`, git@github.com:Kerrialn/lluniostudios.co.uk.git) as branches on 9 October 2026, at your request; `design-foundation` pushed again on 13 October 2026 at your request (up to `b75b483`, 7c.1): GitHub's checks passed (tests, PHPStan and code style; Rector reported suggestions, advisory as decided). The `gh` tool isn't installed here; the checks were read from GitHub's public API; push again with `git push origin symfony-7.4-upgrade design-foundation` when asked. Never push to `main` or merge anything unless asked.
+- **Next step (13 October 2026):** Step 7c ("Begin the Conversation"): 7c.1 (the page) is done and committed. 7c.2 (saving the enquiry as a request, its files, spam protection, admin with a Type column and filter; a migration) is done and committed. **Next: 7c.3 (the thank-you page and the two emails, signed "All the best, / Theo / @LlunioStuidos").** Then 7c.4 (quote and payment). Later 7d (the whole site in All Special Elite). The wording pass (11.5) waits until all the new pages are built. Still waiting too: you read the email review (`var/email-review/emails.html`, see 11.5) and check 11.4 by hand (committed before your checks, at your request); then 11.5's wording changes, one email at a time, as you decide them. After that: Step 11b (Advanced SEO: outline and questions first), 11c (new Terms & Conditions) and 11d (Privacy Policy) once you send the texts, then Step 12. See "Steps" below.
 - **The prototype (from 12 October 2026):** the folder `/Users/theonewham/Downloads/# Website Wireframing Brief` (the latest design, downloaded from Claude Design and unzipped by you on 12 October 2026; its Lighting Designs page is in Special Elite with the seven-stage story). Use it in place of the old copy, `/Users/theonewham/Llunio Studios/# Website Wireframing Brief.zip` (5 October 2026), which is history now. Its Claude Design project is `896bd9c9-a4ee-4500-90b7-d3aa2b9e4b71`. In the folder:
   - `Llunio Site v4 Unified.dc.html`: the prototype itself (with `support.js` next to it). Open it in Chrome. **Serve the folder rather than opening the file** to see the Lighting Designs sizes drawing (Chrome doesn't load its mask image from a file:// page): `cd "/Users/theonewham/Downloads/# Website Wireframing Brief" && python3 -m http.server 8765`, then http://localhost:8765/Llunio%20Site%20v4%20Unified.dc.html. `Llunio Site v4 Unified - Backup (before range page).dc.html` is the version before the new Lighting Designs page. To jump to a screen, set `localStorage['llunio-site-v4'] = '{"v":7,"screen":"product","basket":[]}'` and reload; screens include `home`, `product` (the configurator), `cart`, `reserve`, `reserved`, `commissions`, `commissioned`, `workshop`, `terms`, `contact`, `payment`, `card`, `confirmed`.
   - `Llunio Email Templates/01-…06-*.html`: the six customer emails (all built, Steps 8, 9 and 11, with the email rules and wording decided since).
@@ -61,7 +61,7 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: answers recorded, "Needed 
 | 11 | Order journey emails (11.0 email format, 11.1 email 01 and paid-order notifications, 11.2–11.4 stages and emails 04–06, 11.5 wording pass) | In progress (11.0–11.4 done; 11.4 still to be checked by hand; 11.5 review prepared, waiting for you) | `60499c2` (11.0), `1739f36` (11.1, 11.1b), `d09fc15` (11.2), `d66f803` (11.3), `f61bb32` (11.4) |
 | — | Configurator Custom descriptions (required) and Reserve Your Design Reference photos | Done (committed 10 October 2026 at your request; full browser run with `--clean`: 37 of 38, `configurator-remember.mjs` failing once on timing, then passing twice on its own) | see the commit "Custom descriptions and Reference photos" |
 | 7b | Lighting Designs introduction (Special Elite, seven-stage story), 7b.1–7b.4 | Done (12 October 2026) | `1da513c` (7b.1), `e0ce2d3` (7b.2), `e1c38b0` (7b.3), `c10e5c5` (7b.4) |
-| 7c | "Begin the Conversation": an enquiry page for Atelier, Estate and Monument, 7c.1–7c.4 | In progress: 7c.1 done (committed 13 October 2026; wording DRAFT); 7c.2 next | see the commit "Begin the Conversation page (7c.1)" |
+| 7c | "Begin the Conversation": an enquiry page for Atelier, Estate and Monument, 7c.1–7c.4 | In progress: 7c.1 and 7c.2 done (committed 13 October 2026; wording DRAFT); 7c.3 next | `b75b483` (7c.1), see the commit "Save enquiries and show them in admin (7c.2)" |
 | 7d | The whole site in "All Special Elite" | Later (after 7c; recorded 12 October 2026; not started) | — |
 | 11b | Advanced SEO | Later (nothing built; outline and questions first) | — |
 | 11c | Terms & Conditions (new text) | Waiting for your text | — |
@@ -375,7 +375,7 @@ Asked for on 12 October 2026. A redesign of the Lighting Designs page (`/lightin
 - **Found (12 October 2026), fixed in 7b.2:** on small upright phones (320×568), the text of The Process and The Maker ran down over the top of the photo.
 - **Checks run (12 October 2026):** `lighting-designs-story.mjs` passing at all four sizes (and with reduced motion at 390×844), again after the counter moved and the headers were underlined (it now also checks the counter's corner on phones, the closing buttons' sizes and, on phones, their place (right margin, clear of the heading, skip link and counter, upright just above the lamp; also at 430×932, 360×780 and 320×568) and each header's underline: Special Elite underscores in its colour, as wide as its text, also at 1920×1080 and on the reduced-motion page); the 13 configurator and Reserve checks plus the page footers (18 runs) all passing; `composer test` (190 tests), phpstan, code style, Twig lint and `npm run build` clean. The updated comparison scripts weren't run, as the story was compared by screenshots. **Full browser run with `--clean` before committing (12 October 2026): 41 of 42 passed**; the one failure was Chrome not starting for `quote-send.mjs` (as on earlier runs), which then passed on its own.
 
-### Step 7c: "Begin the Conversation", the enquiry page for larger pieces (in progress: 7c.1 done)
+### Step 7c: "Begin the Conversation", the enquiry page for larger pieces (in progress: 7c.1 and 7c.2 done; 7c.3 next)
 Asked for on 12 October 2026.
 
 **The brief:**
@@ -461,7 +461,56 @@ Asked for on 12 October 2026.
     - `configurator-edit.mjs 390 844` failed once ("saving updates the same line") and passed when run again.
     - `quote-send.mjs` failed on a fault in the check, now fixed. It worked out "valid until" as 14 × 24 hours, which near midnight lands on the day before when the clocks go back in between (run at 00:36 on 13 October; the clocks go back on 25 October). It now counts 14 calendar days from the UK date, as the site does, and passed when run again.
 - No database changes yet (7c.2). **To undo:** revert the commit once made.
-- *Open, for 7c.3:* the name to sign the customer's enquiry emails with ("signed by me").
+- ~~*Open, for 7c.3:* the name to sign the customer's enquiry emails with ("signed by me").~~ Answered 13 October 2026, see "Signature" below.
+
+**Signature for the enquiry emails to the customer (decided 13 October 2026, for 7c.3):** exactly as given, with its line breaks (a blank line after "All the best,"):
+
+```
+All the best,
+
+Theo
+@LlunioStuidos
+```
+
+**Confirmed 13 October 2026, spelling included ("@LlunioStuidos"):** used exactly as written. The studio notification stays plain (no signature).
+
+**Changes to 7c.2 before committing (13 October 2026, your requests):**
+1. **The larger-piece step shows no 3-or-more note:** its purchase route note is only "Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.", whatever the quantity, as every larger piece is an enquiry (`configurator_controller.js`, `renderLarger()`). The note stays everywhere else it applies (the configurator's Studio and Gallery, the review, the basket, `BasketRules::routeNote()`). This replaces (b)'s "and the line for three or more" and 7b.4's "plus the 3-or-more line when it applies" for the step.
+2. **Fixed: a sent form came back filled in.** *Cause:* the saved details were forgotten correctly once the enquiry was sent, but going back to the form with the browser's **Back** button showed the browser's own copy of the page, as it was left, with everything typed still in it. The browser keeps that copy to make Back instant, so the page's own scripts never ran on it and nothing was emptied. Opening the form any other way (the step's button, a link, a fresh visit) already started empty. Reserve Your Design had the same weakness. *Fix:* forgetting a form's details now leaves a marker for the tab, and a form page shown again from the browser's history (Back or Forward) after its details were forgotten, with nothing typed since, is emptied: every field, the choices, the tick boxes and any chosen files (`saved_choices.js`: `wasForgotten()`; `remember_form_controller.js`: `emptyIfForgotten()`), without remembering the empty form. Applies to "Begin the Conversation" and Reserve Your Design.
+3. **The rate-limit message in the "me" voice is fine as a draft** (confirmed 13 October 2026).
+4. **The board link in admin is clickable and opens in a new tab**: shown exactly as typed; "https://" is added to the link when typed without it (which also stops anything else, such as a script address, being opened from admin).
+
+- **Side effect of 1, then fixed (13 October 2026, at your request):** the step became a line shorter, so on a 390×844 phone, opening it scrolled as far as the page went with the panel 28px below the top. **Now on phones the step's panel is at least the screen's full height** (`100lvh`, in `app.css` under "Discuss a Larger Piece"), so it reaches the top as the other stages do; `larger-piece.mjs` checks it is at the top again.
+- **Found while checking 2:** emptying the fields alone left the file list and the phone's "*" showing, as those listen for typing ("input"); the emptying now tells them too.
+- **Checks run (13 October 2026):** `enquiry-saving.mjs`, `enquiry-page.mjs` (both sizes), `larger-piece.mjs` (both), `reserve.mjs`, `gift-options.mjs`, `configurator-remember.mjs`, `configurator-add-to-basket.mjs`, `configurator-custom-notes.mjs` (both): all passed after the two fixes above, and again (with the story and configurator page checks) after the phone space. Unit tests (197), PHPStan, code style and Twig lint clean. **Full browser run with `--clean` before committing (13 October 2026): 49 of 49 passed.**
+- **Checks for these:** `larger-piece.mjs` (3 and 10 lamps: the size note only); `enquiry-saving.mjs` (Back to the sent form: every field empty, no way to talk chosen, no files, the phone "(optional)", nothing remembered; the board link's address, new tab and text).
+
+**7c.2 as built (13 October 2026; checked by you, committed at your request). Wording still DRAFT:**
+- **Saved as a request marked as an enquiry** (`DesignRequest::enquiry()`, `DesignRequestType`: Reservation / Enquiry): an LR- number (same list and quotes), status New, with:
+  - its piece (size, quantity, no options: "Finishes: to be chosen together");
+  - name, email, phone (**may now be empty**: optional unless a phone or video call is chosen);
+  - how they'd like to talk (`EnquiryTalk`: Email / Phone / Video call), the best time, the description (line breaks kept), the board link exactly as typed;
+  - the postcode (tidied, e.g. "im1 1aa" → "IM1 1AA") and its country worked out from it (GB, IM, GG or JE); no address lines, no access notes, Custom Details or gift.
+  - Where a request's address is listed (emails, the quote's estimate), an enquiry gives its postcode and country.
+- **Files:** kept privately as the reference photos are (`var/commission-uploads/`, random names, `DesignRequestFile`), with the Commissions rules checked again on the server; removed again if saving fails; deleted with the enquiry.
+- **Spam protection as Commissions:** the hidden trap field (filled: the same page as a real enquiry, nothing saved) and **at most 5 complete enquiries an hour from one connection, counted apart from Commissions** (`larger_enquiry` in `config/packages/rate_limiter.php`). The sixth is refused, with what was typed kept and the message (DRAFT, in the page's "me" voice): "You've sent several enquiries in a short time. Please try again in an hour, or email me at info@lluniostudios.co.uk."
+- **Afterwards:** the piece and what was typed are forgotten (the step's `llunio:larger` and the form's `llunio:enquiry`). A Studio or Gallery design in progress and the basket are kept. Nothing is emailed yet.
+  - **Until 7c.3, a placeholder page** at `/begin-the-conversation/received`: "Enquiry Saved" / "Under construction: your enquiry has been saved. The thank-you page and the emails come next." (opened directly, it goes back to Lighting Designs). 7c.3 replaces it with the thank-you page.
+- **Admin, Requests:**
+  - a **Type** column (badges "Reservation" / "Enquiry") and a **Type filter** beside the status filter;
+  - an enquiry's page is titled "Enquiry LR-…" and shows Type, status, name, email, phone, "How to talk", "Best time to reach them", "Their space and what they have in mind", "Board link" (clickable, opening in a new tab: see the changes above), Postcode, Country, "Files" (download links, as the reference photos) and the lamps (Monument · 3 lamps, Finishes: to be chosen together);
+  - none of a reservation's fields (address lines, access notes, Custom Details, gift);
+  - a reservation's page is unchanged ("Request LR-…"); the description is searchable;
+  - the quote page opens for an enquiry (it shows the phone only when there is one); quoting it end to end is 7c.4.
+- **Found and fixed (a fault from 7c.1):** the page remembered the hidden spam-trap field with what was typed, so once filled it was filled again on every later visit in that tab, and every enquiry from then on would have been quietly treated as spam. The trap is now never remembered (`data-remember-form-skip`, `remember_form_controller.js`); Reserve Your Design and the Commissions forms are unaffected.
+- **Migration `Version20261013100000`** (hand-written; tested up, down and up again): `design_request` gains `type` (every existing request becomes a Reservation), `talk`, `best_time`, `description`, `board_link`; `phone` may be empty. **To undo:** `docker compose exec -T php php bin/console doctrine:migrations:migrate prev`, which removes those columns (saved enquiries become plain requests without their talk, best time, description and board link; an empty phone becomes blank; their piece, postcode and files are kept), then revert the commit once made.
+- **Checks:**
+  - new **`enquiry-saving.mjs`** (desktop; added to `run-all.mjs`): everything saved (Monument × 3, a video call, two files, an Isle of Man postcode), the files private, what's forgotten and what's kept, an email enquiry without a phone, the server's file check, the spam trap (and that it isn't remembered), the limit of 5 an hour, admin (the Type column and filter, the enquiry's page, downloads, the quote page opening, a reservation's page unchanged, deleting an enquiry deleting its files), no emails yet;
+  - `enquiry-page.mjs`: a complete enquiry is now saved (two: a video call from Jersey, and email with no phone);
+  - `commissions-saving.mjs`: its "no files left behind" count includes requests' files, which share the folder since 10 October;
+  - unit tests `tests/Entity/DesignRequestEnquiryTest.php`.
+- **Checks run (13 October 2026):** `enquiry-saving.mjs`, `enquiry-page.mjs` (desktop and phone), `larger-piece.mjs` (both), `reserve.mjs`, `reserve-photos.mjs`, `commissions-saving.mjs`, `commissions.mjs` (both), `quote-form.mjs`, `configurator-remember.mjs` and `gift-options.mjs`: all passed (after the fixes above). Unit tests (197), PHPStan, code style, Twig lint and the build: clean. (Full run: see the changes below.)
+- **Not done here:** `larger-piece.mjs`'s old Reserve, email and admin parts (dropped in 7c.1) return with 7c.3, which adds the emails; the enquiry's admin page is covered by `enquiry-saving.mjs`.
 
 **Questions asked 12 October 2026 (answered above; the wording in 8 is DRAFT):**
 1. **The buttons:** the larger-piece step's button only opens the page, so a "Send Enquiry" label there would promise more than it does. Proposed: the step's button **"Begin the Conversation"** and the page's own button **"Send Enquiry"**; or "Send Enquiry" on both?
@@ -783,7 +832,6 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 ## Questions still open
 
 **Waiting for you (as of 9 October 2026)**
-- Step 7c: the name to sign the enquiry emails with (for 7c.3).
 - Hand checks of the Custom descriptions and Reference photos, if not done yet (committed 10 October 2026 at your request).
 - Hand checks of 11.4 (Delivered, email 06, the email 05 wording, "Llunio Studios" in full, Facebook in the footers): committed before your checks, at your request.
 - The email review (11.5): what to change in each email.

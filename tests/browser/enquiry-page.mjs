@@ -5,12 +5,13 @@
 // 13 October 2026); every message (required fields, the phone for a phone or
 // video call, the postcode, the board link, the file rules); what is typed
 // remembered; and
-// a complete enquiry accepted but not yet saved (saving: 7c.2). The wording is
-// DRAFT until the wording pass (11.5).
+// a complete enquiry accepted and saved (what is saved, and admin:
+// enquiry-saving.mjs). The wording is DRAFT until the wording pass (11.5).
 //   node tests/browser/enquiry-page.mjs 1440 900
 //   node tests/browser/enquiry-page.mjs 390 844
+import { execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
-import { open, sleep, checker, sql, out, BASE_URL } from './lib.mjs';
+import { open, sleep, checker, sql, out, BASE_URL, PROJECT_DIR } from './lib.mjs';
 
 const [W, H] = [Number(process.argv[2] || 1440), Number(process.argv[3] || 900)];
 const { check, summary } = checker();
@@ -25,6 +26,8 @@ try {
     const requests = () => Number(sql('select count(*) from design_request').match(/\d+/g).pop());
 
     await b.clearStorage(); await send('Network.enable'); await send('Network.clearBrowserCookies');
+    // The limit of 5 enquiries an hour (7c.2).
+    execSync('docker compose exec -T php php bin/console cache:pool:clear cache.rate_limiter 2>/dev/null', { cwd: PROJECT_DIR });
     await go(BASE_URL + '/begin-the-conversation');
     check('without a piece from the larger-piece step: back to Lighting Designs', (await ev('location.pathname')) === '/lighting-designs');
 
@@ -92,11 +95,7 @@ try {
     await submit();
     check('a postcode outside the UK is refused', (await errors()).includes('Please enter a full postcode, e.g. BH21 3EG.'));
 
-    await set('phone', '07700 900123'); await set('postcode', 'je2 3ab'); await set('boardLink', 'pinterest.com/ada/hallway');
-    await submit();
-    check('a Jersey postcode and a board link accepted (nothing refused)', JSON.stringify(await errors()) === JSON.stringify([]), JSON.stringify(await errors()));
-
-    // Files: the Bespoke Commissions rules (checked as they are chosen; the server's check is commissions-saving.mjs's).
+    // Files: the Bespoke Commissions rules (checked as they are chosen; the server's check is commissions-saving.mjs's and enquiry-saving.mjs's).
     const txt = out('enquiry-notes.txt'); writeFileSync(txt, 'Not a photo.');
     const { root } = (await send('DOM.getDocument')).result;
     const { nodeId } = (await send('DOM.querySelector', { nodeId: root.nodeId, selector: '[name="enquiry_form[files][]"]' })).result;
@@ -108,10 +107,17 @@ try {
     await toPage();
     check('what was typed is remembered on coming back', (await ev(`document.querySelector('[name="enquiry_form[fullName]"]').value`)) === 'Ada Enquiry' && (await ev(`document.querySelector('[name="enquiry_form[description]"]').value`)) === 'A tall hallway with a north-facing window.');
 
-    // Complete: accepted, not saved yet (7c.2).
-    await tick('[name="enquiry_form[talk]"][value=email]'); await set('phone', ''); await set('postcode', 'BH21 3EG');
+    // Complete: accepted and saved (7c.2; the thank-you page comes in 7c.3).
+    await set('phone', '07700 900123'); await set('postcode', 'je2 3ab'); await set('boardLink', 'pinterest.com/ada/hallway');
+    await tick('[name="enquiry_form[talk]"][value=video]');
     await submit();
-    const done = await ev(`({ errors: [...document.querySelectorAll('form[name=enquiry_form] [role=alert]')].map(e => e.textContent.trim()).filter(Boolean), complete: !!document.querySelector('[data-enquiry-complete]') })`);
-    check('a complete enquiry (email, no phone): accepted, nothing saved yet (7c.2)', done.errors.length === 0 && done.complete && requests() === before, JSON.stringify(done));
+    let done = await ev(`({ path: location.pathname, saved: !!document.querySelector('[data-enquiry-saved]') })`);
+    check('a Jersey postcode, a board link and a video call: accepted and saved (until 7c.3, the placeholder page)', done.path === '/begin-the-conversation/received' && done.saved && requests() === before + 1, JSON.stringify(done));
+    await toPage();
+    await set('fullName', 'Ada Enquiry'); await set('email', 'ada.enquiry@example.test'); await set('description', 'A tall hallway with a north-facing window.');
+    await tick('[name="enquiry_form[talk]"][value=email]'); await set('postcode', 'BH21 3EG');
+    await submit();
+    done = await ev(`({ path: location.pathname, saved: !!document.querySelector('[data-enquiry-saved]') })`);
+    check('an email enquiry with no phone: accepted and saved', done.path === '/begin-the-conversation/received' && done.saved && requests() === before + 2, JSON.stringify(done));
     summary();
 } finally { b.close(); }

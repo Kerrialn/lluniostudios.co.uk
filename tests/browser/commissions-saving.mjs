@@ -129,7 +129,8 @@ try {
     await ev(`document.querySelector('[data-client=home] input[name="commission_home[phone]"]').value = ''`);
     await submit('home');
     check('server: Phone chosen with no number is refused', JSON.stringify(await errors()) === JSON.stringify(['Please enter your phone number so we can call you.']) && count('true') === saved);
-    check('no refused enquiry left files behind', Number(execSync(`ls "${STORE}" | wc -l`, { encoding: 'utf8' }).trim()) === Number(sql('select count(*) from commission_enquiry_file').match(/\d+/g).pop()));
+    // The folder also holds requests' files (reference photos, enquiries' files).
+    check('no refused enquiry left files behind', Number(execSync(`ls "${STORE}" | wc -l`, { encoding: 'utf8' }).trim()) === Number(sql('select (select count(*) from commission_enquiry_file) + (select count(*) from design_request_file)').match(/\d+/g).pop()));
 
     // The spam trap.
     await go(BASE_URL + '/bespoke-commissions?for=home');

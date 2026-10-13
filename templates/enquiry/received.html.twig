@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{# 7c.2 only: a placeholder after an enquiry is saved, replaced by the thank-you page in 7c.3. #}
+{% block title %}Enquiry saved | Llunio Studios{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-archivo{% endblock %}
+
+{% block body %}
+    <div data-enquiry-saved>
+        {{ include('partials/_received.html.twig', {
+            heading: 'Enquiry Saved',
+            message: 'Under construction: your enquiry has been saved. The thank-you page and the emails come next.',
+            confirmation: false,
+        }) }}
+    </div>
+{% endblock %}

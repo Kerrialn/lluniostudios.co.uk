@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Form\Form;
 
+use App\Enum\EnquiryTalk;
 use App\Shipping\DeliveryArea;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -31,18 +32,6 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  */
 final class EnquiryForm extends AbstractType
 {
-    public const TALK_EMAIL = 'email';
-
-    public const TALK_PHONE = 'phone';
-
-    public const TALK_VIDEO = 'video';
-
-    public const TALK = [
-        self::TALK_EMAIL => 'Email',
-        self::TALK_PHONE => 'Phone',
-        self::TALK_VIDEO => 'Video call',
-    ];
-
     public const DESCRIPTION_MAX = 5000;
 
     public const LINK_MAX = 500;
@@ -63,7 +52,9 @@ final class EnquiryForm extends AbstractType
             ->add('email', EmailType::class, CommissionFields::email())
             ->add('phone', TelType::class, CommissionFields::phone())
             ->add('talk', ChoiceType::class, [
-                'choices' => array_flip(self::TALK),
+                'choices' => EnquiryTalk::cases(),
+                'choice_value' => static fn (?EnquiryTalk $talk): ?string => $talk?->value,
+                'choice_label' => static fn (EnquiryTalk $talk): string => $talk->label(),
                 'expanded' => true,
                 'placeholder' => false,
                 'constraints' => [new Assert\NotBlank(message: "Please choose how you'd like to talk.")],
@@ -124,7 +115,8 @@ final class EnquiryForm extends AbstractType
             'constraints' => [
                 // A phone or video call needs the phone number.
                 new Assert\Callback(static function (mixed $data, ExecutionContextInterface $context): void {
-                    if (! \is_array($data) || ! \in_array($data['talk'] ?? null, [self::TALK_PHONE, self::TALK_VIDEO], true) || trim((string) ($data['phone'] ?? '')) !== '') {
+                    $talk = \is_array($data) ? ($data['talk'] ?? null) : null;
+                    if (! $talk instanceof EnquiryTalk || ! $talk->needsPhone() || trim((string) ($data['phone'] ?? '')) !== '') {
                         return;
                     }
 

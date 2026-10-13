@@ -40,11 +40,6 @@
             <div class="{{ row }} border-b-0"><span class="text-ll-mute">Quantity</span><span class="text-right">{{ item.quantity }}</span></div>
         </div>
 
-        {% if complete %}
-            {# 7c.1 only, until saving (7c.2) and the thank-you page (7c.3). #}
-            <p class="m-0 border border-ll-ink px-4 py-3 text-[13px]" role="status" data-enquiry-complete>Your enquiry is complete. (Under construction: it isn't saved or sent yet.)</p>
-        {% endif %}
-
         {{ form_start(form, { attr: { class: 'flex flex-col gap-8', novalidate: 'novalidate',
             'data-controller': 'enquiry remember-form', 'data-remember-form-name-value': 'enquiry', 'data-action': 'input->remember-form#save change->remember-form#save' } }) }}
             <div class="{{ section }}">Contact</div>

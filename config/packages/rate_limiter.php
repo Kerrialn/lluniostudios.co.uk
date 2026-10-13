@@ -15,6 +15,12 @@ return static function (ContainerConfigurator $containerConfigurator): void {
                 'limit' => 5,
                 'interval' => '1 hour',
             ],
+            // "Begin the Conversation" (Step 7c.2): the same, counted apart.
+            'larger_enquiry' => [
+                'policy' => 'sliding_window',
+                'limit' => 5,
+                'interval' => '1 hour',
+            ],
         ],
     ]);
 };

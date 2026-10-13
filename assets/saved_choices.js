@@ -21,6 +21,7 @@ const STORES = {
     enquiry: () => window.sessionStorage,
 };
 const KEY = (name) => `llunio:${name}`;
+const FORGOTTEN = (name) => `llunio:${name}:forgotten`;
 
 export function readChoices(name) {
     try {
@@ -34,8 +35,23 @@ export function readChoices(name) {
 export function saveChoices(name, value) {
     try {
         STORES[name]().setItem(KEY(name), JSON.stringify(value));
+        window.sessionStorage.removeItem(FORGOTTEN(name));
     } catch {
         // Storage unavailable: nothing is remembered.
+    }
+}
+
+/*
+ * Whether these choices were forgotten because they were used (a form sent)
+ * and nothing has been chosen or typed since, in this tab. A form page shown
+ * again from the browser's history (Back) still holds what was typed: the
+ * browser keeps its own copy of the page (remember_form_controller.js).
+ */
+export function wasForgotten(name) {
+    try {
+        return window.sessionStorage.getItem(FORGOTTEN(name)) !== null;
+    } catch {
+        return false;
     }
 }
 
@@ -43,6 +59,7 @@ export function forgetChoices(...names) {
     names.forEach((name) => {
         try {
             STORES[name]?.().removeItem(KEY(name));
+            window.sessionStorage.setItem(FORGOTTEN(name), '1');
         } catch {
             // Storage unavailable: nothing to forget.
         }

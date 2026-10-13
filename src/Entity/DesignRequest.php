@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\DesignRequestStatus;
+use App\Enum\DesignRequestType;
+use App\Enum\EnquiryTalk;
 use App\Enum\GiftSendTo;
 use App\Repository\DesignRequestRepository;
 use App\Service\GreetingName;
@@ -20,6 +22,12 @@ use Symfony\Component\Uid\Uuid;
  * A "Reserve Your Design" request: the customer's details and the lamps
  * they want (snapshotted, as on an order), sent with no payment taken.
  * The studio quotes it by hand (Step 10b).
+ *
+ * Or an enquiry from "Begin the Conversation" (Step 7c, DesignRequest::enquiry()):
+ * a larger piece (size and quantity, the finishes to be chosen together),
+ * how and when to talk, their space and what they have in mind, a board
+ * link and files, and the postcode only (the full address is asked on the
+ * quote page). Quoted and paid the same way.
  */
 #[ORM\Entity(repositoryClass: DesignRequestRepository::class)]
 #[ORM\Table(name: 'design_request')]
@@ -37,14 +45,23 @@ class DesignRequest implements HasReferenceNumber
     #[ORM\Column(type: Types::STRING, length: 16, enumType: DesignRequestStatus::class)]
     private DesignRequestStatus $status = DesignRequestStatus::NEW;
 
+    #[ORM\Column(type: Types::STRING, length: 16, enumType: DesignRequestType::class, options: [
+        'default' => 'reservation',
+    ])]
+    private DesignRequestType $type = DesignRequestType::RESERVATION;
+
     #[ORM\Column(length: 255)]
     private string $fullName;
 
     #[ORM\Column(length: 255)]
     private string $email;
 
-    #[ORM\Column(length: 32)]
-    private string $phone;
+    /**
+     * Required on Reserve Your Design; optional on an enquiry (unless they
+     * chose a phone or video call).
+     */
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $phone;
 
     /**
      * The address as one block of text: requests received before the address
@@ -106,6 +123,22 @@ class DesignRequest implements HasReferenceNumber
     #[ORM\Column(length: 32, nullable: true)]
     private ?string $giftRecipientPhone = null;
 
+    /**
+     * An enquiry's own details (Step 7c): how they'd like to talk, when, their
+     * space and what they have in mind, and a board link (kept as typed).
+     */
+    #[ORM\Column(length: 16, nullable: true, enumType: EnquiryTalk::class)]
+    private ?EnquiryTalk $talk = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $bestTime = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $boardLink = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
 
@@ -119,8 +152,9 @@ class DesignRequest implements HasReferenceNumber
     private Collection $items;
 
     /**
-     * Reference photos sent with a Custom choice (10 October 2026), kept
-     * privately (CommissionFileStorage) and downloaded from admin.
+     * Reference photos sent with a Custom choice (10 October 2026), or an
+     * enquiry's files (Step 7c), kept privately (CommissionFileStorage) and
+     * downloaded from admin.
      *
      * @var Collection<int, DesignRequestFile>
      */
@@ -145,7 +179,7 @@ class DesignRequest implements HasReferenceNumber
         'JE' => 'Jersey',
     ];
 
-    public function __construct(string $fullName, string $email, string $phone, ?string $accessNotes = null, ?string $customDetails = null)
+    public function __construct(string $fullName, string $email, ?string $phone, ?string $accessNotes = null, ?string $customDetails = null)
     {
         $this->fullName = $fullName;
         $this->email = $email;
@@ -156,6 +190,24 @@ class DesignRequest implements HasReferenceNumber
         $this->items = new ArrayCollection();
         $this->files = new ArrayCollection();
         $this->requestNumber = ReferenceNumber::make('LR');
+    }
+
+    /**
+     * An enquiry from "Begin the Conversation" (Step 7c): the postcode only,
+     * its country worked out from it (GB, IM, GG or JE).
+     */
+    public static function enquiry(string $fullName, string $email, ?string $phone, EnquiryTalk $talk, ?string $bestTime, string $description, ?string $boardLink, string $postcode, string $country): self
+    {
+        $enquiry = new self($fullName, $email, $phone);
+        $enquiry->type = DesignRequestType::ENQUIRY;
+        $enquiry->talk = $talk;
+        $enquiry->bestTime = $bestTime;
+        $enquiry->description = $description;
+        $enquiry->boardLink = $boardLink;
+        $enquiry->postcode = $postcode;
+        $enquiry->country = $country;
+
+        return $enquiry;
     }
 
     public static function referenceField(): string
@@ -191,6 +243,44 @@ class DesignRequest implements HasReferenceNumber
     public function setStatus(DesignRequestStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function getType(): DesignRequestType
+    {
+        return $this->type;
+    }
+
+    public function isEnquiry(): bool
+    {
+        return $this->type === DesignRequestType::ENQUIRY;
+    }
+
+    public function getTalk(): ?EnquiryTalk
+    {
+        return $this->talk;
+    }
+
+    /**
+     * For admin: "Video call", or null for a reservation.
+     */
+    public function getTalkLabel(): ?string
+    {
+        return $this->talk?->label();
+    }
+
+    public function getBestTime(): ?string
+    {
+        return $this->bestTime;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function getBoardLink(): ?string
+    {
+        return $this->boardLink;
     }
 
     public function getFullName(): string
@@ -282,7 +372,7 @@ class DesignRequest implements HasReferenceNumber
         return $this->email;
     }
 
-    public function getPhone(): string
+    public function getPhone(): ?string
     {
         return $this->phone;
     }
@@ -298,12 +388,17 @@ class DesignRequest implements HasReferenceNumber
     }
 
     /**
-     * The address, one line each (from the fields, or the older single box).
+     * The address, one line each (from the fields, or the older single box;
+     * an enquiry has only the postcode and its country).
      *
      * @return list<string>
      */
     public function getAddressLines(): array
     {
+        if ($this->addressLine1 === null && $this->deliveryAddress === null && $this->postcode !== null) {
+            return [$this->postcode, (string) $this->getCountryName()];
+        }
+
         if ($this->addressLine1 === null) {
             return array_values(array_filter(array_map('trim', explode("\n", (string) $this->deliveryAddress)), static fn (string $line): bool => $line !== ''));
         }

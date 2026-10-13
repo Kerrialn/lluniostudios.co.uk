@@ -1,5 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
-import { readChoices, saveChoices } from '../saved_choices.js';
+import { readChoices, saveChoices, wasForgotten } from '../saved_choices.js';
 
 /*
  * Remembers what is typed into a form (Reserve Your Design), and what is
@@ -12,11 +12,20 @@ import { readChoices, saveChoices } from '../saved_choices.js';
  * count as filled. What was typed in it is restored while the carried text
  * is unchanged; once it has changed (new descriptions), the new text is
  * shown with anything the customer added below the old text kept under it.
+ *
+ * Once the form has been sent its details are forgotten, but the browser's
+ * Back button can show the page again from the browser's own copy, still
+ * filled in (found 13 October 2026, after sending an enquiry). A page shown
+ * from the browser's history after its details were forgotten is emptied.
  */
 export default class extends Controller {
     static values = { name: String };
 
     connect() {
+        this.shownAgain = (event) => { if (event.persisted) this.emptyIfForgotten(); };
+        window.addEventListener('pageshow', this.shownAgain);
+        if (performance.getEntriesByType?.('navigation')[0]?.type === 'back_forward') this.emptyIfForgotten();
+
         const saved = readChoices(this.nameValue);
         const filled = this.fields().some((field) => !this.carried(field)
             && (this.ticks(field) ? field.checked : field.tagName !== 'SELECT' && field.value.trim() !== ''));
@@ -41,7 +50,36 @@ export default class extends Controller {
         }
     }
 
+    disconnect() {
+        window.removeEventListener('pageshow', this.shownAgain);
+    }
+
+    // Shown again from the browser's history after the form was sent: empty
+    // every field (and chosen files), without remembering the empty form.
+    emptyIfForgotten() {
+        if (!wasForgotten(this.nameValue) || readChoices(this.nameValue)) return;
+        this.emptying = true;
+        this.fields().forEach((field) => {
+            if (this.ticks(field)) field.checked = false;
+            else if (field.tagName === 'SELECT') field.selectedIndex = 0;
+            else field.value = this.carried(field) ? field.dataset.rememberFormCarried : '';
+            this.changed(field);
+        });
+        this.element.querySelectorAll('input[type=file]').forEach((field) => {
+            field.value = '';
+            this.changed(field);
+        });
+        this.emptying = false;
+    }
+
+    // Tells the page's other scripts (the file list, the phone's "*", the
+    // gift's questions), which listen for either event.
+    changed(field) {
+        ['input', 'change'].forEach((type) => field.dispatchEvent(new Event(type, { bubbles: true })));
+    }
+
     save() {
+        if (this.emptying) return;
         const choices = {};
         this.fields().forEach((field) => {
             // Tick boxes: ticked or not; radio buttons: the one chosen.
@@ -76,7 +114,8 @@ export default class extends Controller {
 
     fields() {
         return [...this.element.querySelectorAll('input[name], textarea[name], select[name]')]
-            // Chosen files can't be remembered (browsers don't allow it).
-            .filter((field) => field.type !== 'hidden' && field.type !== 'file' && !field.name.endsWith('[_token]'));
+            // Chosen files can't be remembered (browsers don't allow it); the
+            // spam trap (data-remember-form-skip) never is.
+            .filter((field) => field.type !== 'hidden' && field.type !== 'file' && !field.name.endsWith('[_token]') && field.dataset.rememberFormSkip === undefined);
     }
 }

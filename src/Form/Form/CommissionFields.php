@@ -191,6 +191,9 @@ final class CommissionFields
             'attr' => [
                 'tabindex' => -1,
                 'autocomplete' => 'off',
+                // Never remembered (remember_form_controller.js): a filled trap
+                // would be filled again on every later visit in the tab.
+                'data-remember-form-skip' => '',
             ],
         ];
     }

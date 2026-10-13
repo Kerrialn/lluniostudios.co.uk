@@ -462,6 +462,13 @@
 .ll-cfg-larger { display: none; }
 .is-larger .ll-cfg-larger { display: flex; }
 .is-larger .ll-cfg-main { display: none !important; }
+/* Phones: the step is shorter than the screen, so it is given at least the
+   screen's full height (the largest, with the browser's bars hidden), so
+   opening it scrolls its panel to the top as the other stages do (decided
+   13 October 2026). */
+@media (max-width: 899px) {
+    .is-revealed.is-larger .ll-cfg-panel { min-height: 100lvh; }
+}
 /* Title and "Scroll to begin" over the photo: cream with a soft shadow, or
    dark over a light photo; fade out on reveal (.ll-reveal-cue). */
 .ll-cfg-hero {

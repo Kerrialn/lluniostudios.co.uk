@@ -6,6 +6,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\DesignRequest;
 use App\Enum\DesignRequestStatus;
+use App\Enum\DesignRequestType;
 use App\Enum\QuotePayment;
 use App\Form\Form\QuoteForm;
 use App\Service\QuoteDelivery;
@@ -32,7 +33,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * "Reserve Your Design" requests, newest first, with their status (New,
+ * "Reserve Your Design" requests and "Begin the Conversation" enquiries
+ * (Step 7c.2: a Type column and filter, Reservation / Enquiry), newest first, with their status (New,
  * Quoted, Deposit Paid, Paid). Requests come from the website only; the customer's details
  * and lamps are read-only here. The status can be changed by hand until the
  * quotes step (Step 10b) sets it. "Quote" opens the request's quote (10b.1:
@@ -53,8 +55,8 @@ class DesignRequestCrudController extends AbstractCrudController
         return $crud
             ->setEntityLabelInSingular('Request')
             ->setEntityLabelInPlural('Requests')
-            ->setPageTitle(Crud::PAGE_DETAIL, static fn (DesignRequest $request): string => 'Request ' . $request->getRequestNumber())
-            ->setSearchFields(['requestNumber', 'fullName', 'email', 'phone', 'addressLine1', 'addressLine2', 'town', 'county', 'postcode', 'deliveryAddress'])
+            ->setPageTitle(Crud::PAGE_DETAIL, static fn (DesignRequest $request): string => ($request->isEnquiry() ? 'Enquiry ' : 'Request ') . $request->getRequestNumber())
+            ->setSearchFields(['requestNumber', 'fullName', 'email', 'phone', 'addressLine1', 'addressLine2', 'town', 'county', 'postcode', 'deliveryAddress', 'description'])
             ->setDefaultSort([
                 'createdAt' => 'DESC',
             ]);
@@ -104,15 +106,23 @@ class DesignRequestCrudController extends AbstractCrudController
 
     public function configureFilters(Filters $filters): Filters
     {
-        return $filters->add(ChoiceFilter::new('status')->setChoices(self::statusLabels()));
+        return $filters
+            ->add(ChoiceFilter::new('type')->setChoices(self::typeLabels()))
+            ->add(ChoiceFilter::new('status')->setChoices(self::statusLabels()));
     }
 
     public function configureFields(string $pageName): iterable
     {
         // A request received before the address was split into fields shows
-        // its single address box instead.
+        // its single address box instead; an enquiry has only the postcode.
         $request = $this->getContext()?->getEntity()->getInstance();
-        if ($request instanceof DesignRequest && $request->getAddressLine1() === null) {
+        $enquiry = $request instanceof DesignRequest && $request->isEnquiry();
+        if ($enquiry) {
+            $address = [
+                TextField::new('postcode')->setDisabled(),
+                TextField::new('countryName', 'Country')->setDisabled()->hideOnIndex(),
+            ];
+        } elseif ($request instanceof DesignRequest && $request->getAddressLine1() === null) {
             $address = [
                 TextareaField::new('legacyDeliveryAddress', 'Delivery address')->setDisabled()->hideOnIndex(),
             ];
@@ -142,24 +152,49 @@ class DesignRequestCrudController extends AbstractCrudController
                 ])
                 ->hideOnForm(),
             ChoiceField::new('status')->setChoices(self::statusChoices())->onlyOnForms(),
+            ChoiceField::new('type')
+                ->setChoices(self::typeLabels())
+                ->renderAsBadges([
+                    DesignRequestType::RESERVATION->value => 'secondary',
+                    DesignRequestType::ENQUIRY->value => 'dark',
+                ])
+                ->hideOnForm(),
             TextField::new('fullName', 'Name')->setDisabled(),
             EmailField::new('email')->setDisabled(),
             TextField::new('phone')->setDisabled()->hideOnIndex(),
             IntegerField::new('lampCount', 'Lamps')->setDisabled()->onlyOnIndex(),
+            ...($enquiry ? [
+                // "Begin the Conversation" (Step 7c.2): how and when to talk, their
+                // space, the board link and files.
+                TextField::new('talkLabel', 'How to talk')->onlyOnDetail(),
+                TextField::new('bestTime', 'Best time to reach them')->onlyOnDetail(),
+                TextareaField::new('description', 'Their space and what they have in mind')->onlyOnDetail(),
+                // Shown as typed; opens in a new tab ("https://" added when typed without it).
+                TextField::new('boardLink', 'Board link')->onlyOnDetail()->renderAsHtml()->formatValue(static fn (?string $link): string => $link === null ? '' : \sprintf(
+                    '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+                    htmlspecialchars(preg_match('~^https?://~i', $link) ? $link : 'https://' . $link, \ENT_QUOTES),
+                    htmlspecialchars($link, \ENT_QUOTES),
+                )),
+            ] : []),
             ...$address,
-            TextareaField::new('accessNotes', 'Site access & delivery notes')->setDisabled()->hideOnIndex(),
-            TextareaField::new('customDetails')->setDisabled()->hideOnIndex(),
-            // Sent with a Custom choice (10 October 2026); downloaded from here.
-            Field::new('files', 'Reference photos')
+            ...($enquiry ? [] : [
+                TextareaField::new('accessNotes', 'Site access & delivery notes')->setDisabled()->hideOnIndex(),
+                TextareaField::new('customDetails')->setDisabled()->hideOnIndex(),
+            ]),
+            // Reference photos sent with a Custom choice (10 October 2026), or
+            // an enquiry's files (Step 7c.2); downloaded from here.
+            Field::new('files', $enquiry ? 'Files' : 'Reference photos')
                 ->setTemplatePath('admin/field/files.html.twig')
                 ->setCustomOption('route', 'admin_design_request_file')
                 ->onlyOnDetail(),
-            // Gift options (9 October 2026).
-            TextField::new('giftLabel', 'Gift')->hideOnForm(),
-            TextField::new('giftPackingNote', 'Packing')->onlyOnDetail()->renderAsHtml(),
-            TextField::new('giftRecipientName', "Recipient's name")->onlyOnDetail(),
-            TextField::new('giftMessage', 'Gift message')->onlyOnDetail(),
-            TextField::new('giftRecipientPhone', "Recipient's mobile")->onlyOnDetail(),
+            // Gift options (9 October 2026); an enquiry has none.
+            $enquiry ? TextField::new('giftLabel', 'Gift')->onlyOnIndex() : TextField::new('giftLabel', 'Gift')->hideOnForm(),
+            ...($enquiry ? [] : [
+                TextField::new('giftPackingNote', 'Packing')->onlyOnDetail()->renderAsHtml(),
+                TextField::new('giftRecipientName', "Recipient's name")->onlyOnDetail(),
+                TextField::new('giftMessage', 'Gift message')->onlyOnDetail(),
+                TextField::new('giftRecipientPhone', "Recipient's mobile")->onlyOnDetail(),
+            ]),
             Field::new('items', 'Lamps')
                 ->setTemplatePath('admin/field/design_request_items.html.twig')
                 ->onlyOnDetail(),
@@ -247,6 +282,19 @@ class DesignRequestCrudController extends AbstractCrudController
         return array_combine(
             array_map(static fn (DesignRequestStatus $status): string => $status->label(), DesignRequestStatus::cases()),
             array_map(static fn (DesignRequestStatus $status): string => $status->value, DesignRequestStatus::cases()),
+        );
+    }
+
+    /**
+     * Label => stored value ("Reservation", "Enquiry").
+     *
+     * @return array<string, string>
+     */
+    private static function typeLabels(): array
+    {
+        return array_combine(
+            array_map(static fn (DesignRequestType $type): string => $type->label(), DesignRequestType::cases()),
+            array_map(static fn (DesignRequestType $type): string => $type->value, DesignRequestType::cases()),
         );
     }
 
