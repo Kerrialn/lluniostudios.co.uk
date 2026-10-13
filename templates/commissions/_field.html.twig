@@ -31,7 +31,7 @@
         <span id="{{ child.vars.id }}_label" class="text-[14px]">{{ label }} <span class="text-ll-mute text-[13px]"></span></span>
         <div class="grid {{ child|length == 3 ? 'grid-cols-3' : 'grid-cols-2' }} gap-2" role="radiogroup" aria-labelledby="{{ child.vars.id }}_label">
             {% for option in child %}
-                <label class="h-12 flex items-center justify-center border border-ll-mute text-[14px] cursor-pointer transition-opacity hover:opacity-70 has-[:checked]:bg-ll-ink has-[:checked]:text-ll-bg has-[:checked]:border-ll-ink has-[:checked]:hover:opacity-85 has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ll-ink">
+                <label class="h-12 flex items-center justify-center border border-ll-mute text-[12px] uppercase tracking-[0.14em] cursor-pointer transition-opacity hover:opacity-70 has-[:checked]:bg-ll-ink has-[:checked]:text-ll-bg has-[:checked]:border-ll-ink has-[:checked]:hover:opacity-85 has-[:focus-visible]:outline has-[:focus-visible]:outline-1 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ll-ink">
                     {{ form_widget(option, { attr: { class: 'sr-only', 'data-action': controller ~ '#contact' } }) }}{{ option.vars.label }}
                 </label>
             {% endfor %}

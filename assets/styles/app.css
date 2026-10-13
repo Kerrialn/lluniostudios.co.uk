@@ -49,8 +49,11 @@
 body { font-synthesis-weight: none; }
 
 /* Buttons take their surroundings' case (Tailwind's base resets it), so a
-   button inside an uppercase label is uppercase too (Step 7d). */
-button { text-transform: inherit; }
+   button inside an uppercase label is uppercase too (Step 7d). In the base
+   layer, so a button's own case class (e.g. uppercase) still wins. */
+@layer base {
+    button { text-transform: inherit; }
+}
 
 /* Small uppercase labels: nav, buttons, field labels. */
 .ll-label {
@@ -343,7 +346,9 @@ picture { display: contents; }
     }
     .ll-home-text h1 {
         max-width: none;
-        font-size: min(28px, calc(100cqi / 9.6));
+        /* Special Elite (Step 7d): sized to the column ("INDIVIDUALLY", the
+           longest word, is about 7.3 times the size), never under 11px. */
+        font-size: max(11px, min(28px, calc(100cqi / 8)));
     }
     .ll-home-actions {
         flex-direction: column;
@@ -354,9 +359,11 @@ picture { display: contents; }
         align-items: center;
         min-height: 44px;
         max-width: 100%;
-        padding: 10px 12px;
-        font-size: min(11px, calc((100cqi - 24px) / 7.4)); /* COMMISSION must fit */
-        letter-spacing: .1em;
+        /* 11px (the minimum) with COMMISSION fitting the narrowest column (90px):
+           tighter letter-spacing and side padding than desktop (Step 7d). */
+        padding: 10px 7px;
+        font-size: 11px;
+        letter-spacing: .05em;
         line-height: 1.25;
     }
     /* Footer icons pinned to the bottom-left of the layout (the bottom of the

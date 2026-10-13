@@ -54,7 +54,7 @@ try {
     check('at the top: Size Estate, Finishes To be chosen together, Quantity 2', JSON.stringify(p.rows) === JSON.stringify(['Size=Estate', 'Finishes=To be chosen together', 'Quantity=2']), JSON.stringify(p.rows));
     check('the sections: Contact, Getting in touch, Your space, Delivery', JSON.stringify(p.sections) === JSON.stringify(['Contact', 'Getting in touch', 'Your space', 'Delivery']), JSON.stringify(p.sections));
     check('the fields, in order (no "Needed by" or gift)', JSON.stringify(p.labels) === JSON.stringify([
-        'Name *', 'Email *', 'Phone (optional)', 'How would you like to talk? *', 'Email', 'Phone', 'Video call', 'Best time to reach you (optional)',
+        'Name *', 'Email *', 'Phone (optional)', 'How would you like to talk? *', 'EMAIL', 'PHONE', 'VIDEO CALL', 'Best time to reach you (optional)',
         'Tell me about your space and what you have in mind *', 'Photos of your space, inspiration or a mood board (optional)', 'Choose photos or files — PDF, DWG, JPG, PNG or HEIC, up to 50MB each, 100MB in total',
         'Pinterest, Instagram or Houzz board (optional)', 'Postcode *']) && !(await ev(`!!document.querySelector('[name*="neededBy"], [name*="gift"]')`)), JSON.stringify(p.labels));
     check('"How would you like to talk?": Email, Phone, Video call; the button "Send Enquiry"', p.talk === 'Email,Phone,Video call' && p.button === 'Send Enquiry', `${p.talk} | ${p.button}`);
