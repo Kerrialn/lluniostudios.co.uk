@@ -53,7 +53,7 @@ class Order implements HasReferenceNumber
     #[ORM\Column(type: Types::INTEGER)]
     private int $total = 0;
 
-    #[ORM\Column(type: Types::STRING, length: 16, enumType: ShippingMethod::class, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 16, nullable: true, enumType: ShippingMethod::class)]
     private ?ShippingMethod $shippingMethod = null;
 
     #[ORM\Column(length: 64, nullable: true)]
@@ -257,7 +257,7 @@ class Order implements HasReferenceNumber
      */
     public function canStartProduction(): bool
     {
-        return $this->isPlaced() && $this->stage === null;
+        return $this->isPlaced() && !$this->stage instanceof \App\Enum\OrderStage;
     }
 
     public function markInProduction(\DateTimeImmutable $expectedDispatch, CarbonImmutable $now): void
@@ -273,7 +273,7 @@ class Order implements HasReferenceNumber
      */
     public function canDispatch(): bool
     {
-        return $this->isPlaced() && ($this->stage === null || $this->stage === OrderStage::IN_PRODUCTION);
+        return $this->isPlaced() && (!$this->stage instanceof \App\Enum\OrderStage || $this->stage === OrderStage::IN_PRODUCTION);
     }
 
     /**
@@ -386,7 +386,7 @@ class Order implements HasReferenceNumber
      */
     public function getTrackingUrl(): ?string
     {
-        return $this->courier !== null && $this->trackingNumber !== null ? $this->courier->trackingUrl($this->trackingNumber) : null;
+        return $this->courier instanceof \App\Enum\Courier && $this->trackingNumber !== null ? $this->courier->trackingUrl($this->trackingNumber) : null;
     }
 
     /**
@@ -645,7 +645,7 @@ class Order implements HasReferenceNumber
     {
         $line = $this->getGiftLine();
 
-        return $line === null ? 'No' : $line . ($this->giftSendTo === null ? '' : ' · ' . ($this->isDirectGift() ? 'Direct to recipient' : 'To the customer'));
+        return $line === null ? 'No' : $line . ($this->giftSendTo instanceof \App\Enum\GiftSendTo ? ' · ' . ($this->isDirectGift() ? 'Direct to recipient' : 'To the customer') : '');
     }
 
     /**

@@ -85,9 +85,9 @@ final class ConfiguratorController extends AbstractController
             'galleries' => $galleries,
             'optionPhotos' => LumenFormaPhotos::forOptions(),
             'maxLamps' => LumenFormaCatalogue::MAX_LAMPS_PER_CONFIGURATION,
-            'basketLamps' => null === $cart ? 0 : $this->basketRules->lampCount($cart, $editing),
+            'basketLamps' => $cart instanceof \App\Entity\Cart ? $this->basketRules->lampCount($cart, $editing) : 0,
             'editing' => $editing,
-            'edit' => null === $editing ? null : $this->designOf($editing),
+            'edit' => $editing instanceof \App\Entity\CartItem ? $this->designOf($editing) : null,
         ]);
     }
 
@@ -180,7 +180,7 @@ final class ConfiguratorController extends AbstractController
     private function editableLine(string $id): ?CartItem
     {
         $cart = $this->cartResolver->peekCart();
-        if ('' === $id || null === $cart) {
+        if ('' === $id || !$cart instanceof \App\Entity\Cart) {
             return null;
         }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'An authentication exception occurred.' => 'An authentication exception occurred.',
     'Authentication credentials could not be found.' => 'Authentication credentials could not be found.',

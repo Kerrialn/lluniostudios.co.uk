@@ -120,7 +120,7 @@ final class StudioSummary
             'New request',
             implode(', ', self::lamps($request)),
             self::customs($request),
-            $gift === null ? null : 'GIFT by ' . $gift->format('j M') . ($request->isDirectGift() ? ' · DIRECT' : ''),
+            $gift instanceof \DateTimeImmutable ? 'GIFT by ' . $gift->format('j M') . ($request->isDirectGift() ? ' · DIRECT' : '') : null,
         ]));
     }
 
@@ -192,7 +192,7 @@ final class StudioSummary
                 default => self::money($amount),
             },
             $kind === 'balance' ? 'paid in full' : null,
-            $order->getGiftArriveBy() === null ? null : 'GIFT by ' . $order->getGiftArriveBy()->format('j M') . ($order->isDirectGift() ? ' · DIRECT' : ''),
+            $order->getGiftArriveBy() instanceof \DateTimeImmutable ? 'GIFT by ' . $order->getGiftArriveBy()->format('j M') . ($order->isDirectGift() ? ' · DIRECT' : '') : null,
         ]));
     }
 

@@ -65,7 +65,7 @@ class CartController extends AbstractController
             'checkoutBlockers' => $blockers,
             'routeNote' => $this->basketRules->routeNote($blockers),
             // Each line's size ("Gallery"), shown under the "Lumen Forma" title.
-            'sizeNames' => array_map(static fn (CartItem $item): string => $item->getProduct() === null ? '' : LumenFormaConfigurator::sizeName($item->getProduct()), array_values($cart->getCartItems()->toArray())),
+            'sizeNames' => array_map(static fn (CartItem $item): string => $item->getProduct() instanceof \App\Entity\Product ? LumenFormaConfigurator::sizeName($item->getProduct()) : '', array_values($cart->getCartItems()->toArray())),
             // Lines of these sizes are edited in the configurator.
             'configuratorSlugs' => array_column(LumenFormaCatalogue::SIZES, 'slug'),
         ]);

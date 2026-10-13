@@ -9,8 +9,9 @@ namespace App\Seo;
  * 13 October 2026). Only these are indexable, carry a canonical link and are
  * listed in sitemap.xml; every other page (admin, the basket, checkout,
  * quotes, orders, the account, sign-in, the forms and every thank-you page)
- * is sent with "noindex, nofollow" (SearchIndexingListener), and the private
- * areas are also kept out of robots.txt.
+ * is sent with "noindex, nofollow" (SearchIndexingListener). robots.txt blocks
+ * admin only (decided 13 October 2026): the other private pages rely on
+ * "noindex", which search engines can only see if they may fetch the page.
  */
 final class SearchPages
 {
@@ -20,22 +21,9 @@ final class SearchPages
     public const INDEXABLE = ['landing', 'lighting_designs', 'commissions', 'workshop', 'contact', 'terms'];
 
     /**
-     * Paths robots.txt asks crawlers not to visit: the private and buying
-     * areas, the forms and the thank-you pages. (They are also "noindex".)
+     * Paths robots.txt asks crawlers not to visit: admin only (also "noindex").
      */
-    public const DISALLOWED = [
-        '/admin',
-        '/basket',
-        '/cart',
-        '/checkout',
-        '/quote/',
-        '/order/',
-        '/account',
-        '/login',
-        '/reserve',
-        '/begin-the-conversation',
-        '/bespoke-commissions/received',
-    ];
+    public const DISALLOWED = ['/admin'];
 
     public static function isIndexable(?string $route): bool
     {

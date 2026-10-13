@@ -23,7 +23,7 @@ class CartItemOption
 
     #[ORM\ManyToOne(targetEntity: CartItem::class, inversedBy: 'cartItemOptions')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?CartItem $cartItem = null;
+    private ?CartItem $cartItem;
 
     #[ORM\ManyToOne(targetEntity: ProductOption::class)]
     #[ORM\JoinColumn(name: 'product_option_id', referencedColumnName: 'id')]
@@ -40,7 +40,7 @@ class CartItemOption
     #[ORM\Column(options: [
         'default' => 0,
     ])]
-    private int $lamp = 0;
+    private int $lamp;
 
     public function __construct(
         CartItem $cartItem,

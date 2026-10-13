@@ -38,9 +38,9 @@ final class LumenFormaConfigurator
             'name' => self::sizeName($product),
             'price' => self::priceLabel($product),
             'direct' => $product->isDirectOrder(),
-            'length' => self::cm($product->getLengthMm()),
-            'width' => self::cm($product->getWidthMm()),
-            'height' => self::cm($product->getHeightMm()),
+            'length' => $this->cm($product->getLengthMm()),
+            'width' => $this->cm($product->getWidthMm()),
+            'height' => $this->cm($product->getHeightMm()),
             'note' => $product->isDirectOrder()
                 ? 'Direct Order | ' . LeadTime::MIN_DAYS . '–' . LeadTime::MAX_DAYS . ' Day Dispatch'
                 : 'Delivery Quote Required',
@@ -281,7 +281,7 @@ final class LumenFormaConfigurator
         return $product->isDirectOrder() ? $pounds : 'Starting at ' . $pounds;
     }
 
-    private static function cm(?int $mm): ?int
+    private function cm(?int $mm): ?int
     {
         return null === $mm ? null : (int) round($mm / 10);
     }

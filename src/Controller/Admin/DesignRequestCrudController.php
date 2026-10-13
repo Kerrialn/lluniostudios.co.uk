@@ -96,7 +96,7 @@ class DesignRequestCrudController extends AbstractCrudController
         }
 
         $order = $payments->paidOrder($designRequest);
-        if ($order === null || ! $order->canRequestBalance()) {
+        if (!$order instanceof \App\Entity\Order || ! $order->canRequestBalance()) {
             $this->addFlash('warning', 'There is no balance to request for this request.');
 
             return $this->redirect($urls->setController(self::class)->setAction(Action::DETAIL)->setEntityId($designRequest->getId())->generateUrl());
@@ -108,8 +108,8 @@ class DesignRequestCrudController extends AbstractCrudController
     public function configureFilters(Filters $filters): Filters
     {
         return $filters
-            ->add(ChoiceFilter::new('type')->setChoices(self::typeLabels()))
-            ->add(ChoiceFilter::new('status')->setChoices(self::statusLabels()));
+            ->add(ChoiceFilter::new('type')->setChoices($this->typeLabels()))
+            ->add(ChoiceFilter::new('status')->setChoices($this->statusLabels()));
     }
 
     public function configureFields(string $pageName): iterable
@@ -144,7 +144,7 @@ class DesignRequestCrudController extends AbstractCrudController
             // Shown by its label ("Deposit Paid"; with the cases themselves
             // EasyAdmin shows their names, e.g. DEPOSIT_PAID); edited as the case.
             ChoiceField::new('status')
-                ->setChoices(self::statusLabels())
+                ->setChoices($this->statusLabels())
                 ->renderAsBadges([
                     DesignRequestStatus::NEW->value => 'warning',
                     DesignRequestStatus::QUOTED->value => 'info',
@@ -152,9 +152,9 @@ class DesignRequestCrudController extends AbstractCrudController
                     DesignRequestStatus::PAID->value => 'success',
                 ])
                 ->hideOnForm(),
-            ChoiceField::new('status')->setChoices(self::statusChoices())->onlyOnForms(),
+            ChoiceField::new('status')->setChoices($this->statusChoices())->onlyOnForms(),
             ChoiceField::new('type')
-                ->setChoices(self::typeLabels())
+                ->setChoices($this->typeLabels())
                 ->renderAsBadges([
                     DesignRequestType::RESERVATION->value => 'secondary',
                     DesignRequestType::ENQUIRY->value => 'dark',
@@ -223,7 +223,7 @@ class DesignRequestCrudController extends AbstractCrudController
         $quote = $quotes->draftFor($designRequest);
         // An enquiry's gift is set here (Step 7c.4), until the quote is paid
         // (the order keeps the gift it was paid with).
-        $giftSection = $designRequest->isEnquiry() && $payments->paidOrder($designRequest) === null;
+        $giftSection = $designRequest->isEnquiry() && !$payments->paidOrder($designRequest) instanceof \App\Entity\Order;
         $form = $this->createForm(QuoteForm::class, QuoteForm::dataFrom($quote), [
             'gift' => $giftSection,
         ]);
@@ -243,7 +243,7 @@ class DesignRequestCrudController extends AbstractCrudController
                 $this->addFlash('success', $quote->isSent()
                     ? 'Quote saved. Not sent: the customer still sees the quote sent on ' . $this->ukDate($quote->getSentAt()) . '.'
                     : 'Quote saved as a draft. Nothing has been sent to the customer.');
-            } elseif ($payments->paidOrder($designRequest) !== null) {
+            } elseif ($payments->paidOrder($designRequest) instanceof \App\Entity\Order) {
                 // Paid: what the customer paid for stays as sent (10b.4).
                 $this->addFlash('danger', 'Quote saved but not sent: it has been paid, so it can\'t be sent again.');
             } elseif (($problem = $quotes->sendingProblem($quote)) !== null) {
@@ -267,9 +267,9 @@ class DesignRequestCrudController extends AbstractCrudController
         return $this->render('admin/quote.html.twig', [
             'designRequest' => $designRequest,
             'quote' => $quote,
-            'saved' => $quote->getId() !== null,
+            'saved' => $quote->getId() instanceof \Symfony\Component\Uid\Uuid,
             'paidOrder' => ($paidOrder = $payments->paidOrder($designRequest)),
-            'orderUrl' => $paidOrder === null ? null : $urls->setController(OrderCrudController::class)->setAction(Action::DETAIL)->setEntityId($paidOrder->getId())->generateUrl(),
+            'orderUrl' => $paidOrder instanceof \App\Entity\Order ? $urls->setController(OrderCrudController::class)->setAction(Action::DETAIL)->setEntityId($paidOrder->getId())->generateUrl() : null,
             'requestBalanceUrl' => $paidOrder?->canRequestBalance() ? $urls->setController(OrderCrudController::class)->setAction('requestBalance')->setEntityId($paidOrder->getId())->generateUrl() : null,
             'customerUrl' => $quote->getToken() === null ? null : $this->generateUrl('quote_show', [
                 'token' => $quote->getToken(),
@@ -291,7 +291,7 @@ class DesignRequestCrudController extends AbstractCrudController
      *
      * @return array<string, string>
      */
-    private static function statusLabels(): array
+    private function statusLabels(): array
     {
         return array_combine(
             array_map(static fn (DesignRequestStatus $status): string => $status->label(), DesignRequestStatus::cases()),
@@ -304,7 +304,7 @@ class DesignRequestCrudController extends AbstractCrudController
      *
      * @return array<string, string>
      */
-    private static function typeLabels(): array
+    private function typeLabels(): array
     {
         return array_combine(
             array_map(static fn (DesignRequestType $type): string => $type->label(), DesignRequestType::cases()),
@@ -315,7 +315,7 @@ class DesignRequestCrudController extends AbstractCrudController
     /**
      * @return array<string, DesignRequestStatus>
      */
-    private static function statusChoices(): array
+    private function statusChoices(): array
     {
         return array_combine(
             array_map(static fn (DesignRequestStatus $status): string => $status->label(), DesignRequestStatus::cases()),

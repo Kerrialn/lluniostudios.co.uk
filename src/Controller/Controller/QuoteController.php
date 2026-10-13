@@ -51,9 +51,9 @@ final class QuoteController extends AbstractController
     ) {
     }
 
-    #[Route(path: '/quote/{token}', name: 'quote_show', methods: ['GET'], requirements: [
+    #[Route(path: '/quote/{token}', name: 'quote_show', requirements: [
         'token' => '[A-Za-z0-9_-]{16,64}',
-    ])]
+    ], methods: ['GET'])]
     public function show(string $token): Response
     {
         $quote = $this->sentQuote($token);
@@ -79,7 +79,7 @@ final class QuoteController extends AbstractController
             ]),
         ]);
 
-        $balanceForm = $paid instanceof Order && $paid->canRequestBalance() && $paid->getBalanceRequestedAt() !== null
+        $balanceForm = $paid instanceof Order && $paid->canRequestBalance() && $paid->getBalanceRequestedAt() instanceof \Carbon\CarbonImmutable
             ? $this->container->get('form.factory')->createNamed('card_payment_form', BalancePaymentForm::class, [
                 'cardName' => $request->getFullName(),
             ], [
@@ -110,9 +110,9 @@ final class QuoteController extends AbstractController
      * approved): the details are checked, then the order is saved and a
      * payment started for the page to confirm.
      */
-    #[Route(path: '/quote/{token}/pay', name: 'quote_pay', methods: ['POST'], requirements: [
+    #[Route(path: '/quote/{token}/pay', name: 'quote_pay', requirements: [
         'token' => '[A-Za-z0-9_-]{16,64}',
-    ])]
+    ], methods: ['POST'])]
     public function pay(Request $request, string $token): JsonResponse
     {
         // Only this site's own page may send here.
@@ -206,9 +206,9 @@ final class QuoteController extends AbstractController
      * After paying: Stripe is asked whether the payment went through, then
      * "Order & Slot Confirmed" (or "Order Received" while it is confirmed).
      */
-    #[Route(path: '/quote/{token}/complete', name: 'quote_complete', methods: ['GET'], requirements: [
+    #[Route(path: '/quote/{token}/complete', name: 'quote_complete', requirements: [
         'token' => '[A-Za-z0-9_-]{16,64}',
-    ])]
+    ], methods: ['GET'])]
     public function complete(string $token): Response
     {
         $quote = $this->sentQuote($token);
@@ -233,9 +233,9 @@ final class QuoteController extends AbstractController
      * "Pay balance" (the page's form, or ?wallet=1 once Apple Pay / Google Pay
      * is approved): the balance's payment for the page to confirm.
      */
-    #[Route(path: '/quote/{token}/balance', name: 'quote_balance', methods: ['POST'], requirements: [
+    #[Route(path: '/quote/{token}/balance', name: 'quote_balance', requirements: [
         'token' => '[A-Za-z0-9_-]{16,64}',
-    ])]
+    ], methods: ['POST'])]
     public function balance(Request $request, string $token): JsonResponse
     {
         if (! \in_array($request->headers->get('Sec-Fetch-Site'), [null, 'same-origin'], true)) {
@@ -244,7 +244,7 @@ final class QuoteController extends AbstractController
 
         $quote = $this->sentQuote($token);
         $order = $this->payments->paidOrder($quote->getDesignRequest());
-        if (! $order instanceof Order || ! $order->canRequestBalance() || $order->getBalanceRequestedAt() === null) {
+        if (! $order instanceof Order || ! $order->canRequestBalance() || !$order->getBalanceRequestedAt() instanceof \Carbon\CarbonImmutable) {
             return new JsonResponse([
                 'status' => 'redirect',
                 'url' => $this->generateUrl('quote_show', [
@@ -272,7 +272,7 @@ final class QuoteController extends AbstractController
         }
 
         try {
-            $intent = $this->payments->startBalance($order, (string) $form->get('cardName')->getData());
+            $intent = $this->payments->startBalance($order);
         } catch (Throwable $throwable) {
             $this->logger->error('Starting a balance payment failed: ' . $throwable->getMessage());
 
@@ -309,9 +309,9 @@ final class QuoteController extends AbstractController
     /**
      * After paying the balance: "Payment Received" once Stripe confirms it.
      */
-    #[Route(path: '/quote/{token}/balance/complete', name: 'quote_balance_complete', methods: ['GET'], requirements: [
+    #[Route(path: '/quote/{token}/balance/complete', name: 'quote_balance_complete', requirements: [
         'token' => '[A-Za-z0-9_-]{16,64}',
-    ])]
+    ], methods: ['GET'])]
     public function balanceComplete(string $token): Response
     {
         $quote = $this->sentQuote($token);

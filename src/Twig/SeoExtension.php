@@ -86,8 +86,8 @@ final class SeoExtension extends AbstractExtension
     }
 
     /**
-     * Llunio Studios as a LocalBusiness (Organization). The address as given:
-     * Wimborne, Dorset (decided provisionally 13 October 2026). Facebook is
+     * Llunio Studios as a LocalBusiness (Organization), with the studio's full
+     * address as on the Contact page (decided 13 October 2026). Facebook is
      * left out until the page exists.
      *
      * @return array<string, mixed>
@@ -106,7 +106,9 @@ final class SeoExtension extends AbstractExtension
             'email' => $this->studioEmail,
             'address' => [
                 '@type' => 'PostalAddress',
+                'streetAddress' => 'Hogsmeade, Higher Merley Ln',
                 'addressLocality' => 'Wimborne',
+                'postalCode' => 'BH21 3EG',
                 'addressRegion' => 'Dorset',
                 'addressCountry' => 'GB',
             ],
@@ -181,6 +183,6 @@ final class SeoExtension extends AbstractExtension
     {
         $request = $this->requestStack->getMainRequest();
 
-        return $request === null || str_starts_with($path, 'http') ? $path : $request->getSchemeAndHttpHost() . $path;
+        return !$request instanceof \Symfony\Component\HttpFoundation\Request || str_starts_with($path, 'http') ? $path : $request->getSchemeAndHttpHost() . $path;
     }
 }

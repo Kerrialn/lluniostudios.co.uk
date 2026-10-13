@@ -159,7 +159,7 @@ final class ReserveController extends AbstractController
             $this->entityManager->persist($designRequest);
 
             // The basket's lamps are now in the request.
-            if (null !== $cart) {
+            if ($cart instanceof \App\Entity\Cart) {
                 foreach ($cart->getCartItems()->toArray() as $line) {
                     $cart->removeCartItem($line);
                 }
@@ -206,7 +206,7 @@ final class ReserveController extends AbstractController
             'customChoices' => $customChoices,
             'carriedDetails' => $carriedDetails,
             // The size's own photo only when every lamp is that size (never another size's).
-            'photo' => 1 === \count($sizes) ? (LumenFormaPhotos::forSize((string) reset($sizes))[3] ?? null) : null,
+            'photo' => 1 === \count($sizes) ? (LumenFormaPhotos::forSize(reset($sizes))[3] ?? null) : null,
         ]);
     }
 

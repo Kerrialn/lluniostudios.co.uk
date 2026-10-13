@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'This value should be false.' => 'This value should be false.',
     'This value should be true.' => 'This value should be true.',

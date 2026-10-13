@@ -330,7 +330,7 @@ class CheckoutController extends AbstractController
 
         $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $email = strtolower((string) $value('email'));
-        $account = $this->orderAccounts->accountFor($email, self::buyerName($data));
+        $account = $this->orderAccounts->accountFor($email, $this->buyerName($data));
 
         $order = $this->orderFactory->createFromCart($cart, $account, $email, $quote, $this->deliveryAddress($cart, $data, $postcode, $account));
         $this->applyDetails($order, $data, $cart);
@@ -374,7 +374,7 @@ class CheckoutController extends AbstractController
         $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
         $order->setContactPhone($value('phone'));
         $order->setDeliveryNotes($value('notes'));
-        $order->setCustomerName(self::buyerName($data));
+        $order->setCustomerName($this->buyerName($data));
         $order->setGiftDetails($cart->isGift() ? $cart->getGiftSendTo() : null, $value('giftMessage'), $value('recipientPhone'));
         $billing = null;
         if (! ($data['billingSame'] ?? true)) {
@@ -430,7 +430,7 @@ class CheckoutController extends AbstractController
                 // Same basket: keep the order and payment, with the latest details.
                 $value = static fn (string $key): ?string => ($text = trim((string) ($data[$key] ?? ''))) === '' ? null : $text;
                 $email = strtolower((string) $value('email'));
-                $account = $this->orderAccounts->accountFor($email, self::buyerName($data));
+                $account = $this->orderAccounts->accountFor($email, $this->buyerName($data));
                 $order->setUser($account);
                 $order->setEmail($email);
                 $order->setShippingAddress($this->deliveryAddress($cart, $data, $postcode, $account));
@@ -568,7 +568,7 @@ class CheckoutController extends AbstractController
         ], static fn (string $line): bool => $line !== '');
         // A gift keeps its date and choices; sent directly, the delivery name is the recipient's and the customer's name is the buyer's (if given).
         $direct = $cart->isDirectGift();
-        $gift = $cart->isGift() && $cart->getGiftArriveBy() !== null ? [
+        $gift = $cart->isGift() && $cart->getGiftArriveBy() instanceof \DateTimeImmutable ? [
             'gift' => '1',
             'giftNeededBy' => $cart->getGiftArriveBy()->format('Y-m-d'),
             'giftSendTo' => $cart->getGiftSendTo()->value ?? '',
@@ -579,7 +579,7 @@ class CheckoutController extends AbstractController
 
         $request->getSession()->set(ReserveController::PREFILL_KEY, [
             ...$gift,
-            'fullName' => $direct ? (string) self::buyerName($data) : $value('name'),
+            'fullName' => $direct ? (string) $this->buyerName($data) : $value('name'),
             'email' => $value('email'),
             'phone' => $value('phone'),
             'addressLine1' => $value('line1'),
@@ -603,7 +603,7 @@ class CheckoutController extends AbstractController
      *
      * @param array<string, mixed> $data
      */
-    private static function buyerName(array $data): ?string
+    private function buyerName(array $data): ?string
     {
         $value = static fn (string $key): string => trim((string) ($data[$key] ?? ''));
         foreach ([($data['billingSame'] ?? true) ? '' : $value('billingName'), $value('cardName') === '-' ? '' : $value('cardName'), $value('payerName')] as $name) {

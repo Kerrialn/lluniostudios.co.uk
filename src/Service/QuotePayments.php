@@ -52,7 +52,7 @@ final readonly class QuotePayments
     {
         $request = $order->getDesignRequest();
 
-        return $request === null ? null : $this->quotes->find($request)?->getToken();
+        return $request instanceof \App\Entity\DesignRequest ? $this->quotes->find($request)?->getToken() : null;
     }
 
     /**
@@ -75,7 +75,7 @@ final readonly class QuotePayments
      * The balance's payment for the page to confirm: the earlier one while
      * it is still for the amount owed, otherwise a new one.
      */
-    public function startBalance(Order $order, string $cardName): StripePaymentIntentResult
+    public function startBalance(Order $order): StripePaymentIntentResult
     {
         $owed = $order->getAmountOwed();
         if ($order->getBalancePaymentIntentId() !== null) {
@@ -107,7 +107,7 @@ final readonly class QuotePayments
      */
     public function finishBalance(Order $order): void
     {
-        if ($order->getBalancePaidAt() !== null || $order->getBalancePaymentIntentId() === null) {
+        if ($order->getBalancePaidAt() instanceof \Carbon\CarbonImmutable || $order->getBalancePaymentIntentId() === null) {
             return;
         }
 

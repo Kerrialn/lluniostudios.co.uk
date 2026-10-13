@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'news-letter-signup' => 'Newsletter Signup Confirmation',
     'greetings' => 'Hello {name},',

@@ -45,7 +45,7 @@ class Quote
     private Uuid $id;
 
     #[ORM\OneToOne(targetEntity: DesignRequest::class)]
-    #[ORM\JoinColumn(nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(unique: true, nullable: false, onDelete: 'CASCADE')]
     private DesignRequest $designRequest;
 
     /**
@@ -333,7 +333,7 @@ class Quote
 
     public function isSent(): bool
     {
-        return $this->sentAt !== null;
+        return $this->sentAt instanceof \DateTimeImmutable;
     }
 
     public function getSentAt(): ?\DateTimeImmutable
@@ -348,7 +348,7 @@ class Quote
 
     public function isExpired(?\DateTimeImmutable $now = null): bool
     {
-        return $this->expiresAt !== null && ($now ?? new CarbonImmutable()) > $this->expiresAt;
+        return $this->expiresAt instanceof \DateTimeImmutable && ($now ?? new CarbonImmutable()) > $this->expiresAt;
     }
 
     /**

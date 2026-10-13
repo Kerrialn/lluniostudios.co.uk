@@ -8,8 +8,9 @@
 // sitemap.xml; Lighting Designs has Product data for the five sizes with their
 // prices ("from" for Atelier, Estate, Monument); every other page (basket,
 // checkout, the forms, thank-you pages, sign-in, quotes, orders, admin) is
-// "noindex" (meta and header). robots.txt keeps the private areas out and
-// points to the sitemap.
+// "noindex" (meta and header). robots.txt blocks admin only (the other
+// private pages rely on "noindex", decided 13 October 2026) and points to the
+// sitemap.
 //   node tests/browser/seo.mjs
 import { execSync } from 'node:child_process';
 import { open, sleep, checker, BASE_URL, PROJECT_DIR } from './lib.mjs';
@@ -59,7 +60,7 @@ try {
         const header = curl(path);
         check(`${name}: indexable (no "noindex" meta or header), canonical to itself`, !p.robots && !/x-robots-tag/i.test(header) && p.canonical === BASE_URL + path && p.og.url === p.canonical, JSON.stringify([p.robots, p.canonical]));
         const business = p.ld.find((d) => d['@type'] === 'LocalBusiness');
-        check(`${name}: LocalBusiness data for Llunio Studios (Wimborne, Dorset, info@, Instagram and YouTube, no Facebook)`, business?.name === 'Llunio Studios' && business.address?.addressLocality === 'Wimborne' && business.address?.addressRegion === 'Dorset' && business.address?.addressCountry === 'GB' && business.email === 'info@lluniostudios.co.uk' && JSON.stringify(business.sameAs) === JSON.stringify(['https://www.instagram.com/llunio_studios/', 'https://www.youtube.com/@LlunioStudios']) && !JSON.stringify(business).includes('facebook'), JSON.stringify(business));
+        check(`${name}: LocalBusiness data for Llunio Studios (the Contact page's full address, Dorset, info@, Instagram and YouTube, no Facebook)`, business?.name === 'Llunio Studios' && business.address?.streetAddress === 'Hogsmeade, Higher Merley Ln' && business.address?.postalCode === 'BH21 3EG' && business.address?.addressLocality === 'Wimborne' && business.address?.addressRegion === 'Dorset' && business.address?.addressCountry === 'GB' && business.email === 'info@lluniostudios.co.uk' && JSON.stringify(business.sameAs) === JSON.stringify(['https://www.instagram.com/llunio_studios/', 'https://www.youtube.com/@LlunioStudios']) && !JSON.stringify(business).includes('facebook'), JSON.stringify(business));
     }
     check('the homepage title leads with "Llunio Studios"', pages['/'].title.startsWith('Llunio Studios'), pages['/'].title);
 
@@ -89,7 +90,7 @@ try {
 
     // robots.txt and sitemap.xml.
     const robots = execSync(`curl -sk "${BASE_URL}/robots.txt"`, { encoding: 'utf8' });
-    check('robots.txt: keeps admin, basket, checkout, quotes, orders, the account, sign-in, the forms and thank-you pages out; points to the sitemap', ['/admin', '/basket', '/checkout', '/quote/', '/order/', '/account', '/login', '/reserve', '/begin-the-conversation', '/bespoke-commissions/received'].every((path) => robots.includes(`Disallow: ${path}\n`)) && robots.includes(`Sitemap: ${BASE_URL}/sitemap.xml`) && !/Disallow: \/\n|Disallow: \/lighting-designs|Disallow: \/bespoke-commissions\n/.test(robots), robots);
+    check('robots.txt: blocks admin only (the other private pages rely on "noindex"); points to the sitemap', JSON.stringify([...robots.matchAll(/^Disallow: (.*)$/gm)].map((m) => m[1])) === JSON.stringify(['/admin']) && robots.includes(`Sitemap: ${BASE_URL}/sitemap.xml`), robots);
     const sitemap = execSync(`curl -sk "${BASE_URL}/sitemap.xml"`, { encoding: 'utf8' });
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     check('sitemap.xml: exactly the six indexable pages', JSON.stringify(locs) === JSON.stringify(Object.keys(INDEXABLE).map((p) => BASE_URL + p)) && /application\/xml/.test(curl('/sitemap.xml')), JSON.stringify(locs));

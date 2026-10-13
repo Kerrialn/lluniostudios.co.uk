@@ -24,7 +24,7 @@ class OrderItem
 
     #[ORM\ManyToOne(targetEntity: Product::class)]
     #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?Product $product = null;
+    private ?Product $product;
 
     #[ORM\Column(length: 255)]
     private string $productTitle;
@@ -41,7 +41,7 @@ class OrderItem
      * @var array<int, array{option: string, value: string, lamp?: int}>
      */
     #[ORM\Column(type: Types::JSON)]
-    private array $optionsSnapshot = [];
+    private array $optionsSnapshot;
 
     /**
      * A product's line, or (no product) a quote's extra line, e.g. "Custom
@@ -167,7 +167,7 @@ class OrderItem
      */
     public function isExtra(): bool
     {
-        return $this->product === null && $this->optionsSnapshot === [];
+        return !$this->product instanceof \App\Entity\Product && $this->optionsSnapshot === [];
     }
 
     public function getLineTotal(): int

@@ -83,10 +83,10 @@ final class ReserveForm extends AbstractType
                     'maxlength' => 20,
                 ],
             ])
-            ->add('addressLine1', TextType::class, self::text(CardPaymentForm::MAX['line'], 'shipping address-line1', 'Please enter the first line of your address.'))
-            ->add('addressLine2', TextType::class, self::text(CardPaymentForm::MAX['line'], 'shipping address-line2'))
-            ->add('town', TextType::class, self::text(CardPaymentForm::MAX['town'], 'shipping address-level2', 'Please enter your town or city.'))
-            ->add('county', TextType::class, self::text(CardPaymentForm::MAX['county'], 'shipping address-level1'))
+            ->add('addressLine1', TextType::class, $this->text(CardPaymentForm::MAX['line'], 'shipping address-line1', 'Please enter the first line of your address.'))
+            ->add('addressLine2', TextType::class, $this->text(CardPaymentForm::MAX['line'], 'shipping address-line2'))
+            ->add('town', TextType::class, $this->text(CardPaymentForm::MAX['town'], 'shipping address-level2', 'Please enter your town or city.'))
+            ->add('county', TextType::class, $this->text(CardPaymentForm::MAX['county'], 'shipping address-level1'))
             ->add('postcode', TextType::class, [
                 'constraints' => [
                     new Assert\NotBlank(message: 'Please enter your postcode.'),
@@ -129,8 +129,8 @@ final class ReserveForm extends AbstractType
                 'placeholder' => false,
                 'choice_label' => static fn (GiftSendTo $choice): string => $choice->label(),
             ])
-            ->add('giftRecipientName', TextType::class, self::text(CardPaymentForm::MAX['name'], 'off'))
-            ->add('giftMessage', TextareaType::class, self::text(CardPaymentForm::GIFT_MESSAGE_MAX, 'off'))
+            ->add('giftRecipientName', TextType::class, $this->text(CardPaymentForm::MAX['name'], 'off'))
+            ->add('giftMessage', TextareaType::class, $this->text(CardPaymentForm::GIFT_MESSAGE_MAX, 'off'))
             ->add('giftRecipientPhone', TelType::class, [
                 'required' => false,
                 'constraints' => [
@@ -166,7 +166,7 @@ final class ReserveForm extends AbstractType
     /**
      * @return array<string, mixed>
      */
-    private static function text(int $max, string $autocomplete, ?string $required = null): array
+    private function text(int $max, string $autocomplete, ?string $required = null): array
     {
         return [
             'required' => $required !== null,

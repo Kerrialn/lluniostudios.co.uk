@@ -59,8 +59,8 @@ class CommissionEnquiryCrudController extends AbstractCrudController
     public function configureFilters(Filters $filters): Filters
     {
         return $filters
-            ->add(ChoiceFilter::new('status')->setChoices(self::statusChoices()))
-            ->add(ChoiceFilter::new('client', 'Type')->setChoices(self::clientChoices()));
+            ->add(ChoiceFilter::new('status')->setChoices($this->statusChoices()))
+            ->add(ChoiceFilter::new('client', 'Type')->setChoices($this->clientChoices()));
     }
 
     public function configureFields(string $pageName): iterable
@@ -69,13 +69,13 @@ class CommissionEnquiryCrudController extends AbstractCrudController
             TextField::new('enquiryNumber', 'Enquiry')->setDisabled(),
             DateTimeField::new('createdAt', 'Received')->setFormat('d MMM y, HH:mm')->setTimezone('Europe/London')->setDisabled(),
             ChoiceField::new('status')
-                ->setChoices(self::statusChoices())
+                ->setChoices($this->statusChoices())
                 ->renderAsBadges([
                     CommissionStatus::NEW->value => 'warning',
                     CommissionStatus::CONTACTED->value => 'info',
                     CommissionStatus::CLOSED->value => 'success',
                 ]),
-            ChoiceField::new('client', 'Type')->setChoices(self::clientChoices())->setDisabled(),
+            ChoiceField::new('client', 'Type')->setChoices($this->clientChoices())->setDisabled(),
             TextField::new('name', 'Name')->setDisabled(),
             TextField::new('company')->setDisabled(),
             EmailField::new('email')->setDisabled(),
@@ -97,7 +97,7 @@ class CommissionEnquiryCrudController extends AbstractCrudController
     /**
      * @return array<string, CommissionStatus>
      */
-    private static function statusChoices(): array
+    private function statusChoices(): array
     {
         return array_combine(
             array_map(static fn (CommissionStatus $status): string => $status->label(), CommissionStatus::cases()),
@@ -108,7 +108,7 @@ class CommissionEnquiryCrudController extends AbstractCrudController
     /**
      * @return array<string, CommissionClient>
      */
-    private static function clientChoices(): array
+    private function clientChoices(): array
     {
         return [
             'Home' => CommissionClient::HOME,

@@ -92,10 +92,10 @@ class DesignRequest implements HasReferenceNumber
     private ?string $country = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $accessNotes = null;
+    private ?string $accessNotes;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    private ?string $customDetails = null;
+    private ?string $customDetails;
 
     /**
      * Gift options (9 October 2026): "This is a gift" with a preferred
@@ -364,7 +364,7 @@ class DesignRequest implements HasReferenceNumber
             return 'No';
         }
 
-        return 'Needed by ' . $this->giftNeededBy->format('j F Y') . ($this->giftSendTo === null ? '' : ' · ' . ($this->isDirectGift() ? 'Direct to recipient' : 'To the customer'));
+        return 'Needed by ' . $this->giftNeededBy->format('j F Y') . ($this->giftSendTo instanceof \App\Enum\GiftSendTo ? ' · ' . ($this->isDirectGift() ? 'Direct to recipient' : 'To the customer') : '');
     }
 
     public function getEmail(): string

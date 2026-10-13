@@ -67,7 +67,7 @@ final class EnquiryController extends AbstractController
     public function enquiry(Request $request): Response
     {
         $item = $this->lamps->largerItem();
-        if (null === $item) {
+        if (!$item instanceof \App\Entity\DesignRequestItem) {
             return $this->redirectToRoute('lighting_designs');
         }
 

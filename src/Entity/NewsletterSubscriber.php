@@ -15,9 +15,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: NewsletterSubscriberRepository::class)]
 #[ORM\Table(name: 'newsletter_subscribers')]
-#[ORM\Index(columns: ['status'], name: 'idx_newsletter_status')]
-#[ORM\Index(columns: ['confirmation_token'], name: 'idx_newsletter_confirmation_token')]
-#[ORM\Index(columns: ['unsubscribe_token'], name: 'idx_newsletter_unsubscribe_token')]
+#[ORM\Index(name: 'idx_newsletter_status', columns: ['status'])]
+#[ORM\Index(name: 'idx_newsletter_confirmation_token', columns: ['confirmation_token'])]
+#[ORM\Index(name: 'idx_newsletter_unsubscribe_token', columns: ['unsubscribe_token'])]
 #[ORM\HasLifecycleCallbacks]
 class NewsletterSubscriber
 {
@@ -44,7 +44,7 @@ class NewsletterSubscriber
      * Null once confirmed (optional, but keeps DB clean).
      */
     #[ORM\Column(length: 64, nullable: true)]
-    private ?string $confirmationToken = null;
+    private ?string $confirmationToken;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?DateTimeImmutable $confirmedAt = null;

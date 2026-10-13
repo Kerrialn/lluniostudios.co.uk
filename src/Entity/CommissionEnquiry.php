@@ -49,7 +49,7 @@ class CommissionEnquiry implements HasReferenceNumber
     private string $email;
 
     #[ORM\Column(length: 32, nullable: true)]
-    private ?string $phone = null;
+    private ?string $phone;
 
     /**
      * Home only: "email" or "phone".

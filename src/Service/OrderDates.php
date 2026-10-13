@@ -29,7 +29,7 @@ final readonly class OrderDates
     public function castingDate(Order $order): ?\DateTimeImmutable
     {
         $request = $order->getDesignRequest();
-        if ($request === null) {
+        if (!$request instanceof \App\Entity\DesignRequest) {
             return null;
         }
 
@@ -58,7 +58,7 @@ final readonly class OrderDates
     {
         $uk = new \DateTimeZone('Europe/London');
         $todayDay = ($today ?? new \DateTimeImmutable('now'))->setTimezone($uk)->format('Y-m-d');
-        $day = $castingDate !== null
+        $day = $castingDate instanceof \DateTimeImmutable
             ? $castingDate->format('Y-m-d')
             : \DateTimeImmutable::createFromInterface($paidAt)->setTimezone($uk)->modify('+' . LeadTime::MAX_DAYS . ' days')->format('Y-m-d');
 

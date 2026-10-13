@@ -63,7 +63,7 @@ class OrderCrudController extends AbstractCrudController
     {
         $requestBalance = Action::new('requestBalance', 'Request balance', 'fa fa-envelope')
             ->linkToCrudAction('requestBalance')
-            ->displayIf(static fn (Order $order): bool => $order->canRequestBalance() && $order->getDesignRequest() !== null);
+            ->displayIf(static fn (Order $order): bool => $order->canRequestBalance() && $order->getDesignRequest() instanceof \App\Entity\DesignRequest);
 
         // Step 11.2: a placed order not yet in production.
         $inProduction = static fn (): Action => Action::new('markInProduction', 'Mark In Production', 'fa fa-industry')
@@ -211,7 +211,7 @@ class OrderCrudController extends AbstractCrudController
             'courier' => $courier,
             'tracking' => $tracking,
             'problem' => $problem,
-            'requestBalanceUrl' => $order->canRequestBalance() && $order->getDesignRequest() !== null
+            'requestBalanceUrl' => $order->canRequestBalance() && $order->getDesignRequest() instanceof \App\Entity\DesignRequest
                 ? $urls->unsetAll()->setController(self::class)->setAction('requestBalance')->setEntityId($order->getId())->generateUrl()
                 : null,
         ]);
@@ -253,7 +253,7 @@ class OrderCrudController extends AbstractCrudController
             }
 
             $typed = OrderDates::day((string) $request->request->get('expectedDispatch'));
-            if ($typed === null) {
+            if (!$typed instanceof \DateTimeImmutable) {
                 $problem = 'Please enter the expected dispatch date.';
             } elseif ($typed < $today) {
                 $problem = 'The expected dispatch date can\'t be in the past.';
@@ -305,7 +305,7 @@ class OrderCrudController extends AbstractCrudController
 
         // Back to the request when asked from there, otherwise to the order.
         $designRequest = $request->query->get('from') === 'request' ? $order->getDesignRequest() : null;
-        $detail = $designRequest !== null
+        $detail = $designRequest instanceof \App\Entity\DesignRequest
             ? $urls->unsetAll()->setController(DesignRequestCrudController::class)->setAction(Action::DETAIL)->setEntityId($designRequest->getId())->generateUrl()
             : $urls->unsetAll()->setController(self::class)->setAction(Action::DETAIL)->setEntityId($order->getId())->generateUrl();
         if (! $order->canRequestBalance() || $payments->tokenFor($order) === null) {
@@ -335,7 +335,7 @@ class OrderCrudController extends AbstractCrudController
 
             try {
                 $payments->requestBalance($order, $note === '' ? null : $note);
-                $this->addFlash('success', 'Balance requested: ' . $order->getEmail() . ' has been emailed to pay ' . self::money($order->getAmountOwed()) . '.');
+                $this->addFlash('success', 'Balance requested: ' . $order->getEmail() . ' has been emailed to pay ' . $this->money($order->getAmountOwed()) . '.');
             } catch (\Throwable $exception) {
                 $logger->error('Requesting a balance failed', [
                     'order' => $order->getOrderNumber(),
@@ -358,8 +358,8 @@ class OrderCrudController extends AbstractCrudController
     public function configureFilters(Filters $filters): Filters
     {
         return $filters
-            ->add(ChoiceFilter::new('status')->setChoices(self::statusLabels()))
-            ->add(ChoiceFilter::new('stage')->setChoices(self::stageLabels()));
+            ->add(ChoiceFilter::new('status')->setChoices($this->statusLabels()))
+            ->add(ChoiceFilter::new('stage')->setChoices($this->stageLabels()));
     }
 
     /**
@@ -367,7 +367,7 @@ class OrderCrudController extends AbstractCrudController
      *
      * @return array<string, string>
      */
-    private static function stageLabels(): array
+    private function stageLabels(): array
     {
         return array_combine(
             array_map(static fn (OrderStage $s): string => $s->label(), OrderStage::cases()),
@@ -380,7 +380,7 @@ class OrderCrudController extends AbstractCrudController
      *
      * @return array<string, string>
      */
-    private static function statusLabels(): array
+    private function statusLabels(): array
     {
         return array_combine(
             array_map(static fn (OrderStatus $s): string => $s->label(), OrderStatus::cases()),
@@ -388,7 +388,7 @@ class OrderCrudController extends AbstractCrudController
         );
     }
 
-        private static function money(int $pence): string
+        private function money(int $pence): string
     {
         return '£' . number_format($pence / 100, 2);
     }
@@ -412,7 +412,7 @@ class OrderCrudController extends AbstractCrudController
             // Shown by its label ("Deposit Paid"; with the cases themselves
             // EasyAdmin shows their names, e.g. DEPOSIT_PAID); edited as the case.
             ChoiceField::new('status')
-                ->setChoices(self::statusLabels())
+                ->setChoices($this->statusLabels())
                 ->renderAsBadges([
                     OrderStatus::PENDING->value => 'secondary',
                     OrderStatus::AWAITING_PAYMENT->value => 'warning',
