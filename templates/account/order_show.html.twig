@@ -11,11 +11,9 @@
     {% set total = 'flex justify-between gap-3 text-[13px] py-2.5 border-t border-ll-line' %}
     {% import _self as m %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
-        {% if not private|default(false) %}<a href="{{ path('account_orders') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Your Orders</a>{% endif %}
-        <div class="flex justify-between items-baseline gap-4 flex-wrap">
-            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Order {{ order.orderNumber }}</h1>
-            <span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.displayStatus }} · {{ order.createdAt|date('j F Y', 'Europe/London') }}</span>
-        </div>
+        {# The status and date on the right of the heading, with "← Your Orders" (not on the private page) beside them (Step 7d: the heading at the same place as every page's). #}
+        {% set aside %}<span class="flex flex-wrap items-baseline justify-end gap-x-5 gap-y-1"><span class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">{{ order.displayStatus }} · {{ order.createdAt|date('j F Y', 'Europe/London') }}</span>{% if not private|default(false) %}<a href="{{ path('account_orders') }}" class="text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Your Orders</a>{% endif %}</span>{% endset %}
+        {{ include('partials/_page_heading.html.twig', { title: 'Order ' ~ order.orderNumber, aside: aside }) }}
 
         <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
             <div class="flex-[1.5_1_460px] min-w-0 flex flex-col gap-6">

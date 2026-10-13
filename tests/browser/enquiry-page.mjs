@@ -42,10 +42,10 @@ try {
         await ev(`document.querySelectorAll('[id^=sfwdt]').forEach(e => e.remove())`);
     };
     await toPage();
-    let p = await ev(`({ path: location.pathname, title: document.title, h1: document.querySelector('h1').textContent.trim(), intro: document.querySelector('h1').nextElementSibling.textContent.trim(),
+    let p = await ev(`({ path: location.pathname, title: document.title, h1: document.querySelector('h1').textContent.trim(), intro: document.querySelector('.ll-page-heading + div p').textContent.trim(),
         rows: [...document.querySelectorAll('[aria-label="Your piece"] .flex.justify-between')].slice(1).map(r => [...r.children].map(c => c.textContent.trim()).join('=')),
         labels: [...document.querySelectorAll('form[name=enquiry_form] label, form[name=enquiry_form] [id$=_label], form[name=enquiry_form] legend, form[name=enquiry_form] span[class^="text-[14px]"]')].filter(l => l.getClientRects().length && !l.closest('[aria-hidden=true]')).map(l => l.innerText.replace(/\\s+/g, ' ').trim()),
-        sections: [...document.querySelectorAll('form[name=enquiry_form] > div.uppercase')].map(e => e.textContent.trim()),
+        sections: [...document.querySelectorAll('form[name=enquiry_form] > div.ll-section-heading')].map(e => e.textContent.trim()),
         talk: [...document.querySelectorAll('[name="enquiry_form[talk]"]')].map(i => i.closest('label').textContent.trim()).join(),
         button: document.querySelector('form[name=enquiry_form] button[type=submit]').textContent.trim(),
         wide: document.documentElement.scrollWidth <= innerWidth })`);

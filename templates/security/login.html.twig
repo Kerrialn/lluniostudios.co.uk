@@ -14,7 +14,7 @@
     {% set button = 'll-cta w-full bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]' %}
     {% set textLink = 'text-[13px] text-ll-mute underline transition-colors hover:text-ll-ink' %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
-        <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Sign In</h1>
+        {{ include('partials/_page_heading.html.twig', { title: 'Sign In' }) }}
 
         <div class="flex flex-col gap-6 border-t border-ll-line pt-4 max-w-[460px] text-[15px] leading-relaxed">
             {% if step == 'code' %}

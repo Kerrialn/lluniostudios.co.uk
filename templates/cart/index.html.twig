@@ -21,14 +21,8 @@
     {% set rowKey = 'text-[11px] leading-[1.5] uppercase tracking-[0.14em] text-ll-mute' %}
     {% set textLink = 'self-start text-xs text-ll-mute ll-link hover:text-ll-ink' %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
-        <div class="flex justify-between items-baseline gap-4 flex-wrap">
-            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Studio Order</h1>
-            {% if cart.cartItems is not empty %}
-                <span class="ll-label text-[11px] text-ll-mute">
-                    {{ lampCount }} {{ lampCount == 1 ? 'lamp' : 'lamps' }}{% if cart.cartItems|length > 1 %} · {{ cart.cartItems|length }} items{% endif %}
-                </span>
-            {% endif %}
-        </div>
+        {% set count %}{% if cart.cartItems is not empty %}<span class="ll-label text-[11px] text-ll-mute">{{ lampCount }} {{ lampCount == 1 ? 'lamp' : 'lamps' }}{% if cart.cartItems|length > 1 %} · {{ cart.cartItems|length }} items{% endif %}</span>{% endif %}{% endset %}
+        {{ include('partials/_page_heading.html.twig', { title: 'Your Studio Order', aside: count, gap: 'clamp(28px,4vw,48px)' }) }}
 
         {% if cart.cartItems is empty %}
             <div class="flex flex-col items-start gap-5 py-6 border-t border-ll-line">

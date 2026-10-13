@@ -22,12 +22,12 @@
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% block body %}
-    {% set section = 'text-[11px] uppercase tracking-[0.14em] text-ll-mute border-t border-ll-line pt-4' %}
+    {% set section = 'll-section-heading border-t border-ll-line pt-4' %}
     {% set grid = 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-x-5 gap-y-4' %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
-        <div class="flex flex-col gap-3.5 max-w-[640px]">
-            <a href="{{ path('lighting_designs') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>
-            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Reserve Your Design</h1>
+        {% set back %}<a href="{{ path('lighting_designs') }}" class="text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>{% endset %}
+        {{ include('partials/_page_heading.html.twig', { title: 'Reserve Your Design', aside: back, gap: 'clamp(28px,4vw,48px)' }) }}
+        <div class="max-w-[640px] border-t border-ll-line pt-4">
             <p class="m-0 text-[15px] leading-[1.5] text-ll-mute [text-wrap:pretty]">No payment is taken today. Reserving holds your place in our studio casting schedule while we calculate delivery options and confirm exact lead times.</p>
         </div>
 

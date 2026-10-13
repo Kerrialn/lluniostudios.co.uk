@@ -24,15 +24,16 @@
 {% import _self as m %}
 
 {% block body %}
-    {% set section = 'text-[11px] uppercase tracking-[0.14em] text-ll-mute border-t border-ll-line pt-4' %}
+    {% set section = 'll-section-heading border-t border-ll-line pt-4' %}
     {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-[13px] leading-[1.5]' %}
     {% set total = 'flex justify-between gap-3 text-[13px] py-2.5 border-t border-ll-line' %}
     {% set grid = 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-x-5 gap-y-4' %}
     {% set payable = not expired and not paidOrder %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-[clamp(28px,4vw,48px)]">
-        <div class="flex flex-col gap-3.5 max-w-[640px]">
-            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Quote</h1>
-            <p class="m-0 text-[13px] text-ll-mute">{{ designRequest.isEnquiry ? 'Enquiry' : 'Request' }} {{ designRequest.requestNumber }}</p>
+        {# The reference on the right of the heading, as every page's heading (Step 7d); the greeting, note and signature under the rule. #}
+        {% set reference %}<span class="text-[13px] text-ll-mute" data-quote-reference>{{ designRequest.isEnquiry ? 'Enquiry' : 'Request' }} {{ designRequest.requestNumber }}</span>{% endset %}
+        {{ include('partials/_page_heading.html.twig', { title: 'Your Quote', aside: reference, gap: 'clamp(28px,4vw,48px)' }) }}
+        <div class="flex flex-col gap-3.5 max-w-[640px] border-t border-ll-line pt-4">
             {% if paidOrder and paidOrder.balancePaidAt %}
                 <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you. Your order {{ paidOrder.orderNumber }} is paid in full.</p>
             {% elseif paidOrder and balanceForm %}

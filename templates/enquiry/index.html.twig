@@ -20,13 +20,15 @@
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% block body %}
-    {% set section = 'text-[11px] uppercase tracking-[0.14em] text-ll-mute border-t border-ll-line pt-4' %}
+    {% set section = 'll-section-heading border-t border-ll-line pt-4' %}
     {% set row = 'flex justify-between gap-4 py-[9px] border-b border-ll-line text-[13px]' %}
     {% set uploadText = 'PDF, DWG, JPG, PNG or HEIC, up to 50MB each, 100MB in total' %}
-    <div class="max-w-[760px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8 text-[15px] leading-[1.5]">
-        <div class="flex flex-col gap-3.5">
-            <a href="{{ path('lighting_designs') }}" class="self-start text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>
-            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Begin the Conversation</h1>
+    {# The page at the standard width, its heading as every page's (Step 7d); the form keeps its narrow column, left-aligned. #}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8 text-[15px] leading-[1.5]">
+        {% set back %}<a href="{{ path('lighting_designs') }}" class="text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>{% endset %}
+        {{ include('partials/_page_heading.html.twig', { title: 'Begin the Conversation', aside: back }) }}
+        <div class="max-w-[760px] w-full flex flex-col gap-8">
+        <div class="border-t border-ll-line pt-4">
             <p class="m-0 text-ll-mute [text-wrap:pretty]">Atelier, Estate and Monument are made in conversation with me. Tell me a little about your space and I'll be in touch to talk it through. No payment is taken.</p>
         </div>
 
@@ -74,5 +76,6 @@
             {% endfor %}
             <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Send Enquiry</button>
         {{ form_end(form) }}
+        </div>
     </div>
 {% endblock %}

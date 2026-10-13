@@ -771,7 +771,7 @@ export default class extends Controller {
             row.dataset.stage = String(stage);
             if (lamp !== undefined) row.dataset.lamp = String(lamp);
             const k = document.createElement('span');
-            k.className = 'll-cfg-review-key self-center text-[10.5px] uppercase tracking-[0.12em] text-ll-mute';
+            k.className = 'll-cfg-review-key self-center text-[11px] uppercase tracking-[0.12em] text-ll-mute';
             k.textContent = key;
             const v = document.createElement('span');
             v.className = 'text-right';

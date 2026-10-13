@@ -17,10 +17,10 @@
         { h: 'Governing law & disputes', p: 'These terms are governed by the laws of England and Wales. Any disputes will be handled through our internal process first, and if unresolved, through the courts of England and Wales.' },
     ] %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
-        <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Terms &amp; Conditions</h1>
+        {{ include('partials/_page_heading.html.twig', { title: 'Terms & Conditions' }) }}
         {% for section in sections %}
             <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
-                <h2 class="ll-label text-[11px]">{{ section.h }}</h2>
+                <h2 class="ll-section-heading">{{ section.h }}</h2>
                 <p class="text-ll-mute text-[15px] leading-relaxed">{{ section.p }}</p>
             </section>
         {% endfor %}

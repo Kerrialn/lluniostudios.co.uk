@@ -1,0 +1,18 @@
+{#
+    The heading of every page except the feature pages (Step 7d, 13 October
+    2026): one identical style, as Contact and Terms & Conditions: the title
+    uppercase in Special Elite (.ll-heading, 22–32px), at the page's top
+    padding, with an optional item on its right (aside: e.g. a count, a
+    reference or a "← Back" link), then exactly 32px to the page's first
+    content, which starts with the thin rule (border-t border-ll-line pt-4).
+
+    Options:
+      title  the heading
+      aside  optional, shown on the right of the title (HTML)
+      gap    the page's gap between its sections (default 2rem), so the
+             32px stays the same on every page
+#}
+<div class="ll-page-heading flex justify-between items-baseline gap-x-4 gap-y-2 flex-wrap" style="margin-bottom: calc(32px - {{ gap|default('2rem') }})">
+    <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">{{ title }}</h1>
+    {% if aside|default('') is not empty %}<div class="ll-page-heading-aside">{{ aside|raw }}</div>{% endif %}
+</div>

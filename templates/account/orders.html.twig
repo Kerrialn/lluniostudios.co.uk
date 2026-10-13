@@ -8,10 +8,8 @@
 {% block body %}
     {% set textLink = 'text-[13px] text-ll-mute underline transition-colors hover:text-ll-ink' %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
-        <div class="flex justify-between items-baseline gap-4 flex-wrap">
-            <h1 class="ll-heading text-[clamp(22px,2vw,32px)]">Your Orders</h1>
-            <a href="{{ path('app_logout') }}" class="{{ textLink }}">Sign out</a>
-        </div>
+        {% set signOut %}<a href="{{ path('app_logout') }}" class="{{ textLink }}">Sign out</a>{% endset %}
+        {{ include('partials/_page_heading.html.twig', { title: 'Your Orders', aside: signOut }) }}
 
         {% if orders is empty %}
             <div class="flex flex-col items-start gap-5 border-t border-ll-line pt-4 text-[15px] leading-relaxed">

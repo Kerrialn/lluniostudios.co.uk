@@ -71,6 +71,20 @@ body { font-synthesis-weight: none; }
     line-height: 1.1;
 }
 
+/* Section headings within pages (Step 7d): one style everywhere, as the
+   form pages' section labels: 11px, uppercase, letter-spaced, muted. */
+.ll-section-heading {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-ll-mute);
+}
+
+/* The item on the right of a page heading (a count, a reference, a "← Back"
+   link) never makes the heading taller; on a narrow screen, where it doesn't
+   fit beside the title, it goes under it (Step 7d). */
+.ll-page-heading-aside { line-height: 1.2; }
+
 /* Underlined text link used across the design. */
 .ll-link {
     text-decoration: underline;
