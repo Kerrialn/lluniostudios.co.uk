@@ -12,18 +12,22 @@
     admin link.
     Styles for the details: keyStyle / valueStyle (a row), section(name).
 #}
-{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
+{% set f = "font-family:'Special Elite','Courier New',Courier,monospace;" %}
 {% set keyStyle = 'padding:8px 12px 8px 0;border-bottom:1px solid #3a342b;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
 {% set valueStyle = 'padding:8px 0;border-bottom:1px solid #3a342b;' ~ f ~ 'font-size:15px;line-height:24px;color:#ece3d3;' %}
 {% set summaryKey = 'padding:6px 12px 6px 0;vertical-align:top;' ~ f ~ 'font-size:11px;line-height:24px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
 {% set summaryValue = 'padding:6px 0;' ~ f ~ 'font-weight:500;font-size:15px;line-height:24px;color:#ece3d3;' %}
 {% macro section(name) %}
 <div style="height:32px;line-height:32px;font-size:1px;">&nbsp;</div>
-<p style="margin:0 0 8px 0;padding:12px 0 0 0;border-top:1px solid #ece3d3;font-family:'Archivo',Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">{{ name }}</p>
+<p style="margin:0 0 8px 0;padding:12px 0 0 0;border-top:1px solid #ece3d3;font-family:'Special Elite','Courier New',Courier,monospace;font-size:11px;line-height:16px;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;">{{ name }}</p>
 {% endmacro %}
 <!DOCTYPE html>
 <html lang="en-GB">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}{% endblock %}</title></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}{% endblock %}</title>
+{# Special Elite (Step 7d, 13 October 2026) where the email app loads web fonts (e.g. Apple Mail); Courier New, a typewriter face, elsewhere; Outlook on Windows is told Courier New outright (it would fall back to Times New Roman). #}
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<!--[if mso]><style>body, table, td, p, a, span { font-family: 'Courier New', Courier, monospace !important; }</style><![endif]-->
+</head>
 <body style="margin:0;padding:0;background:#15120e;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#15120e" style="background:#15120e;">
 <tr><td align="center" style="padding:32px 16px;">

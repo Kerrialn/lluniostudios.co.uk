@@ -18,7 +18,7 @@
     - fine: small muted print (e.g. "Photography is illustrative…");
     - button(url, text): the cream button.
 #}
-{% set f = "font-family:'Archivo',Helvetica,Arial,sans-serif;" %}
+{% set f = "font-family:'Special Elite','Courier New',Courier,monospace;" %}
 {% set body = 'margin:0 0 24px 0;' ~ f ~ 'font-size:15px;line-height:24px;mso-line-height-rule:exactly;color:#ece3d3;' %}
 {% set label = 'margin:0 0 10px 0;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;color:#a89b86;' %}
 {% set ruleCell = 'border-top:1px solid #ece3d3;padding:12px 0 0 0;' ~ f ~ 'font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;' %}
@@ -28,14 +28,14 @@
 {% set strongValue = 'padding:14px 0 10px 0;' ~ f ~ 'font-weight:500;font-size:15px;line-height:24px;mso-line-height-rule:exactly;color:#ece3d3;text-align:right;' %}
 {% set fine = 'margin:0 0 16px 0;' ~ f ~ 'font-size:12px;line-height:18px;color:#a89b86;' %}
 {% macro section(number, name) %}
-{% set ruleCell = "border-top:1px solid #ece3d3;padding:12px 0 0 0;font-family:'Archivo',Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;" %}
+{% set ruleCell = "border-top:1px solid #ece3d3;padding:12px 0 0 0;font-family:'Special Elite','Courier New',Courier,monospace;font-size:11px;line-height:16px;mso-line-height-rule:exactly;text-transform:uppercase;letter-spacing:0.14em;" %}
 <div style="height:16px;line-height:16px;font-size:1px;">&nbsp;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="{{ ruleCell }}color:#ece3d3;">{{ number }}</td><td style="{{ ruleCell }}color:#a89b86;text-align:right;">{{ name }}</td></tr></table>
 <div style="height:20px;line-height:20px;font-size:1px;">&nbsp;</div>
 {% endmacro %}
 {% macro button(url, text) %}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#ece3d3" style="background:#ece3d3;">
-<a href="{{ url }}" target="_blank" style="display:block;padding:18px 24px;font-family:'Archivo',Helvetica,Arial,sans-serif;font-weight:500;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:0.16em;color:#15120e;text-decoration:none;">{{ text }}</a>
+<a href="{{ url }}" target="_blank" style="display:block;padding:18px 24px;font-family:'Special Elite','Courier New',Courier,monospace;font-weight:500;font-size:12px;line-height:16px;text-transform:uppercase;letter-spacing:0.16em;color:#15120e;text-decoration:none;">{{ text }}</a>
 </td></tr></table>
 {% endmacro %}
 {% import _self as layout %}
@@ -47,6 +47,9 @@
 <meta name="color-scheme" content="light dark">
 <meta name="supported-color-schemes" content="light dark">
 <title>{% block title %}{% endblock %}</title>
+{# Special Elite (Step 7d, 13 October 2026) where the email app loads web fonts (e.g. Apple Mail); Courier New, a typewriter face, elsewhere; Outlook on Windows is told Courier New outright (it would fall back to Times New Roman). #}
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<!--[if mso]><style>body, table, td, p, a, span { font-family: 'Courier New', Courier, monospace !important; }</style><![endif]-->
 <style>
 @media only screen and (max-width:620px){.wrap{width:100% !important;}.px{padding-left:24px !important;padding-right:24px !important;}}
 :root{color-scheme:light dark;supported-color-schemes:light dark;}
