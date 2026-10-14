@@ -1052,3 +1052,34 @@ html.ll-menu-open { overflow: hidden; }
 .ll-card-box > * { width: 100%; }
 .ll-card-box.StripeElement--focus,
 .ll-card-box.is-wrong { border-color: var(--color-ll-ink); }
+
+/* The Workshop's origin story (14 October 2026): 13px on phones, one step
+   larger (14px) from 900px wide, with comfortable line spacing. In the
+   tablet and small-laptop range below, scaled as everything else (16.1px). */
+.ll-workshop-story { font-size: 13px; line-height: 1.6; }
+@media (min-width: 900px) {
+    .ll-workshop-story { font-size: 14px; }
+}
+
+/* Tablets and small laptops, 900 to 1400px wide (14 October 2026): text read
+   up close (e.g. a Surface Pro at 1368 × 912) is scaled by 1.15, the same
+   factor for every fixed size, so their proportions stay the same: the
+   navigation and labels, body text, buttons and form fields. Headings that
+   already grow with the window are unchanged. Large desktops (over 1400px)
+   and phones keep their sizes. */
+@media (min-width: 900px) and (max-width: 1400px) {
+    .text-\[11px\], .ll-section-heading, .ll-story-marker, .ll-story-skip, .ll-story-cue, .ll-cfg-unit { font-size: 12.65px; }
+    .text-\[12px\], .text-xs, .ll-label, .ll-cfg-opt, .ll-story-link { font-size: 13.8px; }
+    .text-\[13px\], .ll-story-header, .ll-story-button { font-size: 14.95px; }
+    .text-\[14px\], .text-sm { font-size: 16.1px; }
+    .text-\[15px\] { font-size: 17.25px; }
+    .text-\[16px\], .text-base { font-size: 18.4px; }
+    .text-\[18px\], .text-lg { font-size: 20.7px; }
+    .ll-story-body { font-size: calc(clamp(15px, 1.15vw, 18px) * 1.15); }
+    .ll-workshop-story { font-size: 16.1px; }
+    /* The page heading (every page but the feature pages) by the same factor, so it keeps its size against the text. */
+    .ll-page-heading h1 { font-size: calc(clamp(22px, 2vw, 32px) * 1.15); }
+    /* The homepage's two buttons side by side only where both fit at this size; otherwise stacked. */
+    .ll-home-actions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); }
+}
+
