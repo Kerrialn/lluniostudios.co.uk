@@ -224,12 +224,14 @@
                         <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">Pay balance {{ m.money(paidOrder.amountOwed) }}</button>
                         <div class="text-xs text-ll-mute text-center leading-[1.5]">Payment is processed securely by our payment provider. Your card details are never stored by Llunio Studios.</div>
                         <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
+                        {{ include('partials/_privacy_line.html.twig', { centre: true }) }}
                     {% endif %}
                 {% elseif payable %}
                     <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" hidden></div>
                     <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">Pay {{ m.money(quote.dueNow) }}</button>
                     <div class="text-xs text-ll-mute text-center leading-[1.5]">Payment is processed securely by our payment provider. Your card details are never stored by Llunio Studios.</div>
                     <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
+                    {{ include('partials/_privacy_line.html.twig', { centre: true }) }}
                 {% endif %}
             </aside>
         {% if balanceForm %}

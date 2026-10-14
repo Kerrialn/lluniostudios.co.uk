@@ -45,6 +45,15 @@ class AppController extends AbstractController
         return $this->render('app/terms.html.twig');
     }
 
+    /**
+     * The Privacy Policy (Step 11d, 14 October 2026).
+     */
+    #[Route('/privacy-policy', name: 'privacy', methods: ['GET'])]
+    public function privacy(): Response
+    {
+        return $this->render('app/privacy.html.twig');
+    }
+
     #[Route('/newsletter/verify/{token}', name: 'newsletter_verify_email', methods: ['GET'])]
     public function verifyNewsletterEmail(string $token): Response
     {

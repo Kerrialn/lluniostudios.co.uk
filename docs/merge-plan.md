@@ -67,8 +67,8 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, bra
 | 7c | "Begin the Conversation": an enquiry page for Atelier, Estate and Monument, 7c.1–7c.4 | Done (13 October 2026; wording DRAFT until 11.5; 7c.4 committed before your hand checks) | `b75b483` (7c.1), `d7fd5f1` (7c.2), `ddf440b` (7c.3), see the commit "Quote and pay an enquiry (7c.4)" |
 | 7d | The whole site in "All Special Elite" (7d.1–7d.4) | Done (13 October 2026, built while you were out; decisions confirmed; hand checks waiting) | `5ed2115` (7d.1), `8e44f03` (7d.2), `e36a8d6` (7d.3), `dbb04ae` (7d.4) |
 | 11b | Advanced SEO: technical groundwork | Done (13 October 2026, built while you were out; provisional decisions to confirm; wording DRAFT) | see the commit "Search and link-preview groundwork (11b)" |
-| 11c | Terms & Conditions (new text) | Waiting for your text | — |
-| 11d | Privacy Policy (new page) | Waiting for your text | — |
+| 11c | Terms & Conditions (new text) | Done (14 October 2026) | `3dceada` |
+| 11d | Privacy Policy (new page) | Done (14 October 2026) | see the commit "Privacy Policy (11d)" |
 | — | Speed pass (WebP, loading only when needed, smaller Workshop photos and menu logo) | Done (13 October 2026, built while you were out; one provisional decision) | see the commit "Speed pass" |
 | 12 | Launch checks | Checklist gathered (13 October 2026); nothing launched | — |
 
@@ -951,7 +951,14 @@ Asked for on 13 October 2026: every image resized and compressed for the web, lo
 **13 October 2026:** the updated draft is ready in your documents; you will paste the text once you've reviewed it. It doesn't depend on Step 7d or the wording pass (11.5), so it can be done whenever the text arrives. Not built yet.
 Added 9 October 2026. Replace the current Terms & Conditions page (`/terms-and-conditions`) with the new Terms & Conditions you have drafted separately; you will provide the full text. Use it word for word (British English, "Dorset Studio", "Llunio Studios" in full), laid out as the current page. It should cover the deposit and cancellation terms for quoted orders (question 23). Nothing is built until the text arrives.
 
-### Step 11d: Privacy Policy (waiting for your text)
+### Step 11d: Privacy Policy (done 14 October 2026)
+**Built 14 October 2026:** a new page, **`/privacy-policy`** (`AppController::privacy`, `templates/app/privacy.html.twig`), with your final text **word for word** (kept as given in `tests/browser/fixtures/privacy-2026-10-14.txt`, one table cell per line), styled as the Terms & Conditions: the heading, **"Last updated: 14 October 2026"** under it, the introduction, then each section with its thin rule and section heading; **the three tables kept as tables** (what we collect: 4 columns × 9 rows; who we share it with: 3 × 6; how long we keep it: 2 × 4), scrolling sideways in their own box on a narrow screen; "•" lines as bulleted lists; the email address a link (text unchanged).
+- **Linked from:** the Contact page, beside the Terms & Conditions (no footer link, by your decision: the Contact page is reachable from every page); and **at every form where people give their details**, the line **"We'll only use your details for your order or enquiry. See our Privacy Policy."** (the last two words a link; `partials/_privacy_line.html.twig`) by the submit button: Card Payment and the quote page (under "Pay" and the Terms & Conditions link, centred; on the quote page also under "Pay balance"), Reserve Your Design (under its note), Begin the Conversation, both Bespoke Commissions forms, and the sign-in page (the email step).
+- **In the sitemap** and indexable (`SearchPages::INDEXABLE`): seven pages now.
+- **Checks:** new `privacy.mjs` (the text line by line and cell by cell, 96 lines; the tables' columns and rows; "Last updated"; the heading as the Terms'; the Contact link; the sitemap; the line and its link on every form); `quote-pay.mjs` checks the quote page's line; `seo.mjs` expects seven indexable pages. Related checks (Privacy, Terms, SEO, the footers, Card Payment and paying, Reserve, the enquiry page, Commissions and saving, sign-in, quote paying and the balance): 18 of 18; unit tests, PHPStan, code style and Twig lint clean.
+- **To undo:** revert the commit.
+
+**Earlier notes:**
 **13 October 2026:** the updated draft is ready in your documents (including draft wording for Simple Analytics, see "After launch"); you will paste the text once you've reviewed it. It doesn't depend on Step 7d or the wording pass (11.5). Not built yet.
 Added 9 October 2026. A new Privacy Policy page; you will provide the full text. Link it from: the site footer, the Contact page, Card Payment (checkout), the quote page, and every form that collects personal data (Reserve Your Design, both Bespoke Commissions forms, Sign In, the newsletter sign-up on the maintenance page). The Privacy Policy requires **registering with the ICO** (Information Commissioner's Office) before launch: see Step 12. Nothing is built until the text arrives.
 
@@ -1090,7 +1097,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] Care instructions for email 06 and a studio phone number for the email footers (question 18).
 - [ ] The Facebook page: create it and give its address (`FACEBOOK_URL` in `.env`; the footer, Contact page and email footers use a placeholder until then; the structured data leaves Facebook out until then).
 - [x] The new Terms & Conditions (Step 11c): your final text in place, 14 October 2026 (deposit and cancellation terms included).
-- [ ] The Privacy Policy text (Step 11d).
+- [x] The Privacy Policy (Step 11d): your final text in place, 14 October 2026.
 - [ ] Atelier weight, and packed sizes and weights for every size (questions 8 and 26), so delivery estimates are real (an Estate is currently priced as a weightless parcel).
 - [ ] Whether a Palletways account exists (question 25).
 - [ ] Photos: the finely edited replacements (Lumen Forma, Commissions hero, the story pair), photos for Studio, Atelier, Estate, Monument and the options, the two parked cable photos, real workshop photos, and the portrait homepage pair for upright phones (question 21; `CLAUDE.md`, Pending content). Each needs its WebP twin made as in the speed pass.
@@ -1110,7 +1117,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] Stripe: live keys on the live server (both); the live domain registered for Apple Pay (Payment method domains); a live webhook endpoint for `/webhook/stripe` with its signing secret on the server *(added 13 October 2026)* (both).
 - [ ] DPD's real character limit for delivery instructions: confirm it and set Card Payment's to match (100 since 14 October 2026; the database already takes up to 255).
 - [ ] DPD business account: API credentials, character limits and pricing confirmed, `DpdProvider` checked against the real API, `SHIPPING_MODE=live` (see "Later, when the DPD account exists"); the Highlands and Islands postcode list confirmed; DPD's tracking link address confirmed (`https://track.dpd.co.uk/search?reference=…`, Step 11.3).
-- [ ] Register with the ICO (needed for the Privacy Policy).
+- [x] Registered with the ICO (14 October 2026, by you).
 - [ ] **Google Search Console for lluniostudios.co.uk** (asked for 13 October 2026): set it up, verify the domain, and submit the sitemap (`https://lluniostudios.co.uk/sitemap.xml`).
 
 **4. The live server (Kerrial)**
@@ -1152,6 +1159,10 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 ### After launch (recorded 13 October 2026; don't build yet)
 - **Simple Analytics:** add it. It's cookieless, so no consent banner should be needed, but the Privacy Policy must mention it (draft wording is ready in your Privacy Policy document).
 - **Mixpanel:** add it. It uses cookies or identifiers, so it needs a **cookie consent banner** (Mixpanel runs only after the visitor agrees) and a **Privacy Policy update** before it goes live.
+- **Ready-to-add Privacy Policy wording (recorded 14 October 2026; not published now), to add when each tool is switched on:**
+  - **Simple Analytics:** "We use Simple Analytics to count visits and see which pages are useful. It doesn't use cookies, doesn't collect personal data and can't identify you, so it needs no consent."
+  - **Mixpanel** (needs a cookie consent banner first): "With your consent, we use Mixpanel to understand how visitors use the site, such as which steps of the configurator people find hard. It sets cookies and records how you move through the site, linked to an identifier in your browser. It only runs if you accept analytics cookies, and you can change your mind at any time using the cookie settings link. Lawful basis: consent."
+  - When either is added, update the policy's "Last updated" date (and the "Cookies and browser storage" section for Mixpanel).
 
 ### Later, when the DPD account exists
 Enter the DPD API credentials, confirm the character limits and pricing, check `DpdProvider` against the real API, switch `SHIPPING_MODE=live`.
@@ -1173,7 +1184,6 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 **Waiting for you (as of 9 October 2026)**
 - The hand checks, page by page: see "Hand checks: one checklist, page by page" (gathered 13 October 2026; Step 7d, 7c.4, 11.4, the Custom descriptions and Reference photos, 11b and the speed pass).
 - The email review (11.5): what to change in each email.
-- The Privacy Policy text (11d).
 - Care instructions for email 06 and a studio phone number (question 18).
 - The Facebook page's address, once created (`FACEBOOK_URL`; a placeholder until then).
 

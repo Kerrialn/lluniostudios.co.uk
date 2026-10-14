@@ -16,7 +16,7 @@ import { execSync } from 'node:child_process';
 import { open, sleep, checker, BASE_URL, PROJECT_DIR } from './lib.mjs';
 
 const { check, summary } = checker();
-const INDEXABLE = { '/': 'landing', '/lighting-designs': 'Lighting Designs', '/bespoke-commissions': 'Bespoke Commissions', '/workshop': 'The Workshop', '/contact': 'Contact', '/terms-and-conditions': 'Terms & Conditions' };
+const INDEXABLE = { '/': 'landing', '/lighting-designs': 'Lighting Designs', '/bespoke-commissions': 'Bespoke Commissions', '/workshop': 'The Workshop', '/contact': 'Contact', '/terms-and-conditions': 'Terms & Conditions', '/privacy-policy': 'Privacy Policy' };
 const b = await open(1440, 900, 'seo', { mobile: false });
 const { send, ev } = b;
 const curl = (path) => execSync(`curl -sk -D - -o /dev/null "${BASE_URL}${path}"`, { encoding: 'utf8' });
@@ -93,6 +93,6 @@ try {
     check('robots.txt: blocks admin only (the other private pages rely on "noindex"); points to the sitemap', JSON.stringify([...robots.matchAll(/^Disallow: (.*)$/gm)].map((m) => m[1])) === JSON.stringify(['/admin']) && robots.includes(`Sitemap: ${BASE_URL}/sitemap.xml`), robots);
     const sitemap = execSync(`curl -sk "${BASE_URL}/sitemap.xml"`, { encoding: 'utf8' });
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    check('sitemap.xml: exactly the six indexable pages', JSON.stringify(locs) === JSON.stringify(Object.keys(INDEXABLE).map((p) => BASE_URL + p)) && /application\/xml/.test(curl('/sitemap.xml')), JSON.stringify(locs));
+    check('sitemap.xml: exactly the seven indexable pages (the Privacy Policy since 14 October 2026)', JSON.stringify(locs) === JSON.stringify(Object.keys(INDEXABLE).map((p) => BASE_URL + p)) && /application\/xml/.test(curl('/sitemap.xml')), JSON.stringify(locs));
     summary();
 } finally { b.close(); }

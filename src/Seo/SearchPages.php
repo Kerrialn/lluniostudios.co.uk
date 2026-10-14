@@ -18,7 +18,7 @@ final class SearchPages
     /**
      * Route names of the indexable pages, in sitemap order.
      */
-    public const INDEXABLE = ['landing', 'lighting_designs', 'commissions', 'workshop', 'contact', 'terms'];
+    public const INDEXABLE = ['landing', 'lighting_designs', 'commissions', 'workshop', 'contact', 'terms', 'privacy'];
 
     /**
      * Paths robots.txt asks crawlers not to visit: admin only (also "noindex").

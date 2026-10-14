@@ -1,0 +1,6 @@
+{#
+    The privacy line at every form where people give their details (Step 11d,
+    14 October 2026), near the submit button. centre: true where the lines
+    around it are centred (Card Payment, the quote page).
+#}
+<p class="text-[12px] leading-[1.5] text-ll-mute {{ centre|default(false) ? 'text-center' : '' }}" data-privacy-line>We'll only use your details for your order or enquiry. See our <a href="{{ path('privacy') }}" class="underline transition-colors hover:text-ll-ink">Privacy Policy</a>.</p>

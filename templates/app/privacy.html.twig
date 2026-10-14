@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Privacy Policy | Llunio Studios{% endblock %}
+{% block description %}How Llunio Studios collects, uses and protects your personal data, and your rights.{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
+
+{% block body %}
+    {#
+        Step 11d: Theo's final Privacy Policy (14 October 2026), word for word
+        as given (tests/browser/fixtures/privacy-2026-10-14.txt), styled as the
+        Terms & Conditions: the heading, "Last updated", the introduction, then
+        each section with its rule and section heading; the three tables kept
+        as tables (scrolling sideways in their own box on a narrow screen), "•"
+        lines as bulleted lists. The email address is a link; the text is
+        unchanged.
+    #}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
+        {{ include('partials/_page_heading.html.twig', { title: 'Privacy Policy' }) }}
+        <div class="flex flex-col gap-3 border-t border-ll-line pt-4">
+            <p class="text-ll-mute text-[13px]" data-privacy-updated>Last updated: 14 October 2026</p>
+            <p class="text-ll-mute text-[15px] leading-relaxed">We collect only what we need to make, deliver and support your lamp, and we never sell your data.</p>
+        </div>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">Who we are</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Llunio Studios is the trading name of Theo Newham, the data controller responsible for your personal data.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Email: <a href="mailto:info@lluniostudios.co.uk" class="ll-link text-ll-ink">info@lluniostudios.co.uk</a></li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">What we collect and why</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Everything we hold comes from you, or from the gift-giver for a gift sent directly to you.</p>
+            <div class="overflow-x-auto" data-privacy-table>
+                <table class="w-full min-w-[640px] border-collapse text-left text-[15px] leading-relaxed">
+                    <thead><tr><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">Data</th><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">When we collect it</th><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">Why</th><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">Lawful basis</th></tr></thead>
+                    <tbody>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Name, email, mobile</th><td class="align-top py-3 pr-4 text-ll-mute">Orders, requests, enquiries, commissions, sign-in</td><td class="align-top py-3 pr-4 text-ll-mute">To process your order or enquiry and contact you about it</td><td class="align-top py-3 pr-4 text-ll-mute">Contract</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Delivery and billing addresses, or your postcode for an enquiry</th><td class="align-top py-3 pr-4 text-ll-mute">Orders, requests, enquiries, quote payments</td><td class="align-top py-3 pr-4 text-ll-mute">To quote and deliver your lamp, and record who paid</td><td class="align-top py-3 pr-4 text-ll-mute">Contract</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">How you'd like to be contacted and the best time</th><td class="align-top py-3 pr-4 text-ll-mute">Larger-piece enquiries, commissions</td><td class="align-top py-3 pr-4 text-ll-mute">To arrange the conversation you asked for</td><td class="align-top py-3 pr-4 text-ll-mute">Contract (steps before a contract)</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Lamp configuration and order history</th><td class="align-top py-3 pr-4 text-ll-mute">Orders, requests, enquiries</td><td class="align-top py-3 pr-4 text-ll-mute">To make your lamp and let you view your orders</td><td class="align-top py-3 pr-4 text-ll-mute">Contract</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Gift recipient's name, address, mobile and gift message</th><td class="align-top py-3 pr-4 text-ll-mute">Gift orders sent directly</td><td class="align-top py-3 pr-4 text-ll-mute">To deliver the gift and include the card</td><td class="align-top py-3 pr-4 text-ll-mute">Legitimate interests (delivering a gift you've asked us to send)</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Descriptions of your space and ideas; photos, mood boards, drawings and plans; links you share (such as a Pinterest board)</th><td class="align-top py-3 pr-4 text-ll-mute">Larger-piece enquiries, custom option requests, commissions</td><td class="align-top py-3 pr-4 text-ll-mute">To understand what you'd like, then develop and quote your piece</td><td class="align-top py-3 pr-4 text-ll-mute">Contract (steps before a contract)</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Payment details</th><td class="align-top py-3 pr-4 text-ll-mute">Checkout and quote payments</td><td class="align-top py-3 pr-4 text-ll-mute">Handled by Stripe; we never see your full card number</td><td class="align-top py-3 pr-4 text-ll-mute">Contract</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Order and payment records</th><td class="align-top py-3 pr-4 text-ll-mute">After any payment</td><td class="align-top py-3 pr-4 text-ll-mute">To keep accounts and meet tax rules</td><td class="align-top py-3 pr-4 text-ll-mute">Legal obligation</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Basic technical data (e.g. IP address)</th><td class="align-top py-3 pr-4 text-ll-mute">When you use the site</td><td class="align-top py-3 pr-4 text-ll-mute">To keep the site secure and stop spam</td><td class="align-top py-3 pr-4 text-ll-mute">Legitimate interests (security)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">Who we share it with</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">We share data only with the services needed to run your order, each bound to protect it.</p>
+            <div class="overflow-x-auto" data-privacy-table>
+                <table class="w-full min-w-[480px] border-collapse text-left text-[15px] leading-relaxed">
+                    <thead><tr><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">Service</th><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">What they receive</th><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">Why</th></tr></thead>
+                    <tbody>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Stripe</th><td class="align-top py-3 pr-4 text-ll-mute">Payment details, name, email, billing address</td><td class="align-top py-3 pr-4 text-ll-mute">To take payments securely</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">DPD</th><td class="align-top py-3 pr-4 text-ll-mute">Name, delivery address, mobile, email</td><td class="align-top py-3 pr-4 text-ll-mute">To deliver parcels and send delivery updates</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Palletways</th><td class="align-top py-3 pr-4 text-ll-mute">Name, delivery address, mobile</td><td class="align-top py-3 pr-4 text-ll-mute">To deliver larger pieces by pallet</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Cloudflare and Google (Gmail)</th><td class="align-top py-3 pr-4 text-ll-mute">Emails sent to us</td><td class="align-top py-3 pr-4 text-ll-mute">To route and receive our email</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Our website host</th><td class="align-top py-3 pr-4 text-ll-mute">Everything stored on the site</td><td class="align-top py-3 pr-4 text-ll-mute">To run the website</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Some of these providers may process data outside the UK. Where they do, they use legal safeguards approved under UK law. We'll share data with authorities only where the law requires it.</th><td class="align-top py-3 pr-4 text-ll-mute">How long we keep it</td><td class="align-top py-3 pr-4 text-ll-mute">We keep data only as long as we need it, then delete it.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="overflow-x-auto" data-privacy-table>
+                <table class="w-full  border-collapse text-left text-[15px] leading-relaxed">
+                    <thead><tr><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">Data</th><th scope="col" class="ll-section-heading font-normal align-bottom py-2 pr-4 border-b border-ll-line">How long</th></tr></thead>
+                    <tbody>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Orders and payment records</th><td class="align-top py-3 pr-4 text-ll-mute">6 years after the end of the tax year, as tax rules require</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Requests, enquiries and commission enquiries that don't become orders, including uploaded files and shared links</th><td class="align-top py-3 pr-4 text-ll-mute">2 years from your last contact</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Customer accounts</th><td class="align-top py-3 pr-4 text-ll-mute">Until you ask us to close yours, apart from order records above</td></tr>
+                        <tr class="border-b border-ll-line"><th scope="row" class="font-normal align-top py-3 pr-4 text-ll-ink">Sign-in codes and links</th><td class="align-top py-3 pr-4 text-ll-mute">10 minutes</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">Cookies and browser storage</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">We use only what the site needs to work, so no consent banner is required; we don't use advertising or tracking cookies.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Session and basket: to keep your basket and sign-in working.</li>
+                <li>Security: to protect forms and stop spam.</li>
+                <li>Payments: Stripe sets cookies to process payments securely and prevent fraud.</li>
+                <li>Your lamp choices and forms: your lamp choices are saved in your own browser so they're still there if you come back. Anything you type on the Reserve and enquiry forms is forgotten when you close the tab or once you've sent it. You can clear your choices at any time with "Start again" or your browser settings.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">Your rights</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">You can ask us at any time, free of charge, to:</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>see the personal data we hold about you;</li>
+                <li>correct anything that's wrong;</li>
+                <li>delete your data, unless we must keep it (for example, order records for tax);</li>
+                <li>restrict or object to how we use it;</li>
+                <li>give you your data in a format you can take elsewhere.</li>
+            </ul>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Email <a href="mailto:info@lluniostudios.co.uk" class="ll-link text-ll-ink">info@lluniostudios.co.uk</a> and we'll reply within one month.</p>
+            <p class="text-ll-mute text-[15px] leading-relaxed">If you're unhappy with how we've handled your data, you can complain to the Information Commissioner's Office (ico.org.uk, 0303 123 1113). We'd appreciate the chance to put things right first.</p>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">Security and changes</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Your data is sent over encrypted connections, uploaded files are kept private and accessible only to us, and card payments are handled entirely by Stripe. If we change this policy, we'll update the date at the top.</p>
+        </section>
+    </div>
+{% endblock %}

@@ -1,0 +1,96 @@
+We collect only what we need to make, deliver and support your lamp, and we never sell your data.
+Who we are
+Llunio Studios is the trading name of Theo Newham, the data controller responsible for your personal data.
+• Email: info@lluniostudios.co.uk
+What we collect and why
+Everything we hold comes from you, or from the gift-giver for a gift sent directly to you.
+Data
+When we collect it
+Why
+Lawful basis
+Name, email, mobile
+Orders, requests, enquiries, commissions, sign-in
+To process your order or enquiry and contact you about it
+Contract
+Delivery and billing addresses, or your postcode for an enquiry
+Orders, requests, enquiries, quote payments
+To quote and deliver your lamp, and record who paid
+Contract
+How you'd like to be contacted and the best time
+Larger-piece enquiries, commissions
+To arrange the conversation you asked for
+Contract (steps before a contract)
+Lamp configuration and order history
+Orders, requests, enquiries
+To make your lamp and let you view your orders
+Contract
+Gift recipient's name, address, mobile and gift message
+Gift orders sent directly
+To deliver the gift and include the card
+Legitimate interests (delivering a gift you've asked us to send)
+Descriptions of your space and ideas; photos, mood boards, drawings and plans; links you share (such as a Pinterest board)
+Larger-piece enquiries, custom option requests, commissions
+To understand what you'd like, then develop and quote your piece
+Contract (steps before a contract)
+Payment details
+Checkout and quote payments
+Handled by Stripe; we never see your full card number
+Contract
+Order and payment records
+After any payment
+To keep accounts and meet tax rules
+Legal obligation
+Basic technical data (e.g. IP address)
+When you use the site
+To keep the site secure and stop spam
+Legitimate interests (security)
+Who we share it with
+We share data only with the services needed to run your order, each bound to protect it.
+Service
+What they receive
+Why
+Stripe
+Payment details, name, email, billing address
+To take payments securely
+DPD
+Name, delivery address, mobile, email
+To deliver parcels and send delivery updates
+Palletways
+Name, delivery address, mobile
+To deliver larger pieces by pallet
+Cloudflare and Google (Gmail)
+Emails sent to us
+To route and receive our email
+Our website host
+Everything stored on the site
+To run the website
+Some of these providers may process data outside the UK. Where they do, they use legal safeguards approved under UK law. We'll share data with authorities only where the law requires it.
+How long we keep it
+We keep data only as long as we need it, then delete it.
+Data
+How long
+Orders and payment records
+6 years after the end of the tax year, as tax rules require
+Requests, enquiries and commission enquiries that don't become orders, including uploaded files and shared links
+2 years from your last contact
+Customer accounts
+Until you ask us to close yours, apart from order records above
+Sign-in codes and links
+10 minutes
+Cookies and browser storage
+We use only what the site needs to work, so no consent banner is required; we don't use advertising or tracking cookies.
+• Session and basket: to keep your basket and sign-in working.
+• Security: to protect forms and stop spam.
+• Payments: Stripe sets cookies to process payments securely and prevent fraud.
+• Your lamp choices and forms: your lamp choices are saved in your own browser so they're still there if you come back. Anything you type on the Reserve and enquiry forms is forgotten when you close the tab or once you've sent it. You can clear your choices at any time with "Start again" or your browser settings.
+Your rights
+You can ask us at any time, free of charge, to:
+• see the personal data we hold about you;
+• correct anything that's wrong;
+• delete your data, unless we must keep it (for example, order records for tax);
+• restrict or object to how we use it;
+• give you your data in a format you can take elsewhere.
+Email info@lluniostudios.co.uk and we'll reply within one month.
+If you're unhappy with how we've handled your data, you can complain to the Information Commissioner's Office (ico.org.uk, 0303 123 1113). We'd appreciate the chance to put things right first.
+Security and changes
+Your data is sent over encrypted connections, uploaded files are kept private and accessible only to us, and card payments are handled entirely by Stripe. If we change this policy, we'll update the date at the top.

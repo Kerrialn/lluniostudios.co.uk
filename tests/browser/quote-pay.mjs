@@ -87,6 +87,8 @@ try {
     check('the quote page has the Card Payment fields, filled in from the request', JSON.stringify(filled) === JSON.stringify({ email: EMAIL, phone: '07700 900123', name: 'Ada Pay', line1: '1 High Street', town: 'Wimborne', county: 'Dorset', postcode: 'BH21 1AA' }), JSON.stringify(filled));
     const page = await c.ev(`({ button: document.querySelector('main aside button[type=submit]')?.textContent.trim(), country: [...document.querySelectorAll('main span')].find(s => s.textContent === 'Country')?.nextElementSibling?.textContent.trim(), boxes: document.querySelectorAll('.ll-card-box iframe').length, wallets: document.querySelector('[data-checkout-target=expressArea]')?.hidden })`);
     check('"Pay £1,564" (the 40% deposit), the country, Stripe\'s card boxes; no wallet buttons in headless Chrome', page.button === 'Pay £1,564' && page.country === 'United Kingdom' && page.boxes === 3 && page.wallets === true, JSON.stringify(page));
+    const privacy = await c.ev(`(() => { const l = document.querySelector('main aside [data-privacy-line]'); return l && { text: l.textContent.replace(/\\s+/g, ' ').trim(), href: l.querySelector('a')?.getAttribute('href'), afterTerms: l.previousElementSibling?.getAttribute('href') === '/terms-and-conditions' }; })()`);
+    check('the privacy line under "Pay" and the Terms & Conditions link (Step 11d)', privacy?.text === "We'll only use your details for your order or enquiry. See our Privacy Policy." && privacy.href === '/privacy-policy' && privacy.afterTerms, JSON.stringify(privacy));
     await c.shot(out('quote-pay-form.png'));
 
     // Typing into Stripe's boxes (as checkout-pay.mjs).
