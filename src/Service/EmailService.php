@@ -20,8 +20,6 @@ final readonly class EmailService
 {
     private const SENDER_EMAIL_ADDRESS = 'notifications@lluniostudios.co.uk';
 
-    public const STUDIO_ADDRESS = 'Hogsmeade, Higher Merley Ln, Wimborne BH21 3EG';
-
     public const SIGN_IN_SUBJECT = 'Sign in to Llunio Studios';
 
     public const QUOTE_SUBJECT = 'Your Lumen Forma quote';

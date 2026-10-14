@@ -83,7 +83,7 @@ let s = await b.send('Page.captureScreenshot', { captureBeyondViewport: true, cl
 await submit(); p = await page();
 check('sending it empty shows each required field\'s message and saves nothing', p.path === '/reserve' && ['Please enter your full name.', 'Please enter your email address.', 'Please enter your phone number.', 'Please enter the first line of your address.', 'Please enter your town or city.', 'Please enter your postcode.'].every(m => p.errors.includes(m)) && requests() === before, JSON.stringify(p.errors));
 await setField('fullName', 'Ada Test'); await setField('email', 'not-an-email'); await setField('phone', '07700 900123'); await setField('addressLine1', '1 High Street'); await setField('town', 'Wimborne'); await setField('postcode', 'BH21'); await submit(); p = await page();
-check('a bad email and a half postcode are refused', p.errors.includes('Please enter a valid email address.') && p.errors.includes('Please enter a full postcode, e.g. BH21 3EG.'), JSON.stringify(p.errors));
+check('a bad email and a half postcode are refused', p.errors.includes('Please enter a valid email address.') && p.errors.includes('Please enter a full postcode, e.g. SW1A 1AA.'), JSON.stringify(p.errors));
 await setField('postcode', 'IM1 1AA'); await submit(); p = await page();
 check('a postcode that doesn\'t match the country is refused', p.errors.includes('That postcode is on the Isle of Man: please choose it as the country.'), JSON.stringify(p.errors));
 check('what was typed is kept', (await ev(`document.querySelector('[name="reserve_form[fullName]"]').value`)) === 'Ada Test');

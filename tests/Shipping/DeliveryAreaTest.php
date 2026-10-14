@@ -18,7 +18,7 @@ final class DeliveryAreaTest extends TestCase
      */
     public static function postcodes(): iterable
     {
-        yield 'Dorset (the studio)' => ['BH21 3EG', true];
+        yield 'Dorset' => ['DT1 1AA', true];
         yield 'London' => ['SW1A 1AA', true];
         yield 'London, letter in the district' => ['EC1A 1BB', true];
         yield 'Glasgow' => ['G1 1AA', true];
@@ -57,7 +57,7 @@ final class DeliveryAreaTest extends TestCase
      */
     public static function partials(): iterable
     {
-        yield 'full postcode' => ['BH21 3EG', 'BH21', true];
+        yield 'full postcode' => ['SW1A 1AA', 'SW1A', true];
         yield 'as a wallet shares it' => ['BT1 1', 'BT1', false];
         yield 'district only' => ['IV1', 'IV1', false];
         yield 'letter in the district' => ['EC1A 1', 'EC1A', true];
@@ -74,7 +74,7 @@ final class DeliveryAreaTest extends TestCase
 
     public function testNormalise(): void
     {
-        self::assertSame('BH21 3EG', DeliveryArea::normalise(' bh21   3eg '));
+        self::assertSame('SW1A 1AA', DeliveryArea::normalise(' sw1a   1aa '));
         self::assertSame('EC1A 1BB', DeliveryArea::normalise('ec1a1bb'));
         self::assertNull(DeliveryArea::normalise('BH21'));
     }

@@ -48,12 +48,12 @@ final class DeliveryArea
     ];
 
     /**
-     * A full UK postcode, e.g. "BH21 3EG" (any spacing or case).
+     * A full UK postcode, e.g. "SW1A 1AA" (any spacing or case).
      */
     private const POSTCODE = '/^([A-Z]{1,2})(\d[A-Z\d]?)\s*(\d[A-Z]{2})$/';
 
     /**
-     * "bh213eg" -> "BH21 3EG"; null if it isn't a full UK postcode.
+     * "sw1a1aa" -> "SW1A 1AA"; null if it isn't a full UK postcode.
      */
     public static function normalise(string $postcode): ?string
     {
@@ -66,7 +66,7 @@ final class DeliveryArea
     }
 
     /**
-     * The first half of a postcode ("BH21" from "BH21 3EG" or "bh21 3"), as
+     * The first half of a postcode ("SW1A" from "SW1A 1AA" or "sw1a 1"), as
      * Apple Pay and Google Pay share before the customer pays; null if it
      * doesn't start like a UK postcode.
      */

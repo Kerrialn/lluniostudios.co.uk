@@ -79,7 +79,7 @@ final class CardPaymentForm extends AbstractType
                 new Assert\NotBlank(message: self::REQUIRED_MESSAGE),
                 new Assert\Callback(static function (mixed $value, ExecutionContextInterface $context): void {
                     if (\is_string($value) && trim($value) !== '' && DeliveryArea::normalise($value) === null) {
-                        $context->addViolation('Please enter a full UK postcode, e.g. BH21 3EG.');
+                        $context->addViolation('Please enter a full UK postcode, e.g. SW1A 1AA.');
                     }
                 }),
             ],
@@ -144,7 +144,7 @@ final class CardPaymentForm extends AbstractType
                 'constraints' => [
                     new Assert\Callback(static function (mixed $value, ExecutionContextInterface $context): void {
                         if (\is_string($value) && trim($value) !== '' && DeliveryArea::normalise($value) === null) {
-                            $context->addViolation('Please enter a full UK postcode, e.g. BH21 3EG.');
+                            $context->addViolation('Please enter a full UK postcode, e.g. SW1A 1AA.');
                         }
                     }),
                 ],

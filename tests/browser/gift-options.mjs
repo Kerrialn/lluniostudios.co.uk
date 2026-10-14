@@ -88,7 +88,7 @@ try {
     const prime = `(() => { const form = document.querySelector('main form'); form.addEventListener('submit', (e) => { e.preventDefault(); e.stopImmediatePropagation(); }, { capture: true, once: true }); form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); })();`;
     const pay = () => b.ev(`(async () => { ${prime} const form = document.querySelector('main form'); const body = new FormData(form); body.append('card_ready', '1'); const r = await fetch(form.action || location.href, { method: 'POST', body, headers: { Accept: 'application/json' } }); return r.json(); })()`);
     // The buyer's own billing address (its name is the buyer's, used for greetings).
-    const details = { email: EMAIL, phone: '07700 900123', name: 'Grace Friend', line1: '2 Gift Lane', town: 'Wimborne', postcode: 'BH21 1AA', cardName: 'A LOVELACE', recipientPhone: '07700 900999', billingName: 'mrs ada LOVELACE', billingLine1: '1 High Street', billingTown: 'Wimborne', billingPostcode: 'BH21 3EG' };
+    const details = { email: EMAIL, phone: '07700 900123', name: 'Grace Friend', line1: '2 Gift Lane', town: 'Wimborne', postcode: 'BH21 1AA', cardName: 'A LOVELACE', recipientPhone: '07700 900999', billingName: 'mrs ada LOVELACE', billingLine1: '1 High Street', billingTown: 'Wimborne', billingPostcode: 'SW1A 1AA' };
     await fill({ ...details, giftMessage: 'x'.repeat(251) });
     let r = await pay();
     check('a gift message over 250 characters is refused', r.status === 'invalid' && /250 characters or fewer/.test(r.errors?.giftMessage ?? ''), JSON.stringify(r).slice(0, 200));
@@ -150,7 +150,7 @@ try {
     await b.send('Network.clearBrowserCookies');
     await addGallery();
     const arriveOutside = await basketGift('recipient');
-    await fill({ email: EMAIL, phone: '07700 900123', name: 'Grace Friend', line1: '2 Gift Lane', town: 'Belfast', postcode: 'BT1 1AA', cardName: 'Ada Lovelace', recipientPhone: '07700 900999', giftMessage: 'From Ada', billingName: 'Ada Lovelace', billingLine1: '1 High Street', billingTown: 'Wimborne', billingPostcode: 'BH21 3EG' });
+    await fill({ email: EMAIL, phone: '07700 900123', name: 'Grace Friend', line1: '2 Gift Lane', town: 'Belfast', postcode: 'BT1 1AA', cardName: 'Ada Lovelace', recipientPhone: '07700 900999', giftMessage: 'From Ada', billingName: 'Ada Lovelace', billingLine1: '1 High Street', billingTown: 'Wimborne', billingPostcode: 'SW1A 1AA' });
     r = await b.ev(`(async () => { ${prime} const form = document.querySelector('main form'); const r = await fetch(form.action || location.href, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } }); return r.json(); })()`);
     await go(b, r.url?.startsWith('http') ? r.url : BASE_URL + r.url, 3000);
     const carried = await b.ev(`(() => { const v = (n) => document.querySelector('[name="reserve_form[' + n + ']"]'); return { path: location.pathname, fullName: v('fullName')?.value, gift: v('gift')?.checked, neededBy: v('giftNeededBy')?.value, direct: document.querySelector('[name="reserve_form[giftSendTo]"][value=recipient]')?.checked, recipient: v('giftRecipientName')?.value, message: v('giftMessage')?.value, phone: v('giftRecipientPhone')?.value, postcode: v('postcode')?.value }; })()`);
@@ -213,7 +213,7 @@ try {
     const quotePage = await a.ev(`(() => { const v = (n) => document.querySelector('[name="card_payment_form[' + n + ']"]')?.value; return { billingSame: document.querySelector('[name$="[billingSame]"]').checked, name: v('name'), cardName: v('cardName'), message: v('giftMessage'), phone: v('recipientPhone'), gift: document.querySelector('[data-quote-gift]')?.innerText.replace(/\\s+/g, ' ') }; })()`);
     check('the quote page: "Same as delivery address" unticked, the recipient as the delivery name, the gift message and mobile filled in, the gift in the summary', quotePage.billingSame === false && quotePage.name === 'Grace Friend' && quotePage.message === MESSAGE && quotePage.phone === '07700 900999' && /Send directly to the recipient/.test(quotePage.gift ?? ''), JSON.stringify(quotePage));
     since = new Date();
-    await a.ev(`(() => { for (const [k, v] of Object.entries({ billingName: 'Ada Lovelace', billingLine1: '1 High Street', billingTown: 'Wimborne', billingPostcode: 'BH21 3EG' })) document.querySelector('[name="card_payment_form[' + k + ']"]').value = v; })()`);
+    await a.ev(`(() => { for (const [k, v] of Object.entries({ billingName: 'Ada Lovelace', billingLine1: '1 High Street', billingTown: 'Wimborne', billingPostcode: 'SW1A 1AA' })) document.querySelector('[name="card_payment_form[' + k + ']"]').value = v; })()`);
     const started = await a.ev(`(async () => { const form = document.querySelector('main form'); const r = await fetch(form.dataset.checkoutExpressUrlValue, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } }); return r.json(); })()`);
     const quotePaid = await a.ev(`Stripe(document.querySelector('main form').dataset.checkoutStripeKeyValue).confirmCardPayment(${JSON.stringify(started.clientSecret)}, { payment_method: 'pm_card_visa' }).then(x => x.error ? x.error.message : x.paymentIntent.status)`);
     await go(a, started.completeUrl.replace(/^https?:\/\/[^/]+/, BASE_URL), 3000);

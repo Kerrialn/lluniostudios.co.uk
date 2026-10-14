@@ -94,7 +94,7 @@ final class EnquiryForm extends AbstractType
                     new Assert\NotBlank(message: 'Please enter your postcode.'),
                     new Assert\Callback(static function (mixed $value, ExecutionContextInterface $context): void {
                         if (\is_string($value) && trim($value) !== '' && DeliveryArea::normalise($value) === null) {
-                            $context->addViolation('Please enter a full postcode, e.g. BH21 3EG.');
+                            $context->addViolation('Please enter a full postcode, e.g. SW1A 1AA.');
                         }
                     }),
                 ],

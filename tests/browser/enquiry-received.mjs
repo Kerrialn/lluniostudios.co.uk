@@ -56,7 +56,7 @@ try {
 
     // A video call about an Atelier, with everything filled in.
     await piece('atelier', 1);
-    let page = await enquire({ fullName: 'Ada Received', email: EMAIL, phone: '07700 900123', bestTime: 'Weekday evenings', description: 'A double-height hallway.\nOak floor, white walls.', boardLink: 'pinterest.com/ada/hallway', postcode: 'BH21 3EG' }, 'video', [make('Hallway.jpg', 2), make('Mood board.pdf', 1)]);
+    let page = await enquire({ fullName: 'Ada Received', email: EMAIL, phone: '07700 900123', bestTime: 'Weekday evenings', description: 'A double-height hallway.\nOak floor, white walls.', boardLink: 'pinterest.com/ada/hallway', postcode: 'SW1A 1AA' }, 'video', [make('Hallway.jpg', 2), make('Mood board.pdf', 1)]);
     check('"Enquiry Received": the heading, "I\'ll be in touch to arrange a video call, to talk about your Atelier lamp.", the confirmation line, no reference (DRAFT)', page.path === '/begin-the-conversation/received'
         && page.text === "ENQUIRY RECEIVED Thank you. I'll be in touch to arrange a video call, to talk about your Atelier lamp. Confirmation has been sent to the email address provided." && !/LR-/.test(page.text), JSON.stringify(page));
     const layout = await ev(`(() => { const h = document.querySelector('main h1'); const p = document.querySelector('main p'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(p).fontSize, pColour: getComputedStyle(p).color, rule: getComputedStyle(p.parentElement).borderTopStyle }; })()`);
@@ -95,8 +95,8 @@ try {
         const format = studioEmailProblems(studio.HTML, 'New enquiry');
         const t = text(studio.HTML);
         check('no greeting or signature; "New enquiry" first', format.length === 0 && !/Theo|All the best/.test(t), format.join('; '));
-        check('the summary: enquiry and time, lamps, talk by, best time, phone, postcode, files, customer, payment none taken', new RegExp(`New enquiry\\nEnquiry ${number} · \\d+ October 2026, \\d\\d:\\d\\d\\nLamps Atelier × 1\\nTalk by Video call\\nBest time Weekday evenings\\nPhone 07700 900123\\nPostcode BH21 3EG\\nFiles 2 files\\nCustomer Ada Received\\nPayment None taken\\nOpen the enquiry in admin`).test(t), t.slice(0, 500));
-        check('then their space (line break kept) and every detail, the board link as typed', /Their space and what they have in mind\nA double-height hallway\.\nOak floor, white walls\.\nDetails\nName Ada Received\nEmail ada\.received@example\.test\nPhone 07700 900123\nHow to talk Video call\nBest time to reach them Weekday evenings\nBoard link pinterest\.com\/ada\/hallway\nPostcode BH21 3EG\nCountry United Kingdom\nFiles\n/.test(t), t);
+        check('the summary: enquiry and time, lamps, talk by, best time, phone, postcode, files, customer, payment none taken', new RegExp(`New enquiry\\nEnquiry ${number} · \\d+ October 2026, \\d\\d:\\d\\d\\nLamps Atelier × 1\\nTalk by Video call\\nBest time Weekday evenings\\nPhone 07700 900123\\nPostcode SW1A 1AA\\nFiles 2 files\\nCustomer Ada Received\\nPayment None taken\\nOpen the enquiry in admin`).test(t), t.slice(0, 500));
+        check('then their space (line break kept) and every detail, the board link as typed', /Their space and what they have in mind\nA double-height hallway\.\nOak floor, white walls\.\nDetails\nName Ada Received\nEmail ada\.received@example\.test\nPhone 07700 900123\nHow to talk Video call\nBest time to reach them Weekday evenings\nBoard link pinterest\.com\/ada\/hallway\nPostcode SW1A 1AA\nCountry United Kingdom\nFiles\n/.test(t), t);
         check('the files listed (names and sizes), downloaded from the enquiry in admin, nothing attached', /Hallway\.jpg \(2\.0MB\)/.test(studio.HTML) && /Mood board\.pdf \(1\.0MB\)/.test(studio.HTML) && /Download from the enquiry in admin/.test(studio.HTML) && /\/admin\/design-request\//.test(studio.HTML) && (studio.Attachments || []).length === 0);
         check('the piece: Atelier, finishes to be chosen together', /The piece\nLumen Forma\nSize Atelier\nFinishes To be chosen together\nQuantity 1\n/.test(t), t.slice(-400));
         check('replies go to the customer', (studio.ReplyTo || []).some((r) => r.Address === EMAIL), JSON.stringify(studio.ReplyTo));
@@ -113,7 +113,7 @@ try {
     check('…your notification: "New enquiry · Estate × 3 · Phone", the Jersey postcode with its country', phoneStudio?.Subject === 'New enquiry · Estate × 3 · Phone' && /Postcode JE2 3AB · Jersey\n/.test(text(phoneStudio?.HTML || '')), phoneStudio?.Subject);
 
     await piece('monument', 1);
-    page = await enquire({ fullName: 'Ada Received', email: 'ada.received3@example.test', description: 'A stairwell.', postcode: 'BH21 3EG' }, 'email');
+    page = await enquire({ fullName: 'Ada Received', email: 'ada.received3@example.test', description: 'A stairwell.', postcode: 'SW1A 1AA' }, 'email');
     check('by email, a Monument: "I\'ll be in touch by email, to talk about your Monument lamp."', page.text.includes("Thank you. I'll be in touch by email, to talk about your Monument lamp."), page.text);
     const emailMail = await customerMail('ada.received3@example.test', latest('ada.received3@example.test'));
     check('…its email: "I\'ll be in touch by email", "How we\'ll talk: Email" (no phone)', text(emailMail?.HTML || '').includes("I'll be in touch by email to talk through") && /How you'd like to talk\nEmail\n/.test(text(emailMail?.HTML || '')));
@@ -121,7 +121,7 @@ try {
     // The spam trap: thanked, nothing saved or sent.
     await piece('atelier', 1);
     const before = (await mailpit('to:ada.received4@example.test')).length;
-    page = await enquire({ fullName: 'Ada Received', email: 'ada.received4@example.test', description: 'Spam.', postcode: 'BH21 3EG', website: 'http://spam.example' }, 'email');
+    page = await enquire({ fullName: 'Ada Received', email: 'ada.received4@example.test', description: 'Spam.', postcode: 'SW1A 1AA', website: 'http://spam.example' }, 'email');
     await sleep(1500);
     check('the hidden field filled: the same thank-you page, nothing saved, no emails', page.path === '/begin-the-conversation/received' && page.text.startsWith('ENQUIRY RECEIVED') && !latest('ada.received4@example.test') && (await mailpit('to:ada.received4@example.test')).length === before);
     summary();

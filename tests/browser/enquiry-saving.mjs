@@ -51,7 +51,7 @@ try {
     const errors = () => ev(`[...document.querySelectorAll('form[name=enquiry_form] [role=alert]')].filter(e => !e.hidden && e.textContent.trim()).map(e => e.textContent.trim())`);
     const count = (email = EMAIL) => Number(sql(`select count(*) from design_request where email = '${email}'`).match(/\d+/g).pop());
     const basket = async () => (await ev(`document.querySelector('#navbar').innerText`)).match(/Basket \((\d+)\)/i)?.[1] ?? '0';
-    const minimal = { fullName: 'Ada Saving', email: EMAIL, description: 'A small reading corner.', postcode: 'BH21 3EG' };
+    const minimal = { fullName: 'Ada Saving', email: EMAIL, description: 'A small reading corner.', postcode: 'SW1A 1AA' };
 
     await b.clearStorage(); await send('Network.enable'); await send('Network.clearBrowserCookies');
     // An earlier run's enquiries, with their stored files.

@@ -108,7 +108,7 @@ final class StudioSummaryTest extends TestCase
 
     public function testAnEnquirysSubject(): void
     {
-        $enquiry = DesignRequest::enquiry('Ada Test', 'ada.test@example.test', '07700900000', EnquiryTalk::VIDEO, null, 'A hallway.', null, 'BH21 3EG', 'GB');
+        $enquiry = DesignRequest::enquiry('Ada Test', 'ada.test@example.test', '07700900000', EnquiryTalk::VIDEO, null, 'A hallway.', null, 'SW1A 1AA', 'GB');
         $enquiry->addItem($this->item('Atelier', 1, []));
 
         self::assertSame('New enquiry · Atelier × 1 · Video call', StudioSummary::enquirySubject($enquiry));

@@ -86,9 +86,10 @@ final class SeoExtension extends AbstractExtension
     }
 
     /**
-     * Llunio Studios as a LocalBusiness (Organization), with the studio's full
-     * address as on the Contact page (decided 13 October 2026). Facebook is
-     * left out until the page exists.
+     * Llunio Studios as a LocalBusiness (Organization), its location only:
+     * Bournemouth, Dorset, with no street or postcode (no postal address is
+     * published, decided 14 October 2026). Facebook is left out until the
+     * page exists.
      *
      * @return array<string, mixed>
      */
@@ -106,9 +107,7 @@ final class SeoExtension extends AbstractExtension
             'email' => $this->studioEmail,
             'address' => [
                 '@type' => 'PostalAddress',
-                'streetAddress' => 'Hogsmeade, Higher Merley Ln',
-                'addressLocality' => 'Wimborne',
-                'postalCode' => 'BH21 3EG',
+                'addressLocality' => 'Bournemouth',
                 'addressRegion' => 'Dorset',
                 'addressCountry' => 'GB',
             ],

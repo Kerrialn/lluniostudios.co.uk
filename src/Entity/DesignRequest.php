@@ -168,7 +168,7 @@ class DesignRequest implements HasReferenceNumber
      * Where a request can be delivered, as on the Reserve page.
      */
     /**
-     * A UK postcode anywhere in an older request's address (e.g. "BH21 3EG").
+     * A UK postcode anywhere in an older request's address (e.g. "SW1A 1AA").
      */
     public const POSTCODE_PATTERN = '/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i';
 

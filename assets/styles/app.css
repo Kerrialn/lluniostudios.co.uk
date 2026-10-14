@@ -670,7 +670,11 @@ picture { display: contents; }
 }
 .ll-story-text {
     position: absolute;
-    left: 54%;
+    /* From 54% across, or just beside the lamp when the photo is enlarged to
+       fill a screen narrower than 4:3 (the lamp's right edge is about 31.5% of
+       the photo's width; the photo is max(100vw, 133.42vh) wide), so the text
+       never sits over the lamp (14 October 2026). */
+    left: max(54%, calc(0.315 * max(100vw, 133.42vh) + 32px));
     right: clamp(24px, 5vw, 72px);
     top: 12vh;
     bottom: 12vh;
@@ -750,7 +754,7 @@ picture { display: contents; }
 }
 .ll-story-button {
     align-self: flex-start;
-    min-width: 320px;
+    min-width: min(320px, 100%); /* never wider than the text column (14 October 2026) */
     min-height: 44px;
     box-sizing: border-box;
     display: flex;

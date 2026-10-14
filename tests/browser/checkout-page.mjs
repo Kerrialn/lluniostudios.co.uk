@@ -69,7 +69,7 @@ try {
     check('sent empty: "Please complete the required fields to continue." and the required fields outlined', errors.path === '/checkout' && a.error === 'Please complete the required fields to continue.' && JSON.stringify(errors.outlined) === JSON.stringify(['email', 'phone', 'name', 'line1', 'town', 'postcode', 'cardName']), JSON.stringify({ a, errors }));
     await fill({ ...good, postcode: 'BH21', email: 'not-an-email', phone: '12' }); await submit();
     const under = await ev(`[...document.querySelectorAll('main form label [role=alert]')].map(e => e.textContent.trim())`);
-    check('a half postcode, a bad email and a bad phone each say what is wrong', JSON.stringify(under) === JSON.stringify(['Please enter a valid email address.', 'Please enter a valid phone number.', 'Please enter a full UK postcode, e.g. BH21 3EG.']), JSON.stringify(under));
+    check('a half postcode, a bad email and a bad phone each say what is wrong', JSON.stringify(under) === JSON.stringify(['Please enter a valid email address.', 'Please enter a valid phone number.', 'Please enter a full UK postcode, e.g. SW1A 1AA.']), JSON.stringify(under));
     check('what was typed is kept', (await ev(`${field('line1')}.value`)) === '1 High Street');
 
     // Billing address.

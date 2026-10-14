@@ -89,11 +89,11 @@ try {
     check('choosing a video call: the phone becomes required ("*")', (await ev(`document.querySelector('label[for=enquiry_form_phone]').innerText.replace(/\\s+/g, ' ').trim()`)) === 'Phone *');
     await set('postcode', 'BH21'); await set('boardLink', 'not a link');
     await submit();
-    check('a video call without a phone, a half postcode, a board link that isn\'t a web address: each refused', JSON.stringify(await errors()) === JSON.stringify(['Please enter your phone number for a phone or video call.', 'Please enter a web address, e.g. pinterest.com/your-board.', 'Please enter a full postcode, e.g. BH21 3EG.']), JSON.stringify(await errors()));
+    check('a video call without a phone, a half postcode, a board link that isn\'t a web address: each refused', JSON.stringify(await errors()) === JSON.stringify(['Please enter your phone number for a phone or video call.', 'Please enter a web address, e.g. pinterest.com/your-board.', 'Please enter a full postcode, e.g. SW1A 1AA.']), JSON.stringify(await errors()));
     check('what was typed is kept, and the phone still shows "*"', (await ev(`document.querySelector('[name="enquiry_form[fullName]"]').value`)) === 'Ada Enquiry' && (await ev(`document.querySelector('label[for=enquiry_form_phone]').innerText.replace(/\\s+/g, ' ').trim()`)) === 'Phone *');
     await set('postcode', '75001');
     await submit();
-    check('a postcode outside the UK is refused', (await errors()).includes('Please enter a full postcode, e.g. BH21 3EG.'));
+    check('a postcode outside the UK is refused', (await errors()).includes('Please enter a full postcode, e.g. SW1A 1AA.'));
 
     // Files: the Bespoke Commissions rules (checked as they are chosen; the server's check is commissions-saving.mjs's and enquiry-saving.mjs's).
     const txt = out('enquiry-notes.txt'); writeFileSync(txt, 'Not a photo.');
@@ -115,7 +115,7 @@ try {
     check('a Jersey postcode, a board link and a video call: accepted and saved, then "Enquiry Received"', done.path === '/begin-the-conversation/received' && done.saved && requests() === before + 1, JSON.stringify(done));
     await toPage();
     await set('fullName', 'Ada Enquiry'); await set('email', 'ada.enquiry@example.test'); await set('description', 'A tall hallway with a north-facing window.');
-    await tick('[name="enquiry_form[talk]"][value=email]'); await set('postcode', 'BH21 3EG');
+    await tick('[name="enquiry_form[talk]"][value=email]'); await set('postcode', 'SW1A 1AA');
     await submit();
     done = await ev(`({ path: location.pathname, saved: document.querySelector('main h1')?.textContent.trim() === 'Enquiry Received' })`);
     check('an email enquiry with no phone: accepted and saved', done.path === '/begin-the-conversation/received' && done.saved && requests() === before + 2, JSON.stringify(done));
