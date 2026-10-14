@@ -15,6 +15,12 @@ use Twig\TwigFunction;
  * kept as the fallback. webp_srcset() turns an image list ("a-1000.jpg
  * 1000w, a-2000.jpg 2000w") into its WebP twin, or null when any WebP file
  * is missing (so nothing is ever offered that doesn't exist).
+ *
+ * photo_srcset() (14 October 2026): a photo's versions ("name-1000",
+ * "name-2000", "name-3000", "name-4000", by longest edge, as far as the
+ * original allows) described by their true width, so a large or high-density
+ * screen is offered a version wide enough and a phone a small one. The
+ * WebP versions go up to 4000; the JPEG fallbacks to 2000.
  */
 final class ImageExtension extends AbstractExtension
 {
@@ -28,7 +34,36 @@ final class ImageExtension extends AbstractExtension
     {
         return [
             new TwigFunction('webp_srcset', $this->webpSrcset(...)),
+            new TwigFunction('photo_srcset', $this->photoSrcset(...)),
         ];
+    }
+
+    /**
+     * @var array<string, string>
+     */
+    private array $photoSrcsets = [];
+
+    /**
+     * "/images/x-1000.webp 749w, /images/x-2000.webp 1499w, …" for the
+     * versions of $base (e.g. "images/lumen-forma/gallery-01") that exist.
+     */
+    public function photoSrcset(string $base, string $extension = 'jpg'): string
+    {
+        $key = $base . '.' . $extension;
+        if (isset($this->photoSrcsets[$key])) {
+            return $this->photoSrcsets[$key];
+        }
+
+        $candidates = [];
+        foreach ([1000, 2000, 3000, 4000] as $edge) {
+            $path = '/' . ltrim($base, '/') . '-' . $edge . '.' . $extension;
+            $size = is_file($this->projectDir . '/public' . $path) ? @getimagesize($this->projectDir . '/public' . $path) : false;
+            if ($size !== false) {
+                $candidates[] = $path . ' ' . $size[0] . 'w';
+            }
+        }
+
+        return $this->photoSrcsets[$key] = implode(', ', $candidates);
     }
 
     public function webpSrcset(string $srcset): ?string

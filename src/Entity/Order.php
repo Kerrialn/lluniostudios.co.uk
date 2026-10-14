@@ -82,9 +82,11 @@ class Order implements HasReferenceNumber
     private ?string $contactPhone = null;
 
     /**
-     * "Delivery instructions (optional)", passed to DPD (50 characters).
+     * "Delivery instructions (optional)", passed to DPD (100 characters on the
+     * page since 14 October 2026; the column takes up to 255, so matching
+     * DPD's real limit later needs no database change).
      */
-    #[ORM\Column(length: 64, nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $deliveryNotes = null;
 
     /**

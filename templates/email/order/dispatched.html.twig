@@ -18,6 +18,8 @@
 {% block content %}
 <p style="{{ body }}">{{ order.onItsWaySentence }}</p>
 <p style="{{ body }}">We hope it's even better in person, and we'd love to hear what you think once it arrives.</p>
+{# Signed as the enquiry email (14 October 2026): after the opening, before the details. #}
+{{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Delivery') }}
 <p style="{{ label }}">Order number</p>
 <p style="{{ body }}">{{ order.orderNumber }}</p>

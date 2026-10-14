@@ -57,8 +57,8 @@ try {
     // A video call about an Atelier, with everything filled in.
     await piece('atelier', 1);
     let page = await enquire({ fullName: 'Ada Received', email: EMAIL, phone: '07700 900123', bestTime: 'Weekday evenings', description: 'A double-height hallway.\nOak floor, white walls.', boardLink: 'pinterest.com/ada/hallway', postcode: 'BH21 3EG' }, 'video', [make('Hallway.jpg', 2), make('Mood board.pdf', 1)]);
-    check('"Enquiry Received": the heading, "I\'ll be in touch to arrange a video call, to talk about your Atelier.", the confirmation line, no reference (DRAFT)', page.path === '/begin-the-conversation/received'
-        && page.text === "ENQUIRY RECEIVED Thank you. I'll be in touch to arrange a video call, to talk about your Atelier. Confirmation has been sent to the email address provided." && !/LR-/.test(page.text), JSON.stringify(page));
+    check('"Enquiry Received": the heading, "I\'ll be in touch to arrange a video call, to talk about your Atelier lamp.", the confirmation line, no reference (DRAFT)', page.path === '/begin-the-conversation/received'
+        && page.text === "ENQUIRY RECEIVED Thank you. I'll be in touch to arrange a video call, to talk about your Atelier lamp. Confirmation has been sent to the email address provided." && !/LR-/.test(page.text), JSON.stringify(page));
     const layout = await ev(`(() => { const h = document.querySelector('main h1'); const p = document.querySelector('main p'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(p).fontSize, pColour: getComputedStyle(p).color, rule: getComputedStyle(p.parentElement).borderTopStyle }; })()`);
     await go(BASE_URL + '/contact');
     const contact = await ev(`(() => { const h = document.querySelector('main h1'); const a = document.querySelector('main address'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(a).fontSize, pColour: getComputedStyle(a).color, rule: getComputedStyle(a).borderTopStyle }; })()`);
@@ -71,7 +71,7 @@ try {
     check('the customer\'s email is sent: "Your Lumen Forma enquiry, Ada" (the first name, as the greeting; DRAFT)', mail?.Subject === 'Your Lumen Forma enquiry, Ada', mail?.Subject);
     if (mail) {
         writeFileSync(out('enquiry-customer.html'), mail.HTML);
-        const opening = "Thank you for your enquiry about a Lumen Forma Atelier. I'll be in touch to arrange a video call to talk through your space and the finishes, then send you a quote.";
+        const opening = "Thank you for your enquiry about a Lumen Forma Atelier lamp. I'll be in touch to arrange a video call to talk through your space and the finishes, then send you a quote.";
         const format = customerEmailProblems(mail.HTML, 'Ada', opening);
         check('it follows the email rules: Montage C, no heading, "Dear Ada," then the opening ("me", a video call), one text size, "Llunio Studios" in full (the signature\'s handle excepted)', format.length === 0, format.join('; '));
         const t = text(mail.HTML);
@@ -114,7 +114,7 @@ try {
 
     await piece('monument', 1);
     page = await enquire({ fullName: 'Ada Received', email: 'ada.received3@example.test', description: 'A stairwell.', postcode: 'BH21 3EG' }, 'email');
-    check('by email, a Monument: "I\'ll be in touch by email, to talk about your Monument."', page.text.includes("Thank you. I'll be in touch by email, to talk about your Monument."), page.text);
+    check('by email, a Monument: "I\'ll be in touch by email, to talk about your Monument lamp."', page.text.includes("Thank you. I'll be in touch by email, to talk about your Monument lamp."), page.text);
     const emailMail = await customerMail('ada.received3@example.test', latest('ada.received3@example.test'));
     check('…its email: "I\'ll be in touch by email", "How we\'ll talk: Email" (no phone)', text(emailMail?.HTML || '').includes("I'll be in touch by email to talk through") && /How you'd like to talk\nEmail\n/.test(text(emailMail?.HTML || '')));
 

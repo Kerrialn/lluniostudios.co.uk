@@ -50,7 +50,7 @@ try {
         button: document.querySelector('form[name=enquiry_form] button[type=submit]').textContent.trim(),
         wide: document.documentElement.scrollWidth <= innerWidth })`);
     check('the page: "Begin the Conversation", its intro (DRAFT), no horizontal scrolling', p.path === '/begin-the-conversation' && p.title === 'Begin the Conversation | Llunio Studios' && p.h1 === 'Begin the Conversation'
-        && p.intro === "Atelier, Estate and Monument are made in conversation with me. Tell me a little about your space and I'll be in touch to talk it through. No payment is taken." && p.wide, JSON.stringify([p.h1, p.intro, p.wide]));
+        && p.intro === "Atelier, Estate and Monument lamps are made in conversation with me. Tell me a little about your space and I'll be in touch to talk it through. No payment is taken." && p.wide, JSON.stringify([p.h1, p.intro, p.wide]));
     check('at the top: Size Estate, Finishes To be chosen together, Quantity 2', JSON.stringify(p.rows) === JSON.stringify(['Size=Estate', 'Finishes=To be chosen together', 'Quantity=2']), JSON.stringify(p.rows));
     check('the sections: Contact, Getting in touch, Your space, Delivery', JSON.stringify(p.sections) === JSON.stringify(['Contact', 'Getting in touch', 'Your space', 'Delivery']), JSON.stringify(p.sections));
     check('the fields, in order (no "Needed by" or gift)', JSON.stringify(p.labels) === JSON.stringify([

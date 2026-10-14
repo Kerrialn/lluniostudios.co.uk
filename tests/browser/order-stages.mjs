@@ -17,6 +17,9 @@
 // care section, "View your order", Facebook in the footer); admin and the
 // private order page say "Delivered".
 import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL, customerEmailProblems } from './lib.mjs';
+// The signature on emails 04–06, exactly as the enquiry email (14 October 2026), before the details.
+const signatureOf = (html) => { const m = html.match(/<div data-email-signature>([\s\S]*?)<\/div>/); return m ? [...m[1].matchAll(/<p [^>]*>([\s\S]*?)<\/p>/g)].map((p) => p[1].replace(/<br\s*\/?>\s*/g, '\n').trim()) : null; };
+const signed = (html, before) => JSON.stringify(signatureOf(html)) === JSON.stringify(['All the best,', 'Theo\n@LlunioStuidos']) && html.indexOf('data-email-signature') < html.indexOf(before);
 import { writeFileSync } from 'node:fs';
 
 const { check, summary } = checker();
@@ -97,6 +100,7 @@ try {
     writeFileSync(out('email-04.html'), html);
     const long = new Date(suggested + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).replace(',', '');
     const format = customerEmailProblems(html, 'Ada', `Your Lumen Forma is now in production. Expected dispatch date is: ${long}.`);
+    check('email 04 signed "All the best, / Theo / @LlunioStuidos" after the opening, before the details', signed(html, 'Progress'), JSON.stringify(signatureOf(html)));
     const thanks = html.includes("Thank you for supporting our small studio. Every piece is made with care, and we can't wait for you to see yours.");
     check(`email 04 "Your Lumen Forma is being cast (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma is now in production. Expected dispatch date is: ${long}.", then the thanks; one text size`, thanks && mail?.Subject === `Your Lumen Forma is being cast (${orderNumber})` && format.length === 0, format.join('; ') + ' | ' + mail?.Subject);
     const text = flat(html);
@@ -141,9 +145,10 @@ try {
     const html5 = mail5 ? (await message(mail5.ID)).HTML : '';
     writeFileSync(out('email-05.html'), html5);
     const format5 = customerEmailProblems(html5, 'Ada', 'Your Lumen Forma Gallery lamp has left the studio and is on its way to you.');
+    check('email 05 signed "All the best, / Theo / @LlunioStuidos" after the opening, before the details', signed(html5, 'data-email-courier'), JSON.stringify(signatureOf(html5)));
     check(`email 05 "Your Lumen Forma is on its way (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp has left the studio and is on its way to you.", one text size`, mail5?.Subject === `Your Lumen Forma is on its way (${orderNumber})` && format5.length === 0, format5.join('; ') + ' | ' + mail5?.Subject);
     const plain5 = flat(html5);
-    check('then "We hope it\'s even better in person, and we\'d love to hear what you think once it arrives." (no photo request)', plain5.includes("on its way to you. We hope it's even better in person, and we'd love to hear what you think once it arrives. 01 Delivery") && !/photo/i.test(plain5), plain5.slice(plain5.indexOf('Dear Ada'), plain5.indexOf('Dear Ada') + 300));
+    check('then "We hope it\'s even better in person, and we\'d love to hear what you think once it arrives." (no photo request)', plain5.includes("on its way to you. We hope it's even better in person, and we'd love to hear what you think once it arrives. All the best, Theo / @LlunioStuidos 01 Delivery") && !/photo/i.test(plain5), plain5.slice(plain5.indexOf('Dear Ada'), plain5.indexOf('Dear Ada') + 300));
     const text5 = flat(html5);
     check('01 Delivery: order number, "Courier DPD", the tracking number; "Track your delivery" (DPD\'s page) and "View your order"', text5.includes(`01 Delivery Order number ${orderNumber} Courier DPD Tracking number 1550 1234 5678 Track your delivery View your order Reply to this email with any questions.`) && /<a href="https:\/\/track\.dpd\.co\.uk\/search\?reference=155012345678"[^>]*>Track your delivery</.test(html5), text5.slice(text5.indexOf('01 Delivery'), text5.indexOf('01 Delivery') + 250));
 
@@ -172,9 +177,10 @@ try {
     const html6 = mail6 ? (await message(mail6.ID)).HTML : '';
     writeFileSync(out('email-06.html'), html6);
     const format6 = customerEmailProblems(html6, 'Ada', "Your Lumen Forma Gallery lamp has been delivered. We hope it's found the perfect place in your home.");
+    check('email 06 signed "All the best, / Theo / @LlunioStuidos" after the opening, before the details', signed(html6, 'View your order'), JSON.stringify(signatureOf(html6)));
     check(`email 06 "Your Lumen Forma has arrived (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp has been delivered. We hope it's found the perfect place in your home.", one text size, "Llunio Studios" in full`, mail6?.Subject === `Your Lumen Forma has arrived (${orderNumber})` && format6.length === 0, format6.join('; ') + ' | ' + mail6?.Subject);
     const text6 = flat(html6);
-    check('then the photo request (Facebook or Instagram, @llunio_studios, or a reply) and "By sending us a photo, you\'re happy for us to share it.", "View your order"; no care or Share section', text6.includes("in your home. Would you do us a small favour? We'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page. By sending us a photo, you're happy for us to share it. View your order Reply to this email with any questions.") && !/\b0[12] (Care|Share)\b/.test(text6), text6.slice(text6.indexOf('Dear Ada'), text6.indexOf('Dear Ada') + 600));
+    check('then the photo request (Facebook or Instagram, @llunio_studios, or a reply) and "By sending us a photo, you\'re happy for us to share it.", "View your order"; no care or Share section', text6.includes("in your home. Would you do us a small favour? We'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page. By sending us a photo, you're happy for us to share it. All the best, Theo / @LlunioStuidos View your order Reply to this email with any questions.") && !/\b0[12] (Care|Share)\b/.test(text6), text6.slice(text6.indexOf('Dear Ada'), text6.indexOf('Dear Ada') + 600));
     check('the email footer: Facebook (the placeholder link), Instagram, YouTube', /<a href="https:\/\/www\.facebook\.com\/"[^>]*><img [^>]*icon-facebook\.png[^>]*alt="Facebook"[\s\S]*icon-instagram\.png[\s\S]*icon-youtube\.png/.test(html6));
 
     // The private order page.

@@ -365,20 +365,23 @@ picture { display: contents; }
         font-size: max(11px, min(28px, calc(100cqi / 8)));
     }
     .ll-home-actions {
-        flex-direction: column;
-        align-items: flex-start;
+        grid-template-columns: 1fr;
     }
     .ll-home-btn {
         display: flex;
         align-items: center;
         min-height: 44px;
         max-width: 100%;
-        /* 11px (the minimum) with COMMISSION fitting the narrowest column (90px):
-           tighter letter-spacing and side padding than desktop (Step 7d). */
-        padding: 10px 7px;
+        /* 11px (the minimum), stacked at the column's width, with room to
+           breathe (14 October 2026): 12px above and below, side padding growing
+           with the column up to 12px while COMMISSION (70px) still fits the
+           narrowest column (90px). */
+        justify-content: center;
+        min-height: 48px;
+        padding: 12px max(7px, min(12px, calc((100cqi - 74px) / 2)));
         font-size: 11px;
-        letter-spacing: .05em;
-        line-height: 1.25;
+        letter-spacing: .04em;
+        line-height: 1.4;
     }
     /* Footer icons pinned to the bottom-left of the layout (the bottom of the
        screen, or of the minimum-height page on very short screens), over the

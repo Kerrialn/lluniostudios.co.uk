@@ -39,7 +39,8 @@ final class CardPaymentForm extends AbstractType
         'town' => 35,
         'county' => 35,
         'postcode' => 8,
-        'notes' => 50,
+        // Delivery instructions: 100 (14 October 2026; was 50). DPD's real limit to confirm and match (Step 12).
+        'notes' => 100,
         'phone' => 15,
     ];
 

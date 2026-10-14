@@ -12,7 +12,7 @@
 {% import 'email/_customer.html.twig' as layout %}
 {% set firstName = designRequest.firstName %}
 {% set item = designRequest.items|first %}
-{% set piece = item.quantity > 1 ? item.quantity ~ ' Lumen Forma ' ~ item.sizeName ~ ' lamps' : 'a Lumen Forma ' ~ item.sizeName %}
+{% set piece = item.quantity > 1 ? item.quantity ~ ' Lumen Forma ' ~ item.sizeName ~ ' lamps' : 'a Lumen Forma ' ~ item.sizeName ~ ' lamp' %}
 {% set files = designRequest.files|length %}
 
 {% block title %}{{ constant('App\\Service\\EmailService::ENQUIRY_SUBJECT') }}, {{ firstName ?: designRequest.fullName }}{% endblock %}

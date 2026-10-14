@@ -16,8 +16,8 @@
 
 {% block content %}
 {% set enquiry = order.designRequest and order.designRequest.isEnquiry %}
-{# An enquiry's order: the enquiry named, signed (Step 7c.4, decided 13 October 2026). #}
-<p style="{{ body }}" data-email-opening>Here is the balance for your Lumen Forma order {{ order.orderNumber }}{% if enquiry %}, from your enquiry {{ order.designRequest.requestNumber }}{% endif %}.</p>
+{# An enquiry's order: signed (Step 7c.4, decided 13 October 2026); only the order number shown (14 October 2026). #}
+<p style="{{ body }}" data-email-opening>Here is the balance for your Lumen Forma order {{ order.orderNumber }}.</p>
 {% if note %}<p style="{{ body }}" data-email-note data-balance-note>{{ note|nl2br }}</p>{% endif %}
 {% if enquiry %}{{ include('email/_signature.html.twig') }}{% endif %}
 {{ layout.section('01', 'Balance') }}

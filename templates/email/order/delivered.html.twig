@@ -20,6 +20,8 @@
 <p style="{{ body }}">{{ order.deliveredSentence }}</p>
 <p style="{{ body }}">Would you do us a small favour? We'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page.</p>
 <p style="{{ body }}">By sending us a photo, you're happy for us to share it.</p>
+{# Signed as the enquiry email (14 October 2026): after the opening, before the details. #}
+{{ include('email/_signature.html.twig') }}
 <div style="height:8px;line-height:8px;font-size:1px;">&nbsp;</div>
 {{ layout.button(url('order_view', { token: order.viewToken }), 'View your order') }}
 <div style="height:24px;line-height:24px;font-size:1px;">&nbsp;</div>

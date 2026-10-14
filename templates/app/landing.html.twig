@@ -90,9 +90,10 @@
             <h1 class="max-w-[21em] font-light text-[clamp(28px,2.9vw,48px)] leading-[1.24] uppercase tracking-[0.06em] [text-wrap:balance]">
                 Hand cast <br>individually unique Liquid stone <br>sculptures
             </h1>
-            <div class="ll-home-actions flex flex-wrap gap-2.5 pointer-events-auto">
-                <a href="{{ path('lighting_designs') }}" class="ll-home-btn transition-opacity hover:opacity-70 border border-current px-[22px] py-3.5 text-xs leading-[normal] font-medium uppercase tracking-[0.14em]">Explore our lighting designs</a>
-                <a href="{{ path('commissions') }}" class="ll-home-btn transition-opacity hover:opacity-70 border border-current px-[22px] py-3.5 text-xs leading-[normal] font-medium uppercase tracking-[0.14em]">Commission Your vision</a>
+            {# Two equal buttons side by side where there is room (590px), otherwise stacked at the column's full width (14 October 2026). #}
+            <div class="ll-home-actions grid grid-cols-[repeat(auto-fit,minmax(min(100%,290px),1fr))] gap-2.5 pointer-events-auto">
+                <a href="{{ path('lighting_designs') }}" class="ll-home-btn transition-opacity hover:opacity-70 border border-current px-6 py-[18px] text-xs leading-[1.4] text-center uppercase tracking-[0.14em]">Explore our lighting designs</a>
+                <a href="{{ path('commissions') }}" class="ll-home-btn transition-opacity hover:opacity-70 border border-current px-6 py-[18px] text-xs leading-[1.4] text-center uppercase tracking-[0.14em]">Commission Your vision</a>
             </div>
         </div>
     </section>

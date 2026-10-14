@@ -185,9 +185,10 @@ try {
     for (let i = 0; i < 20 && !balanceMail; i++) { balanceMail = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma balance"`))[0]; if (!balanceMail) await sleep(500); }
     const balanceHtml = balanceMail ? (await message(balanceMail.ID)).HTML : '';
     const bt = text(balanceHtml);
-    const balanceOpening = `Here is the balance for your Lumen Forma order ${orderNumber}, from your enquiry ${number}.`;
+    // Only the order number (14 October 2026).
+    const balanceOpening = `Here is the balance for your Lumen Forma order ${orderNumber}.`;
     const balanceFormat = customerEmailProblems(balanceHtml, 'Ada', balanceOpening);
-    check('the balance request: the email rules, "Dear Ada," then "…order LS-…, from your enquiry LR-…."', !!balanceMail && balanceFormat.length === 0, balanceFormat.join('; '));
+    check('the balance request: the email rules, "Dear Ada," then "…order LS-…." (one number, no enquiry reference)', !!balanceMail && balanceFormat.length === 0 && !bt.includes(number), balanceFormat.join('; '));
     check('…the note, then the signature exactly, before 01; no "we" or "us"', bt.includes(`${balanceOpening}\nYour Estates are cured and ready.\nAll the best,\nTheo\n@LlunioStuidos\n01 Balance`) && JSON.stringify(signatureOf(balanceHtml)) === JSON.stringify(SIGNATURE) && !/\b(we|we'll|us|our)\b/i.test(bt.split('\nLlunio Studios\ninfo@')[0]), bt.slice(0, 500));
 
     // Paying the balance.

@@ -17,6 +17,8 @@
 {% block content %}
 <p style="{{ body }}">Your Lumen Forma is now in production. Expected dispatch date is: {{ order.expectedDispatch|date('l j F Y') }}.</p>
 <p style="{{ body }}">Thank you for supporting our small studio. Every piece is made with care, and we can't wait for you to see yours.</p>
+{# Signed as the enquiry email (14 October 2026): after the opening, before the details. #}
+{{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Progress') }}
 <p style="{{ label }}">Order number</p>
 <p style="{{ body }}">{{ order.orderNumber }}</p>

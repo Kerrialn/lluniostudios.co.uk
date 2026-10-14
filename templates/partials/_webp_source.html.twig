@@ -5,5 +5,6 @@
     script that loads the photo when it is needed (configurator_controller.js,
     slideshow_controller.js).
 #}
-{% set webp = webp_srcset(srcset) %}
+{# webp: the WebP versions given directly (photo_srcset(base, 'webp')), which can go larger than the JPEG fallbacks. #}
+{% set webp = webp|default(null) ?: webp_srcset(srcset) %}
 {% if webp %}<source type="image/webp" {{ lazy|default(false) ? 'data-srcset' : 'srcset' }}="{{ webp }}"{% if sizes|default(null) %} sizes="{{ sizes }}"{% endif %}>{% endif %}

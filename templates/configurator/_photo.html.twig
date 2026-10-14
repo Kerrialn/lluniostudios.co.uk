@@ -4,8 +4,10 @@
     Options: photo, alt, class, eager (bool), attrs (raw extra attributes).
 #}
 {% set src = asset('images/lumen-forma/' ~ photo.file ~ '-2000.jpg') %}
-{% set srcset = asset('images/lumen-forma/' ~ photo.file ~ '-1000.jpg') ~ ' 1000w, ' ~ src ~ ' 2000w' %}
-<picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, sizes: '100vw', lazy: not eager|default(false) }) }}
+{# Each version by its true width, the WebP ones up to 4000px (photo_srcset, 14 October 2026). #}
+{% set srcset = photo_srcset('images/lumen-forma/' ~ photo.file) %}
+{% set webpSrcset = photo_srcset('images/lumen-forma/' ~ photo.file, 'webp') %}
+<picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, webp: webpSrcset, sizes: '100vw', lazy: not eager|default(false) }) }}
 <img {% if eager|default(false) %}src="{{ src }}" srcset="{{ srcset }}"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
      sizes="100vw" alt="{{ alt }}" draggable="false"
      class="ll-cfg-img select-none {{ class|default('') }}"

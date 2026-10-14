@@ -47,7 +47,7 @@ try {
     check('"Proceed to Payment" opens Card Payment, with no sign-in', page.path === '/checkout' && page.h1 === 'Card Payment' && !page.signIn, JSON.stringify(page));
     check('sections: Contact, Delivery address, Billing address, Card details', JSON.stringify(page.sections) === JSON.stringify(['Contact', 'Delivery address', 'Billing address', 'Card details']), JSON.stringify(page.sections));
     const limits = await ev(`Object.fromEntries(['name', 'company', 'line1', 'line2', 'town', 'county', 'postcode', 'notes', 'phone'].map(n => [n, document.querySelector('[name="card_payment_form[' + n + ']"]').maxLength]))`);
-    check("DPD's character limits (35, postcode 8, notes 50, phone 15)", JSON.stringify(limits) === JSON.stringify({ name: 35, company: 35, line1: 35, line2: 35, town: 35, county: 35, postcode: 8, notes: 50, phone: 15 }), JSON.stringify(limits));
+    check("DPD's character limits (35, postcode 8, delivery instructions 100, phone 15)", JSON.stringify(limits) === JSON.stringify({ name: 35, company: 35, line1: 35, line2: 35, town: 35, county: 35, postcode: 8, notes: 100, phone: 15 }), JSON.stringify(limits));
     let a = await aside();
     check('before a postcode: "Calculated from postcode", total £799, "Pay £799"', a.delivery === 'Calculated from postcode' && a.total === '£799' && a.button === 'Pay £799' && a.secure && !a.note, JSON.stringify(a));
 

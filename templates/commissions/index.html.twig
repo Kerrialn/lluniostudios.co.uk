@@ -45,8 +45,9 @@
                 {# The first photo loads with the page; the slideshow loads each of the
                    others one slide ahead (slideshow_controller.js; the speed pass). #}
                 {% set src = asset('images/commissions/' ~ photo.file ~ '-1000.jpg') %}
-                {% set srcset = src ~ ' 1000w, ' ~ asset('images/commissions/' ~ photo.file ~ '-2000.jpg') ~ ' 2000w' %}
-                <picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, sizes: '100vw', lazy: not loop.first }) }}
+                {% set srcset = photo_srcset('images/commissions/' ~ photo.file) %}
+                {% set webpSrcset = photo_srcset('images/commissions/' ~ photo.file, 'webp') %}
+                <picture>{{ include('partials/_webp_source.html.twig', { srcset: srcset, webp: webpSrcset, sizes: '100vw', lazy: not loop.first }) }}
                 <img {% if loop.first %}src="{{ src }}" srcset="{{ srcset }}" fetchpriority="high"{% else %}data-src="{{ src }}" data-srcset="{{ srcset }}"{% endif %}
                      sizes="100vw" alt="A lamp hand cast in liquid stone by Llunio Studios, photo {{ loop.index }} of {{ loop.length }}" class="w-full h-full object-cover select-none" style="object-position: {{ photo.position }}"
                      draggable="false"></picture>
