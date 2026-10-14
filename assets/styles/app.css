@@ -1053,12 +1053,12 @@ html.ll-menu-open { overflow: hidden; }
 .ll-card-box.StripeElement--focus,
 .ll-card-box.is-wrong { border-color: var(--color-ll-ink); }
 
-/* The Workshop's origin story (14 October 2026): 13px on phones, one step
-   larger (14px) from 900px wide, with comfortable line spacing. In the
-   tablet and small-laptop range below, scaled as everything else (16.1px). */
+/* The Workshop's origin story (14 October 2026): 13px on phones, two steps
+   larger (15px) from 900px wide, with comfortable line spacing. In the
+   tablet and small-laptop range below, scaled as everything else (17.25px). */
 .ll-workshop-story { font-size: 13px; line-height: 1.6; }
 @media (min-width: 900px) {
-    .ll-workshop-story { font-size: 14px; }
+    .ll-workshop-story { font-size: 15px; }
 }
 
 /* Tablets and small laptops, 900 to 1400px wide (14 October 2026): text read
@@ -1076,7 +1076,7 @@ html.ll-menu-open { overflow: hidden; }
     .text-\[16px\], .text-base { font-size: 18.4px; }
     .text-\[18px\], .text-lg { font-size: 20.7px; }
     .ll-story-body { font-size: calc(clamp(15px, 1.15vw, 18px) * 1.15); }
-    .ll-workshop-story { font-size: 16.1px; }
+    .ll-workshop-story { font-size: 17.25px; }
     /* The page heading (every page but the feature pages) by the same factor, so it keeps its size against the text. */
     .ll-page-heading h1 { font-size: calc(clamp(22px, 2vw, 32px) * 1.15); }
     /* The homepage's two buttons side by side only where both fit at this size; otherwise stacked. */
