@@ -889,7 +889,10 @@ picture { display: contents; }
    sideways phones: "Skip to configurator" stays at the top, above the text,
    instead of over the headings; the text ends above the marker instead of
    running into it. */
-@media (max-width: 899px) and (orientation: portrait) {
+/* Upright tablets too (up to 1199px wide, e.g. a Surface or an iPad Pro held
+   upright) use the phone layout of the Lighting Designs introduction: text
+   above, photo below (decided 14 October 2026). */
+@media (orientation: portrait) and (max-width: 1199px) {
     /* --story-photo-top: set only on short screens, where the longest stage
        text doesn't fit above 46%; then the photo starts 16px below the text
        (7b.2, decided 12 October 2026). */
@@ -916,7 +919,7 @@ picture { display: contents; }
    visible screen, measured from the small viewport height (svh) so it stays
    above the browser's own bars when they show, and inside any notch or
    home-indicator area; the text always ends above it. */
-@media (max-width: 899px) {
+@media (max-width: 899px), (orientation: portrait) and (max-width: 1199px) {
     .ll-story-marker {
         left: calc(20px + env(safe-area-inset-left, 0px));
         bottom: auto;
@@ -936,7 +939,7 @@ picture { display: contents; }
    which is 15.2% down the photo, max(74.95vw, 54vh) tall from 46% down the
    screen): the auto top margin pushes them down to there, but never higher
    up than 18px under the heading, so on short screens they stop below it. */
-@media (max-width: 899px) {
+@media (max-width: 899px), (orientation: portrait) and (max-width: 1199px) {
     .ll-story-actions {
         display: grid;
         align-self: flex-end;
@@ -959,7 +962,7 @@ picture { display: contents; }
    (--story-plan-top, set by the script) or where the photo starts, whichever
    is higher, so it's as large as the screen allows. --pan is the drawing's point to centre (a fraction of its
    width), from Studio to Monument; it never pans past either end. */
-@media (max-width: 899px) {
+@media (max-width: 899px), (orientation: portrait) and (max-width: 1199px) {
     .ll-story { height: 1673vh; }
     .ll-story-snap-wide, .ll-story-drawing-inline { display: none; }
     .ll-story-snap-phone { display: block; }
@@ -986,10 +989,10 @@ picture { display: contents; }
         left: clamp(min(0px, calc(100% - var(--pw))), calc(50% - var(--pan, 0.121) * var(--pw)), max(0px, calc(100% - var(--pw))));
     }
 }
-@media (max-width: 899px) and (orientation: portrait) {
+@media (orientation: portrait) and (max-width: 1199px) {
     .ll-story-plan { top: var(--story-plan-top, var(--story-photo-top, 46%)); right: 0; }
 }
-@media (max-width: 899px) and (orientation: portrait) {
+@media (orientation: portrait) and (max-width: 1199px) {
     .ll-story-actions {
         /* The lamp's top: 15.2% down the photo frame (h), which sits 40% of
            any overflow above the photo area (c) (.ll-story-frame). */
@@ -1030,17 +1033,17 @@ picture { display: contents; }
     }
     .ll-story-skip, .is-story-scrolled .ll-story-skip { top: clamp(8px, 1.5vw, 16px); transition: none; }
 }
-@media (prefers-reduced-motion: reduce) and (min-width: 900px), (prefers-reduced-motion: reduce) and (orientation: landscape) {
+@media (prefers-reduced-motion: reduce) and (min-width: 1200px), (prefers-reduced-motion: reduce) and (orientation: landscape) {
     .ll-story-text { margin: 0 clamp(24px, 5vw, 72px) 0 54%; }
 }
-@media (prefers-reduced-motion: reduce) and (max-width: 899px) {
+@media (prefers-reduced-motion: reduce) and (max-width: 899px), (prefers-reduced-motion: reduce) and (orientation: portrait) and (max-width: 1199px) {
     .ll-story { height: auto; }
     .ll-story-snap-phone, .ll-story-plan { display: none; }
     .ll-story-photo { opacity: 1; }
     .ll-story-drawing-scroll { overflow-x: auto; margin: 0 -20px; padding: 0 20px; }
     .ll-story-drawing-inline { display: block; width: 707px; }
 }
-@media (prefers-reduced-motion: reduce) and (max-width: 899px) and (orientation: portrait) {
+@media (prefers-reduced-motion: reduce) and (orientation: portrait) and (max-width: 1199px) {
     .ll-story-actions { margin: 0; }
     .ll-story-text { margin: 0 20px; }
     .ll-story-photo { top: auto; height: 75vw; }

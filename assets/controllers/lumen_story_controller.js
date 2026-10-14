@@ -28,8 +28,9 @@ import { Controller } from '@hotwired/stimulus';
  */
 const STAGES = 7;
 const REDUCED = '(prefers-reduced-motion: reduce)';
-const PHONE = '(max-width: 899px)';
-const UPRIGHT = '(max-width: 899px) and (orientation: portrait)';
+// Phones, and tablets held upright (up to 1199px wide, 14 October 2026), use the phone layout.
+const PHONE = '(max-width: 899px), (orientation: portrait) and (max-width: 1199px)';
+const UPRIGHT = '(orientation: portrait) and (max-width: 1199px)';
 // Phones: The Sizes (stage 4, k 3.5) holds while the drawing pans.
 const SIZES_AT = 3.5;
 const PAN_STEPS = 4;

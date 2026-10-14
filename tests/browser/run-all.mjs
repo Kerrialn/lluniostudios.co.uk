@@ -51,6 +51,7 @@ const CHECKS = [
     ['checkout-wallet.mjs'],
     ['account.mjs'],
     ['seo.mjs'],
+    ['terms.mjs'],
     ['speed.mjs', '--check'],
     ['page-footers.mjs', '1440', '900'],
     ['page-footers.mjs', '390', '844'],

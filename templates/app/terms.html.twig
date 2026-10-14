@@ -6,23 +6,142 @@
 
 {% block body %}
     {#
-        PLACEHOLDER: wording copied from the Site v4 design. Not yet confirmed
-        final or reviewed for consumer-law wording (open question).
+        Step 11c: Theo's final Terms & Conditions (14 October 2026), word for
+        word as given, in the page's existing style: the heading, "Last
+        updated", the introduction, then the 13 numbered sections (each
+        with its rule and section heading); "•" lines as bulleted lists and
+        section 9's numbered points as a numbered list. The email address is
+        a link; the text is unchanged.
     #}
-    {% set sections = [
-        { h: 'Made-to-order & cancellations', p: 'Every item is made to order. Orders may be cancelled at any time before production begins. You will be notified by email when production starts; after that point, orders are final and cannot be cancelled or refunded. As bespoke cast items, statutory distance selling cancellation rights cease once production commences.' },
-        { h: 'Changes & revisions', p: 'We welcome reasonable design revisions before production begins. Once production has started, no further changes can be made.' },
-        { h: 'Returns, refunds & replacements', p: 'We do not accept returns or offer refunds for change of mind. We will revise or replace an item only if the finished piece does not match the agreed specifications, or it arrives damaged in transit. Claims must be reported within 7 days of delivery with photographic proof of packaging and damage.' },
-        { h: 'Delivery & fees', p: 'Delivery costs are non-refundable. For eligible returns or replacements, we will cover the cost of sending the replacement; customers are responsible for returning the original item unless we confirm it is defective.' },
-        { h: 'Governing law & disputes', p: 'These terms are governed by the laws of England and Wales. Any disputes will be handled through our internal process first, and if unresolved, through the courts of England and Wales.' },
-    ] %}
     <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
         {{ include('partials/_page_heading.html.twig', { title: 'Terms & Conditions' }) }}
-        {% for section in sections %}
-            <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
-                <h2 class="ll-section-heading">{{ section.h }}</h2>
-                <p class="text-ll-mute text-[15px] leading-relaxed">{{ section.p }}</p>
-            </section>
-        {% endfor %}
+        <div class="flex flex-col gap-3 border-t border-ll-line pt-4">
+            <p class="text-ll-mute text-[13px]" data-terms-updated>Last updated: 14 October 2026</p>
+            <p class="text-ll-mute text-[15px] leading-relaxed">These terms apply to every order placed on lluniostudios.co.uk, including lamps bought at checkout, designs reserved and quoted by hand, larger pieces made after an enquiry, and bespoke commissions. Please read them before ordering. Nothing in them affects your legal rights as a consumer.</p>
+        </div>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">1. About us</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Llunio Studios is the trading name of Theo Newham, a sole trader based in Dorset.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Email: <a href="mailto:info@lluniostudios.co.uk" class="ll-link text-ll-ink">info@lluniostudios.co.uk</a></li>
+            </ul>
+            <p class="text-ll-mute text-[15px] leading-relaxed">We are not VAT-registered, so no VAT is charged on our prices.</p>
+            <p class="text-ll-mute text-[15px] leading-relaxed">"We", "us" and "our" mean Llunio Studios. "You" means the person placing the order.</p>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">2. Our lamps</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Every lamp is hand cast to order in liquid stone, so no two are identical.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Natural variation: tone, texture, surface pinholes and small marks vary from piece to piece. These are characteristics of the material and the hand process, not faults.</li>
+                <li>Photography: photos show examples of our work. Your lamp will differ slightly, and colours vary between screens.</li>
+                <li>Sizes and weights: dimensions and weights are approximate, as each piece is cast by hand.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">3. Ordering</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">There are two ways to order, and a contract is only formed once you've paid.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Direct orders (Studio and Gallery, up to 2 lamps, UK mainland): you configure and pay at checkout. Our contract starts when we email your order confirmation.</li>
+                <li>Reserve Your Design (Studio and Gallery with custom options, 3 or more lamps, or delivery outside the UK mainland): you send a request, with no payment taken. Sending it secures your place in our casting schedule while we prepare a quote. We then email you a written quote. Our contract starts when you pay the quote, either in full or the deposit.</li>
+                <li>Larger pieces (Atelier, Estate and Monument): you send an enquiry through Begin the Conversation, with no payment taken. We talk through your space and the finishes with you, then email you a written quote. Our contract starts when you pay the quote, either in full or the deposit.</li>
+            </ul>
+            <p class="text-ll-mute text-[15px] leading-relaxed">If we can't accept an order, for example because of a pricing error, we'll tell you and refund anything you've paid.</p>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">4. Prices and payment</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">All prices are in pounds sterling, with no VAT charged, and delivery is shown before you pay.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Direct orders are paid in full at checkout.</li>
+                <li>Quotes set out each lamp, any extra work (such as custom pigment development), delivery and the total. A quote is valid for 14 days from the date we send it.</li>
+                <li>Deposits: some quotes ask for a deposit, usually 50%, with the balance due before dispatch. We'll email you when the balance is due, and your lamp is dispatched once it's paid in full.</li>
+                <li>If the balance isn't paid: the balance is due within 14 days of our request, and we'll send a reminder if it's late. If it's still unpaid 30 days after our request, we may cancel the order by email. We'll then keep from your deposit only what covers our actual costs (materials, work already done and storage) and refund the rest.</li>
+                <li>Payment is taken securely by our payment provider, Stripe, by card, Apple Pay or Google Pay. We never see or store your full card details.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">5. Made to order: cancellations and refunds</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">You can cancel for a full refund until production starts. Once it has started, the order can't be cancelled or refunded, except for faulty goods (section 9).</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>When production starts: we email you "Your lamp is being cast" on the day we begin. Until that email, your order is still open to cancellation.</li>
+                <li>Cancelling before production: email <a href="mailto:info@lluniostudios.co.uk" class="ll-link text-ll-ink">info@lluniostudios.co.uk</a> with your order number. We'll refund everything you've paid, including any deposit and delivery, within 14 days, to the card you paid with. If you paid a deposit, your casting slot is released.</li>
+                <li>Why no cancellation after that: every lamp is cast to your chosen size and specification. UK law treats goods made to a customer's specification differently: the usual 14-day right to cancel online purchases doesn't apply to them (Consumer Contracts Regulations 2013, regulation 28(1)(b)).</li>
+                <li>Your other rights are unaffected: if your lamp arrives faulty, damaged or not as described, section 9 applies however it was made.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">6. Production and lead times</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Direct orders are dispatched within 7–14 days; quoted orders follow the estimated casting date in your quote.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Delays: if your lamp will be later than expected, we'll tell you as soon as we know, with a new date.</li>
+                <li>Your right if we're late: if we don't deliver by the date agreed, or within 30 days of your order if no date was agreed, you can give us a further reasonable time. If we still don't deliver, you can cancel and we'll refund you in full.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">7. Delivery</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">We deliver to the UK mainland by DPD; other addresses are quoted individually.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Outside the UK mainland: the Scottish Highlands and Islands, Northern Ireland, the Isle of Man, the Isles of Scilly and the Channel Islands go through Reserve Your Design, with delivery quoted for you.</li>
+                <li>Larger pieces may be delivered on a pallet. Please tell us about stairs, narrow access or anything else that could affect delivery.</li>
+                <li>Responsibility: your lamp is our responsibility until it's delivered to you, or to someone you've asked us to deliver to.</li>
+                <li>Damage in transit: please check your parcel on arrival. If anything is damaged, keep the packaging and email us photos as soon as you can, so we can put it right quickly.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">8. Gift orders</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Whoever places a gift order is our customer, and these terms apply to them.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Arrive-by dates: at checkout, the date you choose is one we can meet. For reserved designs and larger pieces, it's a preferred date, agreed with you and confirmed in your quote.</li>
+                <li>Sent directly to the recipient: we don't put prices or invoices in the box. Any gift message you give us is included on a card.</li>
+                <li>If something's wrong: we're happy to deal with the recipient directly to put it right.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">9. Faulty goods: your legal rights</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Under the Consumer Rights Act 2015, your lamp must be of satisfactory quality, fit for purpose and as described. If it isn't:</p>
+            <ol class="list-decimal pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Within 30 days of delivery: you can reject it for a full refund.</li>
+                <li>Within 6 months: you can ask for a repair or replacement. Any fault is assumed to have been there on delivery unless we can show otherwise.</li>
+                <li>If a repair or replacement fails or isn't possible: you can have a refund or a price reduction. After 6 months, a deduction may be made for the use you've had.</li>
+                <li>Time limit: you can claim for up to 6 years from delivery in England and Wales, and 5 years in Scotland.</li>
+            </ol>
+            <p class="text-ll-mute text-[15px] leading-relaxed">To make a claim, email <a href="mailto:info@lluniostudios.co.uk" class="ll-link text-ll-ink">info@lluniostudios.co.uk</a> with your order number, a description and photos. We'll arrange and pay for collection of faulty goods.</p>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">10. Electrical safety, installation and use</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Our lamps are built to Class II (double insulated) and should be used as described below.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Indoor use only, in dry areas, unless we've agreed otherwise in writing.</li>
+                <li>Hardwired installations, such as wall or ceiling fittings, must be carried out by a qualified electrician.</li>
+                <li>Bulbs: E27 dimmable bulbs only. The built-in smart dimmer takes dimmable LED bulbs up to 150 W in total, or incandescent and halogen bulbs up to 200 W in total, per lamp.</li>
+                <li>Don't modify the wiring, fittings or lamp. Faults caused by modification, incorrect installation or misuse aren't covered by section 9, but your rights for faults that were our responsibility are unaffected.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">11. Bespoke commissions and our designs</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">Commissions follow these terms plus the written quote we agree with you, which sets out the design, price and timing.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Our designs: the designs of our lamps, including any we develop for a commission, remain the intellectual property of Llunio Studios.</li>
+                <li>Your files: drawings, photos, mood boards, plans and links you send us, with a commission, an enquiry or a custom request, are used only to develop, quote and make your piece.</li>
+                <li>Photographing your piece: we may photograph finished commissions for our portfolio, without your name or address. Tell us if you'd rather we didn't.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">12. Our liability</h2>
+            <p class="text-ll-mute text-[15px] leading-relaxed">We're responsible for loss or damage you suffer that is a foreseeable result of us breaking these terms or failing to use reasonable care.</p>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>We don't exclude liability for death or personal injury caused by our negligence, for fraud, or for anything else the law doesn't allow us to exclude, including your rights in section 9.</li>
+                <li>We're not responsible for loss that wasn't foreseeable, or for business losses: our lamps are sold for domestic and private use. Trade customers should agree terms in their quote.</li>
+            </ul>
+        </section>
+        <section class="flex flex-col gap-2 border-t border-ll-line pt-4">
+            <h2 class="ll-section-heading">13. General</h2>
+            <ul class="list-disc pl-5 space-y-1.5 text-ll-mute text-[15px] leading-relaxed marker:text-ll-mute">
+                <li>Events outside our control: if something beyond our control (such as a courier failure or severe weather) delays your order, we'll tell you and do what we can to limit the delay. If it's long, you can cancel for a refund of anything you've paid for goods not yet delivered.</li>
+                <li>Your personal data: how we use it is set out in our Privacy Policy.</li>
+                <li>Changes to these terms: we may update them. The terms in force when you placed your order apply to it.</li>
+                <li>Law: these terms are governed by the law of England and Wales. If you live in Scotland or Northern Ireland, you can also bring proceedings in your local courts.</li>
+                <li>Complaints: email <a href="mailto:info@lluniostudios.co.uk" class="ll-link text-ll-ink">info@lluniostudios.co.uk</a>. We'll acknowledge your complaint within 2 working days, then investigate and give you a full reply, usually within 10 days.</li>
+            </ul>
+        </section>
     </div>
 {% endblock %}

@@ -944,7 +944,10 @@ Asked for on 13 October 2026: every image resized and compressed for the web, lo
 - Check: new `speed.mjs` (added to `run-all.mjs` with `--check`); `lighting-designs-story.mjs` accepts the drawing's mask as PNG or WebP. **Full browser run with `--clean` before committing (13 October 2026): 51 of 53 at first** (the story check still expected the PNG mask, fixed in the check; Chrome didn't start once), **then 53 of 53 passed.**
 - No database changes. **To undo:** revert the commit (the WebP files and the smaller versions can stay; nothing else uses them).
 
-### Step 11c: Terms & Conditions (waiting for your text)
+### Step 11c: Terms & Conditions (done 14 October 2026)
+**Built 14 October 2026:** the page (`/terms-and-conditions`, `templates/app/terms.html.twig`) now holds your final text, **word for word** (kept as given in `tests/browser/fixtures/terms-2026-10-14.txt`), in the page's existing style: the heading as every page's, **"Last updated: 14 October 2026"** just under it, the introduction, then the 13 numbered sections with their headings as given (each with its thin rule and section heading), the "•" lines as bulleted lists and section 9's four points as a numbered list; the email address is a link (text unchanged). The Basket, Card Payment and Contact pages link to it (checked). New check `terms.mjs` compares the page with the text line by line (73 lines). Checks: `terms.mjs`, `seo.mjs`, the footers, the story at every size, the configurator page and remembered choices, the larger piece, the basket and Card Payment: 18 of 18; committed as "Terms & Conditions (11c); Lighting Designs phone layout on upright tablets". *Note:* section 13 mentions the Privacy Policy, which is Step 11d (waiting for your text). **To undo:** revert the commit.
+
+**Earlier notes:**
 **13 October 2026:** the updated draft is ready in your documents; you will paste the text once you've reviewed it. It doesn't depend on Step 7d or the wording pass (11.5), so it can be done whenever the text arrives. Not built yet.
 Added 9 October 2026. Replace the current Terms & Conditions page (`/terms-and-conditions`) with the new Terms & Conditions you have drafted separately; you will provide the full text. Use it word for word (British English, "Dorset Studio", "Llunio Studios" in full), laid out as the current page. It should cover the deposit and cancellation terms for quoted orders (question 23). Nothing is built until the text arrives.
 
@@ -980,7 +983,9 @@ Added 9 October 2026. A new Privacy Policy page; you will provide the full text.
    - **Found, not changed:** at 912 × 1368 (a tablet held upright, just over 900px wide) the text column is 259px, and The Sizes drawing's labels run into each other at their minimum size. Upright screens under 900px already use the phone layout (text above, photo below); extending it to upright screens up to about 1100px would fix this, but touches the story's script and snap points, so it waits for your decision.
 2. **Homepage buttons:** at 1368 wide (and anywhere from 900 to 1400px) they stack, each 588px wide; at 1440 wide, which a Surface Pro 10 at its default 200% display scaling gives Chrome, they sit side by side, each 299px wide, 10px apart, at least 31px clear either side of the longest label and about 420px clear of the lamp: comfortable, so **left as they are** (your instruction). If they are side by side on your Surface, its window is probably over 1400px wide, which also means it doesn't get the tablet text sizes.
 3. **No postal address** (see Decisions, "No postal address"): removed from the Contact page, the customer emails' footer (`EmailService::STUDIO_ADDRESS` deleted) and the structured data (now "Bournemouth, Dorset", no street or postcode); the Contact page's search description says "a lighting studio in Bournemouth, Dorset"; the postcode messages on Card Payment, Reserve Your Design and Begin the Conversation use the example "SW1A 1AA" (they used the workshop's postcode); code comments, unit tests, browser checks and this plan no longer contain it. No business address service item was in the Step 12 checklist. *Still in the repository's history* on GitHub (`design-foundation`, from commit `cb55aee`; not on `main` or `symfony-7.4-upgrade`): removing it from the history means rewriting the branch and force-pushing it, which waits for your decision.
-4. **Step 11c (Terms & Conditions): waiting for the text** (the message on 14 October 2026 ended before it).
+4. **Step 11c (Terms & Conditions):** done the same day (see Step 11c).
+5. **Your answers (14 October 2026):** the repository's history is left as it is, and your brother will make the repository private (added to Step 12 as a priority); upright tablets use the phone layout on Lighting Designs (below).
+6. **Lighting Designs on upright tablets (decided 14 October 2026):** the introduction uses the phone layout (text above, photo below, the drawing panning in the photo's place) on every upright screen up to 1199px wide, as well as everything under 900px (e.g. a Surface or iPad Pro held upright: 912 × 1368, 1024 × 1366); landscape screens and sideways phones keep their layouts. The story's media queries (`app.css`) and its script (`lumen_story_controller.js`: `PHONE`, `UPRIGHT`) and the story photos' sizes follow. Checked through all twelve snaps at 912 × 1368, 1024 × 1366 and 820 × 1180: every stage's text above the photo, The Sizes drawing whole with its labels clear; the closing buttons sit just above the lamp as on phones. This replaces the "Found, not changed" note above.
 - **Checks:** the story at every size (and reduced motion), `seo.mjs` (Bournemouth, Dorset, no street or postcode), the footers, Card Payment, Reserve and the enquiry pages (the new example postcode), gift options and the configurator page: 18 of 18; unit tests, PHPStan, code style, Twig lint clean; the address searched for across the code, templates, tests, plan and the rebuilt email review: none left. Committed as "Story text beside the lamp; no postal address".
 
 ### Hand checks: one checklist, page by page (gathered 13 October 2026)
@@ -1084,7 +1089,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 **1. Your answers and content (Theo)**
 - [ ] Care instructions for email 06 and a studio phone number for the email footers (question 18).
 - [ ] The Facebook page: create it and give its address (`FACEBOOK_URL` in `.env`; the footer, Contact page and email footers use a placeholder until then; the structured data leaves Facebook out until then).
-- [ ] The new Terms & Conditions text (Step 11c), including the deposit and cancellation terms for quoted orders (questions 17 and 23).
+- [x] The new Terms & Conditions (Step 11c): your final text in place, 14 October 2026 (deposit and cancellation terms included).
 - [ ] The Privacy Policy text (Step 11d).
 - [ ] Atelier weight, and packed sizes and weights for every size (questions 8 and 26), so delivery estimates are real (an Estate is currently priced as a weightless parcel).
 - [ ] Whether a Palletways account exists (question 25).
@@ -1109,6 +1114,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] **Google Search Console for lluniostudios.co.uk** (asked for 13 October 2026): set it up, verify the domain, and submit the sitemap (`https://lluniostudios.co.uk/sitemap.xml`).
 
 **4. The live server (Kerrial)**
+- [ ] **Priority: make the GitHub repository private** (asked 14 October 2026). The workshop's address is in the published history of `design-foundation` (from commit `cb55aee`); the history is left as it is, by your decision, so the repository must not stay public.
 - [ ] PHP 8.4, as local Docker and the GitHub checks (10 October 2026).
 - [ ] Its own `APP_SECRET` (never the old development one in the repository's history).
 - [ ] Upload limits as `docker/php/zz-uploads.ini`: 50MB a file, 110MB a request, 20 files.
@@ -1167,7 +1173,7 @@ Enter the DPD API credentials, confirm the character limits and pricing, check `
 **Waiting for you (as of 9 October 2026)**
 - The hand checks, page by page: see "Hand checks: one checklist, page by page" (gathered 13 October 2026; Step 7d, 7c.4, 11.4, the Custom descriptions and Reference photos, 11b and the speed pass).
 - The email review (11.5): what to change in each email.
-- The new Terms & Conditions text (11c) and the Privacy Policy text (11d).
+- The Privacy Policy text (11d).
 - Care instructions for email 06 and a studio phone number (question 18).
 - The Facebook page's address, once created (`FACEBOOK_URL`; a placeholder until then).
 

@@ -108,12 +108,12 @@
 
                 <div class="ll-story-photo" data-lumen-story-target="photo">
                     <div class="ll-story-frame">
-                        <picture>{{ include('partials/_webp_source.html.twig', { srcset: photo_srcset('images/lumen-forma/story-dim'), webp: photo_srcset('images/lumen-forma/story-dim', 'webp'), sizes: '(max-width: 899px) and (orientation: portrait) 180vw, 134vh' }) }}
+                        <picture>{{ include('partials/_webp_source.html.twig', { srcset: photo_srcset('images/lumen-forma/story-dim'), webp: photo_srcset('images/lumen-forma/story-dim', 'webp'), sizes: '(orientation: portrait) and (max-width: 1199px) 180vw, 134vh' }) }}
                         <img src="{{ asset('images/lumen-forma/story-dim-2000.jpg') }}" srcset="{{ photo_srcset('images/lumen-forma/story-dim') }}"
-                             sizes="(max-width: 899px) and (orientation: portrait) 180vw, 134vh" loading="lazy" alt="Lumen Forma lamp, its bulb brightening as you scroll" draggable="false"></picture>
-                        <picture>{{ include('partials/_webp_source.html.twig', { srcset: photo_srcset('images/lumen-forma/story-lit'), webp: photo_srcset('images/lumen-forma/story-lit', 'webp'), sizes: '(max-width: 899px) and (orientation: portrait) 180vw, 134vh' }) }}
+                             sizes="(orientation: portrait) and (max-width: 1199px) 180vw, 134vh" loading="lazy" alt="Lumen Forma lamp, its bulb brightening as you scroll" draggable="false"></picture>
+                        <picture>{{ include('partials/_webp_source.html.twig', { srcset: photo_srcset('images/lumen-forma/story-lit'), webp: photo_srcset('images/lumen-forma/story-lit', 'webp'), sizes: '(orientation: portrait) and (max-width: 1199px) 180vw, 134vh' }) }}
                         <img src="{{ asset('images/lumen-forma/story-lit-2000.jpg') }}" srcset="{{ photo_srcset('images/lumen-forma/story-lit') }}"
-                             sizes="(max-width: 899px) and (orientation: portrait) 180vw, 134vh" loading="lazy" alt="" aria-hidden="true" draggable="false"
+                             sizes="(orientation: portrait) and (max-width: 1199px) 180vw, 134vh" loading="lazy" alt="" aria-hidden="true" draggable="false"
                              class="ll-story-lit" data-lumen-story-target="lit"></picture>
                     </div>
                 </div>
