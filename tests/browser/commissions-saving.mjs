@@ -51,7 +51,7 @@ try {
     check('with its details: LC- number, Home, New, name, phone, Phone chosen, idea', /LC-\d{6}-\d{4}/.test(row) && /\bhome\b/.test(row) && /\bnew\b/.test(row) && /07700 900123/.test(row) && /\bphone\b/.test(row) && /stairwell/.test(row), row);
     const homeNumber = row.match(/LC-\d{6}-\d{4}/)?.[0];
     let page = await received();
-    check('"Commission submitted": heading, the Home message, the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.replace(/\s+/g, ' ') === "COMMISSION SUBMITTED Your vision is in our hands. We are reviewing your space's requirements and will contact you within two working days to begin shaping your design. Confirmation has been sent to the email address provided." && page.nav === 'page', JSON.stringify(page));
+    check('"Commission submitted": heading, the Home message, the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.replace(/\s+/g, ' ') === "COMMISSION SUBMITTED Your vision is in my hands. I'm reviewing your space's requirements and will contact you within two working days to begin shaping your design. Confirmation has been sent to the email address provided." && page.nav === 'page', JSON.stringify(page));
 
     // Emails for the Home enquiry.
     await sleep(800);
@@ -62,7 +62,7 @@ try {
     check('email 03 sent to the customer, "Your commission enquiry"', !!toCustomer);
     if (toCustomer) {
         const m = await mailBody(toCustomer.ID);
-        const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for telling us about your idea. We'll be in touch by phone to talk it through together, whether it's fully formed or still taking shape.");
+        const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for telling me about your idea. I'll be in touch by phone to talk it through together, whether it's fully formed or still taking shape.");
         check('email 03 follows the email rules: Montage C, no heading, "Dear Ada," then the opening with "by phone" (as chosen), one text size', format.length === 0, format.join('; '));
         check('email 03: the reference, "For Your Home"', m.HTML.includes(homeNumber) && m.HTML.includes('For Your Home'));
         check('email 03: Dorset Studio, never Bournemouth; images hosted on the site', /Dorset Studio/.test(m.HTML) && !/Bournemouth/.test(m.HTML) && m.HTML.includes(BASE_URL + '/images/email/header-montage-c.jpg'));
@@ -95,7 +95,7 @@ try {
     check('its file is recorded', /Lobby elevations\.dwg\s+31457280/.test(sql(`select f.original_name, f.size from commission_enquiry_file f join commission_enquiry e on e.id = f.enquiry_id order by e.created_at desc limit 1`)));
     const projectNumber = sql(`select enquiry_number from commission_enquiry where client = 'project' order by created_at desc limit 1`).match(/LC-\d{6}-\d{4}/)?.[0];
     page = await received();
-    check('"Commission submitted": the Project message and the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.includes('We are reviewing the architectural scope and structural parameters and will contact you within two working days to begin shaping your design.') && page.text.endsWith('Confirmation has been sent to the email address provided.') && !/LC-\d/.test(page.text), JSON.stringify(page));
+    check('"Commission submitted": the Project message and the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.includes("I'm reviewing the architectural scope and structural parameters and will contact you within two working days to begin shaping your design.") && page.text.endsWith('Confirmation has been sent to the email address provided.') && !/LC-\d/.test(page.text), JSON.stringify(page));
     const layout = await ev(`(() => { const h = document.querySelector('main h1'); const p = document.querySelector('main p'); const c = h.parentElement; const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(c).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(p).fontSize, pColour: getComputedStyle(p).color, rule: getComputedStyle(p.parentElement).borderTopStyle }; })()`);
     await go(BASE_URL + '/contact');
     const contact = await ev(`(() => { const h = document.querySelector('main h1'); const a = document.querySelector('main address'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(a).fontSize, pColour: getComputedStyle(a).color, rule: getComputedStyle(a).borderTopStyle }; })()`);
@@ -128,7 +128,7 @@ try {
     await fill('home', { ...home, phone: '' });
     await ev(`document.querySelector('[data-client=home] input[name="commission_home[phone]"]').value = ''`);
     await submit('home');
-    check('server: Phone chosen with no number is refused', JSON.stringify(await errors()) === JSON.stringify(['Please enter your phone number so we can call you.']) && count('true') === saved);
+    check('server: Phone chosen with no number is refused', JSON.stringify(await errors()) === JSON.stringify(['Please enter your phone number so I can call you.']) && count('true') === saved);
     // The folder also holds requests' files (reference photos, enquiries' files).
     check('no refused enquiry left files behind', Number(execSync(`ls "${STORE}" | wc -l`, { encoding: 'utf8' }).trim()) === Number(sql('select (select count(*) from commission_enquiry_file) + (select count(*) from design_request_file)').match(/\d+/g).pop()));
 
@@ -145,7 +145,7 @@ try {
     for (let i = 0; i < 3; i++) { await go(BASE_URL + '/bespoke-commissions?for=home'); await fill('home', home); await submit('home'); }
     check('5 enquiries in an hour are saved', count("email like '%@example.test'") === before + 5);
     await go(BASE_URL + '/bespoke-commissions?for=home'); await fill('home', home); await submit('home');
-    check('a 6th is refused with a message, and what was typed is kept', count("email like '%@example.test'") === before + 5 && JSON.stringify(await errors()) === JSON.stringify([`You've sent several enquiries in a short time. Please try again in an hour, or email us at ${STUDIO_EMAIL}.`]) && (await ev(`document.querySelector('[name="commission_home[name]"]').value`)) === 'Ada Test');
+    check('a 6th is refused with a message, and what was typed is kept', count("email like '%@example.test'") === before + 5 && JSON.stringify(await errors()) === JSON.stringify([`You've sent several enquiries in a short time. Please try again in an hour, or email me at ${STUDIO_EMAIL}.`]) && (await ev(`document.querySelector('[name="commission_home[name]"]').value`)) === 'Ada Test');
     resetLimit();
 
     // Admin.

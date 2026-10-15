@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{#
+    "Page Not Found" (wording pass 11.5, 15 October 2026): shown for any
+    address that doesn't exist, laid out like the site's other text pages,
+    with links to Lighting Designs and the homepage. Wording DRAFT. Preview it
+    locally at /_error/404.
+#}
+{% block title %}Page Not Found | Llunio Studios{% endblock %}
+{% block description %}This page couldn't be found at Llunio Studios.{% endblock %}
+{% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
+
+{% block body %}
+    <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8" data-not-found>
+        {{ include('partials/_page_heading.html.twig', { title: 'Page Not Found' }) }}
+        <div class="flex flex-col items-start gap-5 border-t border-ll-line pt-4 text-[15px] leading-relaxed">
+            <p class="text-ll-mute">This page doesn't exist, or it has moved. The lamps are still here.</p>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ path('lighting_designs') }}" class="border border-ll-ink px-[22px] py-3.5 ll-label transition-opacity hover:opacity-70">Explore our lighting designs</a>
+                <a href="{{ path('landing') }}" class="border border-ll-ink px-[22px] py-3.5 ll-label transition-opacity hover:opacity-70">Back to the homepage</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

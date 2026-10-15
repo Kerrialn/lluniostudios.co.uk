@@ -51,7 +51,7 @@ try {
     await tab('home'); await sleep(800); s = await state();
     check('For Your Home shows the Home form', JSON.stringify(s.pressed) === '["home"]' && JSON.stringify(s.shown) === '["home"]', JSON.stringify(s));
     const homeLabels = await ev(`[...document.querySelectorAll('[data-client=home] form > div > div')].map(f => f.children[0].textContent.replace(/\\s+/g, ' ').trim())`);
-    check('Home fields in the prototype\'s order, required ones marked *', JSON.stringify(homeLabels) === JSON.stringify(['Name *', 'Email *', 'Phone (optional)*', 'Preferred contact method *', 'Tell us about your idea *', 'Share a photo of the space or anything that inspired you (optional)']), JSON.stringify(homeLabels));
+    check('Home fields in the prototype\'s order, required ones marked *', JSON.stringify(homeLabels) === JSON.stringify(['Name *', 'Email *', 'Phone (optional)*', 'Preferred contact method *', 'Tell me about your idea *', 'Share a photo of the space or anything that inspired you (optional)']), JSON.stringify(homeLabels));
     check('button "Request Your Custom Design"', (await ev(`document.querySelector('[data-client=home] button[type=submit]').textContent.trim()`)) === 'Request Your Custom Design');
     await tab('project'); await sleep(800); s = await state();
     check('For Your Project shows the Project form instead', JSON.stringify(s.pressed) === '["project"]' && JSON.stringify(s.shown) === '["project"]', JSON.stringify(s));
@@ -75,10 +75,10 @@ try {
     // Required fields: Home (nothing chosen).
     await ev(`document.querySelectorAll('input[name="commission_home[contactMethod]"]').forEach(i => { i.checked = false; })`);
     await submit('home'); s = await state();
-    check('Home sent empty: reopens on the Home form with a message for each required field', s.revealed && JSON.stringify(s.shown) === '["home"]' && JSON.stringify(s.errors) === JSON.stringify(['Please enter your name.', 'Please enter your email address.', "Please choose how you'd like us to contact you.", 'Please tell us about your idea.']), JSON.stringify(s));
+    check('Home sent empty: reopens on the Home form with a message for each required field', s.revealed && JSON.stringify(s.shown) === '["home"]' && JSON.stringify(s.errors) === JSON.stringify(['Please enter your name.', 'Please enter your email address.', "Please choose how you'd like me to contact you.", 'Please tell me about your idea.']), JSON.stringify(s));
     await ev(`(() => { const f = document.querySelector('[data-client=home] form'); f.querySelector('[name="commission_home[name]"]').value = 'Ada Test'; f.querySelector('[name="commission_home[email]"]').value = 'not-an-email'; f.querySelector('[value=phone]').click(); f.querySelector('textarea').value = 'A lamp for the hall.'; })()`);
     await submit('home'); s = await state();
-    check('Phone chosen with no number: asks for it; a bad email is refused', JSON.stringify(s.errors) === JSON.stringify(['Please enter a valid email address.', 'Please enter your phone number so we can call you.']), JSON.stringify(s.errors));
+    check('Phone chosen with no number: asks for it; a bad email is refused', JSON.stringify(s.errors) === JSON.stringify(['Please enter a valid email address.', 'Please enter your phone number so I can call you.']), JSON.stringify(s.errors));
     check('what was typed is kept, and Phone stays chosen and required', (await ev(`document.querySelector('[name="commission_home[name]"]').value`)) === 'Ada Test' && (await phoneLabel()) === 'Phone *');
 
     // Required fields: Project.

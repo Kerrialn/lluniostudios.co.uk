@@ -1,8 +1,11 @@
 {#
     The signature on the emails that speak as "me" (EmailService::ENQUIRY_SIGNATURE,
-    exactly as confirmed 13 October 2026): the enquiry email, and for an enquiry the
-    quote and the balance request (Step 7c.4). Straight after the opening (and any
-    personal note), before the numbered sections. Needs the layout's body style.
+    exactly as confirmed 13 October 2026). By the voice rules (15 October 2026)
+    every customer email that's personal or part of an order's journey is signed:
+    the order confirmation (01), the request email (02), the commission email (03),
+    emails 04–06, the enquiry email, every quote, every balance request and the
+    receipt. Straight after the opening (and any personal note), before the
+    numbered sections. Needs the layout's body style.
 #}
 <div data-email-signature>
 {% for paragraph in constant('App\\Service\\EmailService::ENQUIRY_SIGNATURE')|split("\n\n") %}

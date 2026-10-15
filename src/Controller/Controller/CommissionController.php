@@ -114,7 +114,7 @@ final class CommissionController extends AbstractController
                     return $this->redirectToRoute('commissions_received');
                 }
 
-                $form->addError(new FormError("You've sent several enquiries in a short time. Please try again in an hour, or email us at " . $this->studioEmail . '.'));
+                $form->addError(new FormError("You've sent several enquiries in a short time. Please try again in an hour, or email me at " . $this->studioEmail . '.'));
             }
         }
 

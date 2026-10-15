@@ -5,7 +5,7 @@
     Step 7b.1: the introduction (the design's seven-stage story, in Special
     Elite) before the configurator; the options panel (25% wide, min 300px;
     below the photo on phones) opens from "Skip to configurator" or
-    "Configure Studio or Gallery". The introduction starts fresh on every visit;
+    "Configure a Studio or Gallery lamp". The introduction starts fresh on every visit;
     the choices are remembered (configurator_controller.js), with "Start
     again" to clear them. The panel frame moves between the six stages.
     Sub-step 7.2: the stages' size, option lists, specifications and quantity
@@ -23,7 +23,7 @@
     No footer on this page, as in the prototype.
 #}
 {% block title %}Lighting Designs | Llunio Studios{% endblock %}
-{% block description %}Configure a Lumen Forma lamp, hand cast in liquid stone in our Dorset Studio. Five sizes, from Studio to Monument: Studio and Gallery to order here, larger pieces made in conversation.{% endblock %}
+{% block description %}Configure a Lumen Forma lamp, hand cast in liquid stone in our Dorset Studio. Five sizes, from Studio to Monument: Studio and Gallery lamps to order here, larger pieces made in conversation.{% endblock %}
 {% block preview_image %}images/lumen-forma/story-lit-2000.jpg{% endblock %}
 {% block preview_alt %}A Lumen Forma lamp, fully lit, hand cast in liquid stone{% endblock %}
 {% block structured_data %}<script type="application/ld+json">{{ seo_products()|json_encode(constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }}</script>{% endblock %}
@@ -53,7 +53,7 @@
            Gallery photos cross-fading behind the title until the first scroll,
            then the seven stages over the pinned lamp, which brightens a step
            at each one (lumen_story_controller.js). The panel opens only from
-           "Skip to configurator" or "Configure Studio or Gallery". With
+           "Skip to configurator" or "Configure a Studio or Gallery lamp". With
            reduced motion: the sections in order, no pinning or snapping. #}
         <section class="ll-story" aria-label="Lumen Forma" data-lumen-story-target="sequence">
             {# Snap points: the page top, the middle of stages 1 to 6, the end.
@@ -140,7 +140,7 @@
                         <h2 class="ll-story-header">The Sizes</h2>
                         {# Desktop: the drawing under the header (phones: in the photo's place). #}
                         <div class="ll-story-drawing-scroll">{{ include('configurator/_sizes_drawing.html.twig', { class: 'll-story-drawing-inline' }) }}</div>
-                        <p class="ll-story-body">Five sizes, one form. Studio and Gallery can be configured and ordered here. Atelier, Estate and Monument are made in conversation with me, so together we'll choose the finishes that suit your space.</p>
+                        <p class="ll-story-body">Five sizes, one form. Studio and Gallery lamps can be configured and ordered here. Atelier, Estate and Monument lamps are made in conversation with me, so together we'll choose the finishes that suit your space.</p>
                     </div>
                     <div class="ll-story-stage" data-lumen-story-target="stage">
                         <h2 class="ll-story-header">The Signature</h2>
@@ -154,7 +154,7 @@
                     <div class="ll-story-stage" data-lumen-story-target="stage">
                         <h2 class="ll-story-end">Begin your Lumen Forma.</h2>
                         <div class="ll-story-actions">
-                            <button type="button" class="ll-story-button" data-action="configurator#openMain hero-reveal#reveal">Configure Studio or Gallery</button>
+                            <button type="button" class="ll-story-button" data-action="configurator#openMain hero-reveal#reveal">Configure a Studio or Gallery lamp</button>
                             <button type="button" class="ll-story-button" data-action="configurator#openLarger hero-reveal#reveal">Discuss a Larger Piece</button>
                         </div>
                     </div>
@@ -390,7 +390,7 @@
                                 {% endfor %}
                             </div>
                             <div class="text-[12px] text-ll-mute" role="alert" data-configurator-target="largerWarning" hidden>Please choose a size to continue.</div>
-                            <p class="text-[12px] text-ll-mute">Prefer a smaller piece? <button type="button" class="text-ll-ink underline underline-offset-[3px] transition-opacity hover:opacity-70" data-configurator-target="smaller" data-action="configurator#openMain">Configure Studio or Gallery</button></p>
+                            <p class="text-[12px] text-ll-mute">Prefer a smaller piece? <button type="button" class="text-ll-ink underline underline-offset-[3px] transition-opacity hover:opacity-70" data-configurator-target="smaller" data-action="configurator#openMain">Configure a Studio or Gallery lamp</button></p>
                             <div class="flex flex-col gap-4" data-configurator-target="largerSpecs" hidden>
                                 <div class="text-[12px] text-ll-mute" data-configurator-target="largerSizeNote"></div>
                                 <div class="flex flex-col gap-3 pt-4 border-t border-ll-line-soft w-full max-w-[521px]">

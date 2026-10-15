@@ -53,13 +53,13 @@ final class BasketRules
      * every stage with one), in place of the separate "Custom options are
      * developed with you and quoted individually." line (10 October 2026).
      */
-    public const CUSTOM_CHOICE_NOTE = 'You can upload reference photos when you reserve your design, Custom options are developed with you and quoted individually.';
+    public const CUSTOM_CHOICE_NOTE = 'You can upload reference photos when you reserve your design. Custom options are developed with you and quoted individually.';
 
     /**
      * Replaces the two notes above when a Request size and a Custom choice
      * both apply.
      */
-    public const ROUTE_NOTE_SIZE_AND_CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery quoted individually.';
+    public const ROUTE_NOTE_SIZE_AND_CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery is quoted individually.';
 
     public function lampCount(Cart $cart, ?CartItem $except = null): int
     {

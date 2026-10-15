@@ -77,7 +77,7 @@ try {
     }
 
     const lines = await ev(`[...document.querySelectorAll('[data-configurator-target=describe]')].map(e => [e.dataset.group, [...e.querySelectorAll(':scope > span:not([data-configurator-target])')].map(x => x.textContent.trim())])`);
-    const LINE = 'You can upload reference photos when you reserve your design, Custom options are developed with you and quoted individually.';
+    const LINE = 'You can upload reference photos when you reserve your design. Custom options are developed with you and quoted individually.';
     check('under every box only its label and the one combined line (no "Up to 500 characters")', JSON.stringify(lines) === JSON.stringify(Object.keys(PROMPTS).map((g) => [g, [PROMPTS[g], LINE]])), JSON.stringify(lines));
     const noteStyle = await ev(`(() => { const n = ${box('The Pigment')}.querySelector(':scope > span:not([data-configurator-target]):last-of-type'), w = document.querySelector('[data-configurator-target=warning]'); const a = getComputedStyle(n), c = getComputedStyle(w); return a.fontSize === c.fontSize && a.color === c.color; })()`);
     check('the line is small and grey (12px), as the other notes', noteStyle);

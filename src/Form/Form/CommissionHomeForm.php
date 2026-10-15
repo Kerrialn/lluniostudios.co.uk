@@ -48,11 +48,11 @@ final class CommissionHomeForm extends AbstractType
                 ],
                 'expanded' => true,
                 'placeholder' => false,
-                'constraints' => [new Assert\NotBlank(message: "Please choose how you'd like us to contact you.")],
+                'constraints' => [new Assert\NotBlank(message: "Please choose how you'd like me to contact you.")],
             ])
             ->add('idea', TextareaType::class, [
                 'constraints' => [
-                    new Assert\NotBlank(message: 'Please tell us about your idea.'),
+                    new Assert\NotBlank(message: 'Please tell me about your idea.'),
                     new Assert\Length(max: 5000),
                 ],
                 'attr' => [
@@ -74,7 +74,7 @@ final class CommissionHomeForm extends AbstractType
                         return;
                     }
 
-                    $context->buildViolation('Please enter your phone number so we can call you.')
+                    $context->buildViolation('Please enter your phone number so I can call you.')
                         ->atPath('[phone]')
                         ->addViolation();
                 }),

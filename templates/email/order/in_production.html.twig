@@ -2,9 +2,10 @@
     Email 04, "Your Lumen Forma is being cast" (Site v4 design, Llunio Email
     Templates/04-in-production.html), sent when the studio marks the order
     In Production (Step 11.2): "Dear {first name}," (the buyer's), "Your
-    Lumen Forma is now in production. Expected dispatch date is: {e.g.
-    Friday 23 October 2026}." and the studio's thanks (wording decided
-    9 October 2026, replacing the design's sentence), 01 Progress (the order number and the expected
+    Lumen Forma {sizes} lamp is now in production. Expected dispatch date
+    is: {e.g. Friday 23 October 2026}." and the thanks (wording decided
+    9 October 2026, replacing the design's sentence; "I" and "lamp" by the
+    voice rules, 15 October 2026), the signature, 01 Progress (the order number and the expected
     dispatch date given in admin), "View your order". "Dorset Studio" for
     "Bournemouth". Laid out by email/_customer.html.twig (the email rules).
 #}
@@ -15,8 +16,8 @@
 {% block preheader %}Order {{ order.orderNumber }}: your lamp is now in production in our Dorset Studio.{% endblock %}
 
 {% block content %}
-<p style="{{ body }}">Your Lumen Forma is now in production. Expected dispatch date is: {{ order.expectedDispatch|date('l j F Y') }}.</p>
-<p style="{{ body }}">Thank you for supporting our small studio. Every piece is made with care, and we can't wait for you to see yours.</p>
+<p style="{{ body }}">{{ order.inProductionSentence }} Expected dispatch date is: {{ order.expectedDispatch|date('l j F Y') }}.</p>
+<p style="{{ body }}">Thank you for supporting my small studio. Every piece is made with care, and I can't wait for you to see yours.</p>
 {# Signed as the enquiry email (14 October 2026): after the opening, before the details. #}
 {{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Progress') }}

@@ -17,7 +17,8 @@
 {% block preheader %}Thank you{{ firstName ? ', ' ~ firstName : '' }}. Your Lumen Forma order {{ order.orderNumber }} is confirmed.{% endblock %}
 
 {% block content %}
-<p style="{{ body }}">Thank you for your order. Your Lumen Forma will be cast by hand in our Dorset Studio.</p>
+<p style="{{ body }}">Thank you for your order. {{ order.castByHandSentence }}</p>
+{{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Order') }}
 <p style="{{ label }}">Order number</p>
 <p style="{{ body }}">{{ order.orderNumber }}</p>

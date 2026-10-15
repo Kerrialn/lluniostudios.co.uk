@@ -116,7 +116,7 @@ final class BasketRulesTest extends TestCase
     {
         $size = 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.';
         $custom = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
-        $both = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery quoted individually.';
+        $both = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery is quoted individually.';
         $limit = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
 
         self::assertSame('Direct order and checkout.', $this->rules->routeNote([]));
@@ -137,7 +137,7 @@ final class BasketRulesTest extends TestCase
     public function testCustomChoiceLine(): void
     {
         // Shown in the configurator under a Custom choice's description box (one combined line, 10 October 2026).
-        self::assertSame('You can upload reference photos when you reserve your design, Custom options are developed with you and quoted individually.', BasketRules::CUSTOM_CHOICE_NOTE);
+        self::assertSame('You can upload reference photos when you reserve your design. Custom options are developed with you and quoted individually.', BasketRules::CUSTOM_CHOICE_NOTE);
     }
 
     public function testRequestSizesAndCustomValuesAreRefusedOnAdd(): void

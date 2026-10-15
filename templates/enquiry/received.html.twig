@@ -13,6 +13,6 @@
 {% block body %}
     {{ include('partials/_received.html.twig', {
         heading: 'Enquiry Received',
-        message: "Thank you. I'll be in touch " ~ talk.reachPhrase ~ ', to talk about your ' ~ (quantity > 1 ? quantity ~ ' ' ~ size ~ ' lamps' : size ~ ' lamp') ~ '.',
+        message: "Thank you. I'll be in touch " ~ talk.reachPhrase ~ ' to talk about your ' ~ (quantity > 1 ? quantity ~ ' ' ~ size ~ ' lamps' : size ~ ' lamp') ~ '.',
     }) }}
 {% endblock %}

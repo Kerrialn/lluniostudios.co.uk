@@ -15,14 +15,14 @@
 {% import _self as m %}
 {% set firstName = designRequest.firstName %}
 
-{% block title %}Your Lumen Forma quote, {{ designRequest.fullName }}{% endblock %}
+{% block title %}Your Lumen Forma quote, {{ designRequest.firstName ?? designRequest.fullName }}{% endblock %}
 {% block preheader %}Your quote for Lumen Forma {{ designRequest.isEnquiry ? 'enquiry' : 'request' }} {{ designRequest.requestNumber }} is ready. Valid until {{ validUntil|date('j F Y', 'Europe/London') }}.{% endblock %}
 
 {% block content %}
 {# An enquiry's quote speaks as "me" and is signed (Step 7c.4, decided 13 October 2026). #}
-<p style="{{ body }}" data-email-opening>Thank you for your patience. Here is {{ designRequest.isEnquiry ? 'my quote for your Lumen Forma enquiry' : 'our quote for your Lumen Forma request' }} {{ designRequest.requestNumber }}.</p>
+<p style="{{ body }}" data-email-opening>Thank you for your patience. Here is my quote for your Lumen Forma {{ designRequest.isEnquiry ? 'enquiry' : 'request' }} {{ designRequest.requestNumber }}.</p>
 {% if quote.note %}<p style="{{ body }}" data-email-note>{{ quote.note|nl2br }}</p>{% endif %}
-{% if designRequest.isEnquiry %}{{ include('email/_signature.html.twig') }}{% endif %}
+{{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Your configuration') }}
 {% set quoted = {} %}
 {% for lamp in quote.lamps|filter(l => l.item) %}{% set quoted = quoted|merge({ (lamp.item.id.toRfc4122): lamp.unitPrice }) %}{% endfor %}

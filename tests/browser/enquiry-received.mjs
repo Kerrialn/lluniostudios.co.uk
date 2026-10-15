@@ -57,8 +57,8 @@ try {
     // A video call about an Atelier, with everything filled in.
     await piece('atelier', 1);
     let page = await enquire({ fullName: 'Ada Received', email: EMAIL, phone: '07700 900123', bestTime: 'Weekday evenings', description: 'A double-height hallway.\nOak floor, white walls.', boardLink: 'pinterest.com/ada/hallway', postcode: 'SW1A 1AA' }, 'video', [make('Hallway.jpg', 2), make('Mood board.pdf', 1)]);
-    check('"Enquiry Received": the heading, "I\'ll be in touch to arrange a video call, to talk about your Atelier lamp.", the confirmation line, no reference (DRAFT)', page.path === '/begin-the-conversation/received'
-        && page.text === "ENQUIRY RECEIVED Thank you. I'll be in touch to arrange a video call, to talk about your Atelier lamp. Confirmation has been sent to the email address provided." && !/LR-/.test(page.text), JSON.stringify(page));
+    check('"Enquiry Received": the heading, "I\'ll be in touch to arrange a video call to talk about your Atelier lamp.", the confirmation line, no reference (DRAFT)', page.path === '/begin-the-conversation/received'
+        && page.text === "ENQUIRY RECEIVED Thank you. I'll be in touch to arrange a video call to talk about your Atelier lamp. Confirmation has been sent to the email address provided." && !/LR-/.test(page.text), JSON.stringify(page));
     const layout = await ev(`(() => { const h = document.querySelector('main h1'); const p = document.querySelector('main p'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(p).fontSize, pColour: getComputedStyle(p).color, rule: getComputedStyle(p.parentElement).borderTopStyle }; })()`);
     await go(BASE_URL + '/contact');
     const contact = await ev(`(() => { const h = document.querySelector('main h1'); const a = document.querySelector('main address'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(a).fontSize, pColour: getComputedStyle(a).color, rule: getComputedStyle(a).borderTopStyle }; })()`);
@@ -105,7 +105,7 @@ try {
     // By phone, three Estates; by email, a Monument, nothing optional.
     await piece('estate', 3);
     page = await enquire({ fullName: 'Ada Received', email: 'ada.received2@example.test', phone: '07700 900123', description: 'A long gallery.', postcode: 'JE2 3AB' }, 'phone');
-    check('by phone, 3 Estates: "I\'ll be in touch by phone, to talk about your 3 Estate lamps."', page.text.includes("Thank you. I'll be in touch by phone, to talk about your 3 Estate lamps."), page.text);
+    check('by phone, 3 Estates: "I\'ll be in touch by phone to talk about your 3 Estate lamps."', page.text.includes("Thank you. I'll be in touch by phone to talk about your 3 Estate lamps."), page.text);
     const phoneMail = await customerMail('ada.received2@example.test', latest('ada.received2@example.test'));
     const pt = text(phoneMail?.HTML || '');
     check('…its email: "about 3 Lumen Forma Estate lamps. I\'ll be in touch by phone…", no board, "None" for files, no best time', pt.includes("Thank you for your enquiry about 3 Lumen Forma Estate lamps. I'll be in touch by phone to talk through") && !/Your board/.test(pt) && /Photos and files\nNone\n/.test(pt) && !/Best time/.test(pt) && /How you'd like to talk\nPhone · 07700 900123\n/.test(pt), pt.slice(0, 800));
@@ -114,7 +114,7 @@ try {
 
     await piece('monument', 1);
     page = await enquire({ fullName: 'Ada Received', email: 'ada.received3@example.test', description: 'A stairwell.', postcode: 'SW1A 1AA' }, 'email');
-    check('by email, a Monument: "I\'ll be in touch by email, to talk about your Monument lamp."', page.text.includes("Thank you. I'll be in touch by email, to talk about your Monument lamp."), page.text);
+    check('by email, a Monument: "I\'ll be in touch by email to talk about your Monument lamp."', page.text.includes("Thank you. I'll be in touch by email to talk about your Monument lamp."), page.text);
     const emailMail = await customerMail('ada.received3@example.test', latest('ada.received3@example.test'));
     check('…its email: "I\'ll be in touch by email", "How we\'ll talk: Email" (no phone)', text(emailMail?.HTML || '').includes("I'll be in touch by email to talk through") && /How you'd like to talk\nEmail\n/.test(text(emailMail?.HTML || '')));
 

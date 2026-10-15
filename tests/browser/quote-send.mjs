@@ -90,11 +90,11 @@ try {
     // The email.
     await sleep(800);
     let mails = await quoteMails(since);
-    check('one email: "Your Lumen Forma quote, Ada Send"', mails.length === 1 && mails[0].Subject === 'Your Lumen Forma quote, Ada Send', JSON.stringify(mails.map((m) => m.Subject)));
+    check('one email: "Your Lumen Forma quote, Ada"', mails.length === 1 && mails[0].Subject === 'Your Lumen Forma quote, Ada', JSON.stringify(mails.map((m) => m.Subject)));
     const mail = await message(mails[0].ID);
     const text = mail.HTML.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#039;/g, "'").replace(/\s+/g, ' ');
-    const format = customerEmailProblems(mail.HTML, 'Ada', `Thank you for your patience. Here is our quote for your Lumen Forma request ${number}.`);
-    check('the email follows the email rules: Montage C, no heading, "Dear Ada," (first name only) then "Thank you for your patience. Here is our quote for your Lumen Forma request …", one text size', format.length === 0 && !/Your quote is ready/i.test(text), format.join('; '));
+    const format = customerEmailProblems(mail.HTML, 'Ada', `Thank you for your patience. Here is my quote for your Lumen Forma request ${number}.`);
+    check('the email follows the email rules: Montage C, no heading, "Dear Ada," (first name only) then "Thank you for your patience. Here is my quote for your Lumen Forma request …", one text size', format.length === 0 && !/Your quote is ready/i.test(text), format.join('; '));
     check('then the studio\'s note, as its own paragraph', /<p [^>]*data-email-note>We look forward to casting it\.<\/p>/.test(mail.HTML) && text.indexOf('We look forward to casting it.') < text.indexOf('Your configuration'));
     check('each design with its configuration and quoted price (£1,850 each)', /Size Atelier/.test(text) && /The Pigment Grey/.test(text) && /Light Smoked Glass LED \/ Dual Array/.test(text) && /Price £1,850 each/.test(text) && !/Starting at/.test(text), text.slice(300, 1200));
     check('the breakdown: lamps, extra line, delivery, total, 40% deposit and the balance', /Lumen Forma Atelier × 2 £3,700/.test(text) && /Custom pigment development £150/.test(text) && /Delivery · DPD Next Day Delivery £60/.test(text) && /Total £3,910/.test(text) && /Deposit to pay now \(40%\) £1,564/.test(text) && /Balance to pay later £2,346/.test(text) && !/VAT/.test(text), text.slice(text.indexOf('Quote'), text.indexOf('Quote') + 500));
@@ -143,7 +143,7 @@ try {
         sql(`update quote set expires_at = now() - interval '1 hour' where design_request_id = '${id}'`);
         await c.send('Page.navigate', { url: link.replace(/^https?:\/\/[^/]+/, BASE_URL) }); await sleep(2500);
         const expired = await c.ev(`document.querySelector('main').innerText.replace(/\\s+/g, ' ')`);
-        check('an expired quote says so: "This quote expired on … Please contact us or reply to the quote email…"', /This quote expired on \d+ \w+ 20\d\d\. Please contact us or reply to the quote email, and we'll send you an updated quote\./.test(expired), expired.slice(0, 300));
+        check('an expired quote says so: "This quote expired on … Please contact us or reply to the quote email…"', /This quote expired on \d+ \w+ 20\d\d\. Please contact me or reply to the quote email, and I'll send you an updated quote\./.test(expired), expired.slice(0, 300));
         await go(quoteUrl, 3500);
         check('admin shows it expired, to send again', /Expired on \d+ \w+ 20\d\d\. Send it again for a new 14 days\./.test(await ev(`document.querySelector('[data-quote-state]').innerText`)));
 

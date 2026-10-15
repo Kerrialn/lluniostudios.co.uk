@@ -109,7 +109,7 @@ check('nothing left to reserve afterwards', (await ev('location.pathname')) === 
 
 // Emails
 await sleep(800);
-const toCustomer = (await mailpit(`to:ada.test@example.test after:${since.slice(0, 10)}`)).find(m => m.Subject === 'We have your request, Ada Test');
+const toCustomer = (await mailpit(`to:ada.test@example.test after:${since.slice(0, 10)}`)).find(m => m.Subject === 'We have your request, Ada');
 let toStudio = null;
 for (const m of (await mailpit(`to:lluniostudios@gmail.com subject:"New request" after:${since.slice(0, 10)}`))) if (!toStudio && (await mailBody(m.ID)).HTML.includes(number)) toStudio = m;
 check('email 02 sent to the customer', !!toCustomer);
@@ -117,7 +117,7 @@ check('notification sent to lluniostudios@gmail.com: "New request · Gallery × 
 if (toCustomer) {
     const m = await mailBody(toCustomer.ID);
     check('email 02: request number, both lamps in full, "No payment has been taken", Dorset Studio', m.HTML.includes(number) && /Atelier/.test(m.HTML) && /Smoked Glass LED \/ Dual Array/.test(m.HTML) && /Gallery/.test(m.HTML) && /Dorset Studio/.test(m.HTML) && !/Bournemouth/.test(m.HTML));
-    const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for your request. Your design is one of our larger sizes and includes a custom option, so we'll be in touch to develop it with you and to confirm lead time according to our casting schedule, including a bespoke delivery quote.");
+    const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for your request. Your design is one of our larger sizes and includes a custom option, so I'll be in touch to develop it with you and to confirm lead time according to our casting schedule, including a bespoke delivery quote.");
     check('email 02 follows the email rules: Montage C, no heading, "Dear Ada," then the opening for a larger size with a custom option, one text size', format.length === 0, format.join('; '));
     check('email 02: then "Your casting slot is now secured. No payment has been taken."', m.HTML.includes('Your casting slot is now secured. No payment has been taken.'));
     check('email 02: prices as in the design (from price for Atelier)', /Starting at £1,699/.test(m.HTML) && /£799/.test(m.HTML));

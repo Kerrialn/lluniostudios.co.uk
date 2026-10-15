@@ -3,9 +3,9 @@
     Templates/05-dispatched.html), sent when the studio marks the order
     Dispatched (Step 11.3): "Dear {first name}," (the buyer's), "Your Lumen
     Forma {sizes} lamp has left the studio and is on its way to you." and
-    "We hope it's even better in person, and we'd love to hear what you think
+    "I hope it's even better in person, and I'd love to hear what you think
     once it arrives." (wording decided 9 October 2026, replacing the design's
-    sentence; the photo request moved to email 06), 01 Delivery (order number, courier, tracking number), "Track
+    sentence; "I" by the voice rules, 15 October 2026; the photo request moved to email 06), 01 Delivery (order number, courier, tracking number), "Track
     your delivery" (DPD's tracking page; none for Palletways) and "View your
     order". Laid out by email/_customer.html.twig (the email rules).
 #}
@@ -17,7 +17,7 @@
 
 {% block content %}
 <p style="{{ body }}">{{ order.onItsWaySentence }}</p>
-<p style="{{ body }}">We hope it's even better in person, and we'd love to hear what you think once it arrives.</p>
+<p style="{{ body }}">I hope it's even better in person, and I'd love to hear what you think once it arrives.</p>
 {# Signed as the enquiry email (14 October 2026): after the opening, before the details. #}
 {{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Delivery') }}

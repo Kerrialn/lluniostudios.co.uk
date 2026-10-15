@@ -58,7 +58,7 @@ class CommissionEnquiry implements HasReferenceNumber
     private ?string $contactMethod = null;
 
     /**
-     * Home only: "Tell us about your idea".
+     * Home only: "Tell me about your idea".
      */
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $idea = null;

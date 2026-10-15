@@ -154,7 +154,7 @@ try {
     let balanceMail = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma balance"`)).filter((m) => new Date(m.Created) > since)[0];
     let balanceHtml = balanceMail ? (await message(balanceMail.ID)).HTML : '';
     const balanceText = flat(balanceHtml);
-    check('the email "Your Lumen Forma balance, Ada Balance": "Dear Ada,", the total, paid, the balance, "Pay balance · £2,346"', balanceMail?.Subject === 'Your Lumen Forma balance, Ada Balance' && /Dear Ada,/.test(balanceText) && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\./.test(balanceText) && /Order total £3,910/.test(balanceText) && /Paid \d+ \w+ 20\d\d £1,564/.test(balanceText) && /Balance to pay £2,346/.test(balanceText) && /Pay balance · £2,346/.test(balanceText), balanceText.slice(0, 600));
+    check('the email "Your Lumen Forma balance, Ada": "Dear Ada,", the total, paid, the balance, "Pay balance · £2,346"', balanceMail?.Subject === 'Your Lumen Forma balance, Ada' && /Dear Ada,/.test(balanceText) && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\./.test(balanceText) && /Order total £3,910/.test(balanceText) && /Paid \d+ \w+ 20\d\d £1,564/.test(balanceText) && /Balance to pay £2,346/.test(balanceText) && /Pay balance · £2,346/.test(balanceText), balanceText.slice(0, 600));
     // The note: after the opening, before 01, in the quote email's note style, its line break kept.
     const quoteNote = (await message(quoteMail.ID)).HTML.match(/<p style="([^"]+)" data-email-note>Thank you for your patience with the custom pigment\.<\/p>/)?.[1];
     const balanceNote = balanceHtml.match(/<p style="([^"]+)" data-email-note data-balance-note>Casting is going well\.<br \/>\s*We will be in touch before dispatch\.<\/p>/)?.[1];
@@ -174,7 +174,7 @@ try {
     await sleep(800);
     balanceMail = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma balance"`)).filter((m) => new Date(m.Created) > since)[0];
     balanceHtml = balanceMail ? (await message(balanceMail.ID)).HTML : '';
-    check('with no note, nothing extra: "Here is the balance…" is followed by 01 Balance', !!balanceMail && !/data-balance-note/.test(balanceHtml) && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\. 01 Balance/.test(flat(balanceHtml).replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), flat(balanceHtml).slice(500, 800));
+    check('with no note, nothing extra: "Here is the balance…" is followed by the signature (every balance request is signed, 15 October 2026), then 01 Balance', !!balanceMail && !/data-balance-note/.test(balanceHtml) && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\. All the best, Theo @LlunioStuidos 01 Balance/.test(flat(balanceHtml).replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), flat(balanceHtml).slice(500, 800));
     // A note longer than the limit is refused and nothing is sent.
     await go(b, new URL(action, BASE_URL).href, 3000);
     since = new Date();
@@ -223,14 +223,14 @@ try {
     const receipt = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma order is paid in full"`)).filter((m) => new Date(m.Created) > paidSince)[0];
     const receiptHtml = receipt ? (await message(receipt.ID)).HTML : '';
     const receiptText = flat(receiptHtml);
-    const receiptFormat = customerEmailProblems(receiptHtml, 'Ada', `Thank you. We have received your balance of £2,346, and your Lumen Forma order ${orderNumber} is now paid in full.`);
+    const receiptFormat = customerEmailProblems(receiptHtml, 'Ada', `Thank you. I've received your balance of £2,346, and your Lumen Forma order ${orderNumber} is now paid in full.`);
     check('the receipt follows the email template and rules: Montage C, no heading, "Dear Ada," then the opening, 01 Order (the order number), 02 Payments, one text size', receiptFormat.length === 0 && new RegExp(`01 Order Order number ${orderNumber} .*02 Payments Deposit`).test(receiptText.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), receiptFormat.join('; '));
     let balanceStudio = null;
     for (const m of await mailpit('to:lluniostudios@gmail.com subject:"Balance paid"')) if (!balanceStudio && new Date(m.Created) > paidSince && (await message(m.ID)).HTML.includes(orderNumber)) balanceStudio = m;
     const balanceStudioHtml = balanceStudio ? (await message(balanceStudio.ID)).HTML : '';
     const balanceStudioSummary = balanceStudioHtml.match(/data-studio-summary>([\s\S]*?)<\/table>/)?.[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     check('the studio is emailed "Balance paid · Atelier × 2 · £2,346 · paid in full", "Balance paid" first, the summary with the balance and the total', balanceStudio?.Subject === 'Balance paid · Atelier × 2 · £2,346 · paid in full' && studioEmailProblems(balanceStudioHtml, 'Balance paid').length === 0 && /Paid £2,346 balance · paid in full \(£3,910\)/.test(balanceStudioSummary ?? '') && !/Still to pay/.test(balanceStudioSummary ?? ''), balanceStudio?.Subject + ' | ' + balanceStudioSummary);
-    check('a receipt: "Dear Ada,", the balance received, deposit, balance, paid in full', /Dear Ada,/.test(receiptText) && /We have received your balance of £2,346, and your Lumen Forma order LS-\d{6}-\d{4} is now paid in full\./.test(receiptText) && /Deposit · \d+ \w+ 20\d\d £1,564/.test(receiptText) && /Balance · \d+ \w+ 20\d\d £2,346/.test(receiptText) && /Paid in full £3,910/.test(receiptText), receipt?.Subject);
+    check('a receipt: "Dear Ada,", the balance received, deposit, balance, paid in full', /Dear Ada,/.test(receiptText) && /I've received your balance of £2,346, and your Lumen Forma order LS-\d{6}-\d{4} is now paid in full\./.test(receiptText) && /Deposit · \d+ \w+ 20\d\d £1,564/.test(receiptText) && /Balance · \d+ \w+ 20\d\d £2,346/.test(receiptText) && /Paid in full £3,910/.test(receiptText), receipt?.Subject);
 
     // Afterwards.
     await go(c, link, 3000);

@@ -7,7 +7,7 @@ const b = await open(W, H, 'cfgcustom' + W);
 let ok = true;
 const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log(`${pass ? 'PASS' : 'FAIL'}  ${label}${detail ? '  (' + detail + ')' : ''}`); };
 const ev = b.ev;
-const LINE = 'You can upload reference photos when you reserve your design, Custom options are developed with you and quoted individually.';
+const LINE = 'You can upload reference photos when you reserve your design. Custom options are developed with you and quoted individually.';
 const CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
 const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
 await b.send('Network.enable'); await b.send('Network.clearBrowserCookies');

@@ -749,11 +749,15 @@ picture { display: contents; }
 .ll-story-actions {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    /* The pair as wide as the longer label, "Configure a Studio or Gallery
+       lamp" ("lamp" after the size names, 15 October 2026), so both match. */
+    width: max-content;
+    max-width: 100%;
+    align-items: stretch;
     gap: 18px;
 }
 .ll-story-button {
-    align-self: flex-start;
+    align-self: stretch;
     min-width: min(320px, 100%); /* never wider than the text column (14 October 2026) */
     min-height: 44px;
     box-sizing: border-box;

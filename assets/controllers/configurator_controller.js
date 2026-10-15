@@ -62,7 +62,7 @@ import { forgetChoices, readChoices, saveChoices } from '../saved_choices.js';
  *    quantity straight to the enquiry page (Step 7c), the finishes to be
  *    chosen together; without a size,
  *    "Please choose a size to continue.". "Prefer a smaller piece?"
- *    goes back (openMain), as do "Configure Studio or Gallery" and "Skip to
+ *    goes back (openMain), as do "Configure a Studio or Gallery lamp" and "Skip to
  *    configurator". Remembered separately ('larger'): a visitor who left on
  *    this step with a size chosen comes back to it, already open. A design
  *    remembered from before with a larger size moves here (size and

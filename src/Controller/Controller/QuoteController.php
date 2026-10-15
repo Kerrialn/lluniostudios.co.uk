@@ -41,7 +41,7 @@ use Throwable;
  */
 final class QuoteController extends AbstractController
 {
-    public const POSTCODE_MESSAGE = "Delivery was quoted for %s. To deliver elsewhere, please reply to your quote email and we'll update your quote.";
+    public const POSTCODE_MESSAGE = "Delivery was quoted for %s. To deliver elsewhere, please reply to your quote email and I'll update your quote.";
 
     public function __construct(
         private readonly Quotes $quotes,

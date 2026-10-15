@@ -60,7 +60,7 @@ try {
             dr.labels === 20 && dr.plan === 'none' && (W < 900 ? dr.width === 707 && dr.scroll === 'auto' : dr.width > 300), JSON.stringify(dr));
         check('reduced motion: scrolling does not open the configurator', !(await opened()));
         await ev(`document.querySelector('.ll-story-button').click()`); await sleep(800);
-        check('reduced motion: "Configure Studio or Gallery" opens the configurator at the top', (await opened()) && (await panelShown()) && (await ev('scrollY')) === 0);
+        check('reduced motion: "Configure a Studio or Gallery lamp" opens the configurator at the top', (await opened()) && (await panelShown()) && (await ev('scrollY')) === 0);
         summary();
         process.exit();
     }
@@ -124,9 +124,10 @@ try {
         if (n === 6) check('The Maker: "Read the full story →" goes to The Workshop', (await ev(`document.querySelectorAll('.ll-story-stage')[5].querySelector('a').getAttribute('href')`)) === '/workshop');
     }
     const ends = await ev(`[...document.querySelectorAll('.ll-story-stage')[6].querySelectorAll('.ll-story-button')].map(e => [e.textContent.trim(), e.getAttribute('href') || e.tagName])`);
-    check('the ending: "Configure Studio or Gallery" and "Discuss a Larger Piece" (the larger-piece step, 7b.4: larger-piece.mjs)', JSON.stringify(ends) === JSON.stringify([['Configure Studio or Gallery', 'BUTTON'], ['Discuss a Larger Piece', 'BUTTON']]), JSON.stringify(ends));
+    check('the ending: "Configure a Studio or Gallery lamp" and "Discuss a Larger Piece" (the larger-piece step, 7b.4: larger-piece.mjs)', JSON.stringify(ends) === JSON.stringify([['Configure a Studio or Gallery lamp', 'BUTTON'], ['Discuss a Larger Piece', 'BUTTON']]), JSON.stringify(ends));
     const sizes = await ev(`[...document.querySelectorAll('.ll-story-stage')[6].querySelectorAll('.ll-story-button')].map(e => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return [Math.round(r.width), Math.round(r.height), c.fontSize, c.padding].join(' '); })`);
-    if (W >= 900) check('the two buttons as the design (320 × 58, 13px)', sizes.every((x) => x === '320 58 13px 18px 32px'), JSON.stringify(sizes));
+    // Wider than the design's 320 since "Configure a Studio or Gallery lamp" (15 October 2026): the pair the same width.
+    if (W >= 900) check('the two buttons as the design (58 high, 13px), the same width, at least 320', sizes.length === 2 && sizes[0] === sizes[1] && / 58 13px 18px 32px$/.test(sizes[0]) && Number(sizes[0].split(' ')[0]) >= 320, JSON.stringify(sizes));
     else {
         const [w0, h0, ...rest] = sizes[0].split(' ');
         check('on phones the two buttons the same size, 11px on one line, side padding 20.4px, at least 44px tall', sizes[0] === sizes[1] && rest.join(' ') === '11px 13.5px 20.4px' && Number(h0) >= 44 && Number(h0) < 50, JSON.stringify(sizes));
@@ -138,7 +139,7 @@ try {
             p.right === p.textRight && p.belowHeading && p.clearSkip && p.clearMarker && (!upright || Math.abs(p.aboveLamp - 75) <= 1 || (p.underHeading === 18 && p.aboveLamp >= 12)), JSON.stringify(p));
     }
     await ev(`document.querySelectorAll('.ll-story-stage')[6].querySelector('button').click()`); await sleep(1500);
-    check('"Configure Studio or Gallery" opens the configurator on The Scale, at the top, the snapping off, the introduction gone',
+    check('"Configure a Studio or Gallery lamp" opens the configurator on The Scale, at the top, the snapping off, the introduction gone',
         (await opened()) && (await panelShown()) && (await ev('scrollY')) === 0 && (await snapType()) === '' && (await ev(`getComputedStyle(document.querySelector('.ll-story')).display`)) === 'none' && (await ev(`document.querySelector('[data-configurator-target=stageNumber]').textContent`)) === '01 / 06');
 
     // 7b.3: The Scale shows Studio and Gallery only, with the line for larger pieces. However the
@@ -153,7 +154,7 @@ try {
     const scale = await ev(`({ sizes: [...document.querySelectorAll('.ll-cfg-opt[data-group=size]')].filter(e => e.getClientRects().length).map(e => e.textContent.trim()).join(), line: document.querySelector('[data-configurator-target=larger]').parentElement.textContent.trim(), href: document.querySelector('[data-configurator-target=larger]').tagName })`);
     check('The Scale shows only Studio and Gallery, then "Considering a larger piece? Discuss a Larger Piece" (opening the larger-piece step in place)', scale.sizes === 'Studio,Gallery' && scale.line === 'Considering a larger piece? Discuss a Larger Piece' && scale.href === 'BUTTON', JSON.stringify(scale));
     let ph = await photo();
-    check('"Configure Studio or Gallery": Gallery shows its own 17 photos in their order (gallery-01 … gallery-17), never the introduction\'s', galleryOk(ph), JSON.stringify(ph));
+    check('"Configure a Studio or Gallery lamp": Gallery shows its own 17 photos in their order (gallery-01 … gallery-17), never the introduction\'s', galleryOk(ph), JSON.stringify(ph));
     await ev(`document.querySelector('.ll-cfg-opt[data-value=lumen-forma-studio]').click()`); await sleep(400); ph = await photo();
     check('Studio: "Image Coming Soon", as before', ph.soon && !ph.gallery && ph.story === 0, JSON.stringify(ph));
     await ev(`document.querySelector('.ll-cfg-opt[data-value=lumen-forma-gallery]').click()`); await sleep(400);

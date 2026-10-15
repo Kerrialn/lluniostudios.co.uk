@@ -65,7 +65,7 @@ final readonly class EmailService
     public function sendDesignRequestReceivedEmail(DesignRequest $designRequest): void
     {
         $this->send(
-            subject: 'We have your request, ' . $designRequest->getFullName(),
+            subject: 'We have your request, ' . ($designRequest->getFirstName() ?? $designRequest->getFullName()),
             template: '/email/request/received.html.twig',
             email: $designRequest->getEmail(),
             name: $designRequest->getFullName(),
@@ -87,7 +87,7 @@ final readonly class EmailService
     {
         $request = $quote->getDesignRequest();
         $email = $this->compose(
-            subject: self::QUOTE_SUBJECT . ', ' . $request->getFullName(),
+            subject: self::QUOTE_SUBJECT . ', ' . ($request->getFirstName() ?? $request->getFullName()),
             template: '/email/request/quote.html.twig',
             email: $request->getEmail(),
             name: $request->getFullName(),
@@ -112,7 +112,7 @@ final readonly class EmailService
         $request = $order->getDesignRequest();
         $name = $request?->getFullName() ?? (string) $order->getEmail();
         $email = $this->compose(
-            subject: self::BALANCE_SUBJECT . ', ' . $name,
+            subject: self::BALANCE_SUBJECT . ', ' . ($this->firstName($order) ?? $name),
             template: '/email/order/balance_request.html.twig',
             email: (string) $order->getEmail(),
             name: $name,

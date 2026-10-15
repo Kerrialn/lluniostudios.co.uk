@@ -1,7 +1,8 @@
 {#
     Requesting the balance (Step 10b.4), in the style of the quote email:
     "Dear {first name},", the opening, the studio's personal note (if any,
-    its own paragraph, as the quote email's note), the order total, what was
+    its own paragraph, as the quote email's note), the signature (every
+    balance request, by the voice rules, 15 October 2026), the order total, what was
     paid and the balance, and "Pay balance" (the quote page). Sent from admin
     ("Request balance"). Laid out by email/_customer.html.twig (the email
     rules of Step 11.0).
@@ -11,15 +12,14 @@
 {% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
 {% import _self as m %}
 
-{% block title %}Your Lumen Forma balance, {{ order.designRequest.fullName }}{% endblock %}
+{% block title %}Your Lumen Forma balance, {{ firstName ?? order.designRequest.fullName }}{% endblock %}
 {% block preheader %}The balance for your Lumen Forma order {{ order.orderNumber }}: {{ m.money(order.amountOwed) }}.{% endblock %}
 
 {% block content %}
-{% set enquiry = order.designRequest and order.designRequest.isEnquiry %}
-{# An enquiry's order: signed (Step 7c.4, decided 13 October 2026); only the order number shown (14 October 2026). #}
+{# Only the order number shown (14 October 2026). #}
 <p style="{{ body }}" data-email-opening>Here is the balance for your Lumen Forma order {{ order.orderNumber }}.</p>
 {% if note %}<p style="{{ body }}" data-email-note data-balance-note>{{ note|nl2br }}</p>{% endif %}
-{% if enquiry %}{{ include('email/_signature.html.twig') }}{% endif %}
+{{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Balance') }}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr><td width="60%" style="{{ keyStyle }}">Order total</td><td style="{{ valueStyle }}">{{ m.money(order.total) }}</td></tr>

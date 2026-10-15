@@ -55,10 +55,10 @@ try {
     for (let i = 0; i < 7; i++) await ev(`document.querySelector('[data-action="configurator#largerFewer"]').click()`);
 
     // Out and back in, in place (no page load).
-    check('the way back reads "Prefer a smaller piece? Configure Studio or Gallery"', (await ev(`document.querySelector('[data-configurator-target=smaller]').parentElement.textContent.trim()`)) === 'Prefer a smaller piece? Configure Studio or Gallery');
+    check('the way back reads "Prefer a smaller piece? Configure a Studio or Gallery lamp"', (await ev(`document.querySelector('[data-configurator-target=smaller]').parentElement.textContent.trim()`)) === 'Prefer a smaller piece? Configure a Studio or Gallery lamp');
     await ev('window.stayed = true');
     await ev(`document.querySelector('[data-configurator-target=smaller]').click()`); await sleep(600); s = await state();
-    check('"Prefer a smaller piece? Configure Studio or Gallery": the configurator, The Scale with Studio and Gallery, the Gallery photos', !s.larger && s.main && s.sizes === 'Studio,Gallery*' && s.photo === 'gallery', JSON.stringify(s));
+    check('"Prefer a smaller piece? Configure a Studio or Gallery lamp": the configurator, The Scale with Studio and Gallery, the Gallery photos', !s.larger && s.main && s.sizes === 'Studio,Gallery*' && s.photo === 'gallery', JSON.stringify(s));
     await ev(`document.querySelector('.ll-cfg-opt[data-group=size][data-value=lumen-forma-studio]').click()`);
     await ev(`document.querySelector('[data-configurator-target=larger]').click()`); await sleep(600); s = await state();
     check('"Considering a larger piece? Discuss a Larger Piece": back on the step, Atelier and 3 lamps kept, without leaving the page', s.larger && s.sizes === 'Atelier*,Estate,Monument' && s.quantity === '3' && (await ev('window.stayed === true')), JSON.stringify(s));

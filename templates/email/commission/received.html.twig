@@ -10,10 +10,11 @@
 {% import 'email/_customer.html.twig' as layout %}
 
 {% block title %}Your commission enquiry{% endblock %}
-{% block preheader %}Thank you for sharing your idea. We will be in touch to talk it through.{% endblock %}
+{% block preheader %}Thank you for sharing your idea. I'll be in touch to talk it through.{% endblock %}
 
 {% block content %}
-<p style="{{ body }}">Thank you for telling us about your idea. We'll be in touch by {{ enquiry.contactMethod == 'phone' ? 'phone' : 'email' }} to talk it through together, whether it's fully formed or still taking shape.</p>
+<p style="{{ body }}">Thank you for telling me about your idea. I'll be in touch by {{ enquiry.contactMethod == 'phone' ? 'phone' : 'email' }} to talk it through together, whether it's fully formed or still taking shape.</p>
+{{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Enquiry') }}
 <p style="{{ label }}">Enquiry reference</p>
 <p style="{{ body }}">{{ enquiry.enquiryNumber }}</p>
