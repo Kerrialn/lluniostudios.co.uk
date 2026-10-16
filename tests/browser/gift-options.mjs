@@ -188,7 +188,7 @@ try {
     const requestNumber = sql(`select request_number from design_request where email = '${EMAIL}' order by created_at desc limit 1`).match(/LR-\d{6}-\d{4}/)?.[0];
     const requestRow = sql(`select gift, gift_needed_by, gift_send_to, gift_recipient_name, gift_recipient_phone, replace(gift_message, chr(10), '|') from design_request where request_number = '${requestNumber}'`).replace(/\s+/g, ' ');
     check('the request keeps the gift: needed by, "recipient", the recipient\'s name and mobile, the message', (await b.ev('location.pathname')) === '/reserve/received' && requestRow.includes(`1 ${earliest} recipient Grace Friend 07700 900999 Happy birthday, Grace!|Love, Ada`), requestRow);
-    const received = await latest(`to:${EMAIL} subject:"We have your request"`, since, requestNumber);
+    const received = await latest(`to:${EMAIL} subject:"Your Lumen Forma request"`, since, requestNumber);
     const receivedText = flat(received?.HTML ?? '');
     check(`email 02: "Dear Ada," (from "MRS ADA LOVELACE"), "Gift: Needed by ${niceDate(earliest)} / Send directly to the recipient: Grace Friend", the message, the address with the recipient's name`, /Dear Ada,/.test(receivedText) && receivedText.includes(`Gift Needed by ${niceDate(earliest)} / Send directly to the recipient: Grace Friend Gift message Happy birthday, Grace! / Love, Ada`), receivedText.slice(receivedText.indexOf('01 Request'), receivedText.indexOf('01 Request') + 300));
     const requestStudio = await latest('to:lluniostudios@gmail.com subject:"New request"', since, requestNumber);

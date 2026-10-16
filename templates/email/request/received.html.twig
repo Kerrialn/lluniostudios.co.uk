@@ -9,7 +9,7 @@
 {% import 'email/_customer.html.twig' as layout %}
 {% set firstName = designRequest.firstName %}
 
-{% block title %}We have your request, {{ designRequest.firstName ?? designRequest.fullName }}{% endblock %}
+{% block title %}Your Lumen Forma request, {{ designRequest.firstName ?? designRequest.fullName }}{% endblock %}
 {% block preheader %}Your Lumen Forma request {{ designRequest.requestNumber }} has reached the studio. I'll be in touch.{% endblock %}
 
 {% block content %}

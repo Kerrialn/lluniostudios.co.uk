@@ -793,7 +793,7 @@ class CheckoutController extends AbstractController
             $request->getSession()->set($this->tokenSessionKey($order->getOrderNumber()), $revolutOrder->token);
         } catch (Throwable $throwable) {
             $this->logger->error('Revolut order creation failed: ' . $throwable->getMessage());
-            $this->addFlash('error', 'Could not start payment. Please try again.');
+            $this->addFlash('error', "We couldn't start the payment. Please try again in a moment.");
         }
     }
 

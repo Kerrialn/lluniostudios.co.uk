@@ -65,7 +65,7 @@ final readonly class EmailService
     public function sendDesignRequestReceivedEmail(DesignRequest $designRequest): void
     {
         $this->send(
-            subject: 'We have your request, ' . ($designRequest->getFirstName() ?? $designRequest->getFullName()),
+            subject: 'Your Lumen Forma request, ' . ($designRequest->getFirstName() ?? $designRequest->getFullName()),
             template: '/email/request/received.html.twig',
             email: $designRequest->getEmail(),
             name: $designRequest->getFullName(),

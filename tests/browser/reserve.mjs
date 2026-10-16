@@ -109,7 +109,7 @@ check('nothing left to reserve afterwards', (await ev('location.pathname')) === 
 
 // Emails
 await sleep(800);
-const toCustomer = (await mailpit(`to:ada.test@example.test after:${since.slice(0, 10)}`)).find(m => m.Subject === 'We have your request, Ada');
+const toCustomer = (await mailpit(`to:ada.test@example.test after:${since.slice(0, 10)}`)).find(m => m.Subject === 'Your Lumen Forma request, Ada');
 let toStudio = null;
 for (const m of (await mailpit(`to:lluniostudios@gmail.com subject:"New request" after:${since.slice(0, 10)}`))) if (!toStudio && (await mailBody(m.ID)).HTML.includes(number)) toStudio = m;
 check('email 02 sent to the customer', !!toCustomer);
