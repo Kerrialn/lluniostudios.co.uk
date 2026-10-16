@@ -42,7 +42,7 @@ final class LumenFormaConfigurator
             'width' => $this->cm($product->getWidthMm()),
             'height' => $this->cm($product->getHeightMm()),
             'note' => $product->isDirectOrder()
-                ? 'Direct Order | ' . LeadTime::MIN_DAYS . '–' . LeadTime::MAX_DAYS . ' Day Dispatch'
+                ? 'Direct Order | ' . LeadTime::MIN_WEEKS . '–' . LeadTime::MAX_WEEKS . ' Week Dispatch'
                 : 'Delivery Quote Required',
         ], $this->products());
     }

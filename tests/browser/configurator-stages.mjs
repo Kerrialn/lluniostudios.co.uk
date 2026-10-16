@@ -20,7 +20,7 @@ const jump = (i) => ev(`document.querySelectorAll('.ll-cfg-step')[${i}].click()`
 const next = () => ev(`document.querySelector('[data-configurator-target=next]').click()`);
 let s = await st();
 check('starts on Gallery with nothing else selected', JSON.stringify(s.sel) === JSON.stringify({ size: 'Gallery' }) && s.pressed === 1, JSON.stringify(s.sel));
-check('Gallery spec and note', s.spec === 'Gallery · £799' && s.dims === '22x22x60' && s.note === 'Direct Order | 7–14 Day Dispatch', `${s.spec} ${s.dims} ${s.note}`);
+check('Gallery spec and note', s.spec === 'Gallery · £799' && s.dims === '22x22x60' && s.note === 'Direct Order | 1–3 Week Dispatch', `${s.spec} ${s.dims} ${s.note}`);
 check('sizes listed by name only (Studio and Gallery; the larger sizes have their own step, 7b.4)', (await ev(`[...document.querySelectorAll('[data-group=size]')].map(e => e.textContent.trim()).join(',')`)) === 'Studio,Gallery');
 check('no Bulb Count for Gallery', !s.countShown);
 await next(); s = await st();

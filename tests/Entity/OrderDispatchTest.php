@@ -89,7 +89,15 @@ final class OrderDispatchTest extends TestCase
         self::assertSame('Your Lumen Forma Atelier, Gallery and Studio lamps have left the studio and are on their way to you.', $order([$lamp('Atelier', 2), $lamp('Gallery', 1), $lamp('Studio', 1)])->getOnItsWaySentence());
         self::assertSame('Your Lumen Forma Atelier lamp has left the studio and is on its way to you.', $order([$lamp('Atelier', 1), new OrderItem(product: null, productTitle: 'Custom pigment development', unitPrice: 15000, quantity: 1)])->getOnItsWaySentence(), 'extra lines are not lamps');
 
-        self::assertSame("Your Lumen Forma Gallery lamp has been delivered. I hope it's found the perfect place in your home.", $order([$lamp('Gallery', 1)])->getDeliveredSentence());
-        self::assertSame("Your Lumen Forma Gallery and Studio lamps have been delivered. I hope they've found the perfect place in your home.", $order([$lamp('Gallery', 1), $lamp('Studio', 1)])->getDeliveredSentence());
+        self::assertSame("Your Lumen Forma Gallery lamp has been delivered. I hope it's found its place in your home.", $order([$lamp('Gallery', 1)])->getDeliveredSentence());
+        self::assertSame([
+            'phrase' => 'Your Lumen Forma Gallery lamp',
+            'several' => false,
+        ], $order([$lamp('Gallery', 1)])->getLampWords(), 'one lamp: "lamp"');
+        self::assertSame([
+            'phrase' => 'Your Lumen Forma Gallery lamps',
+            'several' => true,
+        ], $order([$lamp('Gallery', 2)])->getLampWords(), 'two of one size: "lamps"');
+        self::assertSame("Your Lumen Forma Gallery and Studio lamps have been delivered. I hope they've found their place in your home.", $order([$lamp('Gallery', 1), $lamp('Studio', 1)])->getDeliveredSentence());
     }
 }

@@ -1,15 +1,14 @@
 {% extends 'base.html.twig' %}
 
-{# "Commission submitted": the Site v4 prototype's message for the form the enquiry came from. #}
-{% block title %}Commission submitted | Llunio Studios{% endblock %}
-{% block description %}Your bespoke commission enquiry has reached Llunio Studios.{% endblock %}
+{# "Enquiry Received" (the Site v4 prototype's "Commission submitted", reworded in the wording pass 11.5, 16 October 2026): the message for the form the enquiry came from. #}
+{% block title %}Enquiry Received | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% block body %}
     {{ include('partials/_received.html.twig', {
-        heading: 'Commission Submitted',
+        heading: 'Enquiry Received',
         message: client == 'home'
-            ? "Your vision is in my hands. I'm reviewing your space's requirements and will contact you within two working days to begin shaping your design."
-            : "I'm reviewing the architectural scope and structural parameters and will contact you within two working days to begin shaping your design.",
+            ? "Thank you. Your vision is in my hands, I'll look through what you've sent and be in touch within two working days to start shaping your design."
+            : "Thank you. I'll look through your brief and be in touch within two working days to talk about the project.",
     }) }}
 {% endblock %}

@@ -25,7 +25,7 @@ final class OrderDatesTest extends TestCase
 
     public function testTheEndOfTheLeadTimeFromPayment(): void
     {
-        self::assertSame('2026-10-22', OrderDates::suggest(null, new \DateTimeImmutable('2026-10-08 15:00', new \DateTimeZone('Europe/London')), new \DateTimeImmutable(self::TODAY))->format('Y-m-d'));
+        self::assertSame('2026-10-29', OrderDates::suggest(null, new \DateTimeImmutable('2026-10-08 15:00', new \DateTimeZone('Europe/London')), new \DateTimeImmutable(self::TODAY))->format('Y-m-d'));
     }
 
     public function testNeverBeforeToday(): void

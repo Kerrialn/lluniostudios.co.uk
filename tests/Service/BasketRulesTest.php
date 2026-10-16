@@ -114,10 +114,10 @@ final class BasketRulesTest extends TestCase
 
     public function testRouteNotes(): void
     {
-        $size = 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.';
+        $size = 'Hand cast to order. Each larger piece is shaped in conversation with me.';
         $custom = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
         $both = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you, and delivery is quoted individually.';
-        $limit = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
+        $limit = 'Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually.';
 
         self::assertSame('Direct order and checkout.', $this->rules->routeNote([]));
         self::assertSame($size, $this->rules->routeNote([BasketRules::REQUEST_SIZE_MESSAGE]));

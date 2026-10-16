@@ -1,6 +1,6 @@
 {#
     "Thank you" pages after a form is sent or an order paid ("Reservation
-    received", "Commission submitted", "Order & Slot Confirmed"), laid out
+    Received", "Enquiry Received", "Order Confirmed"), laid out
     like the site's other text pages (Contact, Terms & Conditions): heading,
     then the message under a rule. Reference numbers are in the
     confirmation emails, not here.
@@ -9,7 +9,9 @@
       heading       the page heading
       message       the prototype's message for this page
       lines         further lines under it (e.g. "Gift · Arrive by …")
-      confirmation  false to leave out "Confirmation has been sent…"
+      confirmation  false to leave out "A confirmation email is on its way to
+                    you." (wording pass 11.5, 16 October 2026), or other
+                    wording for that line (e.g. the receipt's)
 #}
 <div class="max-w-[1200px] mx-auto px-[clamp(20px,4vw,56px)] py-[clamp(32px,5vw,72px)] flex flex-col gap-8">
     {{ include('partials/_page_heading.html.twig', { title: heading }) }}
@@ -18,8 +20,11 @@
         {% for line in lines|default([]) %}
             <p>{{ line }}</p>
         {% endfor %}
-        {% if confirmation ?? true %}
-            <p>Confirmation has been sent to the email address provided.</p>
+        {% set confirmation = confirmation ?? true %}
+        {% if confirmation is same as(true) %}
+            <p>A confirmation email is on its way to you.</p>
+        {% elseif confirmation %}
+            <p>{{ confirmation }}</p>
         {% endif %}
     </div>
 </div>

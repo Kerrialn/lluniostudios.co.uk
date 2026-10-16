@@ -1,8 +1,10 @@
 // Basket (Step 10.1): "This is a gift" with "When does it need to arrive
-// by?" (earliest: today + 14 calendar days, then 2 working days), its
-// messages, the choice saved on the basket and kept, a single "Proceed to
-// Payment" (no Express Payment button), and no gift box when the basket goes
-// by request. Takes a size: 1440 900 (default) or 390 844.
+// by?" (any date from tomorrow since 16 October 2026; one sooner than the
+// usual earliest, today + 3 weeks then 2 working days, turns the button into
+// "Reserve Your Design" with its note, and goes to Reserve Your Design with
+// the gift carried), its messages, the choice saved on the basket and kept,
+// a single "Proceed to Payment" (no Express Payment button), and no gift box
+// when the basket goes by request. Takes a size: 1440 900 (default) or 390 844.
 import { execSync } from 'node:child_process';
 import { open, sleep, checker, sql, BASE_URL, PROJECT_DIR } from './lib.mjs';
 
@@ -10,8 +12,13 @@ const [W, H] = [Number(process.argv[2] || 1440), Number(process.argv[3] || 900)]
 const { check, summary } = checker();
 const b = await open(W, H, 'basket-gift' + W, { mobile: W < 900 });
 const { send, ev } = b;
-const earliest = execSync(`docker compose exec -T php php -r 'require "vendor/autoload.php"; echo (new App\\Catalogue\\GiftDate())->earliest()->format("Y-m-d");' 2>/dev/null`, { cwd: PROJECT_DIR, encoding: 'utf8' }).trim();
+const php = (method) => execSync(`docker compose exec -T php php -r 'require "vendor/autoload.php"; echo (new App\\Catalogue\\GiftDate())->${method}()->format("Y-m-d");' 2>/dev/null`, { cwd: PROJECT_DIR, encoding: 'utf8' }).trim();
+const earliest = php('earliest');
+const tomorrow = php('tomorrow');
+const today = new Date(new Date(tomorrow + 'T12:00:00Z').getTime() - 86400000).toISOString().slice(0, 10);
+const NOTE = "This date is sooner than our usual 1–3 week lead time. Reserve your design and we'll let you know if we can make it.";
 const dayBefore = new Date(new Date(earliest + 'T12:00:00Z').getTime() - 86400000).toISOString().slice(0, 10);
+// (the day before the usual earliest)
 const later = new Date(new Date(earliest + 'T12:00:00Z').getTime() + 7 * 86400000).toISOString().slice(0, 10);
 const cartRow = () => sql(`select case when gift then 'gift-yes' else 'gift-no' end || ' ' || coalesce(to_char(gift_arrive_by, 'YYYY-MM-DD'), 'no-date') as saved from cart where id = (select cart_id from cart_item order by created_at desc limit 1)`).match(/gift-(yes|no) (\S+)/)?.[0] ?? '';
 try {
@@ -26,10 +33,12 @@ try {
     const state = () => ev(`(() => { const a = document.querySelector('main aside'); const box = [...(a?.querySelectorAll('label') || [])].find(l => /This is a gift/.test(l.textContent)); const date = a?.querySelector('input[type=date]');
         return { path: location.pathname, giftBox: !!box, ticked: !!box?.querySelector('input')?.checked, dateShown: !!date && date.getBoundingClientRect().height > 0, min: date?.min, value: date?.value,
           buttons: [...(a?.querySelectorAll('a, button') || [])].map(e => e.textContent.trim()).filter(t => /Payment|Reserve/.test(t)), errors: [...(a?.querySelectorAll('[role=alert]') || [])].map(e => e.textContent.trim()),
-          note: [...(a?.querySelectorAll('div') || [])].find(d => /^Each lamp is made by hand/.test(d.textContent.trim()))?.textContent.trim() }; })()`);
+          note: [...(a?.querySelectorAll('div') || [])].find(d => /^Each lamp is made by hand/.test(d.textContent.trim()))?.textContent.trim(),
+          soonNote: (() => { const n = a?.querySelector('[data-gift-too-soon-note]'); return n && n.getClientRects().length ? n.textContent.trim() : null; })(),
+          submit: a?.querySelector('button[type=submit]')?.textContent.trim() }; })()`);
     const tick = () => ev(`[...document.querySelectorAll('main aside label')].find(l => /This is a gift/.test(l.textContent)).click()`);
-    const setDate = (v) => ev(`document.querySelector('main aside input[type=date]').value = '${v}'`);
-    const proceed = async () => { await ev(`[...document.querySelectorAll('main aside button')].find(e => e.textContent.trim() === 'Proceed to Payment').click()`); await sleep(2200); };
+    const setDate = async (v) => { await ev(`(() => { const d = document.querySelector('main aside input[type=date]'); d.value = '${v}'; d.dispatchEvent(new Event('input', { bubbles: true })); d.dispatchEvent(new Event('change', { bubbles: true })); })()`); await sleep(200); };
+    const proceed = async () => { await ev(`document.querySelector('main aside button[type=submit]').click()`); await sleep(2200); };
     await send('Network.enable'); await send('Network.clearBrowserCookies');
 
     await add();
@@ -37,9 +46,9 @@ try {
     check('basket: "This is a gift" unticked, no date showing', s.giftBox && !s.ticked && !s.dateShown, JSON.stringify(s));
     check('a single "Proceed to Payment" button (no Express Payment)', JSON.stringify(s.buttons) === JSON.stringify(['Proceed to Payment']), JSON.stringify(s.buttons));
     await tick(); await sleep(300); s = await state();
-    check('ticking it shows the date, its note, and the earliest date allowed', s.ticked && s.dateShown && s.note === 'Each lamp is made by hand. Please allow 7–14 days.' && s.min === earliest, JSON.stringify(s));
+    check('ticking it shows the date, its note, and any date from tomorrow allowed', s.ticked && s.dateShown && s.note === 'Each lamp is made by hand. Please allow 1–3 weeks.' && s.min === tomorrow, JSON.stringify(s));
     const earliestDay = new Date(earliest + 'T12:00:00Z');
-    check(`the earliest date (${earliest}) is at least 16 days away and a weekday`, (earliestDay - Date.now()) / 86400000 >= 15 && ![0, 6].includes(earliestDay.getUTCDay()), earliest);
+    check(`the usual earliest date (${earliest}) is at least 23 days away and a weekday`, (earliestDay - Date.now()) / 86400000 >= 22 && ![0, 6].includes(earliestDay.getUTCDay()), earliest);
 
     // Messages.
     await proceed(); s = await state();
@@ -47,9 +56,21 @@ try {
     // Gift options (9 October 2026): "Send to me" for the rest of this check (gift-options.mjs covers sending directly).
     await ev(`[...document.querySelectorAll('main aside label')].find(l => /Send to me/.test(l.textContent)).click()`);
     check('the date box is outlined in cream when there is a message', (await ev(`getComputedStyle(document.querySelector('main aside input[type=date]')).borderTopColor`)) === 'rgb(236, 227, 211)');
-    await setDate(dayBefore); await proceed(); s = await state();
-    check('a date too soon: "Please choose a date on or after the earliest delivery date."', s.path === '/basket' && JSON.stringify(s.errors) === JSON.stringify(['Please choose a date on or after the earliest delivery date.']) && s.value === dayBefore, JSON.stringify(s));
+    await setDate(today); await proceed(); s = await state();
+    check('today (in the past for delivery): "Please choose a date from tomorrow onwards."', s.path === '/basket' && JSON.stringify(s.errors) === JSON.stringify(['Please choose a date from tomorrow onwards.']) && s.value === today, JSON.stringify(s));
     check('nothing saved yet', cartRow() === 'gift-no no-date', cartRow());
+
+    // Sooner than usual: Reserve Your Design, with the gift carried.
+    await setDate(dayBefore); s = await state();
+    check('a date sooner than the usual earliest turns the button into "Reserve Your Design", with the note under it', s.submit === 'Reserve Your Design' && s.soonNote === NOTE, JSON.stringify(s));
+    await setDate(later); s = await state();
+    check('a later date turns it back to "Proceed to Payment", no note', s.submit === 'Proceed to Payment' && s.soonNote === null, JSON.stringify(s));
+    await setDate(tomorrow); await proceed();
+    const carried = await ev(`(() => { const f = document.querySelector('form[name=reserve_form]'); return f && { path: location.pathname, gift: f.querySelector('[name="reserve_form[gift]"]').checked, date: f.querySelector('[name="reserve_form[giftNeededBy]"]').value, min: f.querySelector('[name="reserve_form[giftNeededBy]"]').min, sendTo: f.querySelector('[name="reserve_form[giftSendTo]"]:checked')?.value }; })()`);
+    check('sending it goes to Reserve Your Design, with the gift carried (ticked, the date, "me"), any date from tomorrow', carried?.path === '/reserve' && carried.gift && carried.date === tomorrow && carried.min === tomorrow && carried.sendTo === 'me', JSON.stringify(carried));
+    check('the gift is saved on the basket', cartRow() === `gift-yes ${tomorrow}`, cartRow());
+    await go(BASE_URL + '/checkout'); s = await state();
+    check('Card Payment sends it back to the basket, which offers Reserve Your Design with the note', s.path === '/basket' && s.submit === 'Reserve Your Design' && s.soonNote === NOTE, JSON.stringify(s));
 
     // Saved and kept.
     await setDate(later); await proceed();

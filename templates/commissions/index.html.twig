@@ -7,7 +7,7 @@
     Choosing a tab shows its form (commission_controller.js).
 #}
 {% block title %}Bespoke Commissions | Llunio Studios{% endblock %}
-{% block description %}Bespoke lighting commissions from Llunio Studios: your own design in our signature brutalist style, hand cast in liquid stone for your home or your project.{% endblock %}
+{% block description %}Bespoke lighting commissions from Llunio Studios: your own design in our brutalist style, hand cast in liquid stone for your home or your project.{% endblock %}
 {% block preview_image %}images/commissions/hero-01-2000.jpg{% endblock %}
 {% block preview_alt %}A lamp hand cast in liquid stone by Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
@@ -59,7 +59,7 @@
             <h1 class="w-max max-w-full flex flex-col items-start text-left font-light leading-[1.04] uppercase tracking-[0.03em] text-[calc((100vw_-_40px)/21.5)] min-[900px]:text-[min(50px,calc((100vw_-_176px)/23))]">
                 {# Scales down on narrow phones so every line fits (the prototype's
                    run off the screen there): the widest line is ~19.2em. #}
-                <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/19.5))] pl-[1.4em] min-[900px]:pl-[4em]">Your bespoke design</span>
+                <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/19.5))] pl-[1.4em] min-[900px]:pl-[4em]">Your design</span>
                 <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/19.5))]">in our signature brutalist style,</span>
                 <span class="block whitespace-nowrap text-[min(30.3px,calc((100vw_-_40px)/19.5))] pl-[2.8em] min-[900px]:pl-[7em]">custom‑built for you.</span>
             </h1>
@@ -83,7 +83,7 @@
                     {{ include('commissions/_field.html.twig', { child: homeForm.name, label: 'Name *' }) }}
                     {{ include('commissions/_field.html.twig', { child: homeForm.email, label: 'Email *' }) }}
                     {{ include('commissions/_field.html.twig', { child: homeForm.phone, label: 'Phone', phone: true, phoneRequired: homeForm.contactMethod.vars.value == 'phone' }) }}
-                    {{ include('commissions/_field.html.twig', { child: homeForm.contactMethod, label: 'Preferred contact method *', kind: 'choice' }) }}
+                    {{ include('commissions/_field.html.twig', { child: homeForm.contactMethod, label: 'How would you like to talk? *', kind: 'choice' }) }}
                     {{ include('commissions/_field.html.twig', { child: homeForm.idea, label: 'Tell me about your idea *', kind: 'area', help: "Where it might live, roughly how big, anything that's inspired you. Don't worry if it's not fully formed; we'll talk it through together." }) }}
                     {{ include('commissions/_field.html.twig', { child: homeForm.files, label: 'Share a photo of the space or anything that inspired you', hint: '(optional)', kind: 'files', drop: 'Choose photos or files — ' ~ uploadText }) }}
                 </div>
@@ -91,7 +91,7 @@
                 {% for error in homeForm.vars.errors %}
                     <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
                 {% endfor %}
-                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Request Your Custom Design</button>
+                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Send Enquiry</button>
                 {{ include('partials/_privacy_line.html.twig') }}
             {{ form_end(homeForm) }}
         </div>
@@ -106,14 +106,14 @@
                     {{ include('commissions/_field.html.twig', { child: projectForm.projectType, label: 'Project Type *', kind: 'select' }) }}
                     {{ include('commissions/_field.html.twig', { child: projectForm.location, label: 'Project Location & Installation Schedule *' }) }}
                     {{ include('commissions/_field.html.twig', { child: projectForm.project, label: 'The Project', hint: '(optional)', kind: 'area', help: 'Tell me about the project: the space, the brief, the overall vision and where the lighting fits in.' }) }}
-                    {{ include('commissions/_field.html.twig', { child: projectForm.integration, label: 'Integration Requirements', kind: 'area' }) }}
-                    {{ include('commissions/_field.html.twig', { child: projectForm.files, label: 'Documentation Upload', kind: 'files', drop: 'Attach architectural elevation drawings, CAD files, or spatial mood boards — ' ~ uploadText }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.integration, label: 'Integration Requirements', hint: '(optional)', kind: 'area' }) }}
+                    {{ include('commissions/_field.html.twig', { child: projectForm.files, label: 'Drawings and Files', hint: '(optional)', kind: 'files', drop: 'CAD files or mood boards — ' ~ uploadText }) }}
                 </div>
                 {{ include('commissions/_honeypot.html.twig', { child: projectForm.website }) }}
                 {% for error in projectForm.vars.errors %}
                     <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
                 {% endfor %}
-                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Request Custom Collaboration</button>
+                <button type="submit" class="ll-cta bg-ll-ink text-ll-bg px-6 py-[19px] text-center text-[12px] leading-[1.5] uppercase tracking-[0.16em]">Send Enquiry</button>
                 {{ include('partials/_privacy_line.html.twig') }}
             {{ form_end(projectForm) }}
         </div>

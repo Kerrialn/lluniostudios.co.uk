@@ -35,7 +35,7 @@ const addGallery = async () => {
 // The basket's gift choice: sendTo 'me', 'recipient' or null (none chosen).
 const basketGift = async (sendTo) => {
     await go(b, BASE_URL + '/basket');
-    const arrive = await b.ev(`document.querySelector('main aside input[type=date]').min`);
+    const arrive = await b.ev(`document.querySelector('[data-gift-route-earliest-value]').dataset.giftRouteEarliestValue`);
     await b.ev(`(() => { const box = document.querySelector('[name$="[gift]"]'); if (!box.checked) box.closest('label').click(); })()`);
     await b.ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
     if (sendTo) await b.ev(`document.querySelector('[name$="[sendTo]"][value=${sendTo}]').closest('label').click()`);
@@ -73,7 +73,7 @@ try {
     // 2. "Send to me": no recipient fields on Card Payment.
     await basketGift('me');
     const toMe = await b.ev(`({ billingSame: document.querySelector('[name$="[billingSame]"]').checked, path: location.pathname, name: document.querySelector('label[for$="_name"] span')?.textContent.trim(), message: !!document.querySelector('[name$="[giftMessage]"]'), phone: !!document.querySelector('[name$="[recipientPhone]"]'), gift: document.querySelector('[data-checkout-gift]')?.innerText.replace(/\\s+/g, ' ') })`);
-    check('"Send to me": Card Payment asks for the usual "Full name", no gift message or recipient\'s mobile; the summary says "Send to me"', toMe.billingSame && toMe.path === '/checkout' && toMe.name === 'Full name *' && !toMe.message && !toMe.phone && /Send to me/.test(toMe.gift ?? ''), JSON.stringify(toMe));
+    check('"Send to me": Card Payment asks for the usual "Full Name", no gift message or recipient\'s mobile; the summary says "Send to me"', toMe.billingSame && toMe.path === '/checkout' && toMe.name === 'Full Name *' && !toMe.message && !toMe.phone && /Send to me/.test(toMe.gift ?? ''), JSON.stringify(toMe));
 
     // 3. "Send directly to the recipient".
     const arrive = await basketGift('recipient');

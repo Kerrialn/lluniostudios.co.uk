@@ -51,7 +51,7 @@ try {
     check('with its details: LC- number, Home, New, name, phone, Phone chosen, idea', /LC-\d{6}-\d{4}/.test(row) && /\bhome\b/.test(row) && /\bnew\b/.test(row) && /07700 900123/.test(row) && /\bphone\b/.test(row) && /stairwell/.test(row), row);
     const homeNumber = row.match(/LC-\d{6}-\d{4}/)?.[0];
     let page = await received();
-    check('"Commission submitted": heading, the Home message, the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.replace(/\s+/g, ' ') === "COMMISSION SUBMITTED Your vision is in my hands. I'm reviewing your space's requirements and will contact you within two working days to begin shaping your design. Confirmation has been sent to the email address provided." && page.nav === 'page', JSON.stringify(page));
+    check('"Commission submitted": heading, the Home message, the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.replace(/\s+/g, ' ') === "ENQUIRY RECEIVED Thank you. Your vision is in my hands, I'll look through what you've sent and be in touch within two working days to start shaping your design. A confirmation email is on its way to you." && page.nav === 'page', JSON.stringify(page));
 
     // Emails for the Home enquiry.
     await sleep(800);
@@ -95,7 +95,7 @@ try {
     check('its file is recorded', /Lobby elevations\.dwg\s+31457280/.test(sql(`select f.original_name, f.size from commission_enquiry_file f join commission_enquiry e on e.id = f.enquiry_id order by e.created_at desc limit 1`)));
     const projectNumber = sql(`select enquiry_number from commission_enquiry where client = 'project' order by created_at desc limit 1`).match(/LC-\d{6}-\d{4}/)?.[0];
     page = await received();
-    check('"Commission submitted": the Project message and the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.includes("I'm reviewing the architectural scope and structural parameters and will contact you within two working days to begin shaping your design.") && page.text.endsWith('Confirmation has been sent to the email address provided.') && !/LC-\d/.test(page.text), JSON.stringify(page));
+    check('"Commission submitted": the Project message and the confirmation line, no reference', page.path === '/bespoke-commissions/received' && page.text.includes("Thank you. I'll look through your brief and be in touch within two working days to talk about the project.") && page.text.endsWith('A confirmation email is on its way to you.') && !/LC-\d/.test(page.text), JSON.stringify(page));
     const layout = await ev(`(() => { const h = document.querySelector('main h1'); const p = document.querySelector('main p'); const c = h.parentElement; const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(c).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(p).fontSize, pColour: getComputedStyle(p).color, rule: getComputedStyle(p.parentElement).borderTopStyle }; })()`);
     await go(BASE_URL + '/contact');
     const contact = await ev(`(() => { const h = document.querySelector('main h1'); const a = document.querySelector('main address'); const r = (e) => e.getBoundingClientRect(); return { col: Math.round(r(h.parentElement).width), left: Math.round(r(h).left), hSize: getComputedStyle(h).fontSize, pSize: getComputedStyle(a).fontSize, pColour: getComputedStyle(a).color, rule: getComputedStyle(a).borderTopStyle }; })()`);
@@ -104,7 +104,7 @@ try {
     toCustomer = (await mailpit(`to:ada.test@example.test subject:"Your commission enquiry"`)).find((m) => new Date(m.Created) > new Date(Date.now() - 60000));
     if (toCustomer) {
         const m = await mailBody(toCustomer.ID);
-        check('email 03 for a Project: "by email", the reference, "For Your Project"', m.HTML.includes('in touch by email to talk it through together') && m.HTML.includes(projectNumber) && m.HTML.includes('For Your Project'));
+        check('email 03 for a Project: "Thank you for telling me about your project. I\'ll be in touch by email to talk it through.", the reference, "For Your Project"', m.HTML.includes("Thank you for telling me about your project. I'll be in touch by email to talk it through.") && m.HTML.includes(projectNumber) && m.HTML.includes('For Your Project'));
         writeFileSync(out('email-03-project.html'), m.HTML);
     } else check('email 03 for a Project sent', false);
     toStudio = await studioMail(projectNumber);

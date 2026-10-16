@@ -1,13 +1,12 @@
 {% extends 'base.html.twig' %}
 
 {# "Reservation received": the Site v4 prototype's message. #}
-{% block title %}Reservation received | Llunio Studios{% endblock %}
-{% block description %}Your Lumen Forma reservation has reached Llunio Studios.{% endblock %}
+{% block title %}Reservation Received | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% block body %}
     {{ include('partials/_received.html.twig', {
         heading: 'Reservation Received',
-        message: 'Your design request has been received. We are reviewing your specifications and calculating delivery to your location. You will receive a formal quotation, estimated studio casting date, and secure payment link by email within 1–2 working days.',
+        message: "Thank you. I'll look over your design, work out delivery and email you a quote within 1–2 working days, with an estimated casting date and a link to pay.",
     }) }}
 {% endblock %}

@@ -93,6 +93,13 @@ final class ReserveController extends AbstractController
             $start['giftSendTo'] = GiftSendTo::tryFrom($start['giftSendTo'] ?? '');
         }
 
+        if (! \is_array($prefill) && $cart instanceof \App\Entity\Cart && $cart->isGift()) {
+            // A gift chosen in the basket (e.g. a date sooner than the usual lead time): carried into the request.
+            $start['gift'] = true;
+            $start['giftNeededBy'] = $cart->getGiftArriveBy();
+            $start['giftSendTo'] = $cart->getGiftSendTo();
+        }
+
         if ($request->isMethod('GET') && '' !== $carriedDetails) {
             $start['customDetails'] = $carriedDetails;
         }
@@ -101,7 +108,7 @@ final class ReserveController extends AbstractController
             'custom_choices' => $customChoices,
             // Room for every carried description, and more besides.
             'custom_details_max' => max(ReserveForm::CUSTOM_DETAILS_MAX, mb_strlen($carriedDetails) + ReserveForm::CUSTOM_DETAILS_MAX),
-            'earliest' => $this->giftDate->earliest(),
+            'earliest' => $this->giftDate->tomorrow(),
         ]);
         $tooLarge = $request->isMethod('POST') && $request->request->count() === 0 && $request->files->count() === 0;
         if ($tooLarge) {
@@ -163,6 +170,7 @@ final class ReserveController extends AbstractController
                 foreach ($cart->getCartItems()->toArray() as $line) {
                     $cart->removeCartItem($line);
                 }
+                $cart->setGiftArriveBy(null);
                 $this->cartRepository->save(cart: $cart);
             }
 

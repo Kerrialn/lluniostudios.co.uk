@@ -18,7 +18,7 @@ final class DeliveryArea
      * Shown on the Card Payment page above "Reserve Your Design" for a
      * postcode outside the UK mainland.
      */
-    public const OUTSIDE_NOTE = 'This address is outside the UK mainland, delivery will be quoted for individually. Reserve now to secure your casting slot.';
+    public const OUTSIDE_NOTE = "This address is outside the UK mainland, so we'll quote delivery separately. Reserve now to hold your casting slot.";
 
     /**
      * Whole postcode areas outside the mainland: Northern Ireland, Isle of

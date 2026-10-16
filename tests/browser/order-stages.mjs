@@ -1,6 +1,6 @@
 // Order stages: In Production (Step 11.2), Dispatched (11.3), Delivered (11.4). A paid order has "Mark In
 // Production" (in the Orders list's menu and as a button on its page); the
-// confirm page suggests the expected dispatch date (the end of the 7–14 day
+// confirm page suggests the expected dispatch date (the end of the 1–3 week
 // lead time from payment, as no quote) and refuses a past date; confirming
 // marks the order, emails 04 "Your Lumen Forma is being cast" (the email
 // rules' format, the order number, the expected dispatch, "View your
@@ -48,10 +48,10 @@ try {
     await go(b, started.completeUrl.replace(/^https?:\/\/[^/]+/, BASE_URL), 3000);
     const orderNumber = started.completeUrl.split('/').pop();
     const orderId = uuid(sql(`select id from orders where order_number = '${orderNumber}'`));
-    // Paid "yesterday" (UK), so the suggestion is 14 days from then.
+    // Paid "yesterday" (UK), so the suggestion is 3 weeks (21 days) from then (the lead time since 16 October 2026).
     sql(`update orders set paid_at = paid_at - interval '1 day' where id = '${orderId}'`);
     const paidDay = sql(`select to_char((paid_at at time zone 'UTC') at time zone 'Europe/London', 'YYYY-MM-DD') from orders where id = '${orderId}'`).match(/\d{4}-\d\d-\d\d/)?.[0];
-    const suggested = new Date(Date.parse(paidDay + 'T12:00:00Z') + 14 * 86400000).toISOString().slice(0, 10);
+    const suggested = new Date(Date.parse(paidDay + 'T12:00:00Z') + 21 * 86400000).toISOString().slice(0, 10);
     check('a paid order', paid === 'succeeded' && !!orderId, paid);
 
     // Admin.
@@ -74,7 +74,7 @@ try {
     // The confirm page.
     await go(b, new URL(button.href, BASE_URL).href, 3000);
     const confirm = await b.ev(`({ date: document.querySelector('[data-expected-dispatch]')?.value, min: document.querySelector('[data-expected-dispatch]')?.min, note: document.querySelector('[data-in-production-note]')?.innerText.replace(/\\s+/g, ' '), button: document.querySelector('[data-mark-in-production]')?.textContent.trim() })`);
-    check(`it asks to confirm, with the expected dispatch suggested as 14 days from payment (${suggested})`, confirm.date === suggested && confirm.note?.startsWith(`This marks the order In Production and emails ${EMAIL}`) && confirm.button === 'Mark In Production and email the customer', JSON.stringify(confirm));
+    check(`it asks to confirm, with the expected dispatch suggested as 3 weeks from payment (${suggested})`, confirm.date === suggested && confirm.note?.startsWith(`This marks the order In Production and emails ${EMAIL}`) && confirm.button === 'Mark In Production and email the customer', JSON.stringify(confirm));
     await b.shot(out('in-production.png'));
     // A past date is refused (the page's own date check bypassed).
     await b.ev(`(() => { const d = document.querySelector('[data-expected-dispatch]'); d.removeAttribute('min'); d.value = '2026-01-01'; document.querySelector('[data-mark-in-production]').click(); })()`); await sleep(2500);
@@ -99,10 +99,10 @@ try {
     const html = mail ? (await message(mail.ID)).HTML : '';
     writeFileSync(out('email-04.html'), html);
     const long = new Date(suggested + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).replace(',', '');
-    const format = customerEmailProblems(html, 'Ada', `Your Lumen Forma Gallery lamp is now in production. Expected dispatch date is: ${long}.`);
+    const format = customerEmailProblems(html, 'Ada', `Your Lumen Forma Gallery lamp is now in production. I expect to dispatch it on ${long}.`);
     check('email 04 signed "All the best, / Theo / @LlunioStuidos" after the opening, before the details', signed(html, 'Progress'), JSON.stringify(signatureOf(html)));
-    const thanks = html.includes("Thank you for supporting my small studio. Every piece is made with care, and I can't wait for you to see yours.");
-    check(`email 04 "Your Lumen Forma is being cast (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp is now in production. Expected dispatch date is: ${long}.", then the thanks; one text size`, thanks && mail?.Subject === `Your Lumen Forma is being cast (${orderNumber})` && format.length === 0, format.join('; ') + ' | ' + mail?.Subject);
+    const thanks = html.includes("Thank you for supporting my small studio. Every lamp is made with care, and I can't wait for you to see yours in its new home.");
+    check(`email 04 "Your Lumen Forma is being cast (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp is now in production. I expect to dispatch it on ${long}.", then the thanks; one text size`, thanks && mail?.Subject === `Your Lumen Forma is being cast (${orderNumber})` && format.length === 0, format.join('; ') + ' | ' + mail?.Subject);
     const text = flat(html);
     check(`01 Progress: the order number and "Expected dispatch ${nice(suggested)}", then "View your order"; Dorset Studio`, text.includes(`01 Progress Order number ${orderNumber} Expected dispatch ${nice(suggested)} View your order Reply to this email with any questions.`) && /Dorset Studio/.test(html) && !/Bournemouth/.test(html), text.slice(text.indexOf('01 Progress'), text.indexOf('01 Progress') + 200));
 
@@ -176,9 +176,9 @@ try {
     for (let i = 0; i < 10 && !mail6; i++) { mail6 = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma has arrived"`)).find((m) => new Date(m.Created) > since6); if (!mail6) await sleep(500); }
     const html6 = mail6 ? (await message(mail6.ID)).HTML : '';
     writeFileSync(out('email-06.html'), html6);
-    const format6 = customerEmailProblems(html6, 'Ada', "Your Lumen Forma Gallery lamp has been delivered. I hope it's found the perfect place in your home.");
+    const format6 = customerEmailProblems(html6, 'Ada', "Your Lumen Forma Gallery lamp has been delivered. I hope it's found its place in your home.");
     check('email 06 signed "All the best, / Theo / @LlunioStuidos" after the opening, before the details', signed(html6, 'View your order'), JSON.stringify(signatureOf(html6)));
-    check(`email 06 "Your Lumen Forma has arrived (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp has been delivered. I hope it's found the perfect place in your home.", one text size, "Llunio Studios" in full`, mail6?.Subject === `Your Lumen Forma has arrived (${orderNumber})` && format6.length === 0, format6.join('; ') + ' | ' + mail6?.Subject);
+    check(`email 06 "Your Lumen Forma has arrived (${orderNumber})" follows the email rules: Montage C, no heading, "Dear Ada," then "Your Lumen Forma Gallery lamp has been delivered. I hope it's found its place in your home.", one text size, "Llunio Studios" in full`, mail6?.Subject === `Your Lumen Forma has arrived (${orderNumber})` && format6.length === 0, format6.join('; ') + ' | ' + mail6?.Subject);
     const text6 = flat(html6);
     check('then the photo request (Facebook or Instagram, @llunio_studios, or a reply) and "By sending me a photo, you\'re happy for me to share it.", "View your order"; no care or Share section', text6.includes("in your home. Would you do me a small favour? I'd love to see where it ended up. Share a photo on Facebook or Instagram and tag Llunio Studios (@llunio_studios), or simply reply to this email with a picture. You might see it featured on our page. By sending me a photo, you're happy for me to share it. All the best, Theo / @LlunioStuidos View your order Reply to this email with any questions.") && !/\b0[12] (Care|Share)\b/.test(text6), text6.slice(text6.indexOf('Dear Ada'), text6.indexOf('Dear Ada') + 600));
     check('the email footer: Facebook (the placeholder link), Instagram, YouTube', /<a href="https:\/\/www\.facebook\.com\/"[^>]*><img [^>]*icon-facebook\.png[^>]*alt="Facebook"[\s\S]*icon-instagram\.png[\s\S]*icon-youtube\.png/.test(html6));

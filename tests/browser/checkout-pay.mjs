@@ -5,7 +5,7 @@
 // linked to the account for its email (created quietly, no sign-in), the
 // basket is emptied and the confirmation email sent; a second order by the
 // same email joins the same account; the order's pages are open only to the
-// visitor who placed it; "Order & Slot Confirmed" (with "Gift · Arrive by"
+// visitor who placed it; "Order Confirmed" (with "Gift · Arrive by"
 // for a gift, which is saved on the order); admin's gift column and order
 // details. Typing goes into Stripe's frames as a customer's would. Takes a size: 1440 900 (default) or 390 844.
 import { open, sleep, checker, sql, BASE_URL, MAILPIT_URL } from './lib.mjs';
@@ -95,7 +95,7 @@ try {
     const orderNumber = s.path.split('/').pop();
     check('the retry used the same order (one order, now paid)', count(`select count(*) from orders where email = '${EMAIL}'`) === before + 1 && count(`select count(*) from orders where order_number = '${orderNumber}' and status = 'paid' and paid_at is not null`) === 1, orderNumber);
     const done = (await ev(`document.querySelector('main').innerText`)).replace(/\s+/g, ' ').trim();
-    check('"Order & Slot Confirmed", "Added to Studio Casting Schedule" and the confirmation line (no gift line)', done === 'ORDER & SLOT CONFIRMED Added to Studio Casting Schedule Confirmation has been sent to the email address provided.', done);
+    check('"Order Confirmed", "Your order has its slot in our casting schedule.", what happens next, and the confirmation line (no gift line)', done === "ORDER CONFIRMED Your order has its slot in our casting schedule. We'll email you when it goes into production, and when it's on its way. A confirmation email is on its way to you.", done);
     check('laid out like the other thank-you pages', await ev(`(() => { const h = document.querySelector('main h1'); return getComputedStyle(h).fontSize === '28.8px' && Math.round(h.closest('main > div').getBoundingClientRect().width) === Math.min(1200, innerWidth) && getComputedStyle(document.querySelector('main p')).fontSize === '15px'; })()`) || W < 900);
     const row = sql(`select o.contact_phone, o.delivery_notes, o.shipping_cost, o.total, s.recipient_name, s.company, s.line1, s.line2, s.city, s.county, s.postcode, s.phone, bl.recipient_name as billing, bl.postcode as billing_postcode, u.email from orders o join address s on s.id = o.shipping_address_id left join address bl on bl.id = o.billing_address_id join users u on u.id = o.user_id where o.order_number = '${orderNumber}'`).replace(/\s+/g, ' ');
     check('saved with every detail (contact phone, notes, DPD price, company, delivery and billing addresses) and linked to the account for its email', row.includes(`07700 900123 Side gate 1295 81195 Ada Test Test Ltd 1 High Street Flat 2 Wimborne Dorset BH21 1AA 07700 900123 Ada Billing BH15 1AA ${EMAIL}`), row);
@@ -131,7 +131,7 @@ try {
     // A gift: the same details as any order; DPD's delivery phone is the customer's mobile.
     await add();
     await go(BASE_URL + '/basket');
-    const arrive = await ev(`document.querySelector('main aside input[type=date]').min`);
+    const arrive = await ev(`document.querySelector('[data-gift-route-earliest-value]').dataset.giftRouteEarliestValue`);
     await ev(`[...document.querySelectorAll('main aside label')].find(l => /This is a gift/.test(l.textContent)).click()`);
     await ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
     // Gift options (9 October 2026): where to send it is required.

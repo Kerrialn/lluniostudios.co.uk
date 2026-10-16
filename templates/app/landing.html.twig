@@ -63,7 +63,7 @@
 {% block body %}
     <section class="ll-home-hero {{ portraitPhotos ? 'has-portrait-photos' : '' }} relative bg-[#fca941] min-[760px]:bg-[#945401]" {{ stimulus_controller('bulb-dimmer') }}>
         <div class="ll-home-stage relative overflow-hidden bg-[#040101] h-[max(520px,86vh)] min-[760px]:h-[max(600px,100vh)]">
-            {{ _self.photo_layer('dim', 'Lumen Forma, lit', portraitPhotos) }}
+            {{ _self.photo_layer('dim', 'A Lumen Forma lamp, lit', portraitPhotos) }}
             <div class="ll-home-lit absolute inset-0 opacity-0 pointer-events-none" data-bulb-dimmer-target="overlay" aria-hidden="true">
                 {{ _self.photo_layer('bright', '', portraitPhotos) }}
             </div>

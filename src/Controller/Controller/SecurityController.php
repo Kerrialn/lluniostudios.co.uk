@@ -55,7 +55,7 @@ class SecurityController extends AbstractController
             $email = strtolower(trim((string) $request->request->get('email', '')));
 
             if (! $this->isCsrfTokenValid('authenticate', (string) $request->request->get('_csrf_token', ''))) {
-                $this->addFlash('error', 'Invalid session. Please try again.');
+                $this->addFlash('error', 'Something went wrong. Please try again.');
             } elseif ($email === '') {
                 $this->addFlash('error', 'Please enter your email address.');
             } else {

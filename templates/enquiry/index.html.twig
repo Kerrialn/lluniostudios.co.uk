@@ -15,7 +15,6 @@
     All the wording here is DRAFT until the wording pass (11.5).
 #}
 {% block title %}Begin the Conversation | Llunio Studios{% endblock %}
-{% block description %}Begin the conversation about an Atelier, Estate or Monument lamp from Llunio Studios, made with you to suit your space.{% endblock %}
 {% form_theme form 'form_div_layout.html.twig' %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
@@ -60,14 +59,14 @@
 
             <div class="{{ section }}">Your space</div>
             <div class="flex flex-col gap-6">
-                {{ include('commissions/_field.html.twig', { child: form.description, label: 'Tell me about your space and what you have in mind *', kind: 'area', help: "Where the lamp will stand, roughly how high the ceiling is, and the colours or finishes you're drawn to." }) }}
+                {{ include('commissions/_field.html.twig', { child: form.description, label: 'Tell me about your space and what you have in mind *', kind: 'area', help: (item.quantity > 1 ? "Where the lamps will stand" : "Where the lamp will stand") ~ ", roughly how high the ceiling is, and the colours or finishes you're drawn to." }) }}
                 {{ include('commissions/_field.html.twig', { child: form.files, label: 'Photos of your space, inspiration or a mood board', hint: '(optional)', kind: 'files', drop: 'Choose photos or files — ' ~ uploadText }) }}
                 {{ include('commissions/_field.html.twig', { child: form.boardLink, label: 'Pinterest, Instagram or Houzz board', hint: '(optional)' }) }}
             </div>
 
             <div class="{{ section }}">Delivery</div>
             <div class="flex flex-col gap-6">
-                {{ include('commissions/_field.html.twig', { child: form.postcode, label: 'Postcode *', help: 'Where the lamp is going, so we can plan delivery.' }) }}
+                {{ include('commissions/_field.html.twig', { child: form.postcode, label: 'Postcode *', help: item.quantity > 1 ? 'Where the lamps are going, so we can plan delivery.' : 'Where the lamp is going, so we can plan delivery.' }) }}
             </div>
 
             {{ include('commissions/_honeypot.html.twig', { child: form.website }) }}

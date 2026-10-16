@@ -14,7 +14,7 @@
 {% block preheader %}I've received your balance for order {{ order.orderNumber }}.{% endblock %}
 
 {% block content %}
-<p style="{{ body }}">Thank you. I've received your balance of {{ m.money(balance) }}, and your Lumen Forma order {{ order.orderNumber }} is now paid in full.</p>
+<p style="{{ body }}">Thank you. I've received your balance of {{ m.money(balance) }}, and your Lumen Forma order {{ order.orderNumber }} is now paid in full. I'll email you when your {{ order.lampWords.several ? 'lamps are on their way' : 'lamp is on its way' }}.</p>
 {{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Order') }}
 <p style="{{ label }}">Order number</p>

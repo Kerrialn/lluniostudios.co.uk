@@ -44,7 +44,7 @@ check('it says no payment is taken', /No payment is taken today/.test(p.text));
 check('it carries the basket lamp and the lamp being configured, each in full', JSON.stringify(p.rows) === JSON.stringify(['Size=Gallery', 'The Pigment=White', 'Cable Colour=Slate Grey', 'Footing Material=Brushed Copper', 'Bulb Style=Crown Gold LED', 'Quantity=1', 'Size=Atelier', 'The Pigment=Custom', 'Cable Colour=Raw Jute', 'Footing Material=Polished Copper', 'Bulb Style / Count=Smoked Glass LED / Dual Array', 'Quantity=1']), JSON.stringify(p.rows));
 // The gift's fields (Step 11.1b) are checked by gift-options.mjs.
 const giftLabel = (l) => /^(Needed by|Recipient's|Gift message|This is a gift|Send to me|Send directly)/.test(l);
-check('the fields, the address in separate fields, with Custom Details for a Custom choice', JSON.stringify(p.labels.filter((l) => !giftLabel(l))) === JSON.stringify(['Full Name *', 'Email Address * (For sending the invoice and build schedule)', 'Phone Number * (Required by carriers for heavy-goods delivery scheduling)', 'Address line 1 *', 'Address line 2', 'Town/City *', 'County', 'Postcode *', 'Country *', "Site Access & Delivery Notes (e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", "Custom Details (Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)"]), JSON.stringify(p.labels));
+check('the fields, the address in separate fields, with Custom Details for a Custom choice', JSON.stringify(p.labels.filter((l) => !giftLabel(l))) === JSON.stringify(['Full Name *', 'Email * (for your quote and casting date)', 'Phone Number * (the carrier needs it to arrange delivery)', 'Address line 1 *', 'Address line 2', 'Town/City *', 'County', 'Postcode *', 'Country *', 'Access and delivery notes (stairs, narrow doorways or anything else the carrier should know)', "Custom Details (Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)"]), JSON.stringify(p.labels));
 // As the Card Payment page: 14px labels above 48px boxes with a border; typed
 // text, placeholders and the dropdown's choices in the page's light colour.
 const look = await ev(`(() => {
@@ -91,7 +91,7 @@ check('what was typed is kept', (await ev(`document.querySelector('[name="reserv
 // Send it
 await setField('email', 'ada.test@example.test'); await setField('postcode', 'bh21 1aa'); await setField('county', 'Dorset'); await setField('accessNotes', 'Two flights of stairs.'); await setField('customDetails', 'Warm grey, close to RAL 7044.');
 await submit(); p = await page();
-check('sending it shows "Reservation received": heading, the message, the confirmation line, no request number', p.path === '/reserve/received' && /^Reservation Received/i.test(p.text) && /Your design request has been received/.test(p.text) && /Confirmation has been sent to the email address provided\./.test(p.text) && !/LR-\d/.test(p.text), p.text.slice(0, 160));
+check('sending it shows "Reservation received": heading, the message, the confirmation line, no request number', p.path === '/reserve/received' && /^Reservation Received/i.test(p.text) && /I'll look over your design, work out delivery and email you a quote within 1–2 working days/.test(p.text) && /A confirmation email is on its way to you\./.test(p.text) && !/LR-\d/.test(p.text), p.text.slice(0, 160));
 const number = (sql(`select request_number from design_request where email = 'ada.test@example.test' order by created_at desc limit 1`).match(/LR-\d{6}-\d{4}/) || [])[0];
 check('one request saved', requests() === before + 1);
 const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'Europe/London' }).replace(/\//g, '');
@@ -117,7 +117,7 @@ check('notification sent to lluniostudios@gmail.com: "New request · Gallery × 
 if (toCustomer) {
     const m = await mailBody(toCustomer.ID);
     check('email 02: request number, both lamps in full, "No payment has been taken", Dorset Studio', m.HTML.includes(number) && /Atelier/.test(m.HTML) && /Smoked Glass LED \/ Dual Array/.test(m.HTML) && /Gallery/.test(m.HTML) && /Dorset Studio/.test(m.HTML) && !/Bournemouth/.test(m.HTML));
-    const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for your request. Your design is one of our larger sizes and includes a custom option, so I'll be in touch to develop it with you and to confirm lead time according to our casting schedule, including a bespoke delivery quote.");
+    const format = customerEmailProblems(m.HTML, 'Ada', "Thank you for your request. Your design is one of our larger sizes and includes a custom option, so I'll be in touch to develop it with you, confirm the lead time and send you a delivery quote.");
     check('email 02 follows the email rules: Montage C, no heading, "Dear Ada," then the opening for a larger size with a custom option, one text size', format.length === 0, format.join('; '));
     check('email 02: then "Your casting slot is now secured. No payment has been taken."', m.HTML.includes('Your casting slot is now secured. No payment has been taken.'));
     check('email 02: prices as in the design (from price for Atelier)', /Starting at £1,699/.test(m.HTML) && /£799/.test(m.HTML));

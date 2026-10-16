@@ -55,7 +55,7 @@ try {
     await type('postcode', 'BH21 1AA'); a = await aside();
     check('a mainland postcode: DPD price, total and Pay update', a.delivery === '£12.95' && a.total === '£811.95' && a.button === 'Pay £811.95', JSON.stringify(a));
     await type('postcode', 'BT1 1AA'); a = await aside();
-    check('Northern Ireland: "Quoted individually", "Reserve Your Design" with the note, no secure-payment line', a.delivery === 'Quoted individually' && a.button === 'Reserve Your Design' && a.note === 'This address is outside the UK mainland, delivery will be quoted for individually. Reserve now to secure your casting slot.' && !a.secure, JSON.stringify(a));
+    check('Northern Ireland: "Quoted individually", "Reserve Your Design" with the note, no secure-payment line', a.delivery === 'Quoted individually' && a.button === 'Reserve Your Design' && a.note === "This address is outside the UK mainland, so we'll quote delivery separately. Reserve now to hold your casting slot." && !a.secure, JSON.stringify(a));
     await type('postcode', 'IV1 1AA'); a = await aside();
     check('the Highlands (IV): Reserve Your Design', a.button === 'Reserve Your Design');
     await type('postcode', 'BH2'); a = await aside();
@@ -92,7 +92,7 @@ try {
 
     // A gift.
     await go(BASE_URL + '/basket');
-    const arrive = await ev(`document.querySelector('main aside input[type=date]').min`);
+    const arrive = await ev(`document.querySelector('[data-gift-route-earliest-value]').dataset.giftRouteEarliestValue`);
     await ev(`[...document.querySelectorAll('main aside label')].find(l => /This is a gift/.test(l.textContent)).click()`);
     await ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
     // Gift options (9 October 2026): where to send it is required.
@@ -101,11 +101,11 @@ try {
     const labels = await ev(`[...document.querySelectorAll('main form label > span:first-child')].filter(s => s.getBoundingClientRect().height > 0).map(s => s.textContent.trim())`);
     a = await aside();
     const nice = new Date(arrive + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-    check('a gift asks for the same details as any order (no recipient fields)', labels.includes('Full name *') && labels.includes('Your Mobile (for order and delivery updates) *') && !labels.some((l) => /recipient/i.test(l)), JSON.stringify(labels));
+    check('a gift asks for the same details as any order (no recipient fields)', labels.includes('Full Name *') && labels.includes('Your Mobile (for order and delivery updates) *') && !labels.some((l) => /recipient/i.test(l)), JSON.stringify(labels));
     check(`the summary shows "Gift · Arrive by ${nice}" and "Send to me"`, a.gift === `Arrive by ${nice}Send to me`, a.gift);
     sql(`update cart set gift_arrive_by = current_date where id = (select cart_id from cart_item order by created_at desc limit 1)`);
     await go(BASE_URL + '/checkout');
-    check('a gift date that has become too soon sends the customer back to the basket to change it', (await ev('location.pathname')) === '/basket' && /Please choose a date on or after the earliest delivery date\./.test(await ev('document.body.innerText')));
+    check('a gift date that is (or has become) sooner than the usual lead time sends the customer back to the basket, which offers Reserve Your Design', (await ev('location.pathname')) === '/basket' && (await ev(`document.querySelector('main aside button[type=submit]')?.textContent.trim()`)) === 'Reserve Your Design');
 
     // Feel and fit.
     sql(`update cart set gift = false, gift_arrive_by = null where id = (select cart_id from cart_item order by created_at desc limit 1)`);

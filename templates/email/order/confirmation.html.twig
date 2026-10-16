@@ -17,7 +17,13 @@
 {% block preheader %}Thank you{{ firstName ? ', ' ~ firstName : '' }}. Your Lumen Forma order {{ order.orderNumber }} is confirmed.{% endblock %}
 
 {% block content %}
-<p style="{{ body }}">Thank you for your order. {{ order.castByHandSentence }}</p>
+{% set lamps = order.lampWords %}
+{% if order.designRequest and order.amountOwed > 0 %}
+{# A quote paid by deposit (wording pass 11.5, 16 October 2026). #}
+<p style="{{ body }}">Thank you for your order, and for trusting me with {{ 'y' ~ lamps.phrase|slice(1) }}. {{ lamps.several ? "They'll" : "It'll" }} be cast by hand in our Dorset Studio, and I'll keep you updated as {{ lamps.several ? 'they take' : 'it takes' }} shape: when production begins, when the balance is due, and when {{ lamps.several ? "they're on their way" : "it's on its way" }} to you.</p>
+{% else %}
+<p style="{{ body }}">Thank you for your order. {{ lamps.phrase }} will be cast by hand in our Dorset Studio, and I'll email you when {{ lamps.several ? 'they go' : 'it goes' }} into production and when {{ lamps.several ? "they're on their way" : "it's on its way" }}.</p>
+{% endif %}
 {{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Order') }}
 <p style="{{ label }}">Order number</p>
@@ -37,7 +43,7 @@
     {% endif %}
 </table>
 <div style="height:16px;line-height:16px;font-size:1px;">&nbsp;</div>
-<p style="{{ fine }}">Photography is illustrative of the Lumen Forma series. Each lamp is cast to your configuration and is unique.</p>
+<p style="{{ fine }}">Photos show the Lumen Forma series. Each lamp is cast to your choices, so yours will be unique.</p>
 {{ layout.section('03', 'Delivery') }}
 {% if order.shippingAddress %}
     {% set a = order.shippingAddress %}

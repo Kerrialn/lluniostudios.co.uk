@@ -9,7 +9,7 @@ const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log
 const ev = b.ev;
 const LINE = 'You can upload reference photos when you reserve your design. Custom options are developed with you and quoted individually.';
 const CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
-const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
+const LIMIT = 'Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually.';
 await b.send('Network.enable'); await b.send('Network.clearBrowserCookies');
 await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800);
 await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1300);

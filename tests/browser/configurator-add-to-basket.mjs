@@ -5,7 +5,7 @@ let ok = true;
 const check = (label, pass, detail = '') => { if (!pass) ok = false; console.log(`${pass ? 'PASS' : 'FAIL'}  ${label}${detail ? '  (' + detail + ')' : ''}`); };
 const ev = b.ev;
 const CUSTOM = 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.';
-const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
+const LIMIT = 'Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually.';
 const note = () => ev(`document.querySelector('[data-configurator-target=routeNote]').textContent`);
 const fresh = async () => { await b.send('Network.enable'); await b.send('Network.clearBrowserCookies'); };
 const open_ = async () => { await b.clearStorage(); await b.send('Page.navigate', { url: BASE_URL + '/lighting-designs' }); await sleep(1800); await b.ev("document.querySelector('.ll-story-skip').click()"); await sleep(1300); };
@@ -38,7 +38,7 @@ check('The Scale: purchase route "Direct order and checkout."', r.note === 'Dire
 await fill(1);
 r = await route();
 check('review rows: size, price, quantity and each choice', JSON.stringify(r.rows) === JSON.stringify(['Size=Gallery', 'Price=£799', 'Quantity=1', 'The Pigment=White', 'Cable Colour=Slate Grey', 'Footing Material=Brushed Copper', 'Bulb Style=Crown Gold LED']), JSON.stringify(r.rows));
-check('button "Cast Your Lamp" with the direct line', r.cta === 'Cast Your Lamp' && r.sub.startsWith('Limited weekly batch capacity'));
+check('button "Cast Your Lamp" with the direct line', r.cta === 'Cast Your Lamp' && r.sub.startsWith('We cast in small weekly batches'));
 await ev(`[...document.querySelectorAll('[data-configurator-target=review] button')].find(b => b.textContent.startsWith('Cable Colour')).click()`); r = await route();
 check('a review row opens its stage (Cable Colour -> 03)', r.num === '03');
 await jump(5); await submit();
@@ -49,7 +49,7 @@ check('the nav basket count shows it', /Basket \(1\)/i.test(await ev(`document.q
 
 // 2. Basket now holds 1 lamp: 2 more goes to Reserve
 await open_(); await more(); r = await route();
-check('with 1 lamp already in the basket, 2 more: Reserve, limit note', r.note === 'Quantities of three or more proceed through the Reserve request process, not direct checkout.', r.note);
+check('with 1 lamp already in the basket, 2 more: Reserve, limit note', r.note === 'Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually.', r.note);
 await fill(1); r = await route();
 check('review button "Reserve Your Design", with no line under it (the purchase route note says it)', r.cta === 'Reserve Your Design' && r.sub === '' && (await ev(`document.querySelector('[data-configurator-target=ctaSub]').hidden`)) === true);
 await submit(); k = await basket();

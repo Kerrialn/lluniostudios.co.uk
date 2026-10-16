@@ -36,7 +36,7 @@ try {
         cue: getComputedStyle(document.querySelector('.ll-reveal-cue')).opacity, body: getComputedStyle(document.querySelector('.ll-reveal-body')).opacity,
         title: getComputedStyle(document.querySelector('h1').parentElement).color })`);
     check('eight hero photos; the first has loaded', hero.slides === 8 && hero.first, JSON.stringify(hero.slides));
-    check('the title\'s three lines are visible on load (no fade-in)', JSON.stringify(hero.lines.map(([t, o]) => [t, o])) === JSON.stringify([['Your bespoke design', '1'], ['in our signature brutalist style,', '1'], ['custom‑built for you.', '1']]), JSON.stringify(hero.lines));
+    check('the title\'s three lines are visible on load (no fade-in)', JSON.stringify(hero.lines.map(([t, o]) => [t, o])) === JSON.stringify([['Your design', '1'], ['in our signature brutalist style,', '1'], ['custom‑built for you.', '1']]), JSON.stringify(hero.lines));
     check('every title line fits on the screen', hero.lines.every(([, , right]) => right <= W), JSON.stringify(hero.lines.map((l) => l[2])));
     check('title in cream (all eight photos are dark)', hero.title === 'rgb(236, 227, 211)', hero.title);
     check('"Scroll to begin" shows and the forms are hidden until the first interaction', hero.cue === '1' && hero.body === '0', JSON.stringify([hero.cue, hero.body]));
@@ -51,15 +51,15 @@ try {
     await tab('home'); await sleep(800); s = await state();
     check('For Your Home shows the Home form', JSON.stringify(s.pressed) === '["home"]' && JSON.stringify(s.shown) === '["home"]', JSON.stringify(s));
     const homeLabels = await ev(`[...document.querySelectorAll('[data-client=home] form > div > div')].map(f => f.children[0].textContent.replace(/\\s+/g, ' ').trim())`);
-    check('Home fields in the prototype\'s order, required ones marked *', JSON.stringify(homeLabels) === JSON.stringify(['Name *', 'Email *', 'Phone (optional)*', 'Preferred contact method *', 'Tell me about your idea *', 'Share a photo of the space or anything that inspired you (optional)']), JSON.stringify(homeLabels));
-    check('button "Request Your Custom Design"', (await ev(`document.querySelector('[data-client=home] button[type=submit]').textContent.trim()`)) === 'Request Your Custom Design');
+    check('Home fields in the prototype\'s order, required ones marked *', JSON.stringify(homeLabels) === JSON.stringify(['Name *', 'Email *', 'Phone (optional)*', 'How would you like to talk? *', 'Tell me about your idea *', 'Share a photo of the space or anything that inspired you (optional)']), JSON.stringify(homeLabels));
+    check('button "Send Enquiry"', (await ev(`document.querySelector('[data-client=home] button[type=submit]').textContent.trim()`)) === 'Send Enquiry');
     await tab('project'); await sleep(800); s = await state();
     check('For Your Project shows the Project form instead', JSON.stringify(s.pressed) === '["project"]' && JSON.stringify(s.shown) === '["project"]', JSON.stringify(s));
     const projectLabels = await ev(`[...document.querySelectorAll('[data-client=project] form > div > div')].map(f => f.children[0].textContent.replace(/\\s+/g, ' ').trim())`);
-    check('Project fields in the prototype\'s order', JSON.stringify(projectLabels) === JSON.stringify(['Company *', 'Contact Name *', 'Email *', 'Phone (optional)', 'Project Type *', 'Project Location & Installation Schedule *', 'The Project (optional)', 'Integration Requirements', 'Documentation Upload']), JSON.stringify(projectLabels));
+    check('Project fields in the prototype\'s order', JSON.stringify(projectLabels) === JSON.stringify(['Company *', 'Contact Name *', 'Email *', 'Phone (optional)', 'Project Type *', 'Project Location & Installation Schedule *', 'The Project (optional)', 'Integration Requirements (optional)', 'Drawings and Files (optional)']), JSON.stringify(projectLabels));
     const types = await ev(`(() => { const s = document.querySelector('[data-client=project] select'); return [...s.options].map(o => o.text).concat('=' + s.selectedOptions[0].text); })()`);
     check('Project Type: the four types, starting on "Please choose"', JSON.stringify(types) === JSON.stringify(['Please choose', 'High-End Residential', 'Commercial', 'Hospitality', 'Retail', '=Please choose']), JSON.stringify(types));
-    check('button "Request Custom Collaboration"', (await ev(`document.querySelector('[data-client=project] button[type=submit]').textContent.trim()`)) === 'Request Custom Collaboration');
+    check('button "Send Enquiry"', (await ev(`document.querySelector('[data-client=project] button[type=submit]').textContent.trim()`)) === 'Send Enquiry');
 
     // Phone becomes required when Phone is chosen.
     await tab('home'); await sleep(700);
@@ -75,7 +75,7 @@ try {
     // Required fields: Home (nothing chosen).
     await ev(`document.querySelectorAll('input[name="commission_home[contactMethod]"]').forEach(i => { i.checked = false; })`);
     await submit('home'); s = await state();
-    check('Home sent empty: reopens on the Home form with a message for each required field', s.revealed && JSON.stringify(s.shown) === '["home"]' && JSON.stringify(s.errors) === JSON.stringify(['Please enter your name.', 'Please enter your email address.', "Please choose how you'd like me to contact you.", 'Please tell me about your idea.']), JSON.stringify(s));
+    check('Home sent empty: reopens on the Home form with a message for each required field', s.revealed && JSON.stringify(s.shown) === '["home"]' && JSON.stringify(s.errors) === JSON.stringify(['Please enter your name.', 'Please enter your email address.', "Please choose how you'd like to talk.", 'Please tell me about your idea.']), JSON.stringify(s));
     await ev(`(() => { const f = document.querySelector('[data-client=home] form'); f.querySelector('[name="commission_home[name]"]').value = 'Ada Test'; f.querySelector('[name="commission_home[email]"]').value = 'not-an-email'; f.querySelector('[value=phone]').click(); f.querySelector('textarea').value = 'A lamp for the hall.'; })()`);
     await submit('home'); s = await state();
     check('Phone chosen with no number: asks for it; a bad email is refused', JSON.stringify(s.errors) === JSON.stringify(['Please enter a valid email address.', 'Please enter your phone number so I can call you.']), JSON.stringify(s.errors));

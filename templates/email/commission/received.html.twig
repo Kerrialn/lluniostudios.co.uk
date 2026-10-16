@@ -9,14 +9,19 @@
 {% extends 'email/_customer.html.twig' %}
 {% import 'email/_customer.html.twig' as layout %}
 
-{% block title %}Your commission enquiry{% endblock %}
+{% block title %}Your commission enquiry{{ firstName ? ', ' ~ firstName : '' }}{% endblock %}
 {% block preheader %}Thank you for sharing your idea. I'll be in touch to talk it through.{% endblock %}
 
 {% block content %}
+{# The way of getting in touch matches what they chose (For Your Home: email or phone; For Your Project: email). #}
+{% if enquiry.client.value == 'project' %}
+<p style="{{ body }}">Thank you for telling me about your project. I'll be in touch by email to talk it through.</p>
+{% else %}
 <p style="{{ body }}">Thank you for telling me about your idea. I'll be in touch by {{ enquiry.contactMethod == 'phone' ? 'phone' : 'email' }} to talk it through together, whether it's fully formed or still taking shape.</p>
+{% endif %}
 {{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Enquiry') }}
-<p style="{{ label }}">Enquiry reference</p>
+<p style="{{ label }}">Enquiry number</p>
 <p style="{{ body }}">{{ enquiry.enquiryNumber }}</p>
 <p style="{{ label }}">Commission type</p>
 <p style="{{ body }}">{{ enquiry.client.label }}</p>

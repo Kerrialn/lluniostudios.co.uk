@@ -1,5 +1,7 @@
 // Step 11b, search and link-preview groundwork (13 October 2026). For every
-// public page: lang="en-GB", a unique title and description (DRAFT wording,
+// public page: lang="en-GB", a unique title, and on the indexable pages a
+// unique description (DRAFT wording; the hidden pages have none, removed
+// 16 October 2026,
 // "Llunio Studios" never shortened), Open Graph and Twitter previews with a
 // real photo that exists, one h1 and no skipped heading levels, descriptive
 // alt text on every image. The indexable pages (homepage, Lighting Designs,
@@ -31,6 +33,7 @@ try {
             description: meta('meta[name=description]'), robots: meta('meta[name=robots]'),
             canonical: document.querySelector('link[rel=canonical]')?.href ?? null,
             og: { title: meta('meta[property="og:title"]'), description: meta('meta[property="og:description"]'), image: meta('meta[property="og:image"]'), alt: meta('meta[property="og:image:alt"]'), url: meta('meta[property="og:url"]'), locale: meta('meta[property="og:locale"]') },
+            twitterDescription: meta('meta[name="twitter:description"]'),
             twitter: { card: meta('meta[name="twitter:card"]'), image: meta('meta[name="twitter:image"]'), title: meta('meta[name="twitter:title"]') },
             ld: [...document.querySelectorAll('script[type="application/ld+json"]')].map(s => { try { return JSON.parse(s.textContent); } catch { return 'invalid'; } }),
             headings, missingAlt: images.filter(i => !(i.getAttribute('alt') || '').trim()).map(i => i.getAttribute('src') || i.dataset.src || '?'),
@@ -39,8 +42,13 @@ try {
     const pages = {};
     const titles = new Map(); const descriptions = new Map();
     const shortened = (t) => /Llunio(?! Studios)/.test(t || '');
-    const common = async (label, p) => {
+    const common = async (label, p, indexable = true) => {
         check(`${label}: lang="en-GB"`, p.lang === 'en-GB', p.lang);
+        if (!indexable) {
+            check(`${label}: a title ("Llunio Studios" in full) and no description (meta, Open Graph or Twitter): hidden from search engines`, !!p.title && !shortened(p.title) && p.description === null && p.og.description === null && !p.twitterDescription, JSON.stringify([p.title, p.description, p.og.description]));
+            if (titles.has(p.title)) check(`${label}: its title is unique`, false, `same as ${titles.get(p.title)}`); else titles.set(p.title, label);
+            return;
+        }
         check(`${label}: a title and a description ("Llunio Studios" in full)`, !!p.title && !!p.description && p.description.length >= 40 && p.description.length <= 200 && !shortened(p.title) && !shortened(p.description), JSON.stringify([p.title, p.description]));
         check(`${label}: Open Graph and Twitter previews (title, description, photo with its description, en_GB, large card)`, p.og.title === p.title && p.og.description === p.description && !!p.og.image && !!p.og.alt && p.og.locale === 'en_GB' && p.twitter.card === 'summary_large_image' && p.twitter.image === p.og.image && p.twitter.title === p.title, JSON.stringify([p.og, p.twitter]));
         const image = p.og.image ? execSync(`curl -sk -o /dev/null -w "%{http_code} %{content_type}" "${p.og.image.replace(/^https?:\/\/[^/]+/, BASE_URL)}"`, { encoding: 'utf8' }) : '';
@@ -80,7 +88,7 @@ try {
     for (const [path, name] of Object.entries(hidden)) {
         await go(path);
         const p = await read();
-        await common(name, p);
+        await common(name, p, false);
         check(`${name}: "noindex, nofollow" (meta and header), no canonical, no structured data`, p.robots === 'noindex, nofollow' && /x-robots-tag: noindex, nofollow/i.test(curl(path)) && !p.canonical && p.ld.length === 0, JSON.stringify([p.robots, p.canonical]));
     }
     // Pages that need something first (a piece, a basket, a sent form): the header on any visit.

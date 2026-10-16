@@ -17,7 +17,6 @@
     aren't remembered if the visitor leaves the page).
 #}
 {% block title %}Reserve Your Design | Llunio Studios{% endblock %}
-{% block description %}Reserve your Lumen Forma design with Llunio Studios. No payment is taken: the studio reviews every request and sends a quote.{% endblock %}
 {% form_theme form 'form_div_layout.html.twig' %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
@@ -28,7 +27,7 @@
         {% set back %}<a href="{{ path('lighting_designs') }}" class="text-[13px] text-ll-mute transition-colors hover:text-ll-ink">← Lumen Forma</a>{% endset %}
         {{ include('partials/_page_heading.html.twig', { title: 'Reserve Your Design', aside: back, gap: 'clamp(28px,4vw,48px)' }) }}
         <div class="max-w-[640px] border-t border-ll-line pt-4">
-            <p class="m-0 text-[15px] leading-[1.5] text-ll-mute [text-wrap:pretty]">No payment is taken today. Reserving holds your place in our studio casting schedule while we calculate delivery options and confirm exact lead times.</p>
+            <p class="m-0 text-[15px] leading-[1.5] text-ll-mute [text-wrap:pretty]">No payment is taken today. Reserving holds your place in our casting schedule while we work out delivery and confirm the lead time.</p>
         </div>
 
         <div class="flex flex-wrap gap-[clamp(32px,5vw,72px)] items-start">
@@ -39,8 +38,8 @@
                 <div class="{{ section }}">Contact</div>
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.fullName, label: 'Full Name *', wide: true }) }}
-                    {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email Address *', hint: '(For sending the invoice and build schedule)', wide: true }) }}
-                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Phone Number *', hint: '(Required by carriers for heavy-goods delivery scheduling)', wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *', hint: '(for your quote and casting date)', wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Phone Number *', hint: '(the carrier needs it to arrange delivery)', wide: true }) }}
                 </div>
 
                 <div class="{{ section }}">Gift</div>
@@ -63,7 +62,7 @@
                     </div>
                 </div>
 
-                <div class="{{ section }}">Delivery address <span class="normal-case tracking-normal text-[13px]">(Required to calculate exact delivery costs)</span><span class="hidden normal-case tracking-normal text-[13px]" data-direct-only>&nbsp;· the recipient's address: sent directly, with no prices in the box</span></div>
+                <div class="{{ section }}">Delivery address <span class="normal-case tracking-normal text-[13px]">(Required so we can quote for delivery)</span><span class="hidden normal-case tracking-normal text-[13px]" data-direct-only>&nbsp;· the recipient's address: sent directly, with no prices in the box</span></div>
                 <div class="{{ grid }}">
                     {{ include('checkout/_field.html.twig', { child: form.addressLine1, label: 'Address line 1 *', wide: true }) }}
                     {{ include('checkout/_field.html.twig', { child: form.addressLine2, label: 'Address line 2', wide: true }) }}
@@ -73,7 +72,7 @@
                     {{ include('checkout/_field.html.twig', { child: form.country, label: 'Country *' }) }}
                 </div>
                 <div class="{{ grid }}">
-                    {{ include('checkout/_field.html.twig', { child: form.accessNotes, label: 'Site Access & Delivery Notes', hint: "(e.g. 'Are there stairs, narrow access, or delivery constraints for heavy items?')", area: true, wide: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.accessNotes, label: 'Access and delivery notes', hint: '(stairs, narrow doorways or anything else the carrier should know)', area: true, wide: true }) }}
                     {% if form.customDetails is defined %}
                         {{ include('checkout/_field.html.twig', { child: form.customDetails, label: 'Custom Details', hint: "(Describe what you'd like for each custom option, e.g. target tone or Pantone/RAL code, cable textile or length, footing finish, bulb specification)", area: true, wide: true, attr: { 'data-remember-form-carried': carriedDetails } }) }}
                     {% endif %}

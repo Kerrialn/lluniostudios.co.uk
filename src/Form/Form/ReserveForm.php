@@ -30,8 +30,8 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
  * 8 October 2026) that must match the postcode.
  *
  * Gift options (9 October 2026): "This is a gift" with a "Needed by" date (a
- * preferred date, not a guarantee; no earlier than GiftDate::earliest(), as
- * at checkout) and "Send to me" or "Send directly to the recipient"; sent
+ * preferred date, not a guarantee; any date from tomorrow, as in the basket
+ * since 16 October 2026) and "Send to me" or "Send directly to the recipient"; sent
  * directly, the recipient's name (the address is theirs), an optional gift
  * message (a card in the box) and the recipient's mobile.
  *

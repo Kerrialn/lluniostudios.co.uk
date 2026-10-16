@@ -2,10 +2,11 @@
     Email 04, "Your Lumen Forma is being cast" (Site v4 design, Llunio Email
     Templates/04-in-production.html), sent when the studio marks the order
     In Production (Step 11.2): "Dear {first name}," (the buyer's), "Your
-    Lumen Forma {sizes} lamp is now in production. Expected dispatch date
-    is: {e.g. Friday 23 October 2026}." and the thanks (wording decided
-    9 October 2026, replacing the design's sentence; "I" and "lamp" by the
-    voice rules, 15 October 2026), the signature, 01 Progress (the order number and the expected
+    Lumen Forma {sizes} lamp is now in production. I expect to dispatch it
+    on {e.g. Friday 23 October 2026}." and the thanks (wording decided
+    9 October 2026, replacing the design's sentence; reworded in the wording
+    pass 11.5, 16 October 2026; "lamps … they" for several), the signature,
+    01 Progress (the order number and the expected
     dispatch date given in admin), "View your order". "Dorset Studio" for
     "Bournemouth". Laid out by email/_customer.html.twig (the email rules).
 #}
@@ -13,11 +14,12 @@
 {% import 'email/_customer.html.twig' as layout %}
 
 {% block title %}Your Lumen Forma is being cast{% endblock %}
-{% block preheader %}Order {{ order.orderNumber }}: your lamp is now in production in our Dorset Studio.{% endblock %}
+{% block preheader %}Order {{ order.orderNumber }}: your {{ order.lampWords.several ? 'lamps are' : 'lamp is' }} now in production in our Dorset Studio.{% endblock %}
 
 {% block content %}
-<p style="{{ body }}">{{ order.inProductionSentence }} Expected dispatch date is: {{ order.expectedDispatch|date('l j F Y') }}.</p>
-<p style="{{ body }}">Thank you for supporting my small studio. Every piece is made with care, and I can't wait for you to see yours.</p>
+{% set lamps = order.lampWords %}
+<p style="{{ body }}">{{ lamps.phrase }} {{ lamps.several ? 'are' : 'is' }} now in production. I expect to dispatch {{ lamps.several ? 'them' : 'it' }} on {{ order.expectedDispatch|date('l j F Y') }}.</p>
+<p style="{{ body }}">Thank you for supporting my small studio. Every lamp is made with care, and I can't wait for you to see yours in {{ lamps.several ? 'their' : 'its' }} new home.</p>
 {# Signed as the enquiry email (14 October 2026): after the opening, before the details. #}
 {{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Progress') }}

@@ -119,7 +119,7 @@ try {
     // Before the balance is requested: nothing to pay on the quote page.
     await go(c, link, 3000);
     let page = await c.ev(`({ form: !!document.querySelector('main form'), paid: document.querySelector('[data-quote-paid]')?.innerText })`);
-    check('before the balance is requested, the quote page shows "£2,346 to pay later" and no form', !page.form && /with £2,346 to pay later/.test(page.paid ?? ''), JSON.stringify(page));
+    check('before the balance is requested, the quote page says "I\'ll email you when the balance of £2,346 is due" and has no form', !page.form && /I'll email you when the balance of £2,346 is due\./.test(page.paid ?? ''), JSON.stringify(page));
 
     // Admin: the request's quote shows the order; the quote can no longer be sent.
     await go(b, quoteUrl, 3500);
@@ -154,12 +154,12 @@ try {
     let balanceMail = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma balance"`)).filter((m) => new Date(m.Created) > since)[0];
     let balanceHtml = balanceMail ? (await message(balanceMail.ID)).HTML : '';
     const balanceText = flat(balanceHtml);
-    check('the email "Your Lumen Forma balance, Ada": "Dear Ada,", the total, paid, the balance, "Pay balance · £2,346"', balanceMail?.Subject === 'Your Lumen Forma balance, Ada' && /Dear Ada,/.test(balanceText) && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\./.test(balanceText) && /Order total £3,910/.test(balanceText) && /Paid \d+ \w+ 20\d\d £1,564/.test(balanceText) && /Balance to pay £2,346/.test(balanceText) && /Pay balance · £2,346/.test(balanceText), balanceText.slice(0, 600));
+    check('the email "Your Lumen Forma balance, Ada": "Dear Ada,", the total, paid, the balance, "Pay balance · £2,346"', balanceMail?.Subject === 'Your Lumen Forma balance, Ada' && /Dear Ada,/.test(balanceText) && /The balance of £2,346 for your Lumen Forma order LS-\d{6}-\d{4} is now ready to pay\. You can pay it securely with the button below\./.test(balanceText) && /01 Balance (?:&nbsp; )?Order number LS-\d{6}-\d{4} Order total/.test(balanceText) && /02 Your order (?:&nbsp; )?Lumen Forma Atelier × 2/.test(balanceText) && /View your order/.test(balanceText) && /Order total £3,910/.test(balanceText) && /Paid \d+ \w+ 20\d\d £1,564/.test(balanceText) && /Balance to pay £2,346/.test(balanceText) && /Pay balance · £2,346/.test(balanceText), balanceText.slice(0, 600));
     // The note: after the opening, before 01, in the quote email's note style, its line break kept.
     const quoteNote = (await message(quoteMail.ID)).HTML.match(/<p style="([^"]+)" data-email-note>Thank you for your patience with the custom pigment\.<\/p>/)?.[1];
     const balanceNote = balanceHtml.match(/<p style="([^"]+)" data-email-note data-balance-note>Casting is going well\.<br \/>\s*We will be in touch before dispatch\.<\/p>/)?.[1];
-    check('the personal note is in the email under the opening, in the same style as the quote email\'s note', !!quoteNote && balanceNote === quoteNote && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\. Casting is going well\. We will be in touch before dispatch\. .*01 Balance/.test(balanceText), JSON.stringify({ quoteNote, balanceNote }));
-    const balanceFormat = customerEmailProblems(balanceHtml, 'Ada', `Here is the balance for your Lumen Forma order ${orderNumber}.`);
+    check('the personal note is in the email under the opening, in the same style as the quote email\'s note', !!quoteNote && balanceNote === quoteNote && /The balance of £2,346 for your Lumen Forma order LS-\d{6}-\d{4} is now ready to pay\. You can pay it securely with the button below\. Casting is going well\. We will be in touch before dispatch\. .*01 Balance/.test(balanceText), JSON.stringify({ quoteNote, balanceNote }));
+    const balanceFormat = customerEmailProblems(balanceHtml, 'Ada', `The balance of £2,346 for your Lumen Forma order ${orderNumber} is now ready to pay. You can pay it securely with the button below.`);
     check('the balance email follows the email rules: Montage C, no heading, "Dear Ada," then the opening, one text size', balanceFormat.length === 0, balanceFormat.join('; '));
     const balanceLink = balanceHtml.match(/<a href="([^"]+\/quote\/[A-Za-z0-9_-]+)"/)?.[1].replace(/^https?:\/\/[^/]+/, BASE_URL);
     check('"Pay balance" goes to the quote page', balanceLink === link, balanceLink);
@@ -174,7 +174,7 @@ try {
     await sleep(800);
     balanceMail = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma balance"`)).filter((m) => new Date(m.Created) > since)[0];
     balanceHtml = balanceMail ? (await message(balanceMail.ID)).HTML : '';
-    check('with no note, nothing extra: "Here is the balance…" is followed by the signature (every balance request is signed, 15 October 2026), then 01 Balance', !!balanceMail && !/data-balance-note/.test(balanceHtml) && /Here is the balance for your Lumen Forma order LS-\d{6}-\d{4}\. All the best, Theo @LlunioStuidos 01 Balance/.test(flat(balanceHtml).replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), flat(balanceHtml).slice(500, 800));
+    check('with no note, nothing extra: the opening is followed by the signature (every balance request is signed, 15 October 2026), then 01 Balance', !!balanceMail && !/data-balance-note/.test(balanceHtml) && /The balance of £2,346 for your Lumen Forma order LS-\d{6}-\d{4} is now ready to pay\. You can pay it securely with the button below\. All the best, Theo @LlunioStuidos 01 Balance/.test(flat(balanceHtml).replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), flat(balanceHtml).slice(500, 800));
     // A note longer than the limit is refused and nothing is sent.
     await go(b, new URL(action, BASE_URL).href, 3000);
     since = new Date();
@@ -223,7 +223,7 @@ try {
     const receipt = (await mailpit(`to:${EMAIL} subject:"Your Lumen Forma order is paid in full"`)).filter((m) => new Date(m.Created) > paidSince)[0];
     const receiptHtml = receipt ? (await message(receipt.ID)).HTML : '';
     const receiptText = flat(receiptHtml);
-    const receiptFormat = customerEmailProblems(receiptHtml, 'Ada', `Thank you. I've received your balance of £2,346, and your Lumen Forma order ${orderNumber} is now paid in full.`);
+    const receiptFormat = customerEmailProblems(receiptHtml, 'Ada', `Thank you. I've received your balance of £2,346, and your Lumen Forma order ${orderNumber} is now paid in full. I'll email you when your lamps are on their way.`);
     check('the receipt follows the email template and rules: Montage C, no heading, "Dear Ada," then the opening, 01 Order (the order number), 02 Payments, one text size', receiptFormat.length === 0 && new RegExp(`01 Order Order number ${orderNumber} .*02 Payments Deposit`).test(receiptText.replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ')), receiptFormat.join('; '));
     let balanceStudio = null;
     for (const m of await mailpit('to:lluniostudios@gmail.com subject:"Balance paid"')) if (!balanceStudio && new Date(m.Created) > paidSince && (await message(m.ID)).HTML.includes(orderNumber)) balanceStudio = m;

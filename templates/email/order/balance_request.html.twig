@@ -2,8 +2,11 @@
     Requesting the balance (Step 10b.4), in the style of the quote email:
     "Dear {first name},", the opening, the studio's personal note (if any,
     its own paragraph, as the quote email's note), the signature (every
-    balance request, by the voice rules, 15 October 2026), the order total, what was
-    paid and the balance, and "Pay balance" (the quote page). Sent from admin
+    balance request, by the voice rules, 15 October 2026), "01 Balance" (the
+    order number, the order total, what was paid and the balance), "Pay
+    balance" (the quote page) straight under it, "02 Your order" (the lamps,
+    size and quantity) and "View your order" (layout and wording from the
+    wording pass 11.5, 16 October 2026). Sent from admin
     ("Request balance"). Laid out by email/_customer.html.twig (the email
     rules of Step 11.0).
 #}
@@ -13,21 +16,30 @@
 {% import _self as m %}
 
 {% block title %}Your Lumen Forma balance, {{ firstName ?? order.designRequest.fullName }}{% endblock %}
-{% block preheader %}The balance for your Lumen Forma order {{ order.orderNumber }}: {{ m.money(order.amountOwed) }}.{% endblock %}
+{% block preheader %}The balance of {{ m.money(order.amountOwed) }} for your Lumen Forma order {{ order.orderNumber }} is ready to pay.{% endblock %}
 
 {% block content %}
 {# Only the order number shown (14 October 2026). #}
-<p style="{{ body }}" data-email-opening>Here is the balance for your Lumen Forma order {{ order.orderNumber }}.</p>
+<p style="{{ body }}" data-email-opening>The balance of {{ m.money(order.amountOwed) }} for your Lumen Forma order {{ order.orderNumber }} is now ready to pay. You can pay it securely with the button below.</p>
 {% if note %}<p style="{{ body }}" data-email-note data-balance-note>{{ note|nl2br }}</p>{% endif %}
 {{ include('email/_signature.html.twig') }}
 {{ layout.section('01', 'Balance') }}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td width="60%" style="{{ keyStyle }}">Order number</td><td style="{{ valueStyle }}">{{ order.orderNumber }}</td></tr>
     <tr><td width="60%" style="{{ keyStyle }}">Order total</td><td style="{{ valueStyle }}">{{ m.money(order.total) }}</td></tr>
     <tr><td width="60%" style="{{ keyStyle }}">Paid {{ order.paidAt|date('j F Y', 'Europe/London') }}</td><td style="{{ valueStyle }}">{{ m.money(order.amountPaid) }}</td></tr>
     <tr><td width="60%" style="{{ strongKey }}">Balance to pay</td><td style="{{ strongValue }}">{{ m.money(order.amountOwed) }}</td></tr>
 </table>
 <div style="height:32px;line-height:32px;font-size:1px;">&nbsp;</div>
 {{ layout.button(url('quote_show', { token: token }), 'Pay balance · ' ~ m.money(order.amountOwed)) }}
+{{ layout.section('02', 'Your order') }}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-balance-lamps>
+    {% for item in order.items|filter(i => not i.extra) %}
+        <tr><td style="{{ keyStyle }}">Lumen Forma {{ item.sizeName }}{% if item.quantity > 1 %} × {{ item.quantity }}{% endif %}</td></tr>
+    {% endfor %}
+</table>
+<div style="height:32px;line-height:32px;font-size:1px;">&nbsp;</div>
+{{ layout.button(url('order_view', { token: order.viewToken }), 'View your order') }}
 <div style="height:24px;line-height:24px;font-size:1px;">&nbsp;</div>
 <p style="{{ body }}">Reply to this email with any questions.</p>
 {% endblock %}

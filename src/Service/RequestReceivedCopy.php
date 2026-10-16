@@ -17,17 +17,17 @@ final class RequestReceivedCopy
 {
     public const CUSTOM = "Your design includes a custom option, so I'll be in touch to develop it with you and confirm the details before anything is cast.";
 
-    public const MORE_THAN_TWO = "Your order contains more than two lamps, so I'll be in touch to confirm lead time according to our casting schedule.";
+    public const MORE_THAN_TWO = "Your order is for more than two lamps, so I'll be in touch to confirm the lead time with you.";
 
-    public const LARGER_SIZE = "Your design is one of our larger sizes, so I'll be in touch to confirm lead time according to our casting schedule, including a bespoke delivery quote.";
+    public const LARGER_SIZE = "Your design is one of our larger sizes, so I'll be in touch to confirm the lead time and send you a delivery quote.";
 
     public const CUSTOM_AND_MORE_THAN_TWO = "Your order is for more than two lamps and includes a custom option, so I'll be in touch to develop them with you and confirm the details before anything is cast.";
 
-    public const CUSTOM_AND_LARGER_SIZE = "Your design is one of our larger sizes and includes a custom option, so I'll be in touch to develop it with you and to confirm lead time according to our casting schedule, including a bespoke delivery quote.";
+    public const CUSTOM_AND_LARGER_SIZE = "Your design is one of our larger sizes and includes a custom option, so I'll be in touch to develop it with you, confirm the lead time and send you a delivery quote.";
 
-    public const MORE_THAN_TWO_AND_LARGER_SIZE = "Your order is for more than two lamps and includes one of our larger sizes, so I'll be in touch to confirm lead time according to our casting schedule, including a bespoke delivery quote.";
+    public const MORE_THAN_TWO_AND_LARGER_SIZE = "Your order is for more than two lamps and includes one of our larger sizes, so I'll be in touch to confirm the lead time and send you a delivery quote.";
 
-    public const ALL_THREE = "Your order is for more than two lamps, includes one of our larger sizes and has a custom option, so I'll be in touch to develop them and confirm lead time according to our casting schedule, including a bespoke delivery quote.";
+    public const ALL_THREE = "Your order is for more than two lamps, includes one of our larger sizes and has a custom option, so I'll be in touch to develop them with you, confirm the lead time and send you a delivery quote.";
 
     /**
      * None of the reasons (only possible by opening the Reserve page directly).

@@ -37,6 +37,8 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, bra
 - **British English** everywhere, including flash messages and emails (Basket, colour, aluminium, enquiry, Postcode, "7 October 2026", £).
 - **"Dorset Studio"**, never "Bournemouth studio" (the design's text says Bournemouth). The studio's location, where a town is named, is "Bournemouth, Dorset" (decided 14 October 2026).
 - **No postal address is ever published** (decided 14 October 2026): the workshop's address must never appear on the site, in an email, in the structured data, or in this repository (it is public); valuables are stored there.
+- **Lead time: 1–3 weeks** for direct orders (decided 16 October 2026, was 7–14 days): `LeadTime` (`lead_time.label` in Twig), everywhere on the site and in every email, the Terms & Conditions (section 6: "Direct orders are dispatched within 1–3 weeks, depending on the casting schedule; quoted orders follow the estimated casting date in your quote."), the configurator's "Direct Order | 1–3 Week Dispatch", and the expected dispatch date suggested in admin (3 weeks from payment).
+- **Gift dates (decided 16 October 2026):** any date from tomorrow can be chosen (basket and Reserve Your Design). A date sooner than the usual lead time plus delivery (3 weeks, then 2 working days: `GiftDate::earliest()`) sends the order to Reserve Your Design instead of checkout, as Custom choices and addresses outside the UK mainland do: the basket's button becomes "Reserve Your Design" with the note under it, "This date is sooner than our usual 1–3 week lead time. Reserve your design and we'll let you know if we can make it." (`BasketRules::GIFT_DATE_NOTE`), and the gift (date and where to send it) is carried into the request. A date before tomorrow: "Please choose a date from tomorrow onwards."
 - **No size abbreviations** (XS, S, M, L, XL) anywhere: sizes are Studio, Gallery, Atelier, Estate, Monument.
 - Migrations are **hand-written** (only the step's own changes; `doctrine:migrations:diff` picks up unrelated drift) and tested up, down and up again.
 - Anything touching payments or the database gets a note on how to undo it.
@@ -49,6 +51,8 @@ Last updated: 13 October 2026 (Step 7b done; Step 7c: 7c.1–7c.3 committed, bra
   - British English. Always "Llunio Studios" in full. Always "lamp" (or "lamps") after a size name ("your Gallery lamp").
   - Greet customers by first name only ("Dear Ada,").
   - Every customer email that's personal or part of an order's journey is signed "All the best," / blank line / "Theo" / "@LlunioStuidos" (`EmailService::ENQUIRY_SIGNATURE`).
+  - **"lamp" and "lamps" (decided 16 October 2026):** "lamp" for one lamp and "lamps" only when more than one was ordered, across every email and page, with the rest of each sentence matching (it/they, is/are, its/their). The order emails take their words from `Order::getLampWords()`.
+  - **The way of getting in touch (decided 16 October 2026):** wherever wording says how the customer will be contacted, it matches the method they chose (email, phone or video call); For Your Project enquiries are answered by email.
   - **The signature's spelling, "@LlunioStuidos", is settled and correct.** Never flag or question it, in any file, check or message.
 - **Every reply ends with a short handover summary** (decided 10 October 2026), so the session can be cleared at any point and a fresh one can carry on: what was done (with commit numbers), what's uncommitted, anything waiting for your decision or checks, and the exact next step. **This plan is kept up to date after every change.**
 
@@ -827,7 +831,7 @@ Restyle email 01; new order stages In production / Dispatched / Delivered with a
 - **11.5 Wording pass (in progress; nothing on the site reworded yet).** Covers every email and page wording, including Step 7c's and Step 11b's DRAFT wording. The review files are in `var/email-review/` (not in git; open each with `open var/email-review/<file>`; each works on its own):
   - **`emails.html`** (rebuilt 14 October 2026): all 23 automated emails, customer and studio, with made-up sample details (Ada Lovelace; Grace Hopper as a gift's recipient), numbered, with who each goes to and its subject, the flagged ones marked. Rebuild: `docker compose exec -T php php var/email-review/build.php` (renders the site's own templates without the database; sends nothing).
   - **`pages.html`** (made 14 October 2026): every customer-facing wording on the site, 1,255 numbered items grouped by where they appear (the live pages, the pages reached after sending or paying, the messages kept in the code, the plan's notes). Rebuild: `render-pages.php` and `scan-sources.php > sources.json` (both in the PHP container), then `node var/email-review/build-pages.mjs` (the numbers change on a rebuild).
-  - **`wording-proposals.html`** (step 1, 15 October 2026): proposed rewording by the voice rules (see the standing rules), only the items that would change, current and suggested side by side with a reason, keyed to the numbers in the two files above. Made by `node var/email-review/build-proposals.mjs` from `proposals.mjs`. **Waiting for you:** mark up which to take; then the changes, their checks, and a commit when you say.
+  - **`wording-proposals.html`** (step 1, 15 October 2026): proposed rewording by the voice rules (see the standing rules), only the items that would change, current and suggested side by side with a reason. Since 16 October 2026 each row is numbered (Row 1, 2, …) and says in plain English when the customer sees the wording (no addresses, file names or code), with the same wording in several situations combined into one row listing them. Made by `node var/email-review/build-proposals.mjs` from `proposals.mjs`. **Waiting for you:** mark up which to take; then the changes, their checks, and a commit when you say.
   - **Applied by the recorded rules (15 October 2026, not put to you again):**
     - **First name only** in the subjects: "We have your request, Ada", "Your Lumen Forma quote, Ada", "Your Lumen Forma balance, Ada" (and the emails' titles).
     - **Signed** (the voice rules): the order confirmation (01), the request email (02), every quote (email and page, not only an enquiry's), every balance request, the receipt and the commission email (03), as emails 04–06 and the enquiry email already were.
@@ -837,6 +841,8 @@ Restyle email 01; new order stages In production / Dispatched / Delivered with a
     - **Plain corrections:** "hand cast" without the hyphen in the basket and order pages' notes; the Custom boxes' note split into two sentences ("… reserve your design. Custom options …"); "… and delivery is quoted individually."; "Don't worry if it's not fully formed; we'll talk it through together."; no comma before "to talk about your … lamp" on Enquiry Received.
     - Checks updated to match; the unit tests, PHPStan, code style, Twig lint, the build and the related browser checks run.
   - **Left for you** (`wording-proposals.html`, rebuilt 15 October 2026): only the genuinely new wording choices.
+  - **Your choices (16 October 2026), applied:** every suggestion accepted except: your own wording for the confirmation page ("Your order has its slot in our casting schedule.", "We'll email you when it goes into production, and when it's on its way.", "We'll let you know by email when the balance is due.", "A confirmation email is on its way to you." on every thank-you page), email 04 ("… is now in production. I expect to dispatch it on {date}.", "… I can't wait for you to see yours in its new home."), email 01 (basket: "… and I'll email you when it goes into production and when it's on its way."; a quote paid by deposit: "Thank you for your order, and for trusting me with your Lumen Forma Atelier lamp. It'll be cast by hand in our Dorset Studio, and I'll keep you updated as it takes shape: when production begins, when the balance is due, and when it's on its way to you."), the Commissions intro ("Your design / in our signature brutalist style, / custom-built for you."), the larger sizes' note ("Hand cast to order. Each larger piece is shaped in conversation with me."), the project upload box ("CAD files or mood boards — …"), the basket note ("… We dispatch within 1–3 weeks, depending on the casting schedule."), an order's page ("… We dispatch within 1–3 weeks, sent by DPD."), Reserve's phone ("Phone Number * (the carrier needs it to arrange delivery)") and delivery note ("(Required so we can quote for delivery)"), Commissions' home thank-you ("Thank you. Your vision is in my hands, I'll look through what you've sent and be in touch within two working days to start shaping your design."), and the checkout limit (both places: "Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually."). Kept as they were: the homepage heading and "Commission Your vision", the configurator's description, and "Full Name *" (now also on Card Payment and the quote page). The wider pair of story buttons kept. The new page's wording approved. **Rows 15 and 56 (the request email's subject; the "couldn't start the payment" message) wait for your decision.**
+  - **Search descriptions removed from the hidden pages** (16 October 2026; see Step 11b).
   - **A "Page Not Found" (404) page** was built with step 1 (`templates/bundles/TwigBundle/Exception/error404.html.twig`; preview locally at https://localhost/_error/404, as the local site runs in debug mode; check `tests/browser/not-found.mjs`, added to `run-all.mjs`). Its wording is DRAFT, in the proposals file.
 
 ### Configurator: Custom descriptions and Reference photos (done, committed 10 October 2026)
@@ -930,6 +936,7 @@ Added 9 October 2026. On 13 October 2026 you asked for the technical groundwork 
   - Symfony's own blanket "noindex" in debug mode is switched off (`disallow_search_engine_index: false` in `config/packages/framework.php`), so the local site behaves as the live one and the page-by-page rule decides.
 - **`robots.txt`** (`SeoController`): **`Disallow: /admin` only** and `Sitemap:` with the site's own address. **Decided by you 13 October 2026** (replacing the provisional version, which also disallowed the basket, checkout, quotes, orders, the account, sign-in, the forms and the thank-you pages): every other private page relies on its "noindex", which search engines can see because they may fetch it.
 - **`sitemap.xml`**: the six indexable pages, with the site's own address (works on any domain).
+- **No search description on the hidden pages (decided 16 October 2026):** the pages kept out of search results (the confirmation and thank-you pages, the basket, Card Payment, the quote and order pages, Your Orders, sign-in, Reserve Your Design, Begin the Conversation and Page Not Found) have no meta, Open Graph or Twitter description, as it had no use there; they keep their browser-tab titles (and the preview photo). Only the seven indexable pages have a description.
 - **Every public page** has a unique title (the homepage's is new: "Llunio Studios | Sculptural lamps hand cast in liquid stone") and a description (DRAFT), and Open Graph and Twitter link previews (site name, en_GB, title, description, a large image card) with **a real photo** and its description (`og:image:width` / `height` from the file):
   - homepage and every other page: the homepage's bright photo (`images/home/hero-bright-2560.jpg`);
   - Lighting Designs: the story's lit lamp (`story-lit-2000.jpg`);
@@ -1191,6 +1198,46 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 Enter the DPD API credentials, confirm the character limits and pricing, check `DpdProvider` against the real API, switch `SHIPPING_MODE=live`.
 
 ---
+
+## Content I need to supply (gathered 16 October 2026)
+
+Everything the site is waiting for from you. Nothing here is built yet; each photo item says where it appears and how to add it once you have it. Real photos only: until a photo exists, the site shows "Image Coming Soon" (or a temporary image, where noted).
+
+**How every Lumen Forma photo is added (the size and option photos below):** from the original, converted to sRGB with all metadata (including GPS) removed, saved in `public/images/lumen-forma/` as `<name>-1000.webp`, `-2000.webp`, `-3000.webp` and `-4000.webp` (longest edge, as far as the original allows; WebP quality 95) plus `<name>-1000.jpg` and `-2000.jpg` (quality 95), then listed in `src/Catalogue/LumenFormaPhotos.php`: `BY_SIZE` for a size's photos, `BY_OPTION` for an option value's. Each photo has its own desktop crop, phone framing (upright and sideways) and title colour, checked against the page when it's added.
+
+### Photos
+
+1. **Studio, Atelier, Estate and Monument: a full set of photos for each size, like Gallery's** (Gallery has 17).
+   - *Where:* Lighting Designs, in the configurator: the photos behind the options when that size is chosen (and in the larger-piece step for Atelier, Estate and Monument); Reserve Your Design's photo when the request is for that size alone; the size's search-preview photo. Today each shows "Image Coming Soon".
+   - *How:* as above, under `BY_SIZE` (`lumen-forma-studio`, `lumen-forma-atelier`, `lumen-forma-estate`, `lumen-forma-monument`), in the order you want them (Gallery's run brightest to darkest).
+2. **Every configurable option: one photo per value.** None has a photo yet, so every one of these shows "Image Coming Soon":
+   - **The Pigment:** White, Grey, Black, Custom.
+   - **Cable Colour:** Black Braided Cotton, Slate Grey, Raw Jute, Orange, Forest Green, Natural Linen, Black & White, Custom Textile / Length. *(Real photos exist for Black & White and Orange in the design zip, held back until the edited versions arrive.)*
+   - **Footing Material:** Brushed Copper, Brushed Greened Copper, Polished Copper, Brushed Aluminium, Brushed Blackened Aluminium, Polished Aluminium, Brushed Stainless Steel, Polished Stainless Steel, Custom Metal Finish.
+   - **Bulb Style:** Soft-Filament Amber Globe, XXL Spiral Filament, Tubular Amber LED, Smoked Glass LED, Crown Gold LED, Clear Vintage Edison, Custom Specification.
+   - **Bulb Count** (Atelier, Estate and Monument only): Single Array, Dual Array, Triple Array.
+   - *Where:* Lighting Designs, in the configurator: on that option's step, the photo shown when the value is chosen.
+   - *How:* as above, under `BY_OPTION`, keyed by the option and value exactly as written here.
+3. **The finely edited replacements for the 17 Gallery photos** (`gallery-01` … `gallery-17`; the originals are listed in `CLAUDE.md` under "Pending content").
+   - *Where:* Lighting Designs: behind the title before the options open (cross-fading) and in the configurator when Gallery is chosen; Reserve Your Design's photo for a Gallery-only request; the search-preview photo.
+   - *How:* replace each file under the same name (all six versions), then recheck its crop, phone framing and title colour, as a new edit may frame the lamp differently.
+4. **The workshop: photos for The Workshop's hero slideshow** (six slots today).
+   - *Where:* The Workshop, the black-and-white photos cross-fading behind the title at the top. Today each slot shows "Workshop Image Coming Soon".
+   - *How:* save them in `public/images/workshop/` (metadata removed) and list them in `templates/app/workshop.html.twig` (`workshopPhotos`, e.g. `{ src: 'images/workshop/workshop-01.jpg' }`); the empty slots then go.
+5. **A new dim and lit pair for the Lighting Designs story**, shot from exactly the same position, with a dark background in the lit photo.
+   - *Where:* Lighting Designs, the seven-stage introduction: the lit photo fades in over the dim one as the visitor scrolls. Today it uses a temporary pair (APC_0263 and APC_0267).
+   - *How:* replace `public/images/lumen-forma/story-dim-*` and `story-lit-*` (the same versions and processing as above), keep the two exactly aligned, reset the framing in `assets/styles/app.css` (`.ll-story-frame`, the lamp left of centre), and revisit the text colour (amber now, as the background never gets light; decided 12 October 2026).
+6. **A portrait dim and lit pair for the homepage on phones.**
+   - *Where:* the homepage on upright phones (computers, tablets and sideways phones keep the landscape pair). Today phones use the landscape pair, which leaves a small heading on tall phones and a slight scroll on short ones.
+   - *How:* the steps in the "PENDING CONTENT" note in `templates/app/landing.html.twig`: add `hero-dim-portrait-1080.jpg`, `-2160.jpg`, `hero-bright-portrait-1080.jpg` and `-2160.jpg` to `public/images/home/` (rotated upright, metadata removed), set `portraitPhotos` to true, and fill in the photo's measurements in `assets/styles/app.css` ("Portrait photos for upright phones").
+
+### Other content
+
+7. **Care instructions for liquid stone**, for email 06 ("Your Lumen Forma has arrived"): its "Care" section is left out until they're written (question 18).
+8. **The Facebook page's link:** the footer's Facebook icon and the Contact page's "Facebook" link point to a placeholder (`FACEBOOK_URL` in `.env`) until the page exists; the structured data leaves Facebook out until then.
+9. **Packed box sizes and weights for all five sizes** (Studio, Gallery, Atelier, Estate, Monument): delivery prices are estimates until then (questions 25 and 26); for example an Estate counts as weightless and is priced as a DPD parcel.
+10. **Which options to remove when slimming down the Studio and Gallery configurator** (recorded as "later" in Step 7b).
+11. **The website host's name, for the Privacy Policy:** its table says "Our website host" until the host is chosen.
 
 ## Design rules that carry over
 

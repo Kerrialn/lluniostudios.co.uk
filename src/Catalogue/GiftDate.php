@@ -7,9 +7,11 @@ namespace App\Catalogue;
 use Carbon\CarbonImmutable;
 
 /**
- * The earliest "arrive by" date a gift order can ask for (decided 7 October
- * 2026): today (UK time) plus the longest lead time (14 calendar days, see
- * LeadTime), then 2 working days for DPD. Working days are Monday to Friday
+ * The usual earliest "arrive by" date for a gift (decided 7 October 2026;
+ * 3 weeks since 16 October 2026): today (UK time) plus the longest lead time
+ * (3 weeks, see LeadTime), then 2 working days for DPD. Any date from
+ * tomorrow can be chosen (16 October 2026); one sooner than this sends the
+ * order to Reserve Your Design instead of checkout (BasketRules). Working days are Monday to Friday
  * except England and Wales bank holidays (lamps are dispatched from Dorset).
  * One-off bank holidays (e.g. for a coronation) are not included.
  */
@@ -34,6 +36,23 @@ final class GiftDate
         }
 
         return $date;
+    }
+
+    /**
+     * The first date a gift can ask for: tomorrow (UK time).
+     */
+    public function tomorrow(?\DateTimeInterface $now = null): CarbonImmutable
+    {
+        return CarbonImmutable::instance($now ?? new \DateTimeImmutable())->setTimezone(self::TIMEZONE)->startOfDay()->addDay();
+    }
+
+    /**
+     * Whether a gift date is sooner than the usual earliest (the lead time,
+     * then DPD): such an order goes to Reserve Your Design, not checkout.
+     */
+    public function isSoonerThanUsual(?\DateTimeInterface $date, ?\DateTimeInterface $now = null): bool
+    {
+        return $date instanceof \DateTimeInterface && $date->format('Y-m-d') < $this->earliest($now)->format('Y-m-d');
     }
 
     public static function isWorkingDay(\DateTimeInterface $date): bool

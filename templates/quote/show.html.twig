@@ -17,7 +17,6 @@
 #}
 {% form_theme form 'form_div_layout.html.twig' %}
 {% block title %}Your Quote | Llunio Studios{% endblock %}
-{% block description %}Your quote from Llunio Studios for your Lumen Forma lamp.{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
@@ -39,7 +38,7 @@
             {% elseif paidOrder and balanceForm %}
                 <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you for your deposit of {{ m.money(paidOrder.amountPaid) }}, received on {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}. The balance of {{ m.money(paidOrder.amountOwed) }} for your order {{ paidOrder.orderNumber }} can be paid below.</p>
             {% elseif paidOrder %}
-                <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>Thank you. Your payment of {{ m.money(paidOrder.amountPaid) }} was received on {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}{{ paidOrder.amountOwed > 0 ? ', with ' ~ m.money(paidOrder.amountOwed) ~ ' to pay later' : '' }}. Your order is {{ paidOrder.orderNumber }}.</p>
+                <p class="m-0 text-[15px] leading-[1.5]" data-quote-paid>{% if paidOrder.amountOwed > 0 %}Thank you for your deposit of {{ m.money(paidOrder.amountPaid) }}, received on {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}. I'll email you when the balance of {{ m.money(paidOrder.amountOwed) }} is due. Your order number is {{ paidOrder.orderNumber }}.{% else %}Thank you. Your payment of {{ m.money(paidOrder.amountPaid) }} was received on {{ paidOrder.paidAt|date('j F Y', 'Europe/London') }}. Your order is {{ paidOrder.orderNumber }}.{% endif %}</p>
             {% elseif expired %}
                 <p class="m-0 text-[15px] leading-[1.5]" role="alert">This quote expired on {{ validUntil|date('j F Y', 'Europe/London') }}. Please <a href="{{ path('contact') }}" class="ll-link">contact me</a> or reply to the quote email, and I'll send you an updated quote.</p>
             {% else %}
@@ -129,7 +128,7 @@
 
                     <div class="{{ section }}">Delivery address{% if designRequest.directGift %} <span class="normal-case tracking-normal text-[13px]">(the recipient's: sent directly, with no prices in the box)</span>{% endif %}</div>
                     <div class="{{ grid }}">
-                        {{ include('checkout/_field.html.twig', { child: form.name, label: designRequest.directGift ? "Recipient's full name *" : 'Full name *', wide: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.name, label: designRequest.directGift ? "Recipient's full name *" : 'Full Name *', wide: true }) }}
                         {{ include('checkout/_field.html.twig', { child: form.company, label: 'Company name (optional)', wide: true }) }}
                         {{ include('checkout/_field.html.twig', { child: form.line1, label: 'Address line 1 *', wide: true }) }}
                         {{ include('checkout/_field.html.twig', { child: form.line2, label: 'Address line 2', wide: true }) }}
@@ -156,7 +155,7 @@
                             Same as delivery address
                         </label>
                         <div class="{{ grid }} group-has-[input[name$='[billingSame]']:checked]/bill:hidden">
-                            {{ include('checkout/_field.html.twig', { child: form.billingName, label: 'Full name *', wide: true }) }}
+                            {{ include('checkout/_field.html.twig', { child: form.billingName, label: 'Full Name *', wide: true }) }}
                             {{ include('checkout/_field.html.twig', { child: form.billingLine1, label: 'Address line 1 *', wide: true }) }}
                             {{ include('checkout/_field.html.twig', { child: form.billingLine2, label: 'Address line 2', wide: true }) }}
                             {{ include('checkout/_field.html.twig', { child: form.billingTown, label: 'Town/City *' }) }}
@@ -222,14 +221,14 @@
                     {% if balanceForm %}
                         <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" hidden></div>
                         <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">Pay balance {{ m.money(paidOrder.amountOwed) }}</button>
-                        <div class="text-xs text-ll-mute text-center leading-[1.5]">Payment is processed securely by our payment provider. Your card details are never stored by Llunio Studios.</div>
+                        <div class="text-xs text-ll-mute text-center leading-[1.5]">Your payment is handled securely by our payment provider. Llunio Studios never stores your card details.</div>
                         <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
                         {{ include('partials/_privacy_line.html.twig', { centre: true }) }}
                     {% endif %}
                 {% elseif payable %}
                     <div class="text-xs text-ll-ink" role="alert" data-checkout-target="message" hidden></div>
                     <button type="submit" class="ll-cta bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-checkout-target="button">Pay {{ m.money(quote.dueNow) }}</button>
-                    <div class="text-xs text-ll-mute text-center leading-[1.5]">Payment is processed securely by our payment provider. Your card details are never stored by Llunio Studios.</div>
+                    <div class="text-xs text-ll-mute text-center leading-[1.5]">Your payment is handled securely by our payment provider. Llunio Studios never stores your card details.</div>
                     <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>
                     {{ include('partials/_privacy_line.html.twig', { centre: true }) }}
                 {% endif %}

@@ -2,8 +2,8 @@
     Email 06, "Your Lumen Forma has arrived" (Site v4 design, Llunio Email
     Templates/06-delivered.html), sent when the studio marks the order
     Delivered (Step 11.4): "Dear {first name}," (the buyer's), "Your Lumen
-    Forma {sizes} lamp has been delivered. I hope it's found the perfect
-    place in your home.", the request for a photo (Facebook or Instagram,
+    Forma {sizes} lamp has been delivered. I hope it's found its place in
+    your home." ("lamps … they've found their place" for several), the request for a photo (Facebook or Instagram,
     @llunio_studios, or a reply) and "By sending me a photo, you're happy for
     me to share it." (wording decided 9 October 2026, replacing the design's
     sentence and its Share section; "I" by the voice rules, 15 October 2026), then "View your order". The design's
@@ -14,7 +14,7 @@
 {% import 'email/_customer.html.twig' as layout %}
 
 {% block title %}Your Lumen Forma has arrived{% endblock %}
-{% block preheader %}Your lamp has been delivered.{% endblock %}
+{% block preheader %}Your {{ order.lampWords.several ? 'lamps have' : 'lamp has' }} been delivered.{% endblock %}
 
 {% block content %}
 <p style="{{ body }}">{{ order.deliveredSentence }}</p>

@@ -157,7 +157,7 @@ try {
     const since = new Date();
     s = await pay();
     const done = await c.ev(`document.querySelector('main').innerText.replace(/\\s+/g, ' ')`);
-    check(`paid: "Order & Slot Confirmed", "Paid · £${(total / 2).toLocaleString('en-GB')}"`, /\/complete$/.test(s.path ?? '') && /Order & Slot Confirmed/i.test(done) && done.includes(`Paid · £${(total / 2).toLocaleString('en-GB')}`), done.slice(0, 300));
+    check(`paid: "Order Confirmed", "Paid · £${(total / 2).toLocaleString('en-GB')}"`, /\/complete$/.test(s.path ?? '') && /Order Confirmed/i.test(done) && done.includes(`Paid · £${(total / 2).toLocaleString('en-GB')}`), done.slice(0, 300));
     const order = sql(`select o.order_number, o.status, o.total, o.amount_paid, o.gift::text, o.gift_send_to, o.gift_message, o.gift_recipient_phone, o.customer_name, r.status as request_status from orders o join design_request r on r.id = o.design_request_id where o.design_request_id = '${id}' and o.status = 'deposit_paid'`).replace(/\s+/g, ' ');
     const orderNumber = order.match(/LS-\d{6}-\d{4}/)?.[0];
     check('the order: Deposit Paid, the gift carried (direct, the message, her mobile), the buyer Ada Lovelace, the enquiry Deposit Paid', !!orderNumber && order.includes(`deposit_paid ${total * 100} ${total * 50} true recipient Happy birthday, Grace. 07700 900456 Ada Lovelace deposit_paid`), order);
@@ -186,7 +186,7 @@ try {
     const balanceHtml = balanceMail ? (await message(balanceMail.ID)).HTML : '';
     const bt = text(balanceHtml);
     // Only the order number (14 October 2026).
-    const balanceOpening = `Here is the balance for your Lumen Forma order ${orderNumber}.`;
+    const balanceOpening = `The balance of £${(total / 2).toLocaleString('en-GB')} for your Lumen Forma order ${orderNumber} is now ready to pay. You can pay it securely with the button below.`;
     const balanceFormat = customerEmailProblems(balanceHtml, 'Ada', balanceOpening);
     check('the balance request: the email rules, "Dear Ada," then "…order LS-…." (one number, no enquiry reference)', !!balanceMail && balanceFormat.length === 0 && !bt.includes(number), balanceFormat.join('; '));
     check('…the note, then the signature exactly, before 01; no "we" or "us"', bt.includes(`${balanceOpening}\nYour Estates are cured and ready.\nAll the best,\nTheo\n@LlunioStuidos\n01 Balance`) && JSON.stringify(signatureOf(balanceHtml)) === JSON.stringify(SIGNATURE) && !/\b(we|we'll|us|our)\b/i.test(bt.split('\nLlunio Studios\ninfo@')[0]), bt.slice(0, 500));

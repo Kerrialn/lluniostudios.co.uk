@@ -22,7 +22,7 @@ final class BasketRules
 {
     public const MAX_CHECKOUT_LAMPS = 2;
 
-    public const LIMIT_MESSAGE = 'Instant checkout is limited to 2 lamps per order to protect our casting schedule. Larger orders are packed and quoted by hand.';
+    public const LIMIT_MESSAGE = 'Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually.';
 
     public const REQUEST_SIZE_MESSAGE = 'This size is made by request: we confirm the details, delivery and lead time with you before any payment.';
 
@@ -38,13 +38,20 @@ final class BasketRules
      * The prototype's line under the button ("Dorset Studio": decided
      * 8 October 2026).
      */
-    public const SUB_DIRECT = 'Limited weekly batch capacity. Individually poured, cured, and hand-finished in our Dorset Studio.';
+    public const SUB_DIRECT = 'We cast in small weekly batches. Each lamp is poured, cured and finished by hand in our Dorset Studio.';
 
-    public const SUB_RESERVE = 'Small-batch studio capacity. Reserving holds your build slot while we review your specifications and confirm exact lead times.';
+    public const SUB_RESERVE = 'We cast in small batches, so reserving holds your slot while we look over your design and confirm the lead time.';
+
+    /**
+     * Under the basket's button when the gift date is sooner than the usual
+     * lead time plus delivery (GiftDate::isSoonerThanUsual): the order goes to
+     * Reserve Your Design instead of checkout (decided 16 October 2026).
+     */
+    public const GIFT_DATE_NOTE = "This date is sooner than our usual 1–3 week lead time. Reserve your design and we'll let you know if we can make it.";
 
     public const ROUTE_NOTES = [
-        self::LIMIT_MESSAGE => 'Quantities of three or more proceed through the Reserve request process, not direct checkout.',
-        self::REQUEST_SIZE_MESSAGE => 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.',
+        self::LIMIT_MESSAGE => 'Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually.',
+        self::REQUEST_SIZE_MESSAGE => 'Hand cast to order. Each larger piece is shaped in conversation with me.',
         self::CUSTOM_OPTION_MESSAGE => 'Hand cast to order. Reserve now to secure your casting slot. Custom options are developed with you and quoted individually.',
     ];
 

@@ -1,5 +1,5 @@
 // The "Page Not Found" page (wording pass 11.5, 15 October 2026; wording
-// DRAFT): the 404 status, the heading styled as every page's, the line, links
+// approved 16 October 2026): the 404 status, the heading styled as every page's, the line, links
 // to Lighting Designs and the homepage, "noindex", and no sideways scroll on a
 // phone. Shown through Symfony's error preview (/_error/404), as the local
 // site runs in debug mode.

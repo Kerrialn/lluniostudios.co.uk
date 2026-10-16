@@ -18,14 +18,16 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 /**
  * The basket's "This is a gift" and "When does it need to arrive by?",
  * sent with "Proceed to Payment" (Site v4 prototype, Step 10.1). A gift
- * needs a date no earlier than GiftDate::earliest(), and "Send to me" or
- * "Send directly to the recipient" (Gift options, 9 October 2026).
+ * needs a date from tomorrow (the `earliest` option: GiftDate::tomorrow(),
+ * since 16 October 2026; a date sooner than GiftDate::earliest() sends the
+ * order to Reserve Your Design instead), and "Send to me" or "Send directly
+ * to the recipient" (Gift options, 9 October 2026).
  */
 final class BasketProceedForm extends AbstractType
 {
     public const NO_DATE = 'Please choose a date to continue.';
 
-    public const TOO_EARLY = 'Please choose a date on or after the earliest delivery date.';
+    public const TOO_EARLY = 'Please choose a date from tomorrow onwards.';
 
     public const NO_SEND_TO = 'Please choose where to send it.';
 

@@ -324,6 +324,24 @@ class Order implements HasReferenceNumber
     }
 
     /**
+     * The order's lamps for the emails, as Twig's `order.lampWords`: the
+     * phrase ("Your Lumen Forma Gallery lamp"), with whether there are several,
+     * so the rest of a sentence can match ("lamp" for one, "lamps" only for
+     * more than one, with it/they and is/are to match: decided 16 October 2026).
+     *
+     * @return array{phrase: string, several: bool}
+     */
+    public function getLampWords(): array
+    {
+        [$phrase, $several] = $this->yourLamps();
+
+        return [
+            'phrase' => $phrase,
+            'several' => $several,
+        ];
+    }
+
+    /**
      * The lamps for emails 01, 04, 05 and 06 (wording decided 9 October 2026), by
      * size, listed naturally: "Your Lumen Forma Gallery lamp", "Your Lumen
      * Forma Gallery lamps", "Your Lumen Forma Gallery and Studio lamps";
@@ -350,27 +368,6 @@ class Order implements HasReferenceNumber
     }
 
     /**
-     * Email 01: "Your Lumen Forma Gallery lamp will be cast by hand in our
-     * Dorset Studio." / "… lamps will be cast …" ("lamp" after the size name,
-     * 15 October 2026).
-     */
-    public function getCastByHandSentence(): string
-    {
-        return $this->yourLamps()[0] . ' will be cast by hand in our Dorset Studio.';
-    }
-
-    /**
-     * Email 04: "Your Lumen Forma Gallery lamp is now in production." /
-     * "… lamps are now in production."
-     */
-    public function getInProductionSentence(): string
-    {
-        [$lamps, $several] = $this->yourLamps();
-
-        return $lamps . ($several ? ' are now in production.' : ' is now in production.');
-    }
-
-    /**
      * Email 05: "Your Lumen Forma Gallery lamp has left the studio and is on
      * its way to you." / "… lamps have left the studio and are on their way
      * to you."
@@ -384,14 +381,14 @@ class Order implements HasReferenceNumber
 
     /**
      * Email 06: "Your Lumen Forma Gallery lamp has been delivered. I hope
-     * it's found the perfect place in your home." / "… lamps have been
-     * delivered. I hope they've found …"
+     * it's found its place in your home." / "… lamps have been delivered.
+     * I hope they've found their place in your home." (wording pass 11.5)
      */
     public function getDeliveredSentence(): string
     {
         [$lamps, $several] = $this->yourLamps();
 
-        return $lamps . ($several ? " have been delivered. I hope they've found the perfect place in your home." : " has been delivered. I hope it's found the perfect place in your home.");
+        return $lamps . ($several ? " have been delivered. I hope they've found their place in your home." : " has been delivered. I hope it's found its place in your home.");
     }
 
     public function getCourierLabel(): string

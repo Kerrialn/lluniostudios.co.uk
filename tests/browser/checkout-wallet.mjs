@@ -72,7 +72,7 @@ try {
 
     // Gifts: wallets too.
     await go(BASE_URL + '/basket');
-    const arrive = await ev(`document.querySelector('main aside input[type=date]').min`);
+    const arrive = await ev(`document.querySelector('[data-gift-route-earliest-value]').dataset.giftRouteEarliestValue`);
     await ev(`[...document.querySelectorAll('main aside label')].find(l => /This is a gift/.test(l.textContent)).click()`);
     await ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
     // Gift options (9 October 2026): where to send it is required.

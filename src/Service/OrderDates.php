@@ -13,8 +13,8 @@ use Doctrine\ORM\EntityManagerInterface;
  * An order's dates for its emails and stages: a quote's estimated casting
  * date (as sent to the customer), and the expected dispatch date suggested
  * when marking In Production (Step 11.2, decided 9 October 2026): the
- * casting date for a quote's order, otherwise the end of the 7–14 day lead
- * time from payment; never before today. UK dates.
+ * casting date for a quote's order, otherwise the end of the 1–3 week lead
+ * time (3 weeks) from payment; never before today. UK dates.
  */
 final readonly class OrderDates
 {

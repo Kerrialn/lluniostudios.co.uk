@@ -2,21 +2,21 @@
 
 {#
     After paying a quote (Step 10b.3): as the Card Payment page's completion
-    ("Order & Slot Confirmed"), with what was paid and anything still owed.
+    ("Order Confirmed"), with what was paid and anything still owed, and how
+    the balance will be asked for.
     While Stripe hasn't confirmed yet, "Order Received" as there.
 #}
 {% macro money(pence) %}{{ (pence / 100)|format_currency('GBP', {fraction_digit: pence % 100 == 0 ? 0 : 2}) }}{% endmacro %}
 {% import _self as m %}
-{% block title %}{{ order.paid ? 'Order & Slot Confirmed' : 'Order Received' }} | Llunio Studios{% endblock %}
-{% block description %}Your payment to Llunio Studios has been received.{% endblock %}
+{% block title %}{{ order.paid ? 'Order Confirmed' : 'Order Received' }} | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% block body %}
     {% if order.paid %}
         {{ include('partials/_received.html.twig', {
-            heading: 'Order & Slot Confirmed',
-            message: 'Added to Studio Casting Schedule',
-            lines: ['Paid · ' ~ m.money(order.amountPaid)]|merge(order.amountOwed > 0 ? ['Balance to pay later · ' ~ m.money(order.amountOwed)] : []),
+            heading: 'Order Confirmed',
+            message: 'Your order has its slot in our casting schedule.',
+            lines: ['Paid · ' ~ m.money(order.amountPaid)]|merge(order.amountOwed > 0 ? ['Balance to pay later · ' ~ m.money(order.amountOwed), "We'll let you know by email when the balance is due."] : []),
         }) }}
     {% else %}
         {{ include('partials/_received.html.twig', {

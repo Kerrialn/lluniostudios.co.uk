@@ -59,7 +59,8 @@ try {
         'Pinterest, Instagram or Houzz board (optional)', 'Postcode *']) && !(await ev(`!!document.querySelector('[name*="neededBy"], [name*="gift"]')`)), JSON.stringify(p.labels));
     check('"How would you like to talk?": Email, Phone, Video call; the button "Send Enquiry"', p.talk === 'Email,Phone,Video call' && p.button === 'Send Enquiry', `${p.talk} | ${p.button}`);
     const help = await ev(`[...document.querySelectorAll('form[name=enquiry_form] span.text-ll-mute')].map(e => e.textContent.trim()).filter(t => t.length > 20)`);
-    check('the hints: the space ("Where the lamp will stand…") and the postcode (DRAFT)', help.includes("Where the lamp will stand, roughly how high the ceiling is, and the colours or finishes you're drawn to.") && help.includes('Where the lamp is going, so we can plan delivery.'), JSON.stringify(help));
+    // Two Estates: "lamps" (only for more than one, decided 16 October 2026).
+    check('the hints: the space ("Where the lamps will stand…") and the postcode, "lamps" for two', help.includes("Where the lamps will stand, roughly how high the ceiling is, and the colours or finishes you're drawn to.") && help.includes('Where the lamps are going, so we can plan delivery.'), JSON.stringify(help));
 
     // Styled as the Bespoke Commissions forms.
     const style = (path) => ev(`(() => { const css = (e) => getComputedStyle(e); const form = document.querySelector(${JSON.stringify(path)});

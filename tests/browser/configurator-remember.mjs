@@ -71,11 +71,11 @@ try {
     // The review: no line under "Reserve Your Design".
     await reveal(); await jump(5);
     const review = await ev(`({ cta: document.querySelector('[data-configurator-target=cta]').textContent, sub: document.querySelector('[data-configurator-target=ctaSub]'), text: document.querySelector('[data-configurator-target=cta]').closest('.flex-col').innerText })`);
-    check('the review: "Reserve Your Design" with no "Small-batch studio capacity…" line under it', review.cta === 'Reserve Your Design' && !/Small-batch studio capacity/.test(review.text), review.text.slice(-200));
+    check('the review: "Reserve Your Design" with no "We cast in small batches…" line under it', review.cta === 'Reserve Your Design' && !/We cast in small batches/.test(review.text), review.text.slice(-200));
 
     // Reserve Your Design: what is typed is remembered too.
     await press();
-    check('Reserve Your Design opens with the three lamps', (await ev('location.pathname')) === '/reserve' && /Small-batch studio capacity/.test(await ev(`document.querySelector('main').innerText`)), 'and the line stays on the Reserve page');
+    check('Reserve Your Design opens with the three lamps', (await ev('location.pathname')) === '/reserve' && /We cast in small batches/.test(await ev(`document.querySelector('main').innerText`)), 'and the line stays on the Reserve page');
     const typed = { fullName: 'Ada Remember', email: EMAIL, phone: '07700 900123', addressLine1: '1 High Street', town: 'Wimborne', county: 'Dorset', postcode: 'BH21 1AA', accessNotes: 'Narrow gate.' };
     await ev(`(() => { for (const [k, v] of Object.entries(${JSON.stringify(typed)})) { const f = document.querySelector('[name="reserve_form[' + k + ']"]'); f.value = v; f.dispatchEvent(new Event('input', { bubbles: true })); } })()`);
     await go('/lighting-designs');

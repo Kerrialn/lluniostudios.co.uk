@@ -48,7 +48,7 @@ final class CommissionHomeForm extends AbstractType
                 ],
                 'expanded' => true,
                 'placeholder' => false,
-                'constraints' => [new Assert\NotBlank(message: "Please choose how you'd like me to contact you.")],
+                'constraints' => [new Assert\NotBlank(message: "Please choose how you'd like to talk.")],
             ])
             ->add('idea', TextareaType::class, [
                 'constraints' => [

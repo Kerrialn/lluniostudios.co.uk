@@ -4,7 +4,7 @@
 // paying by card (Stripe's test card, typed into Stripe's boxes) makes the
 // order: the quote's lines, delivery and total, the deposit paid and the
 // balance owed, the order and request now Deposit Paid, linked to the account for the
-// email; "Order & Slot Confirmed" shows what was paid and is owed; the quote
+// email; "Order Confirmed" shows what was paid and is owed; the quote
 // page then shows the payment instead of the form; the order email and the
 // order in admin show paid and owed. A full-payment quote, paid as Apple Pay /
 // Google Pay would (the page's fields sent with ?wallet=1), is paid in full
@@ -131,7 +131,7 @@ try {
     await c.ev(`document.querySelector('[name="card_payment_form[postcode]"]').value = 'bh21 1aa'`);
     s = await pay(25000);
     const done = await c.ev(`({ path: location.pathname, text: document.querySelector('main').innerText.replace(/\\s+/g, ' ') })`);
-    check('paid: "Order & Slot Confirmed", "Paid · £1,564", "Balance to pay later · £2,346"', /\/quote\/.+\/complete$/.test(done.path) && /Order & Slot Confirmed/i.test(done.text) && /Paid · £1,564/.test(done.text) && /Balance to pay later · £2,346/.test(done.text), done.text.slice(0, 300));
+    check('paid: "Order Confirmed", "Paid · £1,564", "Balance to pay later · £2,346"', /\/quote\/.+\/complete$/.test(done.path) && /Order Confirmed/i.test(done.text) && /Paid · £1,564/.test(done.text) && /Balance to pay later · £2,346/.test(done.text), done.text.slice(0, 300));
     const order = sql(`select o.order_number, o.status, o.total, o.subtotal, o.shipping_cost, o.amount_paid, o.charge_now, o.shipping_service_name, u.email, r.status as request_status from orders o join users u on u.id = o.user_id join design_request r on r.id = o.design_request_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid'`).replace(/\s+/g, ' ');
     check('the order: Deposit Paid, total £3,910 (lamps and extra £3,850, delivery £60), £1,564 paid, the account for the email, the request now Deposit Paid', /LS-\d{6}-\d{4} deposit_paid 391000 385000 6000 156400 156400 DPD Next Day Delivery ada\.pay@example\.test deposit_paid/.test(order), order);
     const items = sql(`select product_title, quantity, unit_price, product_id is null as extra from order_item i join orders o on o.id = i.order_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid' order by i.product_id is null, product_title`).replace(/\s+/g, ' ');
@@ -142,7 +142,7 @@ try {
     // The quote page now.
     await go(c, deposit.link, 2500);
     const after = await c.ev(`({ form: !!document.querySelector('main form'), paid: document.querySelector('[data-quote-paid]')?.innerText, payments: document.querySelector('[data-quote-payments]')?.innerText.replace(/\\s+/g, ' ') })`);
-    check('the quote page then shows the payment, with no form', !after.form && /Thank you\. Your payment of £1,564 was received on \d+ \w+ 2026, with £2,346 to pay later\. Your order is LS-\d{6}-\d{4}\./.test(after.paid ?? '') && /Paid \d+ \w+ 2026 £1,564 Still to pay £2,346/.test(after.payments ?? ''), JSON.stringify(after));
+    check('the quote page then shows the payment, with no form', !after.form && /Thank you for your deposit of £1,564, received on \d+ \w+ 2026\. I'll email you when the balance of £2,346 is due\. Your order number is LS-\d{6}-\d{4}\./.test(after.paid ?? '') && /Paid \d+ \w+ 2026 £1,564 Still to pay £2,346/.test(after.payments ?? ''), JSON.stringify(after));
 
     // The order email.
     await sleep(1000);
@@ -150,7 +150,7 @@ try {
     const confirmationHtml = confirmation ? (await message(confirmation.ID)).HTML : '';
     const confirmationText = confirmationHtml.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ');
     const orderNumber = sql(`select order_number from orders where design_request_id = '${deposit.id}' and status = 'deposit_paid'`).match(/LS-\d{6}-\d{4}/)?.[0];
-    const format = customerEmailProblems(confirmationHtml, 'Ada', 'Thank you for your order. Your Lumen Forma Atelier lamps will be cast by hand in our Dorset Studio.');
+    const format = customerEmailProblems(confirmationHtml, 'Ada', "Thank you for your order, and for trusting me with your Lumen Forma Atelier lamps. They'll be cast by hand in our Dorset Studio, and I'll keep you updated as they take shape: when production begins, when the balance is due, and when they're on their way to you.");
     check('email 01 "Your Llunio Studios order LS-…" follows the email rules: Montage C, no heading, "Dear Ada," then "Thank you for your order…", one text size', confirmation?.Subject === `Your Llunio Studios order ${orderNumber}` && format.length === 0, format.join('; ') + ' | ' + confirmation?.Subject);
     check('email 01 for a quote: the extra line, the quote\'s delivery, the total, the deposit paid and the balance', /Custom pigment development £150/.test(confirmationText) && /Delivery · DPD Next Day Delivery £60/.test(confirmationText) && /Total £3,910/.test(confirmationText) && /Paid \(deposit\) £1,564/.test(confirmationText) && /Balance to pay later £2,346/.test(confirmationText), confirmationText.slice(confirmationText.indexOf('Your configuration'), confirmationText.indexOf('Your configuration') + 900));
     check('email 01 for a quote: 03 Delivery with the address and the estimated casting date (no lead time)', /03 Delivery Delivery address Ada Pay 1 High Street Wimborne Dorset BH21 1AA Estimated casting date 16 November 2026 View your order/.test(confirmationText), confirmationText.slice(confirmationText.indexOf('03 Delivery'), confirmationText.indexOf('03 Delivery') + 300));

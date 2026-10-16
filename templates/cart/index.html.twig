@@ -13,7 +13,6 @@
 #}
 {% form_theme proceedForm 'form_div_layout.html.twig' %}
 {% block title %}Basket | Llunio Studios{% endblock %}
-{% block description %}Your Llunio Studios basket: the Lumen Forma lamps you have configured, ready for payment.{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% block body %}
@@ -87,7 +86,7 @@
                 </div>
 
                 <aside class="flex-[1_1_320px] min-w-0 flex flex-col gap-[18px] p-[clamp(20px,3vw,32px)] bg-ll-surface border border-ll-line">
-                    <p class="text-[13px] text-ll-mute leading-normal">Hand cast to order in our Dorset Studio. Dispatched within {{ lead_time.label }} depending on casting schedule.</p>
+                    <p class="text-[13px] text-ll-mute leading-normal">Hand cast to order in our Dorset Studio. We dispatch within {{ lead_time.label }}, depending on the casting schedule.</p>
                     <div class="flex flex-col">
                         <div class="flex justify-between gap-3 text-[13px] py-2.5 border-t border-ll-line"><span>Subtotal</span><span class="text-right">{{ cart.totalInGbp|format_currency('GBP', {fraction_digit: 0}) }}</span></div>
                         <div class="flex justify-between gap-3 text-[13px] py-2.5 border-t border-b border-ll-line"><span>DPD Next Day Delivery</span><span class="text-right">Calculated before payment</span></div>
@@ -97,18 +96,19 @@
                         {# Over the lamp limit, a Request size or a Custom choice: the whole order goes by request. #}
                         {{ include('partials/_purchase_route.html.twig', { reserve: true, note: routeNote, href: path('basket_request', {basket: 1}) }) }}
                     {% else %}
-                        {{ form_start(proceedForm, { attr: { class: 'flex flex-col gap-[18px]', novalidate: 'novalidate' } }) }}
+                        {# A gift date sooner than the usual lead time plus delivery turns the button into "Reserve Your Design" (16 October 2026). #}
+                        {{ form_start(proceedForm, { attr: { class: 'flex flex-col gap-[18px]', novalidate: 'novalidate', 'data-controller': 'gift-route', 'data-gift-route-earliest-value': giftEarliest|date('Y-m-d'), 'data-gift-route-pay-label-value': 'Proceed to Payment', 'data-gift-route-reserve-label-value': 'Reserve Your Design', 'data-action': 'change->gift-route#update input->gift-route#update' } }) }}
                             {% set dateErrors = proceedForm.arriveBy.vars.errors %}
                             {# The date appears once "This is a gift" is ticked (no script needed). #}
                             <div class="group flex flex-col gap-3">
                                 <label class="min-h-11 flex items-center gap-3 text-[13px] cursor-pointer select-none transition-opacity hover:opacity-70">
-                                    {{ form_widget(proceedForm.gift, { attr: { class: 'peer sr-only' } }) }}
+                                    {{ form_widget(proceedForm.gift, { attr: { class: 'peer sr-only', 'data-gift-route-target': 'gift' } }) }}
                                     <span class="flex-none w-4 h-4 border border-ll-ink flex items-center justify-center peer-focus-visible:outline peer-focus-visible:outline-1 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ll-ink [&>span]:bg-transparent peer-checked:[&>span]:bg-ll-ink" aria-hidden="true"><span class="w-2 h-2"></span></span>
                                     This is a gift
                                 </label>
                                 <div class="hidden group-has-[input[name$='[gift]']:checked]:flex flex-col gap-2">
                                     <label for="{{ proceedForm.arriveBy.vars.id }}" class="text-[11px] uppercase tracking-[0.14em] text-ll-mute">When does it need to arrive by? *</label>
-                                    {{ form_widget(proceedForm.arriveBy, { attr: { class: 'w-full min-h-11 bg-transparent text-ll-ink border ' ~ (dateErrors is empty ? 'border-ll-line' : 'border-ll-ink') ~ ' rounded-none px-3 py-2.5 text-sm leading-[1.5] outline-none [&::-webkit-datetime-edit-fields-wrapper]:py-px focus:border-ll-ink [color-scheme:dark]' } }) }}
+                                    {{ form_widget(proceedForm.arriveBy, { attr: { 'data-gift-route-target': 'date', class: 'w-full min-h-11 bg-transparent text-ll-ink border ' ~ (dateErrors is empty ? 'border-ll-line' : 'border-ll-ink') ~ ' rounded-none px-3 py-2.5 text-sm leading-[1.5] outline-none [&::-webkit-datetime-edit-fields-wrapper]:py-px focus:border-ll-ink [color-scheme:dark]' } }) }}
                                     <div class="text-xs text-ll-mute leading-normal">Each lamp is made by hand. Please allow {{ lead_time.label }}.</div>
                                     {% for error in dateErrors %}
                                         <div class="text-xs text-ll-ink" role="alert">{{ error.message }}</div>
@@ -117,7 +117,8 @@
                                     {{ include('partials/_gift_send_to.html.twig', { field: proceedForm.sendTo }) }}
                                 </div>
                             </div>
-                            <button type="submit" class="ll-cta bg-ll-ink text-ll-bg py-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]">Proceed to Payment</button>
+                            <button type="submit" class="ll-cta bg-ll-ink text-ll-bg py-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]" data-gift-route-target="button" data-basket-proceed>{{ giftTooSoon ? 'Reserve Your Design' : 'Proceed to Payment' }}</button>
+                            <div class="text-xs text-ll-mute leading-normal" data-gift-route-target="note" data-gift-too-soon-note {{ giftTooSoon ? '' : 'hidden' }}>{{ constant('App\\Service\\BasketRules::GIFT_DATE_NOTE') }}</div>
                         {{ form_end(proceedForm) }}
                     {% endif %}
                     <a href="{{ path('terms') }}" class="text-xs leading-[1.5] text-ll-mute text-center underline transition-colors hover:text-ll-ink">Terms &amp; Conditions</a>

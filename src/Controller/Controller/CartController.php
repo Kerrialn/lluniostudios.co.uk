@@ -30,8 +30,10 @@ class CartController extends AbstractController
 
     /**
      * The basket, and "Proceed to Payment": the gift choice ("This is a
-     * gift" with an arrive-by date) is checked and saved on the basket, then
-     * the customer goes on to checkout.
+     * gift" with an arrive-by date from tomorrow) is checked and saved on the
+     * basket, then the customer goes on to checkout; or, when the date is
+     * sooner than the usual lead time plus delivery, to Reserve Your Design,
+     * which carries the gift (decided 16 October 2026).
      */
     #[Route(path: '/basket', name: 'cart')]
     public function index(Request $request): Response
@@ -39,13 +41,14 @@ class CartController extends AbstractController
         $cart = $this->cartResolver->getCart();
         $blockers = $this->basketRules->checkoutBlockers($cart);
         $earliest = $this->giftDate->earliest();
+        $tomorrow = $this->giftDate->tomorrow();
 
         $proceedForm = $this->createForm(BasketProceedForm::class, [
             'gift' => $cart->isGift(),
             'arriveBy' => $cart->getGiftArriveBy(),
             'sendTo' => $cart->getGiftSendTo(),
         ], [
-            'earliest' => $earliest,
+            'earliest' => $tomorrow,
         ]);
         $proceedForm->handleRequest($request);
         if ($proceedForm->isSubmitted() && $blockers === [] && ! $cart->isEmpty() && $proceedForm->isValid()) {
@@ -54,12 +57,19 @@ class CartController extends AbstractController
             $cart->setGiftArriveBy($choice['gift'] ? $choice['arriveBy'] : null, $choice['sendTo']);
             $this->cartRepository->save($cart, true);
 
+            if ($cart->isGift() && $this->giftDate->isSoonerThanUsual($cart->getGiftArriveBy())) {
+                return $this->redirectToRoute('basket_request', [
+                    'basket' => 1,
+                ]);
+            }
+
             return $this->redirectToRoute('checkout');
         }
 
         return $this->render('cart/index.html.twig', [
             'proceedForm' => $proceedForm,
             'giftEarliest' => $earliest,
+            'giftTooSoon' => $cart->isGift() && $this->giftDate->isSoonerThanUsual($cart->getGiftArriveBy()),
             'cart' => $cart,
             'lampCount' => $this->basketRules->lampCount($cart),
             'checkoutBlockers' => $blockers,

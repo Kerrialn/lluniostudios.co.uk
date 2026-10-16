@@ -9,8 +9,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The earliest gift "arrive by" date: today + 14 calendar days, then 2
- * working days (no weekends or England and Wales bank holidays).
+ * The usual earliest gift "arrive by" date: today + 3 weeks (21 calendar
+ * days, the lead time since 16 October 2026), then 2 working days (no
+ * weekends or England and Wales bank holidays); and the first date that can
+ * be chosen (tomorrow), with whether a date is sooner than usual.
  */
 final class GiftDateTest extends TestCase
 {
@@ -19,22 +21,22 @@ final class GiftDateTest extends TestCase
      */
     public static function days(): iterable
     {
-        // Wed 7 Oct 2026 + 14 = Wed 21 Oct; then Thu 22, Fri 23.
-        yield 'midweek' => ['2026-10-07 10:00', '2026-10-23'];
-        // Thu 8 Oct + 14 = Thu 22 Oct; then Fri 23, (weekend) Mon 26.
-        yield 'over a weekend' => ['2026-10-08 10:00', '2026-10-26'];
-        // Sat 10 Oct + 14 = Sat 24 Oct; then Mon 26, Tue 27.
-        yield 'starting on a Saturday' => ['2026-10-10 10:00', '2026-10-27'];
-        // Thu 10 Dec + 14 = Thu 24 Dec; then (Christmas Fri 25, weekend, Boxing Day moved to Mon 28) Tue 29, Wed 30.
-        yield 'over Christmas 2026' => ['2026-12-10 09:00', '2026-12-30'];
-        // Wed 16 Dec + 14 = Wed 30 Dec; then Thu 31, (New Year Fri 1 Jan, weekend) Mon 4 Jan.
-        yield 'over New Year' => ['2026-12-16 09:00', '2027-01-04'];
-        // Wed 10 Mar 2027 + 14 = Wed 24 Mar; then Thu 25, (Good Friday 26, weekend, Easter Monday 29) Tue 30.
-        yield 'over Easter 2027' => ['2027-03-10 09:00', '2027-03-30'];
+        // Wed 7 Oct 2026 + 21 = Wed 28 Oct; then Thu 29, Fri 30.
+        yield 'midweek' => ['2026-10-07 10:00', '2026-10-30'];
+        // Thu 8 Oct + 21 = Thu 29 Oct; then Fri 30, (weekend) Mon 2 Nov.
+        yield 'over a weekend' => ['2026-10-08 10:00', '2026-11-02'];
+        // Sat 10 Oct + 21 = Sat 31 Oct; then Mon 2, Tue 3 Nov.
+        yield 'starting on a Saturday' => ['2026-10-10 10:00', '2026-11-03'];
+        // Thu 3 Dec + 21 = Thu 24 Dec; then (Christmas Fri 25, weekend, Boxing Day moved to Mon 28) Tue 29, Wed 30.
+        yield 'over Christmas 2026' => ['2026-12-03 09:00', '2026-12-30'];
+        // Wed 9 Dec + 21 = Wed 30 Dec; then Thu 31, (New Year Fri 1 Jan, weekend) Mon 4 Jan.
+        yield 'over New Year' => ['2026-12-09 09:00', '2027-01-04'];
+        // Wed 3 Mar 2027 + 21 = Wed 24 Mar; then Thu 25, (Good Friday 26, weekend, Easter Monday 29) Tue 30.
+        yield 'over Easter 2027' => ['2027-03-03 09:00', '2027-03-30'];
         // UK time: 23:30 on 7 Oct in London is still 7 Oct (22:30 UTC).
-        yield 'late evening, UK time' => ['2026-10-07 22:30 UTC', '2026-10-23'];
+        yield 'late evening, UK time' => ['2026-10-07 22:30 UTC', '2026-10-30'];
         // 00:30 on 8 Oct in London (23:30 UTC on the 7th) counts as the 8th.
-        yield 'just after midnight, UK time' => ['2026-10-07 23:30 UTC', '2026-10-26'];
+        yield 'just after midnight, UK time' => ['2026-10-07 23:30 UTC', '2026-11-02'];
     }
 
     #[DataProvider('days')]
@@ -44,6 +46,17 @@ final class GiftDateTest extends TestCase
         $earliest = (new GiftDate())->earliest(new \DateTimeImmutable(str_replace(' UTC', '', $now), $zone));
 
         self::assertSame($expected, $earliest->format('Y-m-d'));
+    }
+
+    public function testAnyDateFromTomorrowAndSoonerThanUsual(): void
+    {
+        $gift = new GiftDate();
+        $now = new \DateTimeImmutable('2026-10-07 23:30', new \DateTimeZone('Europe/London'));
+        self::assertSame('2026-10-08', $gift->tomorrow($now)->format('Y-m-d'));
+        self::assertTrue($gift->isSoonerThanUsual(new \DateTimeImmutable('2026-10-08'), $now), 'tomorrow');
+        self::assertTrue($gift->isSoonerThanUsual(new \DateTimeImmutable('2026-10-29'), $now), 'the day before the usual earliest');
+        self::assertFalse($gift->isSoonerThanUsual(new \DateTimeImmutable('2026-10-30'), $now), 'the usual earliest');
+        self::assertFalse($gift->isSoonerThanUsual(null, $now), 'no date');
     }
 
     /**

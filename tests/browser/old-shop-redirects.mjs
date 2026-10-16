@@ -62,7 +62,7 @@ try {
     // Over the limit in the basket (database-only: one line to quantity 2 => 3 lamps).
     sql("update cart_item set quantity = 2 where id = (select id from cart_item where cart_id = (select cart_id from cart_item order by created_at desc limit 1) order by created_at limit 1)");
     await go(BASE_URL + '/basket');
-    const r = await ev(`({ cta: document.querySelector('main a[href="/reserve?basket=1"]')?.textContent.trim(), note: [...document.querySelectorAll('main span')].find(s => /^Quantities of three/.test(s.textContent.trim()))?.textContent.trim(), pay: [...document.querySelectorAll('main button[type=submit]')].some(b => b.textContent.trim() === 'Proceed to Payment'), box: !!document.querySelector('[role=alert]'), label: /Purchase route/i.test(document.querySelector('aside').innerText) })`);
+    const r = await ev(`({ cta: document.querySelector('main a[href="/reserve?basket=1"]')?.textContent.trim(), note: [...document.querySelectorAll('main span')].find(s => /^Online checkout takes up to two lamps/.test(s.textContent.trim()))?.textContent.trim(), pay: [...document.querySelectorAll('main button[type=submit]')].some(b => b.textContent.trim() === 'Proceed to Payment'), box: !!document.querySelector('[role=alert]'), label: /Purchase route/i.test(document.querySelector('aside').innerText) })`);
     check('over-limit basket: Reserve Your Design + purchase route, no "Proceed to Payment", no message box', r.cta === 'Reserve Your Design' && !!r.note && !r.pay && !r.box && r.label, JSON.stringify(r));
     await shot('basket-reserve', 'aside');
     await go(BASE_URL + '/checkout');

@@ -9,7 +9,6 @@ use App\Entity\Cart;
 use App\Entity\Order;
 use App\Entity\User;
 use App\Enum\OrderStatus;
-use App\Form\Form\BasketProceedForm;
 use App\Form\Form\CardPaymentForm;
 use App\Form\Form\ReserveForm;
 use App\Payment\RevolutMerchantClient;
@@ -103,10 +102,9 @@ class CheckoutController extends AbstractController
             return $this->redirectToRoute('cart');
         }
 
-        if ($cart->isGift() && $cart->getGiftArriveBy() < $this->giftDate->earliest()->startOfDay()) {
-            // The chosen date has become too soon since it was picked.
-            $this->addFlash('error', BasketProceedForm::TOO_EARLY);
-
+        if ($cart->isGift() && $this->giftDate->isSoonerThanUsual($cart->getGiftArriveBy())) {
+            // The date is (or has become) sooner than the usual lead time:
+            // the basket offers Reserve Your Design instead.
             return $this->redirectToRoute('cart');
         }
 

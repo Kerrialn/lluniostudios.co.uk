@@ -1,6 +1,6 @@
 // Order emails (Step 11.1), for a basket order sent as a gift: email 01
 // ("Your Llunio Studios order LS-…") in the email rules' format, with the lamp, DPD
-// delivery and total, 03 Delivery (address, "Gift · Arrive by", the 7–14 day
+// delivery and total, 03 Delivery (address, "Gift · Arrive by", the 1–3 week
 // lead time) and "View your order"; the order's private page (no sign-in,
 // never indexed; an unpaid order's link isn't found); and the studio's
 // "New order · Gallery × 1 · £x · GIFT by …" with "Gift · Needed by" and the
@@ -26,7 +26,7 @@ try {
     await b.ev(`document.querySelector('form[action$="/lighting-designs/add"]').removeAttribute('data-action')`); await sleep(100);
     await b.ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify({ size: 'lumen-forma-gallery', quantity: 1, mode: 'all', lamps: [lamp] }))}; f.requestSubmit(); })()`); await sleep(2500);
     await go(b, BASE_URL + '/basket');
-    const arrive = await b.ev(`document.querySelector('main aside input[type=date]').min`);
+    const arrive = await b.ev(`document.querySelector('[data-gift-route-earliest-value]').dataset.giftRouteEarliestValue`);
     await b.ev(`[...document.querySelectorAll('main aside label')].find(l => /This is a gift/.test(l.textContent)).click()`);
     await b.ev(`document.querySelector('main aside input[type=date]').value = '${arrive}'`);
     // Gift options (9 October 2026): where to send it is required.
@@ -54,10 +54,10 @@ try {
     const html = mail ? (await message(mail.ID)).HTML : '';
     const text = flat(html);
     writeFileSync(out('email-01-gift.html'), html);
-    const format = customerEmailProblems(html, 'Ada', 'Thank you for your order. Your Lumen Forma Gallery lamp will be cast by hand in our Dorset Studio.');
+    const format = customerEmailProblems(html, 'Ada', "Thank you for your order. Your Lumen Forma Gallery lamp will be cast by hand in our Dorset Studio, and I'll email you when it goes into production and when it's on its way.");
     check(`email 01 "Your Llunio Studios order ${orderNumber}" follows the email rules: Montage C, no heading, "Dear Ada," then "Thank you for your order…", one text size`, mail?.Subject === `Your Llunio Studios order ${orderNumber}` && format.length === 0, format.join('; ') + ' | ' + mail?.Subject);
-    check('01 Order (the order number), 02 Your configuration (the lamp in full, its price), the delivery and total; nothing about deposits', new RegExp(`01 Order Order number ${orderNumber} 02 Your configuration Lumen Forma Size Gallery The Pigment Grey Cable Raw Jute Footing Polished Copper Light Smoked Glass LED Quantity 1 Price £799 Delivery · DPD Next Day Delivery ${delivery.replace('.', '\\.')} Total ${total.replace('.', '\\.')} Photography is illustrative`).test(text) && !/deposit/i.test(text), text.slice(text.indexOf('01 Order'), text.indexOf('01 Order') + 500));
-    check(`03 Delivery: the address, "Gift · Arrive by ${nice}" and "Send to me", the lead time, "View your order"`, new RegExp(`03 Delivery Delivery address Ada Gift 1 High Street Wimborne BH21 1AA Gift Arrive by ${nice} Send to me Expected lead time Dispatched within 7–14 days, then DPD Next Day Delivery View your order Reply to this email with any questions\\.`).test(text), text.slice(text.indexOf('03 Delivery'), text.indexOf('03 Delivery') + 300));
+    check('01 Order (the order number), 02 Your configuration (the lamp in full, its price), the delivery and total; nothing about deposits', new RegExp(`01 Order Order number ${orderNumber} 02 Your configuration Lumen Forma Size Gallery The Pigment Grey Cable Raw Jute Footing Polished Copper Light Smoked Glass LED Quantity 1 Price £799 Delivery · DPD Next Day Delivery ${delivery.replace('.', '\\.')} Total ${total.replace('.', '\\.')} Photos show the Lumen Forma series`).test(text) && !/deposit/i.test(text), text.slice(text.indexOf('01 Order'), text.indexOf('01 Order') + 500));
+    check(`03 Delivery: the address, "Gift · Arrive by ${nice}" and "Send to me", the lead time, "View your order"`, new RegExp(`03 Delivery Delivery address Ada Gift 1 High Street Wimborne BH21 1AA Gift Arrive by ${nice} Send to me Expected lead time Dispatched within 1–3 weeks, then DPD Next Day Delivery View your order Reply to this email with any questions\\.`).test(text), text.slice(text.indexOf('03 Delivery'), text.indexOf('03 Delivery') + 300));
     check('replies go to the studio', ((await message(mail?.ID ?? '')).ReplyTo || []).length === 1);
 
     // "View your order".

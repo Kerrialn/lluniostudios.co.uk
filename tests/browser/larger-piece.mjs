@@ -18,8 +18,8 @@ const phone = W < 900;
 const { check, summary } = checker();
 const b = await open(W, H, `larger${W}`, { mobile: phone });
 const { send, ev } = b;
-const SIZE = 'Hand cast to order. Reserve now to secure your casting slot. Delivery will be quoted for individually.';
-const LIMIT = 'Quantities of three or more proceed through the Reserve request process, not direct checkout.';
+const SIZE = 'Hand cast to order. Each larger piece is shaped in conversation with me.';
+const LIMIT = 'Online checkout takes up to two lamps per order, so we can keep to our casting schedule. Larger orders are discussed and quoted for individually.';
 try {
     const go = async (url, wait = 2500) => { await send('Page.navigate', { url }); await sleep(wait); await ev(`document.querySelectorAll('[id^=sfwdt]').forEach(e => e.remove())`); };
     const state = () => ev(`(() => { const root = document.querySelector('[data-controller~=configurator]'), p = document.querySelector('.ll-cfg-panel'), vis = (e) => !!e && e.getClientRects().length > 0;

@@ -224,7 +224,8 @@ final readonly class EmailService
     public function sendCommissionReceivedEmail(CommissionEnquiry $enquiry): void
     {
         $this->send(
-            subject: 'Your commission enquiry',
+            // By first name, as the other enquiry subjects (wording pass 11.5, 16 October 2026).
+            subject: 'Your commission enquiry' . (($first = GreetingName::firstName($enquiry->getName())) !== null ? ', ' . $first : ''),
             template: '/email/commission/received.html.twig',
             email: $enquiry->getEmail(),
             name: $enquiry->getName(),

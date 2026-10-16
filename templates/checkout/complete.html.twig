@@ -1,21 +1,21 @@
 {% extends 'base.html.twig' %}
 
 {#
-    After paying (Site v4 prototype's "Order & Slot Confirmed"), laid out
-    like the other thank-you pages (decided 7 October 2026). While the
+    After paying (Site v4 prototype's "Order & Slot Confirmed", reworded in
+    the wording pass 11.5, 16 October 2026), laid out like the other
+    thank-you pages (decided 7 October 2026). While the
     payment is still being confirmed (rare for cards; the webhook finishes
     it), the page says so instead.
 #}
-{% block title %}{{ order.paid ? 'Order & Slot Confirmed' : 'Order Received' }} | Llunio Studios{% endblock %}
-{% block description %}Your Lumen Forma order with Llunio Studios is confirmed and added to the studio casting schedule.{% endblock %}
+{% block title %}{{ order.paid ? 'Order Confirmed' : 'Order Received' }} | Llunio Studios{% endblock %}
 {% block main_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
 
 {% block body %}
     {% if order.paid %}
         {{ include('partials/_received.html.twig', {
-            heading: 'Order & Slot Confirmed',
-            message: 'Added to Studio Casting Schedule',
-            lines: order.giftLine ? ['Gift · ' ~ order.giftLine] : [],
+            heading: 'Order Confirmed',
+            message: 'Your order has its slot in our casting schedule.',
+            lines: ["We'll email you when it goes into production, and when it's on its way."]|merge(order.giftLine ? ['Gift · ' ~ order.giftLine] : []),
         }) }}
     {% else %}
         {{ include('partials/_received.html.twig', {
