@@ -35,7 +35,7 @@
     {% for item in order.items|filter(i => i.extra) %}
         <tr><td width="60%" style="{{ keyStyle }}">{{ item.productTitle }}</td><td style="{{ valueStyle }}">{{ m.money(item.lineTotal) }}</td></tr>
     {% endfor %}
-    <tr><td width="60%" style="{{ keyStyle }}">Delivery · {{ order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Next Day Delivery' }}</td><td style="{{ valueStyle }}">{{ m.money(order.shippingCost) }}</td></tr>
+    <tr><td width="60%" style="{{ keyStyle }}">Delivery · {{ order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Delivery' }}</td><td style="{{ valueStyle }}">{{ m.money(order.shippingCost) }}</td></tr>
     <tr><td width="60%" style="{{ strongKey }}">Total</td><td style="{{ strongValue }}">{{ m.money(order.total) }}</td></tr>
     {% if order.amountOwed > 0 %}
         <tr><td width="60%" style="{{ keyStyle }}">Paid (deposit)</td><td style="{{ valueStyle }}">{{ m.money(order.amountPaid) }}</td></tr>
@@ -63,7 +63,7 @@
     <p style="{{ body }}">{{ castingDate|date('j F Y') }}</p>
 {% else %}
     <p style="{{ label }}">Expected lead time</p>
-    <p style="{{ body }}">Dispatched within {{ lead_time.label }}, then DPD Next Day Delivery</p>
+    <p style="{{ body }}">Dispatched within {{ lead_time.label }}, then DPD Delivery</p>
 {% endif %}
 <div style="height:8px;line-height:8px;font-size:1px;">&nbsp;</div>
 {{ layout.button(url('order_view', { token: order.viewToken }), 'View your order') }}

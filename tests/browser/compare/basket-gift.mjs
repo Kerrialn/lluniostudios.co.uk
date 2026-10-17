@@ -3,7 +3,7 @@
 // relative to the summary box. Expected differences: ours has no "Express
 // Payment" button (decided 7 October 2026), so Proceed to Payment and Terms
 // sit higher; the prototype's delivery row says "UK Express Delivery (DPD)",
-// ours "DPD Next Day Delivery" (decided).
+// ours "DPD Delivery" (decided).
 //   PROTOTYPE_DIR=... node tests/browser/compare/basket-gift.mjs 1440 900
 import { writeFileSync } from 'node:fs';
 import { open, sleep, out, prototypeUrl, BASE_URL } from '../lib.mjs';

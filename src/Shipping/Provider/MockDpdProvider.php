@@ -36,7 +36,7 @@ final class MockDpdProvider implements ShippingProviderInterface
             new ShippingQuote(
                 method: ShippingMethod::DPD,
                 carrier: 'DPD',
-                serviceName: 'DPD Next Day',
+                serviceName: 'DPD Delivery',
                 priceInPence: $price,
                 estimatedDays: 1,
             ),

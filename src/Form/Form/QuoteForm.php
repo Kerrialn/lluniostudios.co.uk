@@ -64,7 +64,7 @@ final class QuoteForm extends AbstractType
             ->add('delivery', MoneyType::class, $money('Please enter the delivery price.'))
             ->add('deliveryLabel', TextType::class, [
                 'constraints' => [
-                    new Assert\NotBlank(message: 'Please describe the delivery, e.g. "DPD Next Day Delivery".'),
+                    new Assert\NotBlank(message: 'Please describe the delivery, e.g. "DPD Delivery".'),
                     new Assert\Length(max: 128),
                 ],
             ])

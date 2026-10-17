@@ -40,7 +40,7 @@
                         <div class="{{ total }}"><span>{{ item.productTitle }}</span><span class="text-right">{{ m.money(item.lineTotal) }}</span></div>
                     {% endfor %}
                     <div class="{{ total }}"><span>Subtotal</span><span class="text-right">{{ m.money(order.subtotal) }}</span></div>
-                    <div class="{{ total }}"><span>{{ order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Next Day Delivery' }}</span><span class="text-right">{{ m.money(order.shippingCost) }}</span></div>
+                    <div class="{{ total }}"><span>{{ order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Delivery' }}</span><span class="text-right">{{ m.money(order.shippingCost) }}</span></div>
                     {% if order.giftLine %}
                         <div class="{{ total }}" data-order-gift><span>Gift</span><span class="text-right">{{ order.giftLine }}{% if order.giftSendTo %}<br>{{ order.giftSendTo.label }}{% endif %}</span></div>
                         {% if order.directGift and order.giftMessage %}

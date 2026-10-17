@@ -58,7 +58,7 @@ try {
         extra.querySelector('input').value = 'Custom pigment development';
         extra.querySelector('[data-quote-price]').value = '150';
         document.querySelector('[data-quote-delivery]').value = '60';
-        document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Next Day Delivery';
+        document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Delivery';
         document.querySelector('input[name$="[payment]"][value="deposit"]').click();
         document.querySelector('[data-quote-deposit]').value = '40';
         document.querySelector('[name$="[castingDate]"]').value = '2026-11-16';

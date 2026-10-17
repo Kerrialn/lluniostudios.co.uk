@@ -34,8 +34,8 @@
                 </div>
                 <div class="{{ section }}">Contact</div>
                 <div class="{{ grid }}">
-                    {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *' }) }}
-                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order and delivery updates) *' }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *', align: true }) }}
+                    {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order and delivery updates) *', align: true }) }}
                 </div>
 
                 <div class="{{ section }}">Delivery address{% if directGift %} <span class="normal-case tracking-normal text-[13px]">(the recipient's: sent directly, with no prices in the box)</span>{% endif %}</div>
@@ -116,7 +116,7 @@
 
                 <div class="flex flex-col">
                     <div class="{{ total }}"><span>Subtotal</span><span class="text-right">{{ cart.totalInGbp|format_currency('GBP', {fraction_digit: 0}) }}</span></div>
-                    <div class="{{ total }}"><span>DPD Next Day Delivery</span><span class="text-right" data-checkout-target="delivery">{{ delivery.delivery }}</span></div>
+                    <div class="{{ total }}"><span>DPD Delivery</span><span class="text-right" data-checkout-target="delivery">{{ delivery.delivery }}</span></div>
                     {% if gift and giftArriveBy %}
                         <div class="{{ total }}" data-checkout-gift><span>Gift</span><span class="text-right">Arrive by {{ giftArriveBy|date('j F Y') }}{% if giftSendTo %}<br>{{ giftSendTo.label }}{% endif %}</span></div>
                     {% endif %}

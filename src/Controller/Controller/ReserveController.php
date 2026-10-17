@@ -167,10 +167,7 @@ final class ReserveController extends AbstractController
 
             // The basket's lamps are now in the request.
             if ($cart instanceof \App\Entity\Cart) {
-                foreach ($cart->getCartItems()->toArray() as $line) {
-                    $cart->removeCartItem($line);
-                }
-                $cart->setGiftArriveBy(null);
+                $cart->clear();
                 $this->cartRepository->save(cart: $cart);
             }
 

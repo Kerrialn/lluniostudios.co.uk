@@ -137,6 +137,8 @@ export function customerEmailProblems(html, firstName, opening = null) {
     // The one exception: the enquiry emails' signature handle, "@LlunioStuidos", exactly as confirmed (13 October 2026).
     const shortened = words.replace(/@LlunioStuidos\b/g, ' ').match(/Llunio(?! Studios)\S*/g);
     if (shortened) problems.push(`"Llunio" without "Studios": ${shortened.join(', ')}`);
+    // DPD can't always deliver the next day, so nothing promises it (decided 17 October 2026).
+    if (/next[\s-]*day/i.test(words)) problems.push('promises next-day delivery');
     return problems;
 }
 
@@ -148,5 +150,6 @@ export function studioEmailProblems(html, kind) {
     const first = html.match(/data-studio-kind>([^<]*)</)?.[1];
     if (first !== kind) problems.push(`starts "${first}"`);
     if (!/data-studio-summary/.test(html)) problems.push('no summary');
+    if (/next[\s-]*day/i.test(html.replace(/<[^>]+>/g, ' '))) problems.push('promises next-day delivery');
     return problems;
 }

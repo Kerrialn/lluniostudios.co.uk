@@ -89,7 +89,7 @@ final class DpdProvider implements ShippingProviderInterface
                 new ShippingQuote(
                     method: ShippingMethod::DPD,
                     carrier: 'DPD',
-                    serviceName: (string) ($data['serviceName'] ?? 'DPD Next Day'),
+                    serviceName: (string) ($data['serviceName'] ?? 'DPD Delivery'),
                     priceInPence: $priceInPence,
                     estimatedDays: isset($data['transitDays']) ? (int) $data['transitDays'] : 1,
                 ),

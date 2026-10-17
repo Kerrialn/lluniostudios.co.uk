@@ -89,7 +89,7 @@ final readonly class QuoteDelivery
 
         return [
             'price' => $best->priceInPence,
-            'label' => $best->method === ShippingMethod::PALLET ? 'Palletways · ' . $best->serviceName : 'DPD Next Day Delivery',
+            'label' => $best->method === ShippingMethod::PALLET ? 'Palletways · ' . $best->serviceName : 'DPD Delivery',
             'estimated' => ! $this->resolver->isLive(),
             'notes' => $notes,
         ];

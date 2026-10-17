@@ -64,7 +64,7 @@ class Quote
     private int $deliveryPrice = 0;
 
     /**
-     * e.g. "DPD Next Day Delivery", "Palletways · Half pallet".
+     * e.g. "DPD Delivery", "Palletways · Half pallet".
      */
     #[ORM\Column(length: 128)]
     private string $deliveryLabel = '';

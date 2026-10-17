@@ -62,7 +62,7 @@ try {
         extra.querySelector('input').value = 'Custom pigment development';
         extra.querySelector('[data-quote-price]').value = '150';
         document.querySelector('[data-quote-delivery]').value = '60';
-        document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Next Day Delivery';
+        document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Delivery';
         document.querySelector('input[name$="[payment]"][value="deposit"]').click();
         document.querySelector('[data-quote-deposit]').value = '40';
         document.querySelector('[name$="[note]"]').value = 'We look forward to casting it.';
@@ -97,7 +97,7 @@ try {
     check('the email follows the email rules: Montage C, no heading, "Dear Ada," (first name only) then "Thank you for your patience. Here is my quote for your Lumen Forma request …", one text size', format.length === 0 && !/Your quote is ready/i.test(text), format.join('; '));
     check('then the studio\'s note, as its own paragraph', /<p [^>]*data-email-note>We look forward to casting it\.<\/p>/.test(mail.HTML) && text.indexOf('We look forward to casting it.') < text.indexOf('Your configuration'));
     check('each design with its configuration and quoted price (£1,850 each)', /Size Atelier/.test(text) && /The Pigment Grey/.test(text) && /Light Smoked Glass LED \/ Dual Array/.test(text) && /Price £1,850 each/.test(text) && !/Starting at/.test(text), text.slice(300, 1200));
-    check('the breakdown: lamps, extra line, delivery, total, 40% deposit and the balance', /Lumen Forma Atelier × 2 £3,700/.test(text) && /Custom pigment development £150/.test(text) && /Delivery · DPD Next Day Delivery £60/.test(text) && /Total £3,910/.test(text) && /Deposit to pay now \(40%\) £1,564/.test(text) && /Balance to pay later £2,346/.test(text) && !/VAT/.test(text), text.slice(text.indexOf('Quote'), text.indexOf('Quote') + 500));
+    check('the breakdown: lamps, extra line, delivery, total, 40% deposit and the balance', /Lumen Forma Atelier × 2 £3,700/.test(text) && /Custom pigment development £150/.test(text) && /Delivery · DPD Delivery £60/.test(text) && /Total £3,910/.test(text) && /Deposit to pay now \(40%\) £1,564/.test(text) && /Balance to pay later £2,346/.test(text) && !/VAT/.test(text), text.slice(text.indexOf('Quote'), text.indexOf('Quote') + 500));
     check(`the casting date, "Pay now · £1,564" and "valid until ${validUntil}"`, /Estimated casting date 16 November 2026/.test(text) && /Pay now · £1,564/.test(text) && text.includes(`This quote is valid until ${validUntil}.`), text.slice(text.indexOf('Casting')));
     check(`replies go to the studio (${STUDIO_EMAIL}), also in the footer`, (mail.ReplyTo || []).some((r) => r.Address === STUDIO_EMAIL) && text.includes(STUDIO_EMAIL), JSON.stringify(mail.ReplyTo));
     const link = mail.HTML.match(/<a href="([^"]+\/quote\/[A-Za-z0-9_-]+)"/)?.[1];

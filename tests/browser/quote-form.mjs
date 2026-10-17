@@ -60,7 +60,7 @@ try {
     check("the request's address in its fields", JSON.stringify(address) === JSON.stringify(['Address line 1=1 High Street', 'Address line 2=—', 'Town/City=Wimborne', 'County=Dorset', 'Postcode=BH21 1AA', 'Country=United Kingdom']), JSON.stringify(address));
     check('a new draft for the request, not saved yet', draft.title === `Quote for request ${number}` && /New draft, not saved yet/.test(draft.intro), JSON.stringify(draft).slice(0, 200));
     check("each design at its size's price (Atelier from £1,699)", JSON.stringify(draft.lamps) === JSON.stringify(['Lumen Forma Atelier ×2 @ 1699.00']), JSON.stringify(draft.lamps));
-    check('the delivery estimate: a mock DPD price, marked as an estimate, noting Atelier has no packed weight yet', /Estimate: £\d/.test(draft.estimate) && /mock carrier price/.test(draft.estimate) && /No packed weight yet for Atelier/.test(draft.estimate) && draft.label === 'DPD Next Day Delivery' && Number(draft.delivery) > 0, draft.estimate);
+    check('the delivery estimate: a mock DPD price, marked as an estimate, noting Atelier has no packed weight yet', /Estimate: £\d/.test(draft.estimate) && /mock carrier price/.test(draft.estimate) && /No packed weight yet for Atelier/.test(draft.estimate) && draft.label === 'DPD Delivery' && Number(draft.delivery) > 0, draft.estimate);
     check('full payment to start with, deposit set at 50%', draft.payment === 'full' && draft.deposit === '50');
 
     // Wrong values.

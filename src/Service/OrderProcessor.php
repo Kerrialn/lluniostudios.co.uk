@@ -44,13 +44,8 @@ final readonly class OrderProcessor
             $order->setRevolutState($revolutState);
         }
 
-        // Empty the buyer's cart now the order is settled.
-        $cart = $order->getUser()?->getCart();
-        if ($cart instanceof \App\Entity\Cart) {
-            foreach ($cart->getCartItems()->toArray() as $cartItem) {
-                $cart->removeCartItem($cartItem);
-            }
-        }
+        // Empty the buyer's cart now the order is settled, gift choice included.
+        $order->getUser()?->getCart()?->clear();
 
         $this->orderRepository->save($order, true);
 

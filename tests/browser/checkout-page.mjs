@@ -46,6 +46,11 @@ try {
     let page = await ev(`({ path: location.pathname, h1: document.querySelector('h1').textContent.trim(), sections: [...document.querySelectorAll('main form > div > div')].filter(d => d.children.length === 0 && /^[A-Z]/.test(d.textContent.trim())).map(d => d.textContent.trim()), signIn: /sign in|6-digit|sign-in code/i.test(document.querySelector('main').innerText) })`);
     check('"Proceed to Payment" opens Card Payment, with no sign-in', page.path === '/checkout' && page.h1 === 'Card Payment' && !page.signIn, JSON.stringify(page));
     check('sections: Contact, Delivery address, Billing address, Card details', JSON.stringify(page.sections) === JSON.stringify(['Contact', 'Delivery address', 'Billing address', 'Card details']), JSON.stringify(page.sections));
+    // Email and Mobile line up (fixed 17 October 2026): side by side, the longer Mobile label doesn't push its box down; stacked on phones.
+    const boxes = `(() => { const t = (n) => Math.round(${field('email')}.getBoundingClientRect()[n]); const m = (n) => Math.round(${field('phone')}.getBoundingClientRect()[n]); return { emailTop: t('top'), mobileTop: m('top'), emailLeft: t('left'), mobileLeft: m('left'), height: t('height') }; })()`;
+    const lined = (x) => x.mobileLeft > x.emailLeft ? x.mobileTop === x.emailTop : x.mobileTop > x.emailTop + x.height;
+    const contact = await ev(boxes);
+    check('Email and Mobile boxes line up side by side (or stack on a phone)', lined(contact), JSON.stringify(contact));
     const limits = await ev(`Object.fromEntries(['name', 'company', 'line1', 'line2', 'town', 'county', 'postcode', 'notes', 'phone'].map(n => [n, document.querySelector('[name="card_payment_form[' + n + ']"]').maxLength]))`);
     check("DPD's character limits (35, postcode 8, delivery instructions 100, phone 15)", JSON.stringify(limits) === JSON.stringify({ name: 35, company: 35, line1: 35, line2: 35, town: 35, county: 35, postcode: 8, notes: 100, phone: 15 }), JSON.stringify(limits));
     let a = await aside();
@@ -70,6 +75,8 @@ try {
     await fill({ ...good, postcode: 'BH21', email: 'not-an-email', phone: '12' }); await submit();
     const under = await ev(`[...document.querySelectorAll('main form label [role=alert]')].map(e => e.textContent.trim())`);
     check('a half postcode, a bad email and a bad phone each say what is wrong', JSON.stringify(under) === JSON.stringify(['Please enter a valid email address.', 'Please enter a valid phone number.', 'Please enter a full UK postcode, e.g. SW1A 1AA.']), JSON.stringify(under));
+    const contactErrors = await ev(boxes);
+    check('with a message under each, Email and Mobile boxes still line up', lined(contactErrors), JSON.stringify(contactErrors));
     check('what was typed is kept', (await ev(`${field('line1')}.value`)) === '1 High Street');
 
     // Billing address.

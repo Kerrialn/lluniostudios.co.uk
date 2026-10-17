@@ -86,7 +86,7 @@ try {
     check('the paid order is listed with its date, lamps, total and status', orders.rows.length === 1 && orders.rows[0].includes(orderNumber) && /1 lamp/.test(orders.rows[0]) && /£811\.95/.test(orders.rows[0]) && /PAID/i.test(orders.rows[0]), JSON.stringify(orders.rows));
     await c.ev(`document.querySelector('main a[href*="/account/orders/"]').click()`); await sleep(2200);
     const detail = (await c.ev(`document.querySelector('main').innerText`)).replace(/\s+/g, ' ');
-    check("an order's page: the lamp (size and choices), totals and delivery address", new RegExp(`ORDER ${orderNumber}`).test(detail) && /SIZE Gallery/.test(detail) && /THE PIGMENT Grey/.test(detail) && /Raw Jute/.test(detail) && /Subtotal £799/.test(detail) && /DPD Next Day Delivery £12\.95/.test(detail) && /Total £811\.95/.test(detail) && /Ada Signin, 1 High Street, Wimborne, BH21 1AA/.test(detail), detail.slice(0, 400));
+    check("an order's page: the lamp (size and choices), totals and delivery address", new RegExp(`ORDER ${orderNumber}`).test(detail) && /SIZE Gallery/.test(detail) && /THE PIGMENT Grey/.test(detail) && /Raw Jute/.test(detail) && /Subtotal £799/.test(detail) && /DPD Delivery £12\.95/.test(detail) && /Total £811\.95/.test(detail) && /Ada Signin, 1 High Street, Wimborne, BH21 1AA/.test(detail), detail.slice(0, 400));
 
     // Unfinished checkout attempts aren't listed.
     sql(`update orders set status = 'awaiting_payment' where order_number = '${orderNumber}'`);

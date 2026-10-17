@@ -758,13 +758,11 @@ class CheckoutController extends AbstractController
         }
 
         if ($order->isPaid()) {
+            // Emptied, gift choice included, even when paying has already
+            // emptied it (a signed-in buyer's basket is the account's).
             $cart = $this->cartResolver->peekCart();
-            if ($cart instanceof Cart && ! $cart->isEmpty()) {
-                foreach ($cart->getCartItems()->toArray() as $line) {
-                    $cart->removeCartItem($line);
-                }
-
-                $cart->setGiftArriveBy(null);
+            if ($cart instanceof Cart && (! $cart->isEmpty() || $cart->isGift())) {
+                $cart->clear();
                 $this->entityManager->flush();
             }
 

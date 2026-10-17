@@ -64,7 +64,7 @@ try {
             document.querySelector('input[name$="[payment]"][value="deposit"]').click();
             document.querySelector('[data-quote-deposit]').value = '40';` : ''}
             document.querySelector('[data-quote-delivery]').value = '60';
-            document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Next Day Delivery';
+            document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Delivery';
             document.querySelector('[name$="[castingDate]"]').value = '2026-11-16';
             window.confirm = () => true;
             document.querySelector('[data-quote-send]').click();
@@ -133,7 +133,7 @@ try {
     const done = await c.ev(`({ path: location.pathname, text: document.querySelector('main').innerText.replace(/\\s+/g, ' ') })`);
     check('paid: "Order Confirmed", "Paid · £1,564", "Balance to pay later · £2,346"', /\/quote\/.+\/complete$/.test(done.path) && /Order Confirmed/i.test(done.text) && /Paid · £1,564/.test(done.text) && /Balance to pay later · £2,346/.test(done.text), done.text.slice(0, 300));
     const order = sql(`select o.order_number, o.status, o.total, o.subtotal, o.shipping_cost, o.amount_paid, o.charge_now, o.shipping_service_name, u.email, r.status as request_status from orders o join users u on u.id = o.user_id join design_request r on r.id = o.design_request_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid'`).replace(/\s+/g, ' ');
-    check('the order: Deposit Paid, total £3,910 (lamps and extra £3,850, delivery £60), £1,564 paid, the account for the email, the request now Deposit Paid', /LS-\d{6}-\d{4} deposit_paid 391000 385000 6000 156400 156400 DPD Next Day Delivery ada\.pay@example\.test deposit_paid/.test(order), order);
+    check('the order: Deposit Paid, total £3,910 (lamps and extra £3,850, delivery £60), £1,564 paid, the account for the email, the request now Deposit Paid', /LS-\d{6}-\d{4} deposit_paid 391000 385000 6000 156400 156400 DPD Delivery ada\.pay@example\.test deposit_paid/.test(order), order);
     const items = sql(`select product_title, quantity, unit_price, product_id is null as extra from order_item i join orders o on o.id = i.order_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid' order by i.product_id is null, product_title`).replace(/\s+/g, ' ');
     check("its lines: the design at the quoted price, the extra line", /Lumen Forma Atelier 2 185000 Custom pigment development 1 15000 1 /.test(items), items);
     const address = sql(`select a.line1, a.city, a.county, a.postcode from orders o join address a on a.id = o.shipping_address_id where o.design_request_id = '${deposit.id}' and o.status = 'deposit_paid'`).replace(/\s+/g, ' ');
@@ -152,7 +152,7 @@ try {
     const orderNumber = sql(`select order_number from orders where design_request_id = '${deposit.id}' and status = 'deposit_paid'`).match(/LS-\d{6}-\d{4}/)?.[0];
     const format = customerEmailProblems(confirmationHtml, 'Ada', "Thank you for your order, and for trusting me with your Lumen Forma Atelier lamps. They'll be cast by hand in our Dorset Studio, and I'll keep you updated as they take shape: when production begins, when the balance is due, and when they're on their way to you.");
     check('email 01 "Your Llunio Studios order LS-…" follows the email rules: Montage C, no heading, "Dear Ada," then "Thank you for your order…", one text size', confirmation?.Subject === `Your Llunio Studios order ${orderNumber}` && format.length === 0, format.join('; ') + ' | ' + confirmation?.Subject);
-    check('email 01 for a quote: the extra line, the quote\'s delivery, the total, the deposit paid and the balance', /Custom pigment development £150/.test(confirmationText) && /Delivery · DPD Next Day Delivery £60/.test(confirmationText) && /Total £3,910/.test(confirmationText) && /Paid \(deposit\) £1,564/.test(confirmationText) && /Balance to pay later £2,346/.test(confirmationText), confirmationText.slice(confirmationText.indexOf('Your configuration'), confirmationText.indexOf('Your configuration') + 900));
+    check('email 01 for a quote: the extra line, the quote\'s delivery, the total, the deposit paid and the balance', /Custom pigment development £150/.test(confirmationText) && /Delivery · DPD Delivery £60/.test(confirmationText) && /Total £3,910/.test(confirmationText) && /Paid \(deposit\) £1,564/.test(confirmationText) && /Balance to pay later £2,346/.test(confirmationText), confirmationText.slice(confirmationText.indexOf('Your configuration'), confirmationText.indexOf('Your configuration') + 900));
     check('email 01 for a quote: 03 Delivery with the address and the estimated casting date (no lead time)', /03 Delivery Delivery address Ada Pay 1 High Street Wimborne Dorset BH21 1AA Estimated casting date 16 November 2026 View your order/.test(confirmationText), confirmationText.slice(confirmationText.indexOf('03 Delivery'), confirmationText.indexOf('03 Delivery') + 300));
     // "View your order": the order's private page, without signing in, never indexed.
     const viewLink = confirmationHtml.match(/<a href="([^"]+\/order\/[A-Za-z0-9_-]+)"[^>]*>View your order</)?.[1].replace(/^https?:\/\/[^/]+/, BASE_URL);
@@ -171,7 +171,7 @@ try {
     const depositHtml = depositMail ? (await message(depositMail.ID)).HTML : '';
     const depositSummary = depositHtml.match(/data-studio-summary>([\s\S]*?)<\/table>/)?.[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     const depositFormat = studioEmailProblems(depositHtml, 'Deposit paid');
-    check('the studio is emailed "Deposit paid · Atelier × 2 · £1,564 of £3,910": no greeting, the summary first (order, lamps, paid, still to pay, customer, delivery, request, casting)', depositMail?.Subject === 'Deposit paid · Atelier × 2 · £1,564 of £3,910' && depositFormat.length === 0 && new RegExp(`^Order ${orderNumber} · \\d+ \\w+ 2026, \\d\\d:\\d\\d Lamps Atelier × 2 Paid £1,564 deposit of £3,910 Still to pay £2,346 Customer Ada Pay Delivery DPD Next Day Delivery · BH21 1AA Request ${number} Casting 16 November 2026 \\(estimated\\)$`).test(depositSummary ?? ''), depositFormat.join('; ') + ' | ' + depositMail?.Subject + ' | ' + depositSummary);
+    check('the studio is emailed "Deposit paid · Atelier × 2 · £1,564 of £3,910": no greeting, the summary first (order, lamps, paid, still to pay, customer, delivery, request, casting)', depositMail?.Subject === 'Deposit paid · Atelier × 2 · £1,564 of £3,910' && depositFormat.length === 0 && new RegExp(`^Order ${orderNumber} · \\d+ \\w+ 2026, \\d\\d:\\d\\d Lamps Atelier × 2 Paid £1,564 deposit of £3,910 Still to pay £2,346 Customer Ada Pay Delivery DPD Delivery · BH21 1AA Request ${number} Casting 16 November 2026 \\(estimated\\)$`).test(depositSummary ?? ''), depositFormat.join('; ') + ' | ' + depositMail?.Subject + ' | ' + depositSummary);
     check('and replies to it go to the customer', ((await message(depositMail?.ID ?? '')).ReplyTo || []).some((r) => r.Address === EMAIL));
 
     // Admin.

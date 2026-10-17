@@ -106,7 +106,7 @@ export default class extends Controller {
                 billingAddressRequired: true,
                 shippingAddressRequired: true,
                 allowedShippingCountries: ['GB'],
-                shippingRates: [{ id: 'dpd', displayName: 'DPD Next Day Delivery', amount: 0 }],
+                shippingRates: [{ id: 'dpd', displayName: 'DPD Delivery', amount: 0 }],
             });
         });
         express.on('shippingaddresschange', async (event) => {
@@ -119,7 +119,7 @@ export default class extends Controller {
                     return;
                 }
                 this.wallet.update({ amount: data.subtotalPence + data.deliveryPence });
-                event.resolve({ shippingRates: [{ id: 'dpd', displayName: 'DPD Next Day Delivery', amount: data.deliveryPence }] });
+                event.resolve({ shippingRates: [{ id: 'dpd', displayName: 'DPD Delivery', amount: data.deliveryPence }] });
             } catch {
                 event.reject();
             }

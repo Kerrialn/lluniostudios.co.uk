@@ -122,8 +122,8 @@
                     </div>
                     <div class="{{ section }}">Contact</div>
                     <div class="{{ grid }}">
-                        {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *' }) }}
-                        {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order and delivery updates) *' }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.email, label: 'Email *', align: true }) }}
+                        {{ include('checkout/_field.html.twig', { child: form.phone, label: 'Your Mobile (for order and delivery updates) *', align: true }) }}
                     </div>
 
                     <div class="{{ section }}">Delivery address{% if designRequest.directGift %} <span class="normal-case tracking-normal text-[13px]">(the recipient's: sent directly, with no prices in the box)</span>{% endif %}</div>

@@ -4,7 +4,7 @@
 // The card number, expiry and security code are Stripe's boxes on ours
 // (compared as boxes). Expected differences: "Your Mobile (for order and delivery updates)"
 // for "Phone (for delivery updates)" (decided, so its row shows as missing on
-// each side); "DPD Next Day Delivery" for
+// each side); "DPD Delivery" for
 // "UK Express Delivery (DPD)", sizes without abbreviations,
 // "Calculated from postcode" until one is typed (as the prototype's logic).
 //   PROTOTYPE_DIR=... node tests/browser/compare/card-payment.mjs 1440 900

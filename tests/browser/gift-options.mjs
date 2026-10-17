@@ -11,6 +11,9 @@
 // to Reserve Your Design with every gift detail. Reserve Your Design: the
 // same options and their messages; the request, email 02 and the studio's
 // email show them; quoted and paid, the order carries them.
+// Once an order is paid or a request sent, the gift choice and date are
+// cleared, so the next order starts fresh (basket and Reserve Your Design),
+// signed in or not (fixed 17 October 2026).
 // Paid with Stripe's test card (pm_card_visa) through the page's own requests.
 import { open, sleep, checker, sql, out, BASE_URL, MAILPIT_URL } from './lib.mjs';
 
@@ -27,10 +30,10 @@ const uuid = (text) => text.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 const go = async (x, url, wait = 2500) => { await x.send('Page.navigate', { url }); await sleep(wait); };
 const latest = async (query, since, includes = '') => { for (let i = 0; i < 10; i++) { for (const m of await mailpit(query)) if (new Date(m.Created) > since && (await message(m.ID)).HTML.includes(includes)) return message(m.ID); await sleep(500); } return null; };
 const lamp = { 'The Pigment': 'Grey', 'Cable Colour': 'Raw Jute', 'Footing Material': 'Polished Copper', 'Bulb Style': 'Smoked Glass LED' };
-const addGallery = async () => {
-    await go(b, BASE_URL + '/lighting-designs', 1800);
-    await b.ev(`document.querySelector('form[action$="/lighting-designs/add"]').removeAttribute('data-action')`); await sleep(100);
-    await b.ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify({ size: 'lumen-forma-gallery', quantity: 1, mode: 'all', lamps: [lamp] }))}; f.requestSubmit(); })()`); await sleep(2500);
+const addGallery = async (x = b) => {
+    await go(x, BASE_URL + '/lighting-designs', 1800);
+    await x.ev(`document.querySelector('form[action$="/lighting-designs/add"]').removeAttribute('data-action')`); await sleep(100);
+    await x.ev(`(() => { const f = document.querySelector('form[action$="/lighting-designs/add"]'); f.querySelector('[name=configuration]').value = ${JSON.stringify(JSON.stringify({ size: 'lumen-forma-gallery', quantity: 1, mode: 'all', lamps: [lamp] }))}; f.requestSubmit(); })()`); await sleep(2500);
 };
 // The basket's gift choice: sendTo 'me', 'recipient' or null (none chosen).
 const basketGift = async (sendTo) => {
@@ -42,19 +45,28 @@ const basketGift = async (sendTo) => {
     await b.ev(`[...document.querySelectorAll('main aside button')].find(e => e.textContent.trim() === 'Proceed to Payment').click()`); await sleep(2500);
     return arrive;
 };
-// Admin sign-in (the code from Mailpit); again after the visitor's cookies are cleared.
-const signInAdmin = async () => {
+// Sign-in (the code from Mailpit), as admin unless another account is given; again after the visitor's cookies are cleared.
+const signInAdmin = async (email = ADMIN) => {
     const since = new Date();
     await go(b, BASE_URL + '/login');
-    await b.ev(`(() => { const i = document.querySelector('input[name=email]'); i.value = ${JSON.stringify(ADMIN)}; i.form.requestSubmit(); })()`); await sleep(2500);
+    await b.ev(`(() => { const i = document.querySelector('input[name=email]'); i.value = ${JSON.stringify(email)}; i.form.requestSubmit(); })()`); await sleep(2500);
     let code;
     for (let i = 0; i < 20 && !code; i++) {
-        const m = (await mailpit(`to:${ADMIN} subject:"Sign in to Llunio Studios"`)).find((x) => new Date(x.Created) > since);
+        const m = (await mailpit(`to:${email} subject:"Sign in to Llunio Studios"`)).find((x) => new Date(x.Created) > since);
         if (m) code = (await message(m.ID)).HTML.match(/data-login-code>(\d{6})</)?.[1];
         if (!code) await sleep(500);
     }
     await b.ev(`(() => { const h = document.querySelector('[data-pin-code-target=hidden]'); h.value = '${code}'; h.form.requestSubmit(); })()`); await sleep(3000);
 };
+// The gift as the next order finds it: the basket's tick and date, then Reserve Your Design's (needs a lamp in the basket).
+const giftState = async (x = b) => {
+    await go(x, BASE_URL + '/basket');
+    const basket = await x.ev(`({ ticked: document.querySelector('[name$="[gift]"]')?.checked, date: document.querySelector('main aside input[type=date]')?.value })`);
+    await go(x, BASE_URL + '/reserve');
+    const reserve = await x.ev(`({ path: location.pathname, ticked: document.querySelector('[name="reserve_form[gift]"]')?.checked, date: document.querySelector('[name="reserve_form[giftNeededBy]"]')?.value })`);
+    return { basket, reserve };
+};
+const fresh = (state) => state.basket.ticked === false && !state.basket.date && state.reserve.path === '/reserve' && state.reserve.ticked === false && !state.reserve.date;
 const niceDate = (iso) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const shortDate = (iso) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 try {
@@ -146,6 +158,24 @@ try {
     const walletMail = await latest(`to:${EMAIL} subject:"Your Llunio Studios order"`, since, walletOrder);
     check('a wallet payment: the buyer is the payer (DR BOB PAYER), greeted "Dear Bob,"; the message kept; with no recipient\'s mobile DPD has the customer\'s', walletPaid === 'succeeded' && /DR BOB PAYER From Bob 07700 900123/.test(walletRow) && /Dear Bob,/.test(flat(walletMail?.HTML ?? '')), walletRow);
 
+    // 4b. The next order starts fresh: the gift choice and date are cleared once paid.
+    await addGallery();
+    const afterWallet = await giftState();
+    check('after a paid gift order, the next order starts fresh: "This is a gift" unticked and no date, in the basket and on Reserve Your Design', fresh(afterWallet), JSON.stringify(afterWallet));
+
+    // Signed in, the basket is the account's and paying empties it first: the gift is still cleared.
+    await b.send('Network.clearBrowserCookies');
+    await signInAdmin(EMAIL);
+    await addGallery();
+    await basketGift('me');
+    await fill({ email: EMAIL, phone: '07700 900123', name: 'Ada Lovelace', line1: '1 High Street', town: 'Wimborne', postcode: 'BH21 1AA', cardName: 'Ada Lovelace' });
+    r = await pay();
+    const signedInPaid = r.status === 'confirm' ? await b.ev(`Stripe(document.querySelector('main form').dataset.checkoutStripeKeyValue).confirmCardPayment(${JSON.stringify(r.clientSecret)}, { payment_method: 'pm_card_visa' }).then(x => x.error ? x.error.message : x.paymentIntent.status)`) : r;
+    await go(b, r.completeUrl.replace(/^https?:\/\/[^/]+/, BASE_URL), 3000);
+    await addGallery();
+    const afterSignedIn = await giftState();
+    check('signed in: after a paid gift order the next order starts fresh, in the basket and on Reserve Your Design', signedInPaid === 'succeeded' && fresh(afterSignedIn), JSON.stringify({ signedInPaid, afterSignedIn }));
+
     // 5. Outside the UK mainland: a direct gift goes to Reserve Your Design with every detail.
     await b.send('Network.clearBrowserCookies');
     await addGallery();
@@ -188,6 +218,9 @@ try {
     const requestNumber = sql(`select request_number from design_request where email = '${EMAIL}' order by created_at desc limit 1`).match(/LR-\d{6}-\d{4}/)?.[0];
     const requestRow = sql(`select gift, gift_needed_by, gift_send_to, gift_recipient_name, gift_recipient_phone, replace(gift_message, chr(10), '|') from design_request where request_number = '${requestNumber}'`).replace(/\s+/g, ' ');
     check('the request keeps the gift: needed by, "recipient", the recipient\'s name and mobile, the message', (await b.ev('location.pathname')) === '/reserve/received' && requestRow.includes(`1 ${earliest} recipient Grace Friend 07700 900999 Happy birthday, Grace!|Love, Ada`), requestRow);
+    await addGallery();
+    const afterRequest = await giftState();
+    check('after a gift request is sent, the next order starts fresh: "This is a gift" unticked and no date, on Reserve Your Design and in the basket', fresh(afterRequest), JSON.stringify(afterRequest));
     const received = await latest(`to:${EMAIL} subject:"Your Lumen Forma request"`, since, requestNumber);
     const receivedText = flat(received?.HTML ?? '');
     check(`email 02: "Dear Ada," (from "MRS ADA LOVELACE"), "Gift: Needed by ${niceDate(earliest)} / Send directly to the recipient: Grace Friend", the message, the address with the recipient's name`, /Dear Ada,/.test(receivedText) && receivedText.includes(`Gift Needed by ${niceDate(earliest)} / Send directly to the recipient: Grace Friend Gift message Happy birthday, Grace! / Love, Ada`), receivedText.slice(receivedText.indexOf('01 Request'), receivedText.indexOf('01 Request') + 300));
@@ -202,7 +235,7 @@ try {
     // 7. Quoted and paid: the order carries the gift.
     await go(b, `${BASE_URL}/admin/design-request/${requestId}/quote`, 3500);
     const quoteGift = await b.ev(`document.body.innerText.includes('Direct to recipient: no prices in the box')`);
-    await b.ev(`(() => { document.querySelector('[data-quote-delivery]').value = '60'; document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Next Day Delivery'; document.querySelector('[name$="[castingDate]"]').value = '2026-11-16'; window.confirm = () => true; document.querySelector('[data-quote-send]').click(); })()`); await sleep(4000);
+    await b.ev(`(() => { document.querySelector('[data-quote-delivery]').value = '60'; document.querySelector('[name$="[deliveryLabel]"]').value = 'DPD Delivery'; document.querySelector('[name$="[castingDate]"]').value = '2026-11-16'; window.confirm = () => true; document.querySelector('[data-quote-send]').click(); })()`); await sleep(4000);
     const quoteMail = await latest(`to:${EMAIL} subject:"Your Lumen Forma quote"`, since, requestNumber);
     const quoteLink = (quoteMail?.HTML ?? '').match(/<a href="([^"]+\/quote\/[A-Za-z0-9_-]+)"/)?.[1].replace(/^https?:\/\/[^/]+/, BASE_URL);
     const quoteText = flat(quoteMail?.HTML ?? '');
@@ -220,5 +253,8 @@ try {
     const quoteOrder = sql(`select o.customer_name, o.gift, o.gift_arrive_by, o.gift_send_to, s.recipient_name, s.phone, replace(o.gift_message, chr(10), '|') from orders o join address s on s.id = o.shipping_address_id where o.design_request_id = '${requestId}' and o.status in ('paid', 'deposit_paid')`).replace(/\s+/g, ' ');
     const quoteOrderMail = await latest(`to:${EMAIL} subject:"Your Llunio Studios order"`, since);
     check('paid: the order carries the gift (date, "recipient", message), the recipient\'s name and mobile for DPD, the buyer; email 01 greets "Dear Ada,"', quotePaid === 'succeeded' && quoteOrder.includes(`MRS ADA LOVELACE 1 ${earliest} recipient Grace Friend 07700 900999 Happy birthday, Grace!|Love, Ada`) && /Dear Ada,/.test(flat(quoteOrderMail?.HTML ?? '')), quoteOrder);
+    await addGallery(a);
+    const afterQuote = await giftState(a);
+    check('after a gift quote is paid, the next order starts fresh: "This is a gift" unticked and no date, in the basket and on Reserve Your Design', fresh(afterQuote), JSON.stringify(afterQuote));
     summary();
 } finally { b.close(); a?.close(); }

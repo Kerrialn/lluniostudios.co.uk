@@ -102,6 +102,20 @@ class Cart
         return $this;
     }
 
+    /**
+     * Empty the basket and forget its gift choice (the tick, the date and
+     * where to send it), once its order is paid or its request sent, so the
+     * next order starts fresh.
+     */
+    public function clear(): void
+    {
+        foreach ($this->cartItems->toArray() as $cartItem) {
+            $this->removeCartItem($cartItem);
+        }
+
+        $this->setGiftArriveBy(null);
+    }
+
     public function isGift(): bool
     {
         return $this->gift;

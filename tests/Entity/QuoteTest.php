@@ -23,7 +23,7 @@ final class QuoteTest extends TestCase
         $quote = new Quote($request);
         $quote->addLine(QuoteLine::forLamp(new DesignRequestItem(null, 'Lumen Forma Atelier', 'Atelier', 169900, 2, false, []), 185000));
         $quote->addLine(QuoteLine::extra('Custom pigment development', 15000));
-        $quote->setDelivery(6000, 'DPD Next Day Delivery', false);
+        $quote->setDelivery(6000, 'DPD Delivery', false);
 
         self::assertSame(370000, $quote->getLampsTotal());
         self::assertSame(15000, $quote->getExtrasTotal());
@@ -74,7 +74,7 @@ final class QuoteTest extends TestCase
         self::assertFalse($quote->isExpired(new \DateTimeImmutable('2026-10-22 22:00:00', new \DateTimeZone('UTC'))));
         self::assertTrue($quote->isExpired(new \DateTimeImmutable('2026-10-22 23:00:00', new \DateTimeZone('UTC'))));
 
-        $quote->setDelivery(6000, 'DPD Next Day Delivery', false);
+        $quote->setDelivery(6000, 'DPD Delivery', false);
         self::assertTrue($quote->isChangedSinceSent());
         self::assertSame(100000, $quote->getSent()['total'] ?? null);
 

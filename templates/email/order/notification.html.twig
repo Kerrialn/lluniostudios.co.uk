@@ -27,7 +27,7 @@
 {% if order.amountOwed > 0 %}{% set summaryRows = summaryRows|merge({ 'Still to pay': m.money(order.amountOwed) }) %}{% endif %}
 {% set summaryRows = summaryRows|merge({ 'Customer': order.customerName ?: (a ? a.recipientName : order.email) }) %}
 {% if order.directGift and a %}{% set summaryRows = summaryRows|merge({ 'Recipient': a.recipientName }) %}{% endif %}
-{% set summaryRows = summaryRows|merge({ 'Delivery': (order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Next Day Delivery') ~ (a and a.postcode ? ' · ' ~ a.postcode : '') }) %}
+{% set summaryRows = summaryRows|merge({ 'Delivery': (order.designRequest and order.shippingServiceName ? order.shippingServiceName : 'DPD Delivery') ~ (a and a.postcode ? ' · ' ~ a.postcode : '') }) %}
 {% if order.designRequest %}{% set summaryRows = summaryRows|merge({ 'Request': order.designRequest.requestNumber }) %}{% endif %}
 {% if castingDate %}{% set summaryRows = summaryRows|merge({ 'Casting': castingDate|date('j F Y') ~ ' (estimated)' }) %}{% endif %}
 
