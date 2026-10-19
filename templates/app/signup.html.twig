@@ -2,48 +2,107 @@
 
 {#
     Signup (request access), shown at /signup while APP_UNDER_MAINTENANCE is 1.
-    Styled as the design-foundation branch's forms: Special Elite, cream on
-    near-black, boxed fields, uppercase letter-spaced labels and button.
+    The background is the design-foundation homepage's "Test 2" hero: the dark
+    photo of a Lumen Forma, which glides to the lit shot when you scroll over
+    or drag on the bulb (bulb_dimmer_controller.js). The lamp is on the left;
+    the logo, intro and form are on the right, never over the lamp, and
+    switch from the bulb's amber to near-black as it brightens (app.css,
+    "Signup page").
+
+    Phones (below 760px): the column beside the lamp is too narrow for the
+    form, so the logo and intro stay beside the lamp and the form goes below
+    the photo on the homepage's amber panel, in near-black.
 #}
-{% block body_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
+{% block body_class %}bg-[#fca941] min-[760px]:bg-[#040101] text-ll-ink font-elite{% endblock %}
+
+{# Messages are shown beside the form rather than as toasts, which on phones would cover the lamp. #}
+{% block flashes %}<div id="flashes"></div>{% endblock %}
 
 {# Plain widgets: the page styles its fields itself. #}
 {% form_theme newsletterSubscriberForm 'form_div_layout.html.twig' %}
 
+{#
+    One photo plus its fills, as on the homepage. Beside the photo (wide
+    screens) its right-edge strip is stretched across the gap. Above and below
+    it (tall screens) the edge strip continues the photo for the first 48px,
+    then fades into that edge's average colour.
+#}
+{% macro photo_layer(name, alt) %}
+    {% set average = {
+        dim: { top: '#030000', bottom: '#080201' },
+        bright: { top: '#a65e01', bottom: '#ac5e01' },
+    }[name] %}
+    {% set base = 'images/home/hero-' ~ name %}
+    <div class="ll-home-fill-top" style="background-image: linear-gradient(to top, transparent, {{ average.top }} 48px), url('{{ asset(base ~ '-edge-top.png') }}')"></div>
+    <div class="ll-home-fill-bottom" style="background-image: linear-gradient(to bottom, transparent, {{ average.bottom }} 48px), url('{{ asset(base ~ '-edge-bottom.png') }}')"></div>
+    <div class="ll-home-fill-right" style="background-image: url('{{ asset(base ~ '-edge-right.png') }}')"></div>
+    <picture>
+        <source type="image/webp" srcset="{{ asset(base ~ '-1280.webp') }} 1280w, {{ asset(base ~ '-2560.webp') }} 2560w" sizes="min(100vw, 134vh)">
+        <img src="{{ asset(base ~ '-2560.jpg') }}"
+             srcset="{{ asset(base ~ '-1280.jpg') }} 1280w, {{ asset(base ~ '-2560.jpg') }} 2560w"
+             sizes="min(100vw, 134vh)" alt="{{ alt }}" {{ alt ? '' : 'aria-hidden="true"' }} draggable="false"
+             class="ll-home-frame object-fill select-none" {{ name == 'dim' ? 'fetchpriority="high"' : '' }}>
+    </picture>
+{% endmacro %}
+
 {% block body %}
-    {% set box = 'w-full h-12 px-3.5 bg-transparent text-ll-ink border border-ll-mute rounded-none outline-none text-[15px] leading-[1.5] focus:border-ll-ink' %}
-    <div class="mx-auto max-w-5xl px-5 py-12 min-h-screen flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16">
-        <div class="w-full max-w-[180px] md:max-w-[280px] md:w-1/2 flex justify-center">
-            <img src="{{ asset('images/brand/logo-full-light.png') }}" alt="Llunio Studios" class="w-full h-auto"/>
+    {% set box = 'w-full h-12 px-3.5 bg-transparent border border-current rounded-none outline-none text-[15px] leading-[1.5] placeholder:text-current placeholder:opacity-60 focus:outline-1 focus:outline-current' %}
+    <section class="ll-signup grid" {{ stimulus_controller('bulb-dimmer') }}>
+        <div class="ll-home-stage ll-signup-stage relative overflow-hidden bg-[#040101]">
+            {{ _self.photo_layer('dim', 'A Lumen Forma lamp, lit') }}
+            <div class="ll-home-lit absolute inset-0 opacity-0 pointer-events-none" data-bulb-dimmer-target="overlay" aria-hidden="true">
+                {{ _self.photo_layer('bright', '') }}
+            </div>
+
+            {# Bulb controls, positioned as percentages of the photo so they stay on the bulb. #}
+            <div class="ll-home-frame z-[2] pointer-events-none">
+                <div class="absolute min-w-[88px] min-h-[88px] rounded-[45%] cursor-ns-resize touch-none pointer-events-auto
+                            left-[11%] top-[30%] w-[20%] h-[34%]
+                            min-[900px]:left-[16.2%] min-[900px]:top-[36%] min-[900px]:w-[10.2%] min-[900px]:h-[21.5%]"
+                     title="Scroll to adjust brightness" role="slider" tabindex="0" aria-label="Lamp brightness"
+                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+                     data-bulb-dimmer-target="hit"></div>
+                <div class="ll-home-meter absolute left-[33%] top-[38%] h-[17%] w-px bg-[rgba(21,18,14,.22)] opacity-0 transition-opacity duration-[400ms]"
+                     data-bulb-dimmer-target="meter" aria-hidden="true">
+                    <div class="ll-home-meter-fill absolute -left-px -right-px bottom-0 h-0 bg-[#15120e]" data-bulb-dimmer-target="meterFill"></div>
+                </div>
+            </div>
         </div>
-        <div class="w-full md:w-1/2 max-w-md">
-            <div class="flex flex-col gap-6 text-[15px] leading-relaxed">
-                <div class="flex flex-col gap-3">
-                    <p>Llunio Studios is currently in the workshop.</p>
-                    <p class="text-ll-mute">
+
+        <div class="ll-signup-side ll-sw-text">
+            <div class="ll-signup-head">
+                <span class="ll-signup-logo" style="--ll-logo-mask: url('{{ asset('images/brand/logo-full-special-elite.png') }}')" role="img" aria-label="Llunio Studios"></span>
+                <div class="ll-signup-intro flex flex-col gap-3">
+                    <p>We're currently in the workshop,</p>
+                    <p>
                         We are refining our first collection of liquid stone sculptural lamps, request an
                         invitation to the launch below.
                     </p>
                 </div>
-                {{ form_start(newsletterSubscriberForm, { attr: { class: 'flex flex-col gap-6 border-t border-ll-line pt-6' } }) }}
-                    {% for field in [newsletterSubscriberForm.name, newsletterSubscriberForm.email] %}
-                        <div class="flex flex-col gap-2">
-                            {{ form_label(field, null, { label_attr: { class: 'll-label' } }) }}
-                            {{ form_widget(field, { attr: { class: box ~ (field.vars.errors|length ? ' border-ll-ink' : ''), placeholder: false } }) }}
-                            {% for error in field.vars.errors %}
-                                <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                    {% for error in newsletterSubscriberForm.vars.errors %}
-                        <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
-                    {% endfor %}
-                    <button type="submit"
-                            class="ll-cta w-full bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]">
-                        {{ 'request-access'|trans }}
-                    </button>
-                {{ form_end(newsletterSubscriberForm) }}
             </div>
+
+            {{ form_start(newsletterSubscriberForm, { attr: { class: 'll-signup-form flex flex-col gap-5' } }) }}
+                {% for type, messages in app.flashes %}
+                    {% for message in messages %}
+                        <p class="text-[15px] leading-[1.5]" role="{{ type == 'error' ? 'alert' : 'status' }}">{{ message }}</p>
+                    {% endfor %}
+                {% endfor %}
+                {% for field in [newsletterSubscriberForm.name, newsletterSubscriberForm.email] %}
+                    <div class="flex flex-col gap-2">
+                        {{ form_label(field, null, { label_attr: { class: 'll-label' } }) }}
+                        {{ form_widget(field, { attr: { class: box, placeholder: false } }) }}
+                        {% for error in field.vars.errors %}
+                            <span class="text-[12px]" role="alert">{{ error.message }}</span>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                {% for error in newsletterSubscriberForm.vars.errors %}
+                    <span class="text-[12px]" role="alert">{{ error.message }}</span>
+                {% endfor %}
+                <button type="submit" class="ll-signup-button ll-cta w-full p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]">
+                    {{ 'request-access'|trans }}
+                </button>
+            {{ form_end(newsletterSubscriberForm) }}
         </div>
-    </div>
+    </section>
 {% endblock %}
