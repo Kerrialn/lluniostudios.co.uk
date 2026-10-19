@@ -49,7 +49,7 @@ class Order
     #[ORM\Column(type: Types::INTEGER)]
     private int $total = 0;
 
-    #[ORM\Column(type: Types::STRING, length: 16, enumType: ShippingMethod::class, nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 16, nullable: true, enumType: ShippingMethod::class)]
     private ?ShippingMethod $shippingMethod = null;
 
     #[ORM\Column(length: 64, nullable: true)]

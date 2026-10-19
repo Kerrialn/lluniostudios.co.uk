@@ -1,4 +1,10 @@
-# https://github.com/docker/build-push-action/blob/master/docs/advanced/tags-labels.md
+# Builds the production image and deploys it, once Tests has passed on main.
+#
+# Image (GHCR): ghcr.io/kerrialn/lluniostudios.co.uk-php, FrankenPHP serving
+# PHP and the static files in one container.
+#
+# The repo belongs to Kerrialn, so the image goes under that account: the job's
+# own GITHUB_TOKEN can push there, with no personal access token to expire.
 
 name: Release
 
@@ -10,98 +16,104 @@ on:
     branches:
       - main
 
+# One release at a time; a newer push waits rather than racing the deploy.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   docker:
-    name: "Docker images"
+    name: "Docker image"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      # The commit Tests ran against, not whatever main points at now.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Docker meta PHP
-        id: meta-php
+      - name: Docker meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
-          # list of Docker images to use as base name for tags
-          images: |
-            ghcr.io/eventpoints/lluniostudios.co.uk-php
-          # generate Docker tags based on the following events/attributes
+          images: ghcr.io/kerrialn/lluniostudios.co.uk-php
           tags: |
-            type=ref,event=branch
-            type=sha
-          no-cache: true
+            type=raw,value=main
+            type=sha,format=long
 
-      - name: Docker meta Caddy
-        id: meta-caddy
-        uses: docker/metadata-action@v5
-        with:
-          # list of Docker images to use as base name for tags
-          images: |
-            ghcr.io/eventpoints/lluniostudios.co.uk-caddy
-          # generate Docker tags based on the following events/attributes
-          tags: |
-            type=ref,event=branch
-            type=sha
+      - uses: docker/setup-buildx-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.REPO_ACCESS_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push PHP
-        uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v5
         with:
           context: .
-          target: php
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-php.outputs.tags }}
-          labels: ${{ steps.meta-php.outputs.labels }}
-          cache-from: type=gha, scope=${{ github.workflow }}
-          cache-to: type=gha, scope=${{ github.workflow }}
-
-      - name: Build and push Caddy
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          target: caddy
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-caddy.outputs.tags }}
-          labels: ${{ steps.meta-caddy.outputs.labels }}
-          cache-from: type=gha, scope=${{ github.workflow }}
-          cache-to: type=gha, scope=${{ github.workflow }}
+          target: frankenphp_prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=php
+          cache-to: type=gha,mode=max,scope=php
 
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      # Lets the server pull the private image with this job's token.
+      packages: read
     needs:
       - docker
     environment:
       name: prod
       url: https://lluniostudios.co.uk
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Copy docker-compose template
-        run: cp .deployment/docker-compose.production-template.yml .deployment/docker-compose.yml
-
-      # Iterate over secrets as JSON and replace possible placeholders
-      # Save output to the file to be processed
+      # Fills __SECRET_NAME__ placeholders: literal string replacement in
+      # Python, so no secret value can break a sed expression.
       - name: Prepare docker-compose file
-        run: echo $SECRETS | jq --raw-output 'keys[]' | while read -r secretKey; do cat .deployment/docker-compose.yml | sed "s#__${secretKey}__#$(echo $SECRETS | jq --raw-output .${secretKey} | tr -d '\n\t')#" > .deployment/docker-compose.yml; done
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+
+          secrets = json.loads(os.environ['SECRETS'])
+          template = pathlib.Path('.deployment/docker-compose.production-template.yml')
+          target = pathlib.Path('.deployment/docker-compose.yml')
+
+          # Secrets pasted into the GitHub UI often carry a trailing newline.
+          values = {key: str(value).replace('\n', '').replace('\t', '') for key, value in secrets.items()}
+
+          content = template.read_text()
+          # Longest first, so __X__ cannot eat part of a longer __X_Y__.
+          for key in sorted(values, key=len, reverse=True):
+              content = content.replace(f'__{key}__', values[key])
+
+          target.write_text(content)
+          PY
         env:
           SECRETS: ${{ toJson(secrets) }}
 
-      - run: cat .deployment/docker-compose.yml
+      # Never print the file: it holds every production secret. Names only.
+      - name: Verify every placeholder was substituted
+        run: |
+          leftover=$(grep -o '__[A-Z_]\+__' .deployment/docker-compose.yml | sort -u || true)
+          if [ -n "$leftover" ]; then
+            echo "::error::Unsubstituted placeholders — missing repository secrets:"
+            echo "$leftover"
+            exit 1
+          fi
+          echo "All placeholders substituted."
 
-      - name: Rsync Docker files
+      - name: Rsync deployment files
         uses: burnett01/rsync-deployments@5.2
         with:
           switches: -azvr --exclude='docker-compose.production-template.yml'
@@ -111,13 +123,40 @@ jobs:
           remote_user: ${{ secrets.DEPLOY_USERNAME }}
           remote_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
 
-      - uses: appleboy/ssh-action@master
+      # Pinned to a commit: this step is handed the deploy key.
+      - uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        env:
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USERNAME }}
           key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
-          script_stop: true
+          envs: GHCR_USER,GHCR_TOKEN
           script: |
+            set -e
             cd /lluniostudios.co.uk
-            docker-compose pull
-            docker-compose up -d
+            if docker compose version >/dev/null 2>&1; then
+              compose="docker compose"
+            elif command -v docker-compose >/dev/null 2>&1; then
+              compose="docker-compose"
+            else
+              echo "::error::Neither 'docker compose' nor 'docker-compose' is available on the host."
+              exit 1
+            fi
+            # The image is private. Log in with this job's short-lived token,
+            # in a Docker config of our own: the server's default one may hold
+            # the ghcr.io login other deploys depend on, and a login here would
+            # overwrite it with a token that dies with this job.
+            export DOCKER_CONFIG=/lluniostudios.co.uk/.docker
+            mkdir -p "$DOCKER_CONFIG"
+            # Docker also looks for CLI plugins (compose) under DOCKER_CONFIG;
+            # keep a per-user install reachable.
+            if [ -d "$HOME/.docker/cli-plugins" ] && [ ! -e "$DOCKER_CONFIG/cli-plugins" ]; then
+              ln -s "$HOME/.docker/cli-plugins" "$DOCKER_CONFIG/cli-plugins"
+            fi
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            $compose pull
+            docker logout ghcr.io
+            # --remove-orphans takes down the old separate caddy container.
+            $compose up -d --remove-orphans
