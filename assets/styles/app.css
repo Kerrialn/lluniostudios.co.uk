@@ -1261,8 +1261,9 @@ html.ll-menu-open { overflow: hidden; }
         text-shadow: 0 1px 2px rgba(0, 0, 0, calc(.35 * (1 - var(--lit))));
     }
     .ll-signup-logo { --logo-h: clamp(72px, 12.5vh, 124px); }
-    /* The meter goes in the gap between the lamp and the text. */
-    .ll-home-meter { left: calc(30.6% + 7px); }
+    /* The meter goes in the gap between the lamp and the text (this page only:
+       the homepage places its own). */
+    .ll-signup .ll-home-meter { left: calc(30.6% + 7px); }
     /* The page background (the panel under the photo, and what shows when the
        page is pulled past its top) fades with the brightness, from the dim
        photo's bottom-edge colour to the bulb's orange, so it blends with the
