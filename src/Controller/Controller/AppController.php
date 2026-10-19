@@ -9,6 +9,7 @@ use App\Repository\NewsletterSubscriberRepository;
 use App\Repository\ProductCollectionRepository;
 use App\Repository\ProductRepository;
 use App\Service\EmailService;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -18,6 +19,8 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class AppController extends AbstractController
 {
+    private const ALREADY_SIGNED_UP = "You're already on the list";
+
     public function __construct(
         private readonly ProductRepository $productRepository,
         private readonly ProductCollectionRepository $productCollectionRepository,
@@ -73,10 +76,25 @@ class AppController extends AbstractController
         $newsletterSubscriberForm->handleRequest($request);
         if($newsletterSubscriberForm->isSubmitted() && $newsletterSubscriberForm->isValid()){
 
+            // Already signed up: say so, and send nothing (no second confirmation or notification).
+            if ($this->newsletterSubscriberRepository->findOneByEmail($newsletterSubscriber->getEmail()) instanceof NewsletterSubscriber) {
+                $this->addFlash(FlashMessageEnum::SUSCCESS->value, self::ALREADY_SIGNED_UP);
+
+                return $this->redirectToRoute('signup');
+            }
+
             $this->emailService->sendNewsLetterSubscriptionEmail($newsletterSubscriber, [
                 'token' => $newsletterSubscriber->getConfirmationToken(),
             ]);
-            $this->newsletterSubscriberRepository->save($newsletterSubscriber, true);
+
+            try {
+                $this->newsletterSubscriberRepository->save($newsletterSubscriber, true);
+            } catch (UniqueConstraintViolationException) {
+                // The same email sent twice at once: the other request saved it.
+                $this->addFlash(FlashMessageEnum::SUSCCESS->value, self::ALREADY_SIGNED_UP);
+
+                return $this->redirectToRoute('signup');
+            }
 
             // Tell the studio; the signup is already saved, so a failed send is only logged.
             try {

@@ -73,3 +73,239 @@
     #navbar.nav-split.nav-light .navbar-actions { color: #111827; }
     #navbar.nav-split.nav-light .cart-badge { background: #111827; color: #ffffff; }
 }
+
+/* ---- Bulb-dimming hero (from design-foundation's homepage, "Test 2";
+   bulb_dimmer_controller.js), used as the signup page's background ----
+   The controller publishes the brightness as --ll-hero-b (0 to 1) on <html>.
+   Anything marked .ll-sw-text switches from the bulb's amber to near-black
+   once the brightness passes its switch point (--sw-text), with a 0.3s
+   crossfade, so it never passes through colours as dark as the photo.
+   --sw-fg is that colour and --sw-bg the other one (for a filled button). */
+:root {
+    --ll-hero-b: 0;
+    --sw-text: .52;
+}
+.ll-sw-text {
+    --sw: var(--sw-text);
+    --lit: clamp(0, (var(--ll-hero-b) - var(--sw)) * 100000, 1);
+    --sw-fg: rgb(calc(250 - 229 * var(--lit)) calc(179 - 161 * var(--lit)) calc(90 - 76 * var(--lit)));
+    --sw-bg: rgb(calc(21 + 229 * var(--lit)) calc(18 + 161 * var(--lit)) calc(14 + 76 * var(--lit)));
+    color: var(--sw-fg);
+    transition: color .3s ease, text-shadow .3s ease;
+}
+
+/* Images are wrapped in <picture> to offer WebP with the JPEG as fallback;
+   the wrapper takes no part in layout. */
+picture { display: contents; }
+
+/* The whole photo (4022x3015, ratio 1.334) is shown, never cropped: it fits
+   inside the stage, anchored left and 40% down. Any space left over is
+   filled by stretching strips of the photo's own edge pixels. */
+.ll-home-stage { container-type: size; }
+.ll-home-frame,
+.ll-home-fill-right {
+    position: absolute;
+    top: calc((100cqh - min(74.96cqw, 100cqh)) * 0.4);
+    height: min(74.96cqw, 100cqh);
+}
+.ll-home-frame {
+    left: 0;
+    width: min(100cqw, 133.4cqh);
+    max-width: none; /* Tailwind's base styles cap images at 100% width */
+}
+.ll-home-fill-right {
+    left: calc(min(100cqw, 133.4cqh) - 2px); /* tucked under the photo edge so no hairline shows */
+    right: -2%;
+}
+.ll-home-fill-top,
+.ll-home-fill-bottom {
+    position: absolute;
+    left: 0;
+    width: calc(min(100cqw, 133.4cqh) * 1.02);
+}
+.ll-home-fill-top {
+    top: 0;
+    height: calc((100cqh - min(74.96cqw, 100cqh)) * 0.4 + 2px);
+}
+.ll-home-fill-bottom {
+    top: calc((100cqh - min(74.96cqw, 100cqh)) * 0.4 + min(74.96cqw, 100cqh) - 2px);
+    bottom: 0;
+}
+.ll-home-fill-right,
+.ll-home-fill-top,
+.ll-home-fill-bottom {
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+/* The lit shot is offset by 0.995% of the photo's width to line up with the dark one. */
+.ll-home-lit { transform: translateX(calc(min(100cqw, 133.4cqh) * -0.00995)); }
+
+/* Phones (below 760px): the photo fills the stage height, so the lamp is
+   big. The lamp occupies 9.5%-30.6% of the photo's width and 14.2%-93% of
+   its height; it is placed 20px from the left edge. */
+@media (max-width: 759px) {
+    .ll-home-frame,
+    .ll-home-fill-right {
+        top: 0;
+        height: 100cqh;
+    }
+    .ll-home-frame {
+        width: 133.4cqh;
+        left: min(0px, max(100cqw - 133.4cqh, 20px - 133.4cqh * 0.095));
+    }
+    .ll-home-fill-right {
+        left: calc(min(0px, max(100cqw - 133.4cqh, 20px - 133.4cqh * 0.095)) + 133.4cqh - 2px);
+    }
+    .ll-home-fill-top,
+    .ll-home-fill-bottom { display: none; }
+    .ll-home-lit { transform: translateX(calc(133.4cqh * -0.00995)); }
+}
+
+.ll-home-meter-fill { transition: height .45s cubic-bezier(.25, .6, .3, 1); }
+.is-dragging .ll-home-meter-fill { transition: none; }
+
+/* ---- Signup page (templates/app/signup.html.twig) ----
+   The lamp on the left; on the right, the logo, the intro and the form,
+   all switching colour with the brightness. Nothing sits over the lamp: the
+   column starts at least 48% from the right, and the lamp ends at 30.6% of
+   the photo's width. */
+.ll-signup-logo {
+    display: block;
+    align-self: flex-start; /* in line with the text, not centred */
+    aspect-ratio: 386 / 489;
+    height: clamp(96px, 16vh, 160px);
+    background-color: currentColor;
+    -webkit-mask: var(--ll-logo-mask) left center / contain no-repeat;
+    mask: var(--ll-logo-mask) left center / contain no-repeat;
+    transition: background-color .3s ease;
+}
+.ll-signup-head {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(20px, 3vh, 32px);
+    font-size: 15px;
+    line-height: 1.6;
+}
+.ll-signup-button {
+    background-color: var(--sw-fg);
+    color: var(--sw-bg);
+    transition: background-color .3s ease, color .3s ease, opacity .3s;
+}
+.ll-signup-form input { transition: border-color .3s ease, color .3s ease; }
+/* Browser autofill keeps the page's look: no pale box, typed text in the current colour. */
+.ll-signup-form input:-webkit-autofill {
+    -webkit-text-fill-color: currentColor;
+    transition: background-color 600000s 0s, color .3s ease;
+}
+
+@media (min-width: 760px) {
+    /* The photo fills the section behind the column, so the page grows if the
+       column is ever taller than the screen. (The stage needs a definite
+       height for the photo's container units, hence inset rather than a
+       min-height.) */
+    .ll-signup {
+        position: relative;
+        min-height: max(600px, 100vh);
+    }
+    .ll-signup-stage {
+        position: absolute;
+        inset: 0;
+    }
+    /* --Hs is the stage height, --pH and --pT the photo's height and top.
+       The bottom padding keeps the column above the cable on the floor
+       (the photo's bottom 17%). */
+    .ll-signup {
+        --Hs: max(600px, 100vh);
+        --pH: min(74.96vw, var(--Hs));
+        --pT: calc((var(--Hs) - var(--pH)) * .4);
+    }
+    .ll-signup-side {
+        position: relative;
+        z-index: 3;
+        justify-self: end;
+        width: min(48%, 680px);
+        padding: clamp(32px, 6vh, 96px) clamp(24px, 5vw, 88px) max(clamp(32px, 6vh, 96px), calc(var(--Hs) - var(--pT) - var(--pH) * .83)) 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: clamp(28px, 4vh, 44px);
+    }
+    .ll-signup-form { max-width: 460px; }
+}
+/* Short screens (laptops, phones held sideways): a smaller logo and tighter
+   spacing, so the column fits above the cable without the page growing. */
+@media (min-width: 760px) and (max-height: 720px) {
+    .ll-signup-side { gap: 20px; }
+    .ll-signup-head { gap: 14px; line-height: 1.5; }
+    .ll-signup-logo { height: clamp(56px, 11vh, 96px); }
+    .ll-signup-form { gap: 14px; }
+    .ll-signup-form input { height: 44px; }
+    .ll-signup-button { padding-block: 14px; }
+}
+
+/* Upright tablets (760px and wider, but narrower than the photo's 4:3): the
+   whole photo would leave dark filler above and below it, under the logo and
+   the button, and put the form over the cable. Instead the photo fills the
+   height, as the homepage does on phones (only background beyond the right
+   edge is cropped), so the column sits on the photo, beside the lamp and
+   above the cable. */
+@media (min-width: 760px) and (max-aspect-ratio: 4 / 3) {
+    .ll-signup .ll-home-frame,
+    .ll-signup .ll-home-fill-right {
+        top: 0;
+        height: 100cqh;
+    }
+    .ll-signup .ll-home-frame {
+        width: 133.4cqh;
+        left: min(0px, max(100cqw - 133.4cqh, 20px - 133.4cqh * 0.095));
+    }
+    .ll-signup .ll-home-fill-right {
+        left: calc(min(0px, max(100cqw - 133.4cqh, 20px - 133.4cqh * 0.095)) + 133.4cqh - 2px);
+    }
+    .ll-signup .ll-home-fill-top,
+    .ll-signup .ll-home-fill-bottom { display: none; }
+    .ll-signup .ll-home-lit { transform: translateX(calc(133.4cqh * -0.00995)); }
+    .ll-signup { --pH: var(--Hs); --pT: 0px; }
+}
+
+/* Phones: the column beside the lamp is too narrow for the form, so the logo
+   and intro stay beside the lamp (switching colour) and the form goes below
+   the photo on the homepage's amber panel, in near-black. --S is the stage
+   height and --W the photo's width; --lamp-r is the lamp's right edge (the
+   photo's left edge, as placed above, plus 30.6% of its width). */
+@media (max-width: 759px) {
+    .ll-signup {
+        --S: max(340px, 62vh);
+        --W: calc(var(--S) * 1.334);
+        --lamp-r: calc(min(0px, max(100vw - var(--W), 20px - var(--W) * .095)) + var(--W) * .306);
+        /* Measured for this framing: amber and near-black equal at about 57%. */
+        --sw-text: .57;
+    }
+    .ll-signup-side { display: contents; }
+    .ll-signup-stage {
+        grid-area: 1 / 1;
+        height: var(--S);
+    }
+    .ll-signup-head {
+        grid-area: 1 / 1;
+        position: relative;
+        z-index: 3;
+        align-self: start;
+        margin: 20px 16px 0 calc(var(--lamp-r) + 18px);
+        max-height: calc(var(--S) * .84 - 28px);
+        gap: 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, calc(.35 * (1 - var(--lit))));
+    }
+    .ll-signup-logo { height: clamp(64px, 11vh, 110px); }
+    /* The meter goes in the gap between the lamp and the text. */
+    .ll-home-meter { left: calc(30.6% + 7px); }
+    .ll-signup-form {
+        grid-area: 2 / 1;
+        padding: 32px 24px 40px;
+        --sw-fg: #15120e;
+        --sw-bg: #fca941;
+        color: #15120e;
+    }
+}

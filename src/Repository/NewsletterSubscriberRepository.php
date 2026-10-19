@@ -34,6 +34,19 @@ final class NewsletterSubscriberRepository extends ServiceEntityRepository
         ]);
     }
 
+    /**
+     * Case-insensitive, so "Ada@Example.com" finds "ada@example.com".
+     */
+    public function findOneByEmail(string $email): ?NewsletterSubscriber
+    {
+        return $this->createQueryBuilder('subscriber')
+            ->where('LOWER(subscriber.email) = LOWER(:email)')
+            ->setParameter('email', trim($email))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function remove(NewsletterSubscriber $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
