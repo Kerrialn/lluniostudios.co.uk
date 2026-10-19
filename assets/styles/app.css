@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Special+Elite&display=swap');
 @import 'tailwindcss';
 @import 'tom-select/dist/css/tom-select.default.css';
 @plugin 'flowbite/plugin';
@@ -16,7 +16,38 @@
     /* Flowbite drawers/modals use `bg-dark-backdrop/70`; the token isn't provided
        by the plugin under Tailwind v4, so define it (matches the app's gray-900). */
     --color-dark-backdrop: #111827;
+
+    /* Llunio design system, copied from the design-foundation branch for the
+       signup page. Use as bg-ll-bg, text-ll-ink, border-ll-line, font-elite, ... */
+    --font-elite: 'Special Elite', 'Courier New', Courier, monospace;
+    --color-ll-bg: #15120e;
+    --color-ll-surface: #1c1813;
+    --color-ll-ink: #ece3d3;
+    --color-ll-mute: #a89b86;
+    --color-ll-line: rgb(236 227 211 / 0.22);
+    --color-ll-line-soft: rgb(236 227 211 / 0.14);
 }
+
+/* ---- Llunio design (from design-foundation; used by the signup page) ---- */
+
+/* Small uppercase labels: buttons, field labels. */
+.ll-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+/* Uppercase, letter-spaced headings. */
+.ll-heading {
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.1;
+}
+
+/* Cream filled buttons dim a touch on hover. */
+.ll-cta { transition: opacity .3s; }
+.ll-cta:hover { opacity: .85; }
 
 .boldonse-regular {
     font-family: 'Boldonse', system-ui;

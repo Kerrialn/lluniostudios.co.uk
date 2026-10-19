@@ -1,0 +1,49 @@
+{% extends 'simple.base.html.twig' %}
+
+{#
+    Signup (request access), shown at /signup while APP_UNDER_MAINTENANCE is 1.
+    Styled as the design-foundation branch's forms: Special Elite, cream on
+    near-black, boxed fields, uppercase letter-spaced labels and button.
+#}
+{% block body_class %}bg-ll-bg text-ll-ink font-elite{% endblock %}
+
+{# Plain widgets: the page styles its fields itself. #}
+{% form_theme newsletterSubscriberForm 'form_div_layout.html.twig' %}
+
+{% block body %}
+    {% set box = 'w-full h-12 px-3.5 bg-transparent text-ll-ink border border-ll-mute rounded-none outline-none text-[15px] leading-[1.5] focus:border-ll-ink' %}
+    <div class="mx-auto max-w-5xl px-5 py-12 min-h-screen flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16">
+        <div class="w-full max-w-[180px] md:max-w-[280px] md:w-1/2 flex justify-center">
+            <img src="{{ asset('images/brand/logo-full-light.png') }}" alt="Llunio Studios" class="w-full h-auto"/>
+        </div>
+        <div class="w-full md:w-1/2 max-w-md">
+            <div class="flex flex-col gap-6 text-[15px] leading-relaxed">
+                <div class="flex flex-col gap-3">
+                    <p>Llunio Studios is currently in the workshop.</p>
+                    <p class="text-ll-mute">
+                        We are refining our first collection of liquid stone sculptural lamps, request an
+                        invitation to the launch below.
+                    </p>
+                </div>
+                {{ form_start(newsletterSubscriberForm, { attr: { class: 'flex flex-col gap-6 border-t border-ll-line pt-6' } }) }}
+                    {% for field in [newsletterSubscriberForm.name, newsletterSubscriberForm.email] %}
+                        <div class="flex flex-col gap-2">
+                            {{ form_label(field, null, { label_attr: { class: 'll-label' } }) }}
+                            {{ form_widget(field, { attr: { class: box ~ (field.vars.errors|length ? ' border-ll-ink' : ''), placeholder: false } }) }}
+                            {% for error in field.vars.errors %}
+                                <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    {% for error in newsletterSubscriberForm.vars.errors %}
+                        <span class="text-[12px] text-ll-ink" role="alert">{{ error.message }}</span>
+                    {% endfor %}
+                    <button type="submit"
+                            class="ll-cta w-full bg-ll-ink text-ll-bg p-[18px] text-center text-xs leading-[1.5] uppercase tracking-[0.16em]">
+                        {{ 'request-access'|trans }}
+                    </button>
+                {{ form_end(newsletterSubscriberForm) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

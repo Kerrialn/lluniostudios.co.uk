@@ -13,7 +13,7 @@
         {{ vite_entry_script_tags('app') }}
     {% endblock %}
 </head>
-<body class="min-h-full bg-white text-gray-900 antialiased font-sans"
+<body class="min-h-full {% block body_class %}bg-white text-gray-900 font-sans{% endblock %} antialiased"
       {{ stimulus_controller('symfony/ux-swup/swup', {
           containers: ['#main', '#flashes'],
           theme: 'slide',
