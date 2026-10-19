@@ -8,7 +8,6 @@ return static function (ContainerConfigurator $containerConfigurator): void {
     $containerConfigurator->extension('twig', [
         'file_name_pattern' => '*.twig',
         'globals' => [
-            'is_under_maintenance' => '%env(APP_UNDER_MAINTENANCE)%',
             'lead_time' => '@App\Catalogue\LeadTime',
             // The studio's public email (STUDIO_EMAIL in .env).
             'studio_email' => '%env(STUDIO_EMAIL)%',
