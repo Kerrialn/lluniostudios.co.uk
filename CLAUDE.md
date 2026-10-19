@@ -9,7 +9,7 @@ High-end lamp e-commerce platform built with Symfony 7.3.
 - **Doctrine ORM 3.3** (attribute-based mapping)
 - **EasyAdmin 4** for admin panel
 - **Stimulus.js** + Swup for frontend
-- **Docker** (PHP, Caddy, PostgreSQL)
+- **Docker** (FrankenPHP: PHP and Caddy in one container; PostgreSQL)
 - **Vich Uploader** for image handling
 
 ## Development Commands

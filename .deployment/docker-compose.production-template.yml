@@ -7,32 +7,27 @@ networks:
     external: false
 
 volumes:
-  php_socket:
   caddy_data:
   caddy_config:
   uploads:
 
 services:
+  # FrankenPHP: serves PHP and the static files in one container. Traefik
+  # terminates TLS in front of it, so it listens on plain :80.
   php:
-    image: ghcr.io/eventpoints/lluniostudios.co.uk-php:main
+    image: ghcr.io/kerrialn/lluniostudios.co.uk-php:main
     volumes:
-      - php_socket:/var/run/php
-      - ./php/php.ini:/usr/local/etc/php/php.ini
-      # Persist user-uploaded images and share them with Caddy (which serves them).
+      - caddy_data:/data
+      - caddy_config:/config
+      # Persist user-uploaded images (Vich writes them under public/uploads).
       - uploads:/app/public/uploads
-    healthcheck:
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 30s
     depends_on:
       - database
     restart: unless-stopped
     environment:
-      MERCURE_PUBLIC_URL: "https://lluniostudios.co.uk/.well-known/mercure"
+      SERVER_NAME: ":80"
       APP_ENV: "prod"
       DATABASE_URL: "postgresql://__LLUNIOSTUDIOS_POSTGRES_USER__:__LLUNIOSTUDIOS_POSTGRES_PASSWORD__@database:5432/__LLUNIOSTUDIOS_POSTGRES_DBNAME__?serverVersion=16&charset=utf8"
-      MERCURE_JWT_SECRET: "__LLUNIOSTUDIOS_MERCURE_JWT_SECRET__"
       APP_SECRET: "__LLUNIOSTUDIOS_APP_SECRET__"
       MAILER_DSN: "__LLUNIOSTUDIOS_MAILER_DSN__"
       STRIPE_PUBLISHABLE_KEY: "__LLUNIOSTUDIOS_STRIPE_PUBLISHABLE_KEY__"
@@ -40,25 +35,6 @@ services:
       STRIPE_WEBHOOK_SECRET: "__LLUNIOSTUDIOS_STRIPE_WEBHOOK_SECRET__"
       MESSENGER_TRANSPORT_DSN: "doctrine://default?auto_setup=0"
       APP_UNDER_MAINTENANCE: "__LLUNIOSTUDIOS_APP_UNDER_MAINTENANCE__"
-    networks:
-      - internal
-
-  caddy:
-    image: ghcr.io/eventpoints/lluniostudios.co.uk-caddy:main
-    depends_on:
-      - php
-    restart: unless-stopped
-    environment:
-      SERVER_NAME: ":80"
-      MERCURE_PUBLISHER_JWT_KEY: "__LLUNIOSTUDIOS_MERCURE_JWT_SECRET__"
-      MERCURE_SUBSCRIBER_JWT_KEY: "__LLUNIOSTUDIOS_MERCURE_JWT_SECRET__"
-    volumes:
-      - php_socket:/var/run/php
-      - caddy_data:/data
-      - caddy_config:/config
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      # Serve the same uploaded images the PHP container writes.
-      - uploads:/app/public/uploads:ro
     expose:
       - "80"
     labels:
@@ -66,6 +42,9 @@ services:
       - "traefik.http.routers.lluniostudios.rule=Host(`lluniostudios.co.uk`, `www.lluniostudios.co.uk`)"
       - "traefik.http.routers.lluniostudios.tls=true"
       - "traefik.http.routers.lluniostudios.tls.certresolver=le"
+      # The image exposes 80, 443 and 2019; Traefik must be told which to use.
+      - "traefik.http.services.lluniostudios.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik"
     networks:
       - traefik
       - internal

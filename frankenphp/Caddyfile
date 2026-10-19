@@ -1,0 +1,33 @@
+# One container serves the whole site: Caddy (TLS, compression, static files)
+# and PHP through FrankenPHP. In production Traefik terminates TLS in front of
+# it, so SERVER_NAME is ":80" there.
+{
+	skip_install_trust
+
+	{$CADDY_GLOBAL_OPTIONS}
+
+	frankenphp {
+		{$FRANKENPHP_CONFIG}
+	}
+}
+
+{$SERVER_NAME:localhost} {
+	log
+
+	root /app/public
+	encode zstd br gzip
+
+	# Hashed, immutable Vite output.
+	@build path /build/assets/*
+	header @build Cache-Control "public, max-age=31536000, immutable"
+
+	{$CADDY_SERVER_EXTRA_DIRECTIVES}
+
+	php_server {
+		# Never serve a PHP file other than the front controller.
+		try_files {path} index.php
+		# The site is only ever reached over HTTPS (Traefik in production), so
+		# Symfony builds https:// URLs, as the old Caddy + php-fpm setup did.
+		env HTTPS on
+	}
+}
