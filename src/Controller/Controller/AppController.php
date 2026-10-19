@@ -83,10 +83,6 @@ class AppController extends AbstractController
                 return $this->redirectToRoute('signup');
             }
 
-            $this->emailService->sendNewsLetterSubscriptionEmail($newsletterSubscriber, [
-                'token' => $newsletterSubscriber->getConfirmationToken(),
-            ]);
-
             try {
                 $this->newsletterSubscriberRepository->save($newsletterSubscriber, true);
             } catch (UniqueConstraintViolationException) {
@@ -94,6 +90,21 @@ class AppController extends AbstractController
                 $this->addFlash(FlashMessageEnum::SUSCCESS->value, self::ALREADY_SIGNED_UP);
 
                 return $this->redirectToRoute('signup');
+            }
+
+            // Saved first, so a mail provider refusing the confirmation never loses the signup.
+            $confirmationSent = true;
+            try {
+                $this->emailService->sendNewsLetterSubscriptionEmail($newsletterSubscriber, [
+                    'token' => $newsletterSubscriber->getConfirmationToken(),
+                ]);
+            } catch (\Throwable $throwable) {
+                $confirmationSent = false;
+                $this->logger->error('Signup confirmation email failed: {message}', [
+                    'message' => $throwable->getMessage(),
+                    'email' => $newsletterSubscriber->getEmail(),
+                    'exception' => $throwable,
+                ]);
             }
 
             // Tell the studio; the signup is already saved, so a failed send is only logged.
@@ -107,7 +118,9 @@ class AppController extends AbstractController
                 ]);
             }
 
-            $this->addFlash(FlashMessageEnum::SUSCCESS->value, 'Thank you for subscribing to our newsletter, we have sent you an email to confirm your subscription');
+            $this->addFlash(FlashMessageEnum::SUSCCESS->value, $confirmationSent
+                ? 'Thank you for subscribing to our newsletter, we have sent you an email to confirm your subscription'
+                : "Thank you for subscribing to our newsletter. We couldn't send your confirmation email just now, but your details are saved and we'll be in touch.");
 
             return $this->redirectToRoute('signup');
         }
