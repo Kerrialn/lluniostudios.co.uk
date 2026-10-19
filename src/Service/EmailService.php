@@ -16,6 +16,8 @@ final readonly class EmailService
 {
     private const SENDER_EMAIL_ADDRESS = 'notifications@lluniostudios.co.uk';
 
+    private const STUDIO_EMAIL_ADDRESS = 'info@lluniostudios.co.uk';
+
     public function __construct(
         private MailerInterface $mailer,
     )
@@ -36,6 +38,26 @@ final readonly class EmailService
                 'name' => $newsletterSubscriber->getName(),
             ]),
         );
+    }
+
+    /**
+     * Tells the studio someone has signed up on /signup. Replying goes to them.
+     */
+    public function sendSignupNotificationEmail(NewsletterSubscriber $newsletterSubscriber): void
+    {
+        $templatedEmail = $this->compose(
+            subject: 'New signup: ' . $newsletterSubscriber->getName(),
+            template: '/email/newsletter/signup_notification.html.twig',
+            email: self::STUDIO_EMAIL_ADDRESS,
+            name: 'Llunio Studios',
+            context: [
+                'subscriber' => $newsletterSubscriber,
+            ],
+        );
+        $templatedEmail->replyTo(new Address($newsletterSubscriber->getEmail(), $newsletterSubscriber->getName()));
+        $templatedEmail->textTemplate('/email/newsletter/signup_notification.txt.twig');
+
+        $this->mailer->send($templatedEmail);
     }
 
     public function sendLoginCodeEmail(User $user, string $code): void
