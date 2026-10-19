@@ -22,7 +22,7 @@ class CartItemOption
 
     #[ORM\ManyToOne(targetEntity: CartItem::class, inversedBy: 'cartItemOptions')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?CartItem $cartItem = null;
+    private ?CartItem $cartItem;
 
     #[ORM\ManyToOne(targetEntity: ProductOption::class)]
     #[ORM\JoinColumn(name: 'product_option_id', referencedColumnName: 'id')]

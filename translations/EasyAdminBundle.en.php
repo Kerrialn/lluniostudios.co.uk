@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'page_title.dashboard' => 'Dashboard',
     'page_title.detail' => '%entity_label_singular% <small>(#%entity_short_id%)</small>',

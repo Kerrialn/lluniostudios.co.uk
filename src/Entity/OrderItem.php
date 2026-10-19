@@ -23,7 +23,7 @@ class OrderItem
 
     #[ORM\ManyToOne(targetEntity: Product::class)]
     #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
-    private ?Product $product = null;
+    private ?Product $product;
 
     #[ORM\Column(length: 255)]
     private string $productTitle;
@@ -40,7 +40,7 @@ class OrderItem
      * @var array<int, array{option: string, value: string}>
      */
     #[ORM\Column(type: Types::JSON)]
-    private array $optionsSnapshot = [];
+    private array $optionsSnapshot;
 
     /**
      * @param array<int, array{option: string, value: string}> $optionsSnapshot

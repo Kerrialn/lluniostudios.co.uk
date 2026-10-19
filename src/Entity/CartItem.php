@@ -21,7 +21,7 @@ class CartItem
     private Uuid $id;
 
     #[ORM\Column(type: Types::INTEGER)]
-    private int|null $quantity = null;
+    private int|null $quantity;
 
     #[ORM\Column(type: Types::STRING, nullable: true)]
     private null|string $hash = null;
@@ -44,7 +44,7 @@ class CartItem
 
     #[ORM\ManyToOne(targetEntity: Product::class)]
     #[ORM\JoinColumn(name: 'product_id', referencedColumnName: 'id')]
-    private null|Product $product = null;
+    private null|Product $product;
 
     public function __construct(?int $quantity, ?Product $product)
     {
