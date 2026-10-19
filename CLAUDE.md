@@ -13,7 +13,7 @@ The site is being reshaped to the Claude Design prototype "Llunio Site v4 Unifie
 - **Doctrine ORM 3.3** (attribute-based mapping)
 - **EasyAdmin 4** for admin panel
 - **Stimulus.js** + Swup for frontend
-- **Docker** (PHP, Caddy, PostgreSQL)
+- **Docker** (FrankenPHP: PHP and Caddy in one container; PostgreSQL)
 - **Vich Uploader** for image handling
 
 ## Development Commands

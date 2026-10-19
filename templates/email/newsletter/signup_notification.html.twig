@@ -1,0 +1,28 @@
+{#
+    Sent to the studio when someone signs up on /signup: plain, large text,
+    one detail per line, so it reads at a glance on a phone. Replying goes
+    to the person who signed up.
+#}
+{% set signedUpAt = subscriber.createdAt|date('j F Y, H:i T', 'Europe/London') %}
+<!doctype html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New signup</title>
+</head>
+<body style="margin:0;padding:20px;background:#ffffff;color:#111111;font:17px/1.5 Arial,Helvetica,sans-serif;">
+    <p style="margin:0 0 20px;font-size:20px;font-weight:bold;">New signup on lluniostudios.co.uk</p>
+
+    <p style="margin:0;font-size:13px;color:#666666;">Name</p>
+    <p style="margin:0 0 16px;">{{ subscriber.name }}</p>
+
+    <p style="margin:0;font-size:13px;color:#666666;">Email</p>
+    <p style="margin:0 0 16px;"><a href="mailto:{{ subscriber.email }}" style="color:#111111;">{{ subscriber.email }}</a></p>
+
+    <p style="margin:0;font-size:13px;color:#666666;">Signed up</p>
+    <p style="margin:0 0 16px;">{{ signedUpAt }}</p>
+
+    <p style="margin:24px 0 0;font-size:13px;color:#666666;">Reply to this email to write to them.</p>
+</body>
+</html>

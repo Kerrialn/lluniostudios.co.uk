@@ -1,35 +1,19 @@
 services:
     php:
-        image: ghcr.io/eventpoints/php:main
-        platform: linux/arm64
-        volumes:
-            - .:/app:cached
-            - ./docker/php/zz-opcache-dev.ini:/usr/local/etc/php/conf.d/zz-opcache-dev.ini
-            - ./docker/php/zz-uploads.ini:/usr/local/etc/php/conf.d/zz-uploads.ini
-        healthcheck:
-            # expects /app/php/docker-healthcheck.sh to ping 127.0.0.1:9000
-            test: [ "CMD-SHELL", "/app/php/docker-healthcheck.sh" ]
-            interval: 10s
-            timeout: 3s
-            retries: 3
-            start_period: 30s
-        depends_on:
-            - database
-
-    caddy:
-        image: ghcr.io/eventpoints/caddy:main
-        platform: linux/arm64
-        depends_on:
-            - php
+        build:
+            context: .
+            target: frankenphp_dev
         environment:
-            SERVER_NAME: localhost, caddy:80
-            MERCURE_PUBLIC_URL: "https://localhost/.well-known/mercure"
-            MERCURE_PUBLISHER_JWT_KEY: secret
-            MERCURE_SUBSCRIBER_JWT_KEY: secret
+            SERVER_NAME: localhost
+            XDEBUG_MODE: "${XDEBUG_MODE:-off}"
         volumes:
-            - .:/app:ro
+            - .:/app
+            - ./frankenphp/Caddyfile:/etc/frankenphp/Caddyfile:ro
+            - ./frankenphp/conf.d/20-app.dev.ini:/usr/local/etc/php/app.conf.d/20-app.dev.ini:ro
             - caddy_data:/data
             - caddy_config:/config
+        extra_hosts:
+            - host.docker.internal:host-gateway
         ports:
             # HTTP
             - target: 80
@@ -43,6 +27,8 @@ services:
             - target: 443
               published: 443
               protocol: udp
+        depends_on:
+            - database
 
     database:
         image: postgis/postgis:16-3.4

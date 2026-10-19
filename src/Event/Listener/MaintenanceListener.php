@@ -48,7 +48,8 @@ class MaintenanceListener
             return;
         }
 
-        if ($currentRoute === 'newsletter_verify_email') {
+        // The old /maintenance address redirects to /signup permanently itself.
+        if ($currentRoute === 'newsletter_verify_email' || $currentRoute === 'maintenance') {
             return;
         }
 
@@ -63,9 +64,9 @@ class MaintenanceListener
             return;
         }
 
-        // 6) Never redirect if we’re already on the maintenance route/path
-        $maintenanceRoute = 'maintenance';
-        $maintenancePath = $this->router->generate($maintenanceRoute); // e.g. "/maintenance"
+        // 6) Never redirect if we’re already on the signup route/path
+        $maintenanceRoute = 'signup';
+        $maintenancePath = $this->router->generate($maintenanceRoute); // e.g. "/signup"
 
         if ($currentRoute === $maintenanceRoute || $request->getPathInfo() === $maintenancePath) {
             return;
