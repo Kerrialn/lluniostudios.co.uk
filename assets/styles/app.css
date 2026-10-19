@@ -276,8 +276,9 @@ picture { display: contents; }
 }
 
 /* Phones: the column beside the lamp is too narrow for the form, so the logo
-   and intro stay beside the lamp (switching colour) and the form goes below
-   the photo on the homepage's amber panel, in near-black. --S is the stage
+   and intro stay beside the lamp and the form goes below the photo, on a
+   panel that fades from black to orange with the brightness; all of it
+   switches colour. --S is the stage
    height and --W the photo's width; --lamp-r is the lamp's right edge (the
    photo's left edge, as placed above, plus 30.6% of its width). */
 @media (max-width: 759px) {
@@ -308,11 +309,24 @@ picture { display: contents; }
     .ll-signup-logo { --logo-h: clamp(72px, 12.5vh, 124px); }
     /* The meter goes in the gap between the lamp and the text. */
     .ll-home-meter { left: calc(30.6% + 7px); }
+    /* The page background (the panel under the photo, and what shows when the
+       page is pulled past its top) fades with the brightness, from the dim
+       photo's bottom-edge colour to the bulb's orange, so it blends with the
+       photo's edges. */
+    body:has(.ll-signup) {
+        background-color: rgb(calc(8 + 244 * var(--ll-hero-b)) calc(2 + 167 * var(--ll-hero-b)) calc(1 + 64 * var(--ll-hero-b)));
+    }
+    /* The form on that panel switches like the rest: amber on the dark panel,
+       near-black once it is bright. Switch point measured for the panel:
+       amber and near-black equal (about 3.2:1) at 53%. */
     .ll-signup-form {
         grid-area: 2 / 1;
         padding: 32px 24px 40px;
-        --sw-fg: #15120e;
-        --sw-bg: #fca941;
-        color: #15120e;
+        --sw: .53;
+        --lit: clamp(0, (var(--ll-hero-b) - var(--sw)) * 100000, 1);
+        --sw-fg: rgb(calc(250 - 229 * var(--lit)) calc(179 - 161 * var(--lit)) calc(90 - 76 * var(--lit)));
+        --sw-bg: rgb(calc(21 + 229 * var(--lit)) calc(18 + 161 * var(--lit)) calc(14 + 76 * var(--lit)));
+        color: var(--sw-fg);
+        transition: color .3s ease;
     }
 }
