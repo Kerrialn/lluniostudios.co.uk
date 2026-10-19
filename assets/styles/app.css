@@ -169,11 +169,18 @@ picture { display: contents; }
    all switching colour with the brightness. Nothing sits over the lamp: the
    column starts at least 48% from the right, and the lamp ends at 30.6% of
    the photo's width. */
+/* The logo file (556 x 573, near-black with its tones in its transparency)
+   is used as it is, as a mask: the current colour shows through it, so it
+   switches with the text. It has a 40px transparent margin on every side;
+   the negative margins line its visible edge up with the text. --logo-h is
+   the file's full height on the page. */
 .ll-signup-logo {
+    --logo-h: clamp(110px, 18vh, 180px);
     display: block;
     align-self: flex-start; /* in line with the text, not centred */
-    aspect-ratio: 386 / 489;
-    height: clamp(96px, 16vh, 160px);
+    aspect-ratio: 556 / 573;
+    height: var(--logo-h);
+    margin: calc(var(--logo-h) * -40 / 573);
     background-color: currentColor;
     -webkit-mask: var(--ll-logo-mask) left center / contain no-repeat;
     mask: var(--ll-logo-mask) left center / contain no-repeat;
@@ -237,7 +244,7 @@ picture { display: contents; }
 @media (min-width: 760px) and (max-height: 720px) {
     .ll-signup-side { gap: 20px; }
     .ll-signup-head { gap: 14px; line-height: 1.5; }
-    .ll-signup-logo { height: clamp(56px, 11vh, 96px); }
+    .ll-signup-logo { --logo-h: clamp(64px, 12.5vh, 108px); }
     .ll-signup-form { gap: 14px; }
     .ll-signup-form input { height: 44px; }
     .ll-signup-button { padding-block: 14px; }
@@ -298,7 +305,7 @@ picture { display: contents; }
         line-height: 1.5;
         text-shadow: 0 1px 2px rgba(0, 0, 0, calc(.35 * (1 - var(--lit))));
     }
-    .ll-signup-logo { height: clamp(64px, 11vh, 110px); }
+    .ll-signup-logo { --logo-h: clamp(72px, 12.5vh, 124px); }
     /* The meter goes in the gap between the lamp and the text. */
     .ll-home-meter { left: calc(30.6% + 7px); }
     .ll-signup-form {
