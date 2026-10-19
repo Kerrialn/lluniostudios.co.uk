@@ -642,7 +642,7 @@ Two forms (Home: name, email, phone, preferred contact, idea, files; Project: co
   - Files: `CommissionFileStorage` keeps them in `var/commission-uploads/` (outside `public/`, random names, folder only readable by the server). Downloaded only from admin (`/admin/commission-file/{id}`, admin sign-in required), always as a download under the customer's own file name. Deleting an enquiry in admin deletes its files (`CommissionEnquiryFileRemover`). **The live server must keep this folder between deploys and back it up** (Step 12).
   - The server repeats the page's file checks (type by extension, 50MB a file, 100MB in total) in the same words (`CommissionFields::uploadProblem`), and shows the same "more than 100MB" message when more than the server takes at once (110MB) is sent.
   - Spam: a hidden "website" field (an enquiry with it filled is accepted on screen but not saved) and at most 5 complete enquiries an hour from one connection (`config/packages/rate_limiter.php`, new package `symfony/rate-limiter`), after which: "You've sent several enquiries in a short time. Please try again in an hour, or email us at info@lluniostudios.co.uk."
-  - Local PHP limits (`docker/php/zz-uploads.ini`, mounted in `docker-compose.yml`): 50MB a file, 110MB a request, 20 files. Locally the debug toolbar is switched off for an oversize send (it would read the whole request into memory); the live site has no toolbar.
+  - Local PHP limits (`frankenphp/conf.d/20-app.dev.ini` since the FrankenPHP merge, 19 October 2026; before that `docker/php/zz-uploads.ini`): 50MB a file, 110MB a request, 20 files. Locally the debug toolbar is switched off for an oversize send (it would read the whole request into memory); the live site has no toolbar.
   - Admin "Commissions" (`CommissionEnquiryCrudController`): newest first with number, received (UK time), status badge, type, name, company, email and file count; filters by status and type; an enquiry's page shows every detail and its files as download links; only the status can be changed.
   - After a complete enquiry the page still returns to the form; the "Commission submitted" page and emails come in 9.3.
   - Browser check `commissions-saving.mjs`; `clean-up.mjs` also removes test enquiries and their files.
@@ -1163,7 +1163,7 @@ Gathered into one checklist on 13 October 2026 (Step 5 of your list that day) fr
 - [ ] **Priority: make the GitHub repository private** (asked 14 October 2026). The workshop's address is in the published history of `design-foundation` (from commit `cb55aee`); the history is left as it is, by your decision, so the repository must not stay public.
 - [ ] PHP 8.4, as local Docker and the GitHub checks (10 October 2026).
 - [ ] Its own `APP_SECRET` (never the old development one in the repository's history).
-- [ ] Upload limits as `docker/php/zz-uploads.ini`: 50MB a file, 110MB a request, 20 files.
+- [ ] Upload limits as the local ones (`frankenphp/conf.d/20-app.dev.ini`): 50MB a file, 110MB a request, 20 files. The live limits are in `frankenphp/conf.d/10-app.ini` (10M/40M until then).
 - [ ] The private files folder `var/commission-uploads/` (commission files, reference photos, enquiry files) kept between deploys and backed up.
 - [ ] Database backups *(added 13 October 2026)*.
 - [ ] Sending email: a real mail service in `MAILER_DSN`, and the sender `notifications@lluniostudios.co.uk` allowed by the domain's mail records (SPF, DKIM) so emails aren't marked as spam *(added 13 October 2026)*.
